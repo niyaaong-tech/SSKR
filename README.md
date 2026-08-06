@@ -2,6 +2,10 @@
 
 SSKR 서비스 기획을 기반으로 제작한 단일 파일 HTML/CSS/JavaScript 프레젠테이션입니다.
 
+## 공개 주소
+
+https://niyaaong-tech.github.io/SSKR/
+
 ## 실행
 
 `index.html`을 최신 Chrome, Safari 또는 Edge에서 엽니다.
@@ -14,4 +18,4 @@ SSKR 서비스 기획을 기반으로 제작한 단일 파일 HTML/CSS/JavaScrip
 
 이 저장소는 `main` 브랜치에 푸시될 때 GitHub Pages로 자동 배포되도록 구성되어 있습니다.
 
-필요한 경우 저장소의 **Settings → Pages → Build and deployment → Source**를 **GitHub Actions**로 지정합니다.
+저장소의 **Settings → Pages → Build and deployment → Source**는 **GitHub Actions**를 사용합니다.

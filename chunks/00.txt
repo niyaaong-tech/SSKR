@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>SSKR 서비스 기획 PT — 기억으로 남는 라이딩</title>
+<style>
+:root{
+  --night-900:#08111f;--night-800:#102036;--ocean-700:#163a59;--ocean-500:#2d6f92;
+  --dawn-500:#f6a15b;--sun-400:#ffc76b;--sunset-500:#e86a45;--sunset-700:#9f3c32;
+  --sand-100:#f2eadc;--sand-050:#fbf6ed;--cloud-050:#f7f8fa;--ink-900:#101820;--ink-700:#334052;
+  --forest-600:#365a47;--route-400:#ffd166;--success-500:#48b785;--warning-500:#f0a44b;
+  --paper:#fffdf8;--muted:#7a8494;--line:rgba(16,24,32,.14);--shadow:0 28px 70px rgba(16,24,32,.18);
+  --font-display: clamp(54px, 5.9vw, 112px);
+  --font-h1: clamp(42px, 4vw, 76px);
+  --font-h2: clamp(28px, 2.3vw, 46px);
+  --font-body: clamp(18px, 1.22vw, 25px);
+  --font-caption: clamp(13px, .85vw, 17px);
+  --ease:cubic-bezier(.22,1,.36,1);
+}
+*{box-sizing:border-box}html,body{height:100%;margin:0;background:#111;color:var(--ink-900);font-family:"Nanum Gothic","Apple SD Gothic Neo","Malgun Gothic",Pretendard,SUIT,system-ui,sans-serif;overflow:hidden}body{letter-spacing:-.025em}.deck{height:100vh;width:100vw;position:relative;overflow:hidden;background:var(--sand-050)}.slides{height:100%;display:flex;transition:transform 820ms var(--ease);will-change:transform;touch-action:none}.slides.is-dragging{transition:none}.deck{touch-action:none;-webkit-user-select:none;user-select:none}.slide{width:100vw;height:100vh;flex:0 0 100vw;position:relative;overflow:hidden;padding:clamp(48px,5vw,92px);isolation:isolate;background:linear-gradient(135deg,var(--sand-050),#fff 48%,#f8ead6)}.slide.dark{color:white;background:linear-gradient(135deg,var(--night-900),var(--ocean-700) 64%,#47243a)}.slide.split{display:grid;grid-template-columns:1.05fr .95fr;gap:clamp(24px,4vw,72px);align-items:center}.kicker{font-size:var(--font-caption);font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--sunset-500);margin-bottom:18px}.dark .kicker{color:var(--sun-400)}h1,h2,h3,p{margin:0}h1{font-size:var(--font-display);line-height:.93;font-weight:900;letter-spacing:-.07em}h2{font-size:var(--font-h1);line-height:1.02;font-weight:900;letter-spacing:-.065em}h3{font-size:var(--font-h2);line-height:1.12;font-weight:900;letter-spacing:-.045em}.lead{font-size:clamp(24px,1.9vw,36px);line-height:1.34;font-weight:700;color:var(--ink-700);margin-top:28px}.dark .lead{color:rgba(255,255,255,.78)}.body{font-size:var(--font-body);line-height:1.55;color:var(--ink-700)}.dark .body{color:rgba(255,255,255,.74)}.note{font-size:var(--font-caption);color:var(--muted);line-height:1.4}.dark .note{color:rgba(255,255,255,.55)}.strong{color:var(--sunset-500)}.gold{color:var(--route-400)}.mono{font-variant-numeric:tabular-nums}.visual{position:relative;min-height:480px}.badge{display:inline-flex;align-items:center;gap:10px;border:1px solid rgba(232,106,69,.28);background:rgba(255,255,255,.68);backdrop-filter:blur(10px);border-radius:999px;padding:10px 16px;font-weight:800;font-size:var(--font-caption);color:var(--sunset-700);box-shadow:0 8px 24px rgba(16,24,32,.07)}.dark .badge{background:rgba(255,255,255,.08);color:#fff;border-color:rgba(255,255,255,.22)}
+/* nav */
+.progress{position:fixed;left:0;top:0;height:4px;background:linear-gradient(90deg,var(--sun-400),var(--sunset-500));width:0;z-index:50;transition:width 420ms var(--ease)}.nav{position:fixed;right:26px;bottom:24px;display:flex;gap:10px;z-index:60}.nav button{pointer-events:auto;-webkit-tap-highlight-color:transparent;touch-action:manipulation;width:54px;height:54px;border:1px solid rgba(16,24,32,.16);background:rgba(255,255,255,.76);border-radius:50%;cursor:pointer;box-shadow:0 8px 20px rgba(16,24,32,.12);font-weight:900;color:var(--ink-900);backdrop-filter:blur(8px)}.nav button:hover{background:white;transform:translateY(-1px)}.counter{position:fixed;left:28px;bottom:28px;z-index:60;color:rgba(16,24,32,.55);font-size:13px;font-weight:800;letter-spacing:.05em}.dark .counter{color:rgba(255,255,255,.55)}
+/* background objects */
+.grid-bg:before{content:"";position:absolute;inset:0;z-index:-4;background-image:linear-gradient(rgba(16,24,32,.045) 1px,transparent 1px),linear-gradient(90deg,rgba(16,24,32,.045) 1px,transparent 1px);background-size:72px 72px;mask-image:linear-gradient(135deg,transparent 0%,#000 20%,#000 70%,transparent 100%)}.orb{position:absolute;border-radius:50%;filter:blur(.2px);background:radial-gradient(circle at 35% 35%,#fff6c6 0 8%,var(--sun-400) 22%,var(--dawn-500) 55%,var(--sunset-500) 86%);box-shadow:0 0 65px rgba(255,199,107,.54),0 0 160px rgba(232,106,69,.25)}.route-glow{position:absolute;inset:auto 0 0 0;height:40%;background:radial-gradient(ellipse at 50% 100%,rgba(255,199,107,.34),transparent 64%);z-index:-2}.horizon{position:absolute;left:0;right:0;bottom:0;height:42%;background:linear-gradient(180deg,transparent,rgba(8,17,31,.55)),linear-gradient(90deg,rgba(246,161,91,.3),rgba(255,199,107,.4),rgba(232,106,69,.35));clip-path:polygon

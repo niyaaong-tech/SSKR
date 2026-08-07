@@ -1,0 +1,9 @@
+# generated / downloaded terrain data
+**/__pycache__/
+*.pyc
+**/raw/tiles/**/*.tif
+**/raw/tiles/**/*.hgt
+**/output/**/*.tif
+**/output/**/*.glb
+**/output/**/*.png
+.DS_Store

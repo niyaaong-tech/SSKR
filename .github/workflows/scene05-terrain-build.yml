@@ -5,7 +5,7 @@ on:
     branches: [main]
     paths:
       - '.github/workflows/scene05-terrain-build.yml'
-      - 'snapshot/**'
+      - 'tools/scene05-build-direct.py'
   workflow_dispatch:
 
 jobs:
@@ -16,83 +16,22 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Restore workspace snapshot
-        run: python snapshot/unpack_snapshot.py
-
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-          cache: 'pip'
-          cache-dependency-path: workspace/tools/scene05-real-terrain/requirements.txt
 
       - name: Install terrain dependencies
-        run: python -m pip install -r workspace/tools/scene05-real-terrain/requirements.txt
+        run: python -m pip install boto3 numpy Pillow rasterio pyproj scipy trimesh
 
-      - name: Download Copernicus GLO-30 tiles
-        working-directory: workspace/tools/scene05-real-terrain
-        run: python scripts/fetch_copernicus_dem.py --region south_korea_hero --resolution 30
-
-      - name: Build South Korea Hero terrain v0.1
-        working-directory: workspace/tools/scene05-real-terrain
-        run: |
-          python scripts/build_scene05_terrain_assets.py raw/tiles/copernicus \
-            --region south_korea_hero \
-            --width 2048 \
-            --mesh-width 320 \
-            --vertical-exaggeration 1.5 \
-            --out output/south_korea_hero_v0.1
-
-      - name: Build terrain QA preview
-        working-directory: workspace/tools/scene05-real-terrain
-        run: |
-          python - <<'PY'
-          from pathlib import Path
-          from PIL import Image, ImageEnhance
-          p=Path('output/south_korea_hero_v0.1')
-          albedo=Image.open(p/'albedo.png').convert('RGB')
-          hs=Image.open(p/'hillshade.png').convert('L')
-          # Multiply a restrained hillshade into the base color for QA only.
-          h=ImageEnhance.Contrast(hs).enhance(0.8)
-          h=Image.blend(Image.new('L',h.size,220),h,0.55)
-          shade=Image.merge('RGB',(h,h,h))
-          import PIL.ImageChops as C
-          preview=C.multiply(albedo,shade)
-          preview.thumbnail((1800,1800),Image.Resampling.LANCZOS)
-          preview.save(p/'terrain_qa_preview.png',quality=95)
-          PY
-
-      - name: Write build provenance
-        working-directory: workspace/tools/scene05-real-terrain
-        run: |
-          python - <<'PY'
-          import json, datetime, pathlib, hashlib
-          p=pathlib.Path('output/south_korea_hero_v0.1')
-          files={}
-          for f in sorted(p.iterdir()):
-              if f.is_file():
-                  files[f.name]={
-                    'bytes': f.stat().st_size,
-                    'sha256': hashlib.sha256(f.read_bytes()).hexdigest()
-                  }
-          out={
-            'asset':'South Korea Hero Terrain v0.1',
-            'source':'Copernicus DEM GLO-30 public AWS bucket',
-            'built_at_utc':datetime.datetime.now(datetime.timezone.utc).isoformat(),
-            'vertical_exaggeration':1.5,
-            'raster_width':2048,
-            'mesh_width':320,
-            'coastline_clip':'NOT_APPLIED_PENDING_VERIFIED_SVG_WGS84_GEOREFERENCE',
-            'files':files
-          }
-          (p/'BUILD_PROVENANCE.json').write_text(json.dumps(out,indent=2),encoding='utf-8')
-          PY
+      - name: Build actual South Korea Hero terrain v0.1
+        run: python tools/scene05-build-direct.py
 
       - name: Upload generated terrain asset
         uses: actions/upload-artifact@v4
         with:
           name: SSKR-Scene05-SouthKoreaHero-Terrain-v0.1
-          path: workspace/tools/scene05-real-terrain/output/south_korea_hero_v0.1/
+          path: output/south_korea_hero_v0.1/
           if-no-files-found: error
           compression-level: 6
           retention-days: 30

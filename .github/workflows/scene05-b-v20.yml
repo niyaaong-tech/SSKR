@@ -1,4 +1,4 @@
-name: Scene 05 B Extended One-Take v2.1
+name: Scene 05 B Extended One-Take v2.2
 
 on:
   push:
@@ -7,6 +7,8 @@ on:
       - '.github/workflows/scene05-b-v20.yml'
       - 'final/scene05-b/**'
       - 'tools/scene05-b-source-v20.py'
+      - 'tools/scene05-b-coast-source-v22.py'
+      - 'tools/scene05-b-art-textures-v22.py'
       - 'tools/scene05-final-data-v1.py'
       - 'tools/scene05-final-terrain-v1.py'
       - 'assets/scene05/road_hints_source_v1.geojson'
@@ -20,7 +22,7 @@ permissions:
   contents: write
 
 jobs:
-  build-scene05-b-v21:
+  build-scene05-b-v22:
     runs-on: ubuntu-latest
     timeout-minutes: 40
     steps:
@@ -34,19 +36,22 @@ jobs:
         with:
           python-version: '3.12'
 
-      - name: Build clean real-terrain and route assets
+      - name: Build real terrain and B cinematic art assets
         run: |
           python -m pip install --upgrade pip
           python -m pip install numpy Pillow pyproj trimesh
           python tools/scene05-final-terrain-v1.py
+          python tools/scene05-b-art-textures-v22.py
           python tools/scene05-final-data-v1.py
           python tools/scene05-b-source-v20.py
+          python tools/scene05-b-coast-source-v22.py
           test -s output/scene05_final_v1/terrain_final_uv.glb
           test -s output/scene05_final_v1/terrain_dawn_final.png
           test -s output/scene05_final_v1/terrain_day_final.png
           test -s output/scene05_final_v1/terrain_sunset_final.png
+          test -s output/scene05_final_v1/coast_shallow.png
           test -s output/scene05_final_v1/scene05_final_data_v1.json
-          test -s output/scene05-b-v20.js
+          test -s output/scene05-b-v22.js
 
       - name: Set up Node
         uses: actions/setup-node@v5
@@ -59,12 +64,12 @@ jobs:
           sudo apt-get install -y --no-install-recommends fonts-noto-cjk
           fc-cache -f
 
-      - name: Bundle Scene 05 B v2.1
+      - name: Bundle Scene 05 B v2.2
         run: |
           npm install --no-save --no-audit --no-fund three@0.185.1 gsap@3.15.0 esbuild puppeteer-core
           rm -rf final/scene05-b/dist
           mkdir -p final/scene05-b/dist/assets
-          npx esbuild output/scene05-b-v20.js --bundle --format=esm --target=es2022 --minify --outfile=final/scene05-b/dist/app.js
+          npx esbuild output/scene05-b-v22.js --bundle --format=esm --target=es2022 --minify --outfile=final/scene05-b/dist/app.js
           cp final/scene05-b/index.html final/scene05-b/dist/index.html
           cp final/scene05-b/scene05-b.css final/scene05-b/dist/scene05-b.css
           cp final/scene05-b/README.md final/scene05-b/dist/README.md
@@ -72,10 +77,11 @@ jobs:
           cp output/scene05_final_v1/terrain_dawn_final.png final/scene05-b/dist/assets/
           cp output/scene05_final_v1/terrain_day_final.png final/scene05-b/dist/assets/
           cp output/scene05_final_v1/terrain_sunset_final.png final/scene05-b/dist/assets/
+          cp output/scene05_final_v1/coast_shallow.png final/scene05-b/dist/assets/
           cp output/scene05_final_v1/scene05_final_data_v1.json final/scene05-b/dist/assets/
           cp assets/vector/korean_peninsula_precise.svg final/scene05-b/dist/assets/
           python final/scene05-b/pack_standalone.py
-          test -s final/scene05-b/dist/SSKR_Scene05_B_Extended_OneTake_v2.1_standalone.html
+          test -s final/scene05-b/dist/SSKR_Scene05_B_Extended_OneTake_v2.2_standalone.html
 
       - name: Headed Chromium exact-timeline visual QA
         timeout-minutes: 4
@@ -97,38 +103,38 @@ jobs:
       - name: Upload Scene 05 B portable build
         uses: actions/upload-artifact@v4
         with:
-          name: SSKR-Scene05-B-Extended-OneTake-v2.1
+          name: SSKR-Scene05-B-Extended-OneTake-v2.2
           path: final/scene05-b/dist/
           if-no-files-found: error
           compression-level: 6
           retention-days: 30
 
-      - name: Publish B v2.1 QA frames and build metadata
+      - name: Publish B v2.2 QA frames and metadata
         run: |
-          mkdir -p assets/scene05/b_v2_1 final/scene05-b/preview_v2_1
-          cp output/scene05_final_v1/terrain_final_metadata.json assets/scene05/b_v2_1/
-          cp output/scene05_final_v1/scene05_final_data_v1.json assets/scene05/b_v2_1/
-          cp final/scene05-b/dist/b_*.png final/scene05-b/preview_v2_1/
-          cat > assets/scene05/b_v2_1/README.md <<'EOF'
-          # Scene 05 B v2.1 visual QA refinement
+          mkdir -p assets/scene05/b_v2_2 final/scene05-b/preview_v2_2
+          cp output/scene05_final_v1/terrain_final_metadata.json assets/scene05/b_v2_2/
+          cp output/scene05_final_v1/scene05_b_art_texture_metadata.json assets/scene05/b_v2_2/
+          cp output/scene05_final_v1/scene05_final_data_v1.json assets/scene05/b_v2_2/
+          cp final/scene05-b/dist/b_*.png final/scene05-b/preview_v2_2/
+          cat > assets/scene05/b_v2_2/README.md <<'EOF'
+          # Scene 05 B v2.2 cinematic landscape candidate
 
           - 60-second cut-free virtual-camera sequence
-          - real Copernicus DEM / canonical coastline / real-road-grounded route data retained
-          - daylight terrain no longer bakes the dense national Road Hint web; landscape readability takes priority
-          - presentation Route curves are visually resampled from real-road-grounded source points to remove GIS polyline faceting
-          - procedural ocean, physical scene background, stronger cloud framing and atmospheric depth
-          - west-coast chapter recomposed toward a low inland-to-sea horizon view
-          - sunset sun separated from the Finish marker
-          - Finish beacon restrained
-          - fireworks changed from point clouds to ordinary radial streak bursts
+          - Copernicus DEM / canonical coastline / real-road-grounded route structure retained
+          - terrain appearance rebuilt as a terrain-driven cinematic forest/plain/rock material pass
+          - terrain material separation is art direction from elevation/slope/source albedo variation, not a land-cover classification claim
+          - dense national Road Hint web remains removed from the daylight hero surface
+          - ocean adds coastline-aware shallow-water tonal separation plus animated deep-water response
+          - route presentation remains smoothed from real-road-grounded source points
+          - low west-coast horizon composition, independent sunset sun, blue hour and ordinary festival fireworks retained
           - exact production plan: `docs/scene05/Scene05_B_Extended_OneTake_Production_Plan_v2.0.md`
 
-          B v2.1 remains a visual review candidate. Accepted A v1.8 is preserved separately.
+          B v2.2 remains under visual review. Accepted A v1.8 is preserved separately.
           EOF
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add assets/scene05/b_v2_1 final/scene05-b/preview_v2_1
+          git add assets/scene05/b_v2_2 final/scene05-b/preview_v2_2
           if ! git diff --cached --quiet; then
-            git commit -m 'Publish Scene 05 B v2.1 visual QA candidate'
+            git commit -m 'Publish Scene 05 B v2.2 cinematic landscape QA'
             git push
           fi

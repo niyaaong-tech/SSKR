@@ -6,6 +6,7 @@ on:
     paths:
       - '.github/workflows/scene05-terrain-v02.yml'
       - 'tools/scene05-georef-build-v02.py'
+      - 'assets/vector/source_chunks/**'
   workflow_dispatch:
 
 permissions:
@@ -30,6 +31,25 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           python -m pip install numpy Pillow scipy rasterio pyproj shapely geopandas pyogrio trimesh boto3 requests cairosvg opencv-python-headless gdown
+
+      - name: Restore canonical Korea SVG from repository chunks
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import base64, gzip, hashlib
+          root = Path('assets/vector')
+          parts = sorted((root/'source_chunks').glob('korean_peninsula_precise.svg.gz.b64.part*'))
+          if len(parts) != 6:
+              raise SystemExit(f'Expected 6 SVG source chunks, got {len(parts)}')
+          text = ''.join(p.read_text('ascii').strip() for p in parts)
+          raw = gzip.decompress(base64.b64decode(text))
+          out = root/'korean_peninsula_precise.svg'
+          out.write_bytes(raw)
+          print('canonical SVG bytes:', len(raw))
+          print('canonical SVG sha256:', hashlib.sha256(raw).hexdigest())
+          if len(raw) < 60000 or not raw.lstrip().startswith(b'<svg'):
+              raise SystemExit('Reconstructed canonical SVG failed sanity check')
+          PY
 
       - name: Build georeferenced South Korea Hero terrain v0.2
         run: python tools/scene05-georef-build-v02.py

@@ -18,9 +18,7 @@ MAIN_ROUTE_IDS={'route_start_n01','route_start_n02','route_start_n04','route_sta
 PERSONAL_ROUTE_ID='route_start_n02'
 MERGED_LIMIT=260
 MERGED_GRID_SCENE=1.05
-ROUTE_OFFSET_M=58.0
 MERGED_OFFSET_M=72.0
-SEED_OFFSET_M=65.0
 
 
 def bilinear(arr,x,y):
@@ -51,7 +49,6 @@ def build_shared_segments(raw,tf,height,meta):
         if int(s.get('count',0))<2:continue
         a=s.get('a');b=s.get('b')
         if not a or not b:continue
-        # a/b are [lat, lon]
         pa=scene_point(a[1],a[0],tf,height,meta,MERGED_OFFSET_M)
         pb=scene_point(b[1],b[0],tf,height,meta,MERGED_OFFSET_M)
         mx=(pa[0]+pb[0])*.5;mz=(pa[2]+pb[2])*.5
@@ -60,12 +57,10 @@ def build_shared_segments(raw,tf,height,meta):
         old=cells.get(key)
         if old is None or item['count']>old['count']:
             cells[key]=item
-    selected=sorted(cells.values(),key=lambda x:(-x['count'],x['a'][2]))[:MERGED_LIMIT]
-    return selected
+    return sorted(cells.values(),key=lambda x:(-x['count'],x['a'][2]))[:MERGED_LIMIT]
 
 
 def infer_shared_from_routes(routes):
-    # Conservative fallback only if legacy raw shared-segment data is unavailable.
     out=[];seen=set()
     for i,r1 in enumerate(routes):
         p1=r1['points']
@@ -84,17 +79,25 @@ def infer_shared_from_routes(routes):
 
 
 def build_start_seeds(starts,routes):
+    """Give every visible Start a route relationship.
+
+    Five Starts already own full real-road Main Routes. The remaining four are
+    connected by short, subdued feeder lines to the nearest existing route so
+    the Dawn phase never suggests decorative/unrelated coastal lights.
+    """
+    main_start_ids={r['start_id'] for r in routes}
     route_points=[p for r in routes for p in r['points']]
     seeds=[]
     for s in starts:
+        if s['id'] in main_start_ids:
+            continue
         start=s['position']
         best=min(route_points,key=lambda p:dist2(start,p))
         dx=best[0]-start[0];dz=best[2]-start[2];d=math.sqrt(dx*dx+dz*dz)
-        if d<.45:continue
         t=min(1.0,3.1/max(d,1e-6))
         end=[start[0]+dx*t,max(start[1],best[1])+.012,start[2]+dz*t]
         mid=[(start[0]+end[0])*.5,max(start[1],end[1])+.018,(start[2]+end[2])*.5]
-        seeds.append({'start_id':s['id'],'points':[start,mid,end]})
+        seeds.append({'start_id':s['id'],'points':[start,mid,end],'role':'subtle_feeder_to_main_network'})
     return seeds
 
 
@@ -133,9 +136,8 @@ def main():
     starts=route3d['starts']
     seeds=build_start_seeds(starts,routes)
     checkpoints=build_checkpoints(routes)
-
-    # Add the visual finish policy text from the prior asset unchanged.
     finish=route3d['finish']
+
     result={
         'schema_version':'1.0',
         'status':'FINAL_SCENE_PRESENTATION_DATA',
@@ -146,7 +148,8 @@ def main():
             'This is a cinematic presentation visualization, not an SSKR navigation engine.',
             'Start references and West Finish remain visual placeholders until product planning confirms official coordinates.',
             'Main routes are grounded in the real-road source topology and terrain-following DEM coordinates.',
-            'Merged segments are sampled from shared real-road topology where available; Road Hint remains intentionally subordinate.'
+            'Merged segments are sampled from shared real-road topology where available; Road Hint remains intentionally subordinate.',
+            'Every visible Dawn Start is connected to the journey network: five by Main Routes and four by subtle feeder lines.'
         ],
         'storyboard':{
             'duration_s':12.8,

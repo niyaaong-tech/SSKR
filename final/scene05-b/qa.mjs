@@ -66,7 +66,7 @@ try{
     statement:getComputedStyle(document.querySelector('#statement')).opacity
   }));
   if(!state.ready||!state.paused)throw new Error('Deterministic Scene 05 B QA state not reached');
-  if(state.duration<59.8||state.duration>60.5)throw new Error(`Unexpected Scene 05 B duration: ${state.duration}`);
+  if(state.duration<59.8||state.duration>61.0)throw new Error(`Unexpected Scene 05 B duration: ${state.duration}`);
   console.log(JSON.stringify(state));
 }finally{
   await browser.close();

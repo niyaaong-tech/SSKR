@@ -1,12 +1,12 @@
-name: Scene 05 B Artwork One-Take v3.3
+name: Scene 05 B Artwork One-Take v3.4
 on:
   push:
     branches: [main]
-    paths: ['.github/workflows/scene05-b-v20.yml','final/scene05-b/**','tools/scene05-b-source-v33.py','tools/scene05-b-peninsula-texture-v33.py','tools/scene05-b-participant-routes-v32.py','tools/scene05-b-road-overlay-v31.py','tools/scene05-b-choice-data-v29.py','tools/scene05-b-source-v*.py','tools/scene05-final-*.py','tools/scene05-b-art-textures-v22.py','assets/scene05/worldcover_v1/**','assets/scene05/choice_roads_source_v1.geojson','assets/scene05/route_network_v0.1/**','assets/scene05/south_korea_hero_v0.2/**','assets/vector/korean_peninsula_precise.svg']
+    paths: ['.github/workflows/scene05-b-v20.yml','final/scene05-b/**','tools/scene05-b-source-v34.py','tools/scene05-b-surface-relief-v34.py','tools/scene05-b-conform-relief-v34.py','tools/scene05-b-source-v33.py','tools/scene05-b-peninsula-texture-v33.py','tools/scene05-b-participant-routes-v32.py','tools/scene05-b-road-overlay-v31.py','tools/scene05-b-choice-data-v29.py','tools/scene05-b-source-v*.py','tools/scene05-final-*.py','tools/scene05-b-art-textures-v22.py','assets/scene05/worldcover_v1/**','assets/scene05/choice_roads_source_v1.geojson','assets/scene05/route_network_v0.1/**','assets/scene05/south_korea_hero_v0.2/**','assets/vector/korean_peninsula_precise.svg']
   workflow_dispatch:
 permissions: {contents: write}
 jobs:
-  build-scene05-b-v33:
+  build-scene05-b-v34:
     runs-on: ubuntu-latest
     timeout-minutes: 55
     steps:
@@ -14,7 +14,7 @@ jobs:
         with: {fetch-depth: 1}
       - uses: actions/setup-python@v5
         with: {python-version: '3.12'}
-      - name: Build v3.3 WorldCover participant journey artwork
+      - name: Build v3.4 2.5D WorldCover participant artwork
         run: |
           python -m pip install --upgrade pip
           python -m pip install numpy Pillow pyproj trimesh cairosvg
@@ -22,9 +22,11 @@ jobs:
           python tools/scene05-b-art-textures-v22.py
           python tools/scene05-final-data-v1.py
           python tools/scene05-b-peninsula-texture-v33.py
+          python tools/scene05-b-surface-relief-v34.py
           python tools/scene05-b-road-overlay-v31.py
           python tools/scene05-b-choice-data-v29.py
           python tools/scene05-b-participant-routes-v32.py
+          python tools/scene05-b-conform-relief-v34.py
           python tools/scene05-b-source-v20.py
           python tools/scene05-b-coast-source-v22.py
           python tools/scene05-b-source-v23.py
@@ -40,51 +42,51 @@ jobs:
           python tools/scene05-b-source-v31.py
           python tools/scene05-b-source-v32.py
           python tools/scene05-b-source-v33.py
+          python tools/scene05-b-source-v34.py
           test -s output/scene05_final_v1/peninsula_surface_v33.png
-          test -s output/scene05_final_v1/peninsula_surface_v33.json
-          test -s output/scene05_final_v1/peninsula_surface_v33_qa.json
+          test -s output/scene05_final_v1/peninsula_surface_v34.json
           test -s output/scene05_final_v1/road_choice_overlay_v31.png
-          test -s output/scene05-b-v33.js
-          grep -q '2.1-v32-participant-routes' output/scene05_final_v1/scene05_final_data_v1.json
+          test -s output/scene05-b-v34.js
+          grep -q '2.2-v34-surface-conformed' output/scene05_final_v1/scene05_final_data_v1.json
       - uses: actions/setup-node@v5
         with: {node-version: '22'}
       - name: Install fonts
         run: sudo apt-get update -qq && sudo apt-get install -y --no-install-recommends fonts-noto-cjk && fc-cache -f
-      - name: Bundle v3.3
+      - name: Bundle v3.4
         run: |
           npm install --no-save --no-audit --no-fund three@0.185.1 gsap@3.15.0 esbuild puppeteer-core
           rm -rf final/scene05-b/dist && mkdir -p final/scene05-b/dist/assets
-          npx esbuild output/scene05-b-v33.js --bundle --format=esm --target=es2022 --minify --outfile=final/scene05-b/dist/app.js
+          npx esbuild output/scene05-b-v34.js --bundle --format=esm --target=es2022 --minify --outfile=final/scene05-b/dist/app.js
           cp final/scene05-b/index.html final/scene05-b/dist/index.html
           cp final/scene05-b/scene05-b.css final/scene05-b/dist/scene05-b.css
           cp final/scene05-b/README.md final/scene05-b/dist/README.md
-          cp output/scene05_final_v1/{terrain_final_uv.glb,terrain_dawn_final.png,terrain_day_final.png,terrain_sunset_final.png,coast_shallow.png,peninsula_surface_v33.png,peninsula_surface_v33.json,road_choice_overlay_v31.png,scene05_final_data_v1.json} final/scene05-b/dist/assets/
+          cp output/scene05_final_v1/{terrain_final_uv.glb,terrain_dawn_final.png,terrain_day_final.png,terrain_sunset_final.png,coast_shallow.png,peninsula_surface_v33.png,peninsula_surface_v34.json,road_choice_overlay_v31.png,scene05_final_data_v1.json} final/scene05-b/dist/assets/
           cp assets/vector/korean_peninsula_precise.svg final/scene05-b/dist/assets/
           python final/scene05-b/pack_standalone.py
-          test -s final/scene05-b/dist/SSKR_Scene05_B_ArtworkPass_OneTake_v3.3_standalone.html
+          test -s final/scene05-b/dist/SSKR_Scene05_B_ArtworkPass_OneTake_v3.4_standalone.html
       - name: Visual QA
         timeout-minutes: 4
         run: |
           python -m http.server 4174 --directory final/scene05-b/dist >/tmp/http.log 2>&1 & SERVER_PID=$!; trap 'kill $SERVER_PID || true' EXIT; sleep 2
           BROWSER=$(command -v google-chrome || command -v chromium || command -v chromium-browser || true); test -n "$BROWSER"
           timeout 210s xvfb-run -a env BROWSER_PATH="$BROWSER" node final/scene05-b/qa.mjs
-          for f in b33_014_peninsula b33_052_starts b33_088_route_choice b33_122_diverging_journeys b33_185_landcover_reveal b33_242_network_flight b33_298_finish b33_342_sunset b33_372_firework b33_394_finale; do test -s "final/scene05-b/dist/${f}.png"; done
+          for f in b34_014_peninsula b34_052_starts b34_088_route_choice b34_122_diverging_journeys b34_185_oblique_reveal b34_242_oblique_network b34_298_finish b34_342_sunset b34_372_firework b34_394_finale; do test -s "final/scene05-b/dist/${f}.png"; done
       - uses: actions/upload-artifact@v4
         with:
-          name: SSKR-Scene05-B-Artwork-OneTake-v3.3
+          name: SSKR-Scene05-B-Artwork-OneTake-v3.4
           path: final/scene05-b/dist/
           if-no-files-found: error
           compression-level: 6
           retention-days: 30
       - name: Publish QA
         run: |
-          mkdir -p assets/scene05/b_v3_3 final/scene05-b/preview_v3_3
-          cp output/scene05_final_v1/peninsula_surface_v33.json assets/scene05/b_v3_3/
-          cp output/scene05_final_v1/peninsula_surface_v33_qa.json assets/scene05/b_v3_3/
-          cp output/scene05_final_v1/road_choice_overlay_v31.json assets/scene05/b_v3_3/
-          cp output/scene05_final_v1/scene05_final_data_v1.json assets/scene05/b_v3_3/
-          cp final/scene05-b/dist/b33_*.png final/scene05-b/preview_v3_3/
-          printf '%s\n' '# Scene 05 B v3.3' '- full peninsula land materials use ESA WorldCover 2021 classification' '- actual Copernicus GLO-30 relief remains the physical-form authority where available' '- ten complete participant journeys remain actual-road graph alternatives from east starts to one west Finish' '- canonical SVG remains immutable land alpha authority' '- WorldCover attribution is visible in the presentation frame' '- current status: Artwork QA Candidate' > assets/scene05/b_v3_3/README.md
+          mkdir -p assets/scene05/b_v3_4 final/scene05-b/preview_v3_4
+          cp output/scene05_final_v1/peninsula_surface_v33.json assets/scene05/b_v3_4/
+          cp output/scene05_final_v1/peninsula_surface_v34.json assets/scene05/b_v3_4/
+          cp output/scene05_final_v1/road_choice_overlay_v31.json assets/scene05/b_v3_4/
+          cp output/scene05_final_v1/scene05_final_data_v1.json assets/scene05/b_v3_4/
+          cp final/scene05-b/dist/b34_*.png final/scene05-b/preview_v3_4/
+          printf '%s\n' '# Scene 05 B v3.4' '- canonical WorldCover texture mesh itself carries shallow actual DEM relief' '- legacy GLB overlay is hidden; no double-relief / mask conflict' '- all participant routes and nodes are conformed to the same shallow relief' '- national reveal camera is more oblique and lateral rather than map-top-down' '- cloud banks render as visible aerial framing/depth layers' '- start/finish/checkpoint nodes are smaller and less HUD-like' '- current status: Artwork QA Candidate' > assets/scene05/b_v3_4/README.md
           git config user.name 'github-actions[bot]'; git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add assets/scene05/b_v3_3 final/scene05-b/preview_v3_3
-          if ! git diff --cached --quiet; then git commit -m 'Publish Scene 05 B v3.3 WorldCover artwork QA'; git push; fi
+          git add assets/scene05/b_v3_4 final/scene05-b/preview_v3_4
+          if ! git diff --cached --quiet; then git commit -m 'Publish Scene 05 B v3.4 2.5D artwork QA'; git push; fi

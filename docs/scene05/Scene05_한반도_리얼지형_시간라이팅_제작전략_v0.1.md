@@ -17,9 +17,15 @@ Scene 05의 지형은 단순히 `한국처럼 보이는 3D 지도`가 아니라,
 
 ## 2. 현재 확보된 개발 자산
 
-현재 Git 저장소의 `tools/scene05-terrain-kit/`에 Scene 05 Real Terrain Asset Kit v0.1을 포함한다.
+Scene 05 Real Terrain Asset Kit v0.1을 제작했고, 현재 Git 저장소의 `snapshot/`에 clone-safe archive로 보존한다.
 
-구성:
+로컬에서 다음 명령으로 복원하면 `workspace/` 아래에 Terrain Kit과 현재 제작 자료가 생성된다.
+
+```bash
+python snapshot/unpack_snapshot.py
+```
+
+Asset Kit 구성:
 
 - 정밀 한반도 SVG와 full-canvas SVG
 - 2K/4K land mask, coastline outline, 2K SDF
@@ -36,11 +42,15 @@ Scene 05의 지형은 단순히 `한국처럼 보이는 3D 지도`가 아니라,
 
 원본 DEM GeoTIFF 자체는 저장소에 커밋하지 않는다. 공개 원본에서 재생성 가능하게 **manifest + downloader + checksum + attribution**으로 관리한다.
 
+현재 snapshot archive SHA256:
+
+`88f9e32b3fcd0b590f1b6a541c4cc0423e35928149c0cde70c91c29dcc7566bc`
+
 ## 3. 정본 소스 계층
 
 ### 3.1 해안선 정본
 
-`assets/vector/korean_peninsula_precise.svg`를 최종 국토 Shape의 기준으로 사용한다.
+`korean_peninsula_precise.svg`를 최종 국토 Shape의 기준으로 사용한다.
 
 역할:
 
@@ -81,7 +91,9 @@ DEM 자체 coastline과 SVG가 미세하게 다를 경우 최종 presentation si
 
 ### 기준점
 
-8~15개의 식별 가능한 기준점을 설정한다.
+최종본에서는 추정값이 아닌 **지리적으로 검증된 6~15개 control point**를 사용한다.
+
+권장 기준점:
 
 - 한반도 북동/북서단
 - 동해안 주요 돌출부
@@ -99,7 +111,7 @@ SVG_X, SVG_Y
 Longitude, Latitude
 ```
 
-투영 왜곡이 작으면 Affine/Homography, 부분별 오차가 남으면 Thin Plate Spline 계열 비선형 보정을 검토한다.
+투영 왜곡이 작으면 Affine/Homography를 우선하고, residual이 유의미하거나 부분별 오차가 남으면 control point를 늘린 뒤 Thin Plate Spline 계열 비선형 보정을 검토한다.
 
 최종적으로 모든 시스템이 다음 공통 변환을 사용한다.
 
@@ -172,10 +184,12 @@ XY 위치와 산악 형태는 바꾸지 않는다.
 - 큰 산악축만 유지
 - 충분히 decimate한 mesh
 - 작은 섬은 silhouette 유지에 필요한 수준으로 정리
+- GLO-90 또는 decimated GLO-30을 우선 비교
 
 ### LOD 1 — South Korea Hero
 
 - 남한 확대 후 사용
+- GLO-30 우선
 - 주요 해안/섬 유지
 - 실제 산악 relief 판독 가능
 - Route의 terrain 밀착이 보일 수준의 sampling density 확보
@@ -211,7 +225,23 @@ routeY = terrainHeight(x,z) + routeOffset
 
 실제 도로망을 참고하되 발표용으로 node 수와 shape를 정리한다.
 
+### Route 시각 계층
+
+- **Main Route** — 참가자의 주요 횡단 경로
+- **Merged Segment** — 여러 Route가 함께 사용하는 공유 구간
+- **Road Hint** — 전국 도로망의 존재를 암시하는 저명도 배경
+
+Road Hint 전체를 밝게 켜서 전국 전기회로처럼 보이게 하지 않는다.
+
 ## 10. 시간 라이팅
+
+Scene 05는 공간만 보여주는 지도가 아니라 **한 하루의 시간 변화 자체를 보여주는 장면**이다.
+
+```text
+Dawn / East Coast Start
+→ Daylight / Road Network Crossing
+→ Sunset / West Coast Finish
+```
 
 ### Dawn
 
@@ -227,7 +257,26 @@ routeY = terrainHeight(x,z) + routeOffset
 
 시간 전환은 단순 overlay가 아니라 sun direction, shadow, sky, fog, sea reflection, emission을 동시에 보간한다.
 
-## 11. 구현 구조
+## 11. Terrain build 산출물
+
+실제 DEM을 확보해 South Korea Hero를 빌드하면 다음 결과를 생성한다.
+
+```text
+output/south_korea_hero/
+  dem_scene_float32.tif
+  height_u16.png
+  hillshade.png
+  slope.png
+  normal.png
+  albedo.png
+  land_mask.png
+  terrain_lod.glb
+  terrain_metadata.json
+```
+
+`terrain_lod.glb`는 실제 DEM 고도에서 생성한 WebGL용 Terrain Mesh다. `terrain_metadata.json`은 좌표계, scene axis, scale, height decode 정보를 보존해 Route와 Node가 같은 공간 좌표를 공유하게 한다.
+
+## 12. Three.js 구현 구조
 
 ```text
 Three.js Scene
@@ -241,7 +290,7 @@ Three.js Scene
 └─ Post FX / Bloom
 ```
 
-Runtime 자산:
+Terrain Kit runtime 구성:
 
 - `runtime/scene05Terrain.js`
 - `runtime/scene05Lighting.js`
@@ -255,23 +304,23 @@ Runtime 자산:
 - `scripts/fit_svg_georef.py`
 - `scripts/sample_route_heights.py`
 
-## 12. 개발 PC에서 재생성
+## 13. 개발 PC에서 재생성
 
-Windows:
-
-```powershell
-powershell -ExecutionPolicy Bypass -File tools/scene05-terrain-kit/scripts/fetch_and_build_scene05.ps1
-```
-
-macOS/Linux:
+먼저 저장소를 clone하고 snapshot을 복원한다.
 
 ```bash
-bash tools/scene05-terrain-kit/scripts/fetch_and_build_scene05.sh
+git clone https://github.com/niyaaong-tech/SSKR.git
+cd SSKR
+python snapshot/unpack_snapshot.py
 ```
+
+이후 복원된 `workspace/` 안의 Terrain Kit README를 기준으로 실행한다.
+
+Windows PowerShell과 macOS/Linux용 일괄 빌드 스크립트가 포함되어 있다.
 
 원본 DEM은 대용량 외부 원본이므로 Git에 저장하지 않고 downloader로 가져온다.
 
-## 13. QA 게이트
+## 14. QA 게이트
 
 ### Geography
 - SVG 해안선과 DEM silhouette의 오차 확인
@@ -293,9 +342,9 @@ bash tools/scene05-terrain-kit/scripts/fetch_and_build_scene05.sh
 - 시간 전환 중 terrain shadow가 부자연스럽게 점프하지 않는지 확인
 - Sunset에서 Finish가 강하지만 지형 전체가 주황색 overlay처럼 보이지 않는지 확인
 
-## 14. 현재 상태
+## 15. 현재 상태 — 2026-08-08
 
-**Asset Kit v0.1은 제작 파이프라인 단계까지 확보된 상태**다.
+**Asset Kit v0.1은 제작 파이프라인과 보존 단계까지 확보된 상태**다.
 
 완료:
 
@@ -308,13 +357,33 @@ bash tools/scene05-terrain-kit/scripts/fetch_and_build_scene05.sh
 - route schema
 - georef control-point template
 - attribution / checksum / build status
+- clone-safe Git snapshot
+- 기존 GitHub Pages 실험 프로젝트 제거
 
 미완료/실제 개발 PC 단계:
 
 - Copernicus 원본 GeoTIFF 다운로드
 - DEM mosaic 실빌드
-- SVG↔WGS84 control point 확정
+- SVG↔WGS84 검증 control point 확정
 - South Korea Hero 최종 GLB 생성
 - 실제 Start 후보 좌표 입력
 - 실제 도로망 기반 대표 Route 설계
 - Three.js Scene 05 통합 및 프레임 성능 검증
+
+GitHub 저장소:
+
+https://github.com/niyaaong-tech/SSKR
+
+현재 main checkpoint:
+
+`03949abd212436debbaffc8c415d76e8ba832d10`
+
+문서와 개발자산의 역할은 다음처럼 분리한다.
+
+```text
+Notion
+= 최신 기획 정본 + 의사결정
+
+GitHub
+= 개발 코드 + 제작 자산 + 실행 도구 + 복원 가능한 작업 상태
+```

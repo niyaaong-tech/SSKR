@@ -1,0 +1,82 @@
+name: Scene 05 Georef Diagnostic v0.3.1
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/scene05-georef-v031.yml'
+      - 'tools/scene05-georef-diagnose-v031.py'
+      - 'assets/scene05/control_points_v0.3.json'
+      - 'assets/scene05/south_korea_hero_v0.2/svg_georef.json'
+      - 'assets/vector/korean_peninsula_precise.svg'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  diagnose-georef-v031:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install diagnostic dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install numpy Pillow scipy pyproj requests cairosvg opencv-python-headless
+
+      - name: Resolve landmarks to OSM coastline and diagnose affine correction
+        run: python tools/scene05-georef-diagnose-v031.py
+
+      - name: Upload diagnostic artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: SSKR-Scene05-Georef-Diagnostic-v0.3.1
+          path: output/scene05_georef_v0.3.1/
+          if-no-files-found: error
+          compression-level: 6
+          retention-days: 30
+
+      - name: Publish diagnostic result
+        run: |
+          mkdir -p assets/scene05/georef_v0.3.1
+          cp output/scene05_georef_v0.3.1/georef_diagnostic_v031.json assets/scene05/georef_v0.3.1/
+          cp output/scene05_georef_v0.3.1/control_points_coast_resolved_v031.json assets/scene05/georef_v0.3.1/
+          cp output/scene05_georef_v0.3.1/georef_v031_controlpoint_overlay.png assets/scene05/georef_v0.3.1/
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          p=Path('assets/scene05/georef_v0.3.1/georef_diagnostic_v031.json')
+          d=json.loads(p.read_text('utf-8'))
+          Path('assets/scene05/georef_v0.3.1/README.md').write_text(f'''# Scene 05 Georef Diagnostic v0.3.1
+
+Status: **{d['status']}**
+
+This diagnostic resolves the 13 reference landmarks to actual OpenStreetMap `natural=coastline` geometry before comparing them with the canonical SSKR SVG boundary.
+
+- Seed error mean: **{d['seed_error_km']['mean']:.3f} km**
+- Seed error max: **{d['seed_error_km']['max']:.3f} km**
+- Affine inliers: **{d['inlier_count']} / {d['control_point_count']}**
+- Leave-one-out affine error mean: **{d['leave_one_out_inlier_error_km']['mean']:.3f} km**
+- Leave-one-out affine error max: **{d['leave_one_out_inlier_error_km']['max']:.3f} km**
+- Max sampled correction displacement: **{d['affine_transform_metrics']['max_sample_displacement_px']:.3f} px**
+
+The canonical `korean_peninsula_precise.svg` remains the final coastline. OSM is used only to resolve real-world geographic control coordinates. Control points are not confirmed SSKR event spots.
+''',encoding='utf-8')
+          PY
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add assets/scene05/georef_v0.3.1
+          if ! git diff --cached --quiet; then
+            git commit -m 'Publish Scene 05 georef diagnostic v0.3.1'
+            git push
+          fi

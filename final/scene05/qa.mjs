@@ -6,6 +6,7 @@ if(!executablePath)throw new Error('BROWSER_PATH is required');
 const browser=await puppeteer.launch({
   headless:false,
   executablePath,
+  protocolTimeout:120000,
   args:[
     '--no-sandbox','--disable-dev-shm-usage','--ignore-gpu-blocklist','--enable-webgl',
     '--use-gl=angle','--disable-background-timer-throttling','--disable-renderer-backgrounding'
@@ -22,14 +23,19 @@ try{
   page.on('console',m=>{if(m.type()==='error')errors.push(`CONSOLE: ${m.text()}`)});
   await page.goto('http://127.0.0.1:4173/?qa=1',{waitUntil:'networkidle0',timeout:60000});
   await page.waitForSelector('#frame.ready',{timeout:45000});
-  await sleep(500);
+  await sleep(300);
   if(!(await page.$('#three-stage canvas')))throw new Error('Three.js canvas missing');
   if(!(await page.evaluate(()=>Boolean(window.__scene05Timeline))))throw new Error('Final timeline unavailable');
   if(errors.length)throw new Error(errors.join('\n'));
 
   async function capture(time,name){
-    await page.evaluate(t=>window.__scene05Timeline.pause().seek(t,false),time);
-    await sleep(350);
+    await page.evaluate(t=>{
+      window.__scene05Timeline.pause().seek(t,false);
+      const render=window.__qaRafCallback;
+      if(typeof render!=='function')throw new Error('QA render callback unavailable');
+      render(performance.now());
+    },time);
+    await sleep(120);
     await page.screenshot({path:`final/scene05/dist/${name}.png`});
   }
 

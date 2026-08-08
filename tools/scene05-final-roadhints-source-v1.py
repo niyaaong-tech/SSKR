@@ -21,7 +21,7 @@ def hav(a,b):
 def line_length(coords):return sum(hav(a,b) for a,b in zip(coords,coords[1:]))
 
 
-def rdp(coords,tol_m=950):
+def rdp(coords,tol_m=350):
     if len(coords)<3:return coords
     lat0=sum(p[1] for p in coords)/len(coords)
     xy=[(p[0]*111320*math.cos(math.radians(lat0)),p[1]*110540) for p in coords]
@@ -53,7 +53,7 @@ def query():
     for ep in OVERPASS:
         for attempt in range(3):
             try:
-                r=requests.post(ep,data={'data':q},timeout=280,headers={'User-Agent':'SSKR-scene05-final-roadhints/1.0'});r.raise_for_status();d=r.json()
+                r=requests.post(ep,data={'data':q},timeout=280,headers={'User-Agent':'SSKR-scene05-final-roadhints/1.1'});r.raise_for_status();d=r.json()
                 if d.get('elements'):return d,ep
             except Exception as ex:last=ex;time.sleep(4*(attempt+1))
     raise RuntimeError(f'Overpass failed: {last}')
@@ -61,28 +61,28 @@ def query():
 
 def main():
     OUT.mkdir(parents=True,exist_ok=True)
-    data,endpoint=query();features=[]
+    data,endpoint=query();features=[];counts={'motorway':0,'trunk':0,'primary':0}
     for el in data.get('elements',[]):
         geom=el.get('geometry') or []
         if len(geom)<2:continue
+        hw=el.get('tags',{}).get('highway','')
+        if hw not in counts:continue
         coords=[[float(p['lon']),float(p['lat'])] for p in geom]
-        length=line_length(coords);hw=el.get('tags',{}).get('highway','')
-        min_len=3500 if hw in {'motorway','trunk'} else 6000
-        if length<min_len:continue
-        simp=rdp(coords,700 if hw in {'motorway','trunk'} else 1050)
+        length=line_length(coords)
+        # Preserve every OSM way fragment. Filtering short ways broke continuity and
+        # produced dash-like marks at national scale. Geometry is only mildly simplified.
+        simp=rdp(coords,260 if hw in {'motorway','trunk'} else 380)
         if len(simp)<2:continue
-        features.append({'type':'Feature','properties':{'osm_way_id':int(el['id']),'highway':hw,'length_km':round(length/1000,2)},'geometry':{'type':'LineString','coordinates':simp}})
-    # Deterministic de-cluttering: keep all motorway/trunk and a spatially diverse primary subset.
-    major=[f for f in features if f['properties']['highway'] in {'motorway','trunk'}]
-    primary=[f for f in features if f['properties']['highway']=='primary']
-    cells={}
-    for f in sorted(primary,key=lambda x:-x['properties']['length_km']):
-        c=f['geometry']['coordinates'];mid=c[len(c)//2];key=(round(mid[0]/.09),round(mid[1]/.09))
-        if key not in cells:cells[key]=f
-    selected=major+list(cells.values())
-    selected=sorted(selected,key=lambda x:(x['properties']['highway'],x['properties']['osm_way_id']))
-    out={'type':'FeatureCollection','metadata':{'source':'OpenStreetMap via Overpass','endpoint':endpoint,'bbox':BBOX,'purpose':'Scene 05 faint Road Hint layer only','policy':'Road Hint is subordinate context, never navigation or an official SSKR route.'},'features':selected}
+        features.append({'type':'Feature','properties':{'osm_way_id':int(el['id']),'highway':hw,'length_km':round(length/1000,3)},'geometry':{'type':'LineString','coordinates':simp}})
+        counts[hw]+=1
+    features=sorted(features,key=lambda x:(x['properties']['highway'],x['properties']['osm_way_id']))
+    out={'type':'FeatureCollection','metadata':{
+        'schema_version':'1.1',
+        'source':'OpenStreetMap via Overpass','endpoint':endpoint,'bbox':BBOX,
+        'purpose':'Scene 05 faint Road Hint layer only',
+        'policy':'All queried motorway/trunk/primary way fragments are retained to preserve continuous real-road topology. Road Hint is subordinate context, never navigation or an official SSKR route.'
+    },'features':features}
     (OUT/'scene05_road_hints_source_v1.geojson').write_text(json.dumps(out,ensure_ascii=False,separators=(',',':')),encoding='utf-8')
-    print(json.dumps({'queried':len(data.get('elements',[])),'eligible':len(features),'selected':len(selected),'major':len(major),'primary_cells':len(cells),'endpoint':endpoint},indent=2))
+    print(json.dumps({'queried':len(data.get('elements',[])),'selected':len(features),'by_class':counts,'endpoint':endpoint},indent=2))
 
 if __name__=='__main__':main()

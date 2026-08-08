@@ -1,4 +1,4 @@
-name: Deploy Scene 05 B v2.3 to GitHub Pages
+name: Deploy Scene 05 B v2.4 to GitHub Pages
 
 on:
   push:
@@ -13,6 +13,7 @@ on:
       - 'tools/scene05-b-source-v20.py'
       - 'tools/scene05-b-coast-source-v22.py'
       - 'tools/scene05-b-source-v23.py'
+      - 'tools/scene05-b-source-v24.py'
       - 'tools/scene05-b-art-textures-v22.py'
       - 'tools/scene05-final-data-v1.py'
       - 'tools/scene05-final-terrain-v1.py'
@@ -45,7 +46,7 @@ jobs:
         with:
           python-version: '3.12'
 
-      - name: Build real terrain and Scene 05 B cinematic assets
+      - name: Build real terrain and Scene 05 B v2.4 journey assets
         run: |
           python -m pip install --upgrade pip
           python -m pip install numpy Pillow pyproj trimesh
@@ -55,25 +56,26 @@ jobs:
           python tools/scene05-b-source-v20.py
           python tools/scene05-b-coast-source-v22.py
           python tools/scene05-b-source-v23.py
+          python tools/scene05-b-source-v24.py
           test -s output/scene05_final_v1/terrain_final_uv.glb
           test -s output/scene05_final_v1/terrain_dawn_final.png
           test -s output/scene05_final_v1/terrain_day_final.png
           test -s output/scene05_final_v1/terrain_sunset_final.png
           test -s output/scene05_final_v1/coast_shallow.png
           test -s output/scene05_final_v1/scene05_final_data_v1.json
-          test -s output/scene05-b-v23.js
+          test -s output/scene05-b-v24.js
 
       - name: Set up Node
         uses: actions/setup-node@v5
         with:
           node-version: '22'
 
-      - name: Build deployable Scene 05 B v2.3
+      - name: Build deployable Scene 05 B v2.4
         run: |
           npm install --no-save --no-audit --no-fund three@0.185.1 gsap@3.15.0 esbuild
           rm -rf final/scene05-b/dist
           mkdir -p final/scene05-b/dist/assets
-          npx esbuild output/scene05-b-v23.js --bundle --format=esm --target=es2022 --minify --outfile=final/scene05-b/dist/app.js
+          npx esbuild output/scene05-b-v24.js --bundle --format=esm --target=es2022 --minify --outfile=final/scene05-b/dist/app.js
           cp final/scene05-b/index.html final/scene05-b/dist/index.html
           cp final/scene05-b/scene05-b.css final/scene05-b/dist/scene05-b.css
           cp final/scene05-b/README.md final/scene05-b/dist/README.md
@@ -88,7 +90,7 @@ jobs:
           test -s final/scene05-b/dist/index.html
           test -s final/scene05-b/dist/app.js
           test -s final/scene05-b/dist/assets/terrain_final_uv.glb
-          test -s final/scene05-b/dist/SSKR_Scene05_B_Extended_OneTake_v2.3_standalone.html
+          test -s final/scene05-b/dist/SSKR_Scene05_B_JourneyFirst_OneTake_v2.4_standalone.html
 
       - name: Configure Pages
         uses: actions/configure-pages@v5
@@ -105,6 +107,6 @@ jobs:
     runs-on: ubuntu-latest
     needs: build
     steps:
-      - name: Deploy Scene 05 B v2.3 to GitHub Pages
+      - name: Deploy Scene 05 B v2.4 to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4

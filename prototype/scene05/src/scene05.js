@@ -21,14 +21,14 @@ renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,1.5));
 renderer.setSize(stage.clientWidth,stage.clientHeight,false);
 renderer.outputColorSpace=THREE.SRGBColorSpace;
 renderer.toneMapping=THREE.ACESFilmicToneMapping;
-renderer.toneMappingExposure=1.05;
+renderer.toneMappingExposure=1.12;
 renderer.shadowMap.enabled=false;
 stage.appendChild(renderer.domElement);
 
 const scene=new THREE.Scene();
 const bg=new THREE.Color('#071019');
 scene.background=bg;
-scene.fog=new THREE.FogExp2('#071019',0.0135);
+scene.fog=new THREE.FogExp2('#071019',0.0115);
 
 const camera=new THREE.PerspectiveCamera(34,stage.clientWidth/stage.clientHeight,0.1,240);
 const cam={x:15,y:60,z:67,tx:1,ty:0,tz:-2};
@@ -37,18 +37,25 @@ syncCamera();
 
 const composer=new EffectComposer(renderer);
 composer.addPass(new RenderPass(scene,camera));
-const bloom=new UnrealBloomPass(new THREE.Vector2(stage.clientWidth,stage.clientHeight),0.72,0.42,0.72);
+const bloom=new UnrealBloomPass(new THREE.Vector2(stage.clientWidth,stage.clientHeight),0.68,0.4,0.74);
 composer.addPass(bloom);
 
-const hemi=new THREE.HemisphereLight('#8097a1','#08100d',0.54);scene.add(hemi);
-const sun=new THREE.DirectionalLight('#f6a15b',2.25);sun.position.set(34,18,-18);scene.add(sun);
-const rim=new THREE.DirectionalLight('#6f9bbd',0.62);rim.position.set(-22,12,32);scene.add(rim);
+// v0.2: grazing key + cool rim + weak fill. Relief must come from the real DEM normals,
+// not from arbitrary mountain geometry or extra height exaggeration.
+const hemi=new THREE.HemisphereLight('#a1b4b9','#07100c',0.72);scene.add(hemi);
+const ambient=new THREE.AmbientLight('#8a9b98',0.12);scene.add(ambient);
+const sun=new THREE.DirectionalLight('#f6a15b',2.9);sun.position.set(34,16,-26);scene.add(sun);
+const rim=new THREE.DirectionalLight('#719fc4',1.05);rim.position.set(-28,13,34);scene.add(rim);
+const fill=new THREE.DirectionalLight('#c7d1cc',0.32);fill.position.set(-8,28,-34);scene.add(fill);
 
-const oceanMat=new THREE.MeshStandardMaterial({color:'#102b3d',roughness:.88,metalness:.02,transparent:true,opacity:.92});
+const oceanMat=new THREE.MeshStandardMaterial({color:'#102b3d',roughness:.9,metalness:.02,transparent:true,opacity:.92});
 const ocean=new THREE.Mesh(new THREE.PlaneGeometry(150,150),oceanMat);
 ocean.rotation.x=-Math.PI/2;ocean.position.y=-.025;scene.add(ocean);
 
-const terrainMat=new THREE.MeshStandardMaterial({color:'#263a31',roughness:.94,metalness:.01});
+const terrainMat=new THREE.MeshStandardMaterial({
+  color:'#2d4237',roughness:.9,metalness:.015,
+  emissive:'#06110d',emissiveIntensity:.16
+});
 const routeGroup=new THREE.Group();const nodeGroup=new THREE.Group();const checkpointGroup=new THREE.Group();scene.add(routeGroup,nodeGroup,checkpointGroup);
 const routeLines=[];const startNodes=new Map();let finishNode=null;let routeData=null;
 
@@ -62,7 +69,7 @@ function goldNode(position,radius=.16){
 function createRoute(r){
   const positions=[];for(const p of r.points)positions.push(p[0],p[1],p[2]);
   const geometry=new LineGeometry();geometry.setPositions(positions);geometry.instanceCount=0;
-  const material=new LineMaterial({color:0xffd166,linewidth:2.7,transparent:true,opacity:.96,depthTest:true,depthWrite:false});
+  const material=new LineMaterial({color:0xffd166,linewidth:2.8,transparent:true,opacity:.96,depthTest:true,depthWrite:false});
   material.resolution.set(stage.clientWidth,stage.clientHeight);
   const line=new Line2(geometry,material);line.renderOrder=8;line.userData={id:r.id,startId:r.start_id,segments:Math.max(1,r.points.length-1),progress:0,positions};
   routeGroup.add(line);routeLines.push(line);
@@ -99,16 +106,20 @@ function play(){
   checkpointGroup.children.forEach(m=>m.material.opacity=0);
   if(finishNode){gsap.set(finishNode.scale,{x:.68,y:.68,z:.68});finishNode.children.forEach(c=>{if(c.material)c.material.opacity=.12})}
   Object.assign(cam,{x:15,y:60,z:67,tx:1,ty:0,tz:-2});syncCamera();
+  sun.intensity=2.9;rim.intensity=1.05;fill.intensity=.32;hemi.intensity=.72;
 
   // 0.0–2.4: peninsula overview, then a single deliberate Dolly/Zoom into South Korea.
   tl.to(overview,{scale:1.48,yPercent:-15,opacity:.34,duration:1.65,ease:'power2.inOut'},.55)
     .to(stage,{opacity:1,duration:1.05,ease:'sine.inOut'},1.18)
     .to(overviewLayer,{opacity:0,duration:.7,ease:'sine.inOut'},1.72)
-    .to(cam,{x:16.5,y:43,z:49,tx:1.8,tz:-1.2,duration:1.8,onUpdate:syncCamera,ease:'power2.inOut'},.55);
+    .to(cam,{x:16.5,y:37,z:48,tx:1.8,tz:-1.2,duration:1.8,onUpdate:syncCamera,ease:'power2.inOut'},.55);
 
-  // Dawn → daylight while starts ignite north to south.
-  tweenColor(tl,1.1,bg,'#0a1820',2.5);tweenColor(tl,1.1,scene.fog.color,'#0a1820',2.5);tweenColor(tl,1.1,terrainMat.color,'#31483a',2.5);tweenColor(tl,1.1,oceanMat.color,'#163a59',2.5);tweenColor(tl,1.1,sun.color,'#ffd6a0',2.1);
-  tl.to(sun.position,{x:12,y:42,z:-8,duration:2.3,ease:'sine.inOut'},1.1);
+  // Dawn → daylight while starts ignite north to south. Keep the light oblique so real relief reads.
+  tweenColor(tl,1.1,bg,'#0b1920',2.5);tweenColor(tl,1.1,scene.fog.color,'#0b1920',2.5);tweenColor(tl,1.1,terrainMat.color,'#395044',2.5);tweenColor(tl,1.1,oceanMat.color,'#163a59',2.5);tweenColor(tl,1.1,sun.color,'#ffe0b5',2.1);
+  tl.to(sun.position,{x:24,y:28,z:-22,duration:2.3,ease:'sine.inOut'},1.1)
+    .to(sun,{intensity:2.55,duration:2.0,ease:'sine.inOut'},1.1)
+    .to(rim,{intensity:.82,duration:2.0,ease:'sine.inOut'},1.1)
+    .to(fill,{intensity:.42,duration:2.0,ease:'sine.inOut'},1.1);
   const starts=[...startNodes.values()];starts.forEach((n,i)=>tl.to(n.scale,{x:1,y:1,z:1,duration:.34,ease:'power2.out'},2.35+i*.095));
 
   // 3.3–5.7: five real-road journeys draw across the terrain.
@@ -117,16 +128,23 @@ function play(){
   // 5.5–7.5: route network settles; small waypoint reactions reveal shared spatial structure without a game HUD.
   checkpointGroup.children.forEach((m,i)=>tl.to(m.material,{opacity:.78,duration:.18,yoyo:true,repeat:1,ease:'sine.inOut'},5.35+(i%5)*.08+Math.floor(i/5)*.12));
 
-  // 7.4–9.2: light moves westward and one common finish becomes the strongest point.
-  tweenColor(tl,6.8,bg,'#10151a',2.6);tweenColor(tl,6.8,scene.fog.color,'#10151a',2.6);tweenColor(tl,6.8,sun.color,'#ffb16f',2.6);tweenColor(tl,6.8,oceanMat.color,'#243144',2.6);
-  tl.to(sun.position,{x:-34,y:15,z:10,duration:2.7,ease:'sine.inOut'},6.65);
+  // 7.4–9.2: sunset comes from the west; a low key light keeps mountain relief legible.
+  tweenColor(tl,6.8,bg,'#11161b',2.6);tweenColor(tl,6.8,scene.fog.color,'#11161b',2.6);tweenColor(tl,6.8,sun.color,'#ffad69',2.6);tweenColor(tl,6.8,oceanMat.color,'#263448',2.6);tweenColor(tl,6.8,terrainMat.color,'#35473d',2.6);
+  tl.to(sun.position,{x:-36,y:11,z:12,duration:2.7,ease:'sine.inOut'},6.65)
+    .to(sun,{intensity:3.15,duration:2.5,ease:'sine.inOut'},6.65)
+    .to(rim,{intensity:.98,duration:2.3,ease:'sine.inOut'},6.65);
   if(finishNode){tl.to(finishNode.scale,{x:1.36,y:1.36,z:1.36,duration:.62,ease:'power2.out'},7.72);finishNode.children.forEach((c,i)=>{if(c.material)tl.to(c.material,{opacity:i===0?1:.9,duration:.55},7.68)})}
-  tl.to(statement,{opacity:1,y:0,duration:.65,ease:'power2.out'},8.55);
+  tl.to(statement,{opacity:1,y:0,duration:.65,ease:'power2.out'},8.42);
 
   // 9.8–12.0: preserve one participant path, choose its eastern start, and Dolly In toward Scene 06.
-  const selected='start_n02';routeLines.forEach(line=>tl.to(line.material,{opacity:line.userData.startId===selected?1:.15,duration:.55,ease:'sine.inOut'},9.72));
+  // v0.2 deliberately stops farther away than v0.1 so the current LOD never exposes coarse facets.
+  const selected='start_n02';routeLines.forEach(line=>tl.to(line.material,{opacity:line.userData.startId===selected?1:.14,duration:.55,ease:'sine.inOut'},9.72));
   tl.to(statement,{opacity:0,y:-8,duration:.38},9.78);
-  const n=startNodes.get(selected);if(n){tl.to(n.scale,{x:1.9,y:1.9,z:1.9,duration:.46,ease:'power2.out'},9.92);const p=n.position;tl.to(cam,{x:p.x+6.4,y:6.7,z:p.z+8.5,tx:p.x,ty:p.y,tz:p.z,duration:1.9,onUpdate:syncCamera,ease:'power2.inOut'},10.02)}
+  const n=startNodes.get(selected);if(n){
+    tl.to(n.scale,{x:1.72,y:1.72,z:1.72,duration:.46,ease:'power2.out'},9.92);
+    const p=n.position;
+    tl.to(cam,{x:p.x+10.5,y:12.8,z:p.z+14.0,tx:p.x,ty:p.y+.15,tz:p.z,duration:1.9,onUpdate:syncCamera,ease:'power2.inOut'},10.02);
+  }
   tl.to(transitionCopy,{opacity:.92,y:0,duration:.48,ease:'power2.out'},10.62);
   tl.to(transitionCopy,{opacity:0,duration:.35},11.62);
   return tl;
@@ -134,7 +152,7 @@ function play(){
 
 function showStatic(){
   stage.style.opacity='1';overviewLayer.style.display='none';statement.style.opacity='1';statement.style.transform='none';
-  Object.assign(cam,{x:16.5,y:43,z:49,tx:1.8,ty:0,tz:-1.2});syncCamera();
+  Object.assign(cam,{x:16.5,y:37,z:48,tx:1.8,ty:0,tz:-1.2});syncCamera();
   for(const n of startNodes.values())n.scale.setScalar(1);for(const line of routeLines)setRouteProgress(line,1);checkpointGroup.children.forEach(m=>m.material.opacity=.35);if(finishNode){finishNode.scale.setScalar(1.25);finishNode.children.forEach(c=>{if(c.material)c.material.opacity=.9})}
 }
 

@@ -11,10 +11,10 @@ patch('const n = makeNode(s.position, .13);','const n = makeNode(s.position, .09
 patch('finishNode = makeNode(data.finish.position, .24);','finishNode = makeNode(data.finish.position, .18);','smaller finish node')
 patch('const fb = finishNode.userData.sprite.userData.baseScale * 1.75;','const fb = finishNode.userData.sprite.userData.baseScale * 1.38;','finish glow restraint')
 patch('const n = makeNode(c.position, .062);','const n = makeNode(c.position, .048);','smaller checkpoints')
-# Robust cloud patch: match the unique material-to-sprite boundary instead of the
-# entire color expression, which earlier art passes may have reformatted.
-patch('depthWrite: false, depthTest: true });\n    const sp = new THREE.Sprite(mat);','depthWrite: false, depthTest: false });\n    const sp = new THREE.Sprite(mat);','cloud foreground material')
-patch('sp.userData = { baseX: sp.position.x, baseY: sp.position.y, baseZ: sp.position.z, phase: i * .83, speed: .022 + (i % 4) * .006, targetOpacity: s[4] };','sp.renderOrder = 6;\n    sp.userData = { baseX: sp.position.x, baseY: sp.position.y, baseZ: sp.position.z, phase: i * .83, speed: .022 + (i % 4) * .006, targetOpacity: s[4] };','cloud render order')
+# Clouds must read as aerial depth instead of being occluded by the shallow land mesh.
+# Set the material property after construction so earlier source formatting cannot break this patch.
+patch('    const sp = new THREE.Sprite(mat);','    mat.depthTest = false;\n    const sp = new THREE.Sprite(mat);','cloud foreground material')
+patch('sp.userData = { baseX: sp.position.x, baseY: sp.position.y, baseZ: sp.position.z, phase: i * .83, speed: .022 + (i % 4) * .006, targetOpacity: Math.min(.68, s[4] * 2.40) };','sp.renderOrder = 6;\n    sp.userData = { baseX: sp.position.x, baseY: sp.position.y, baseZ: sp.position.z, phase: i * .83, speed: .022 + (i % 4) * .006, targetOpacity: Math.min(.68, s[4] * 2.40) };','cloud render order')
 patch('const cranePos = center.clone().add(new THREE.Vector3(diag * .18, diag * .56, diag * .48));','const cranePos = center.clone().add(new THREE.Vector3(diag * .30, diag * .43, diag * .62));','oblique crane')
 patch('const networkA = center.clone().add(new THREE.Vector3(diag * .34, diag * .40, diag * .23));','const networkA = center.clone().add(new THREE.Vector3(diag * .43, diag * .32, diag * .41));','oblique network A')
 patch('const networkB = center.clone().add(new THREE.Vector3(-diag * .18, diag * .36, -diag * .28));','const networkB = center.clone().add(new THREE.Vector3(-diag * .29, diag * .31, -diag * .43));','oblique network B')

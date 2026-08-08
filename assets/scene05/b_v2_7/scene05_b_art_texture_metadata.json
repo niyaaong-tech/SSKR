@@ -1,0 +1,10 @@
+{
+  "schema_version": "2.3",
+  "policy": "Scene 05 B naturalized terrain material pass. Geometry/coastline remain authoritative; source albedo is preserved as the majority surface signal, with restrained terrain-driven palette organization from elevation/slope. This is art direction, not land-cover classification.",
+  "outputs": [
+    "terrain_dawn_final.png",
+    "terrain_day_final.png",
+    "terrain_sunset_final.png",
+    "coast_shallow.png"
+  ]
+}

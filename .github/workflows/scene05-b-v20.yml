@@ -1,4 +1,4 @@
-name: Scene 05 B Texture-Led One-Take v2.5.2
+name: Scene 05 B Artwork One-Take v2.6
 
 on:
   push:
@@ -13,8 +13,9 @@ on:
       - 'tools/scene05-b-source-v25.py'
       - 'tools/scene05-b-source-v251.py'
       - 'tools/scene05-b-source-v252.py'
-      - 'tools/scene05-b-peninsula-texture-v25.py'
-      - 'tools/scene05-b-choice-network-v25.py'
+      - 'tools/scene05-b-source-v26.py'
+      - 'tools/scene05-b-peninsula-texture-v26.py'
+      - 'tools/scene05-b-choice-network-v26.py'
       - 'tools/scene05-b-art-textures-v22.py'
       - 'tools/scene05-final-data-v1.py'
       - 'tools/scene05-final-terrain-v1.py'
@@ -22,14 +23,14 @@ on:
       - 'assets/scene05/route_network_v0.1/**'
       - 'assets/scene05/south_korea_hero_v0.2/**'
       - 'assets/vector/korean_peninsula_precise.svg'
-      - 'docs/scene05/Scene05_B_v2.5_Artwork_Revision_Directive.md'
+      - 'docs/scene05/Scene05_B_v2.6_Artwork_Production_Pass.md'
   workflow_dispatch:
 
 permissions:
   contents: write
 
 jobs:
-  build-scene05-b-v252:
+  build-scene05-b-v26:
     runs-on: ubuntu-latest
     timeout-minutes: 45
     steps:
@@ -43,15 +44,15 @@ jobs:
         with:
           python-version: '3.12'
 
-      - name: Build texture-led 2.5D map and journey assets
+      - name: Build v2.6 texture-led artwork and autonomous journey assets
         run: |
           python -m pip install --upgrade pip
           python -m pip install numpy Pillow pyproj trimesh cairosvg
           python tools/scene05-final-terrain-v1.py
           python tools/scene05-b-art-textures-v22.py
           python tools/scene05-final-data-v1.py
-          python tools/scene05-b-peninsula-texture-v25.py
-          python tools/scene05-b-choice-network-v25.py
+          python tools/scene05-b-peninsula-texture-v26.py
+          python tools/scene05-b-choice-network-v26.py
           python tools/scene05-b-source-v20.py
           python tools/scene05-b-coast-source-v22.py
           python tools/scene05-b-source-v23.py
@@ -59,17 +60,18 @@ jobs:
           python tools/scene05-b-source-v25.py
           python tools/scene05-b-source-v251.py
           python tools/scene05-b-source-v252.py
+          python tools/scene05-b-source-v26.py
           test -s output/scene05_final_v1/terrain_final_uv.glb
           test -s output/scene05_final_v1/terrain_dawn_final.png
           test -s output/scene05_final_v1/terrain_day_final.png
           test -s output/scene05_final_v1/terrain_sunset_final.png
           test -s output/scene05_final_v1/coast_shallow.png
-          test -s output/scene05_final_v1/peninsula_surface_v25.png
-          test -s output/scene05_final_v1/peninsula_surface_v25.json
-          test -s output/scene05_final_v1/peninsula_surface_v25_qa.json
+          test -s output/scene05_final_v1/peninsula_surface_v26.png
+          test -s output/scene05_final_v1/peninsula_surface_v26.json
+          test -s output/scene05_final_v1/peninsula_surface_v26_qa.json
           test -s output/scene05_final_v1/scene05_final_data_v1.json
-          test -s output/scene05-b-v252.js
-          grep -q 'choice_routes' output/scene05_final_v1/scene05_final_data_v1.json
+          test -s output/scene05-b-v26.js
+          grep -q '1.6-v26-freedom-network' output/scene05_final_v1/scene05_final_data_v1.json
 
       - name: Set up Node
         uses: actions/setup-node@v5
@@ -82,12 +84,12 @@ jobs:
           sudo apt-get install -y --no-install-recommends fonts-noto-cjk
           fc-cache -f
 
-      - name: Bundle Scene 05 B v2.5.2
+      - name: Bundle Scene 05 B v2.6
         run: |
           npm install --no-save --no-audit --no-fund three@0.185.1 gsap@3.15.0 esbuild puppeteer-core
           rm -rf final/scene05-b/dist
           mkdir -p final/scene05-b/dist/assets
-          npx esbuild output/scene05-b-v252.js --bundle --format=esm --target=es2022 --minify --outfile=final/scene05-b/dist/app.js
+          npx esbuild output/scene05-b-v26.js --bundle --format=esm --target=es2022 --minify --outfile=final/scene05-b/dist/app.js
           cp final/scene05-b/index.html final/scene05-b/dist/index.html
           cp final/scene05-b/scene05-b.css final/scene05-b/dist/scene05-b.css
           cp final/scene05-b/README.md final/scene05-b/dist/README.md
@@ -96,12 +98,12 @@ jobs:
           cp output/scene05_final_v1/terrain_day_final.png final/scene05-b/dist/assets/
           cp output/scene05_final_v1/terrain_sunset_final.png final/scene05-b/dist/assets/
           cp output/scene05_final_v1/coast_shallow.png final/scene05-b/dist/assets/
-          cp output/scene05_final_v1/peninsula_surface_v25.png final/scene05-b/dist/assets/
-          cp output/scene05_final_v1/peninsula_surface_v25.json final/scene05-b/dist/assets/
+          cp output/scene05_final_v1/peninsula_surface_v26.png final/scene05-b/dist/assets/
+          cp output/scene05_final_v1/peninsula_surface_v26.json final/scene05-b/dist/assets/
           cp output/scene05_final_v1/scene05_final_data_v1.json final/scene05-b/dist/assets/
           cp assets/vector/korean_peninsula_precise.svg final/scene05-b/dist/assets/
           python final/scene05-b/pack_standalone.py
-          test -s final/scene05-b/dist/SSKR_Scene05_B_TextureLed_OneTake_v2.5_standalone.html
+          test -s final/scene05-b/dist/SSKR_Scene05_B_ArtworkPass_OneTake_v2.6_standalone.html
 
       - name: Headed Chromium exact-timeline visual QA
         timeout-minutes: 4
@@ -116,46 +118,48 @@ jobs:
             exit 1
           fi
           timeout 210s xvfb-run -a env BROWSER_PATH="$BROWSER" node final/scene05-b/qa.mjs
-          for f in b25_014_peninsula_integrity b25_052_east_starts b25_095_route_chase b25_142_choice_merge b25_195_choice_reveal b25_250_network_freedom b25_305_finish_descent b25_345_sunset_arrival b25_375_firework_launch b25_394_fireworks_safeframe; do
+          for f in b26_014_peninsula_texture b26_052_east_starts b26_092_first_fork b26_124_choice_encounter b26_185_freedom_reveal b26_242_network_flight b26_298_finish_convergence b26_342_sunset_arrival b26_372_firework_launch b26_394_festival_finale; do
             test -s "final/scene05-b/dist/${f}.png"
           done
 
-      - name: Upload Scene 05 B v2.5.2 portable build
+      - name: Upload Scene 05 B v2.6 portable build
         uses: actions/upload-artifact@v4
         with:
-          name: SSKR-Scene05-B-TextureLed-OneTake-v2.5.2
+          name: SSKR-Scene05-B-Artwork-OneTake-v2.6
           path: final/scene05-b/dist/
           if-no-files-found: error
           compression-level: 6
           retention-days: 30
 
-      - name: Publish B v2.5.2 QA frames and metadata
+      - name: Publish B v2.6 QA frames and metadata
         run: |
-          mkdir -p assets/scene05/b_v2_5_2 final/scene05-b/preview_v2_5_2
-          cp output/scene05_final_v1/terrain_final_metadata.json assets/scene05/b_v2_5_2/
-          cp output/scene05_final_v1/scene05_b_art_texture_metadata.json assets/scene05/b_v2_5_2/
-          cp output/scene05_final_v1/peninsula_surface_v25.json assets/scene05/b_v2_5_2/
-          cp output/scene05_final_v1/peninsula_surface_v25_qa.json assets/scene05/b_v2_5_2/
-          cp output/scene05_final_v1/scene05_final_data_v1.json assets/scene05/b_v2_5_2/
-          cp final/scene05-b/dist/b25_*.png final/scene05-b/preview_v2_5_2/
-          cat > assets/scene05/b_v2_5_2/README.md <<'EOF'
-          # Scene 05 B v2.5.2 texture-led safe-frame candidate
+          mkdir -p assets/scene05/b_v2_6 final/scene05-b/preview_v2_6
+          cp output/scene05_final_v1/terrain_final_metadata.json assets/scene05/b_v2_6/
+          cp output/scene05_final_v1/scene05_b_art_texture_metadata.json assets/scene05/b_v2_6/
+          cp output/scene05_final_v1/peninsula_surface_v26.json assets/scene05/b_v2_6/
+          cp output/scene05_final_v1/peninsula_surface_v26_qa.json assets/scene05/b_v2_6/
+          cp output/scene05_final_v1/scene05_final_data_v1.json assets/scene05/b_v2_6/
+          cp final/scene05-b/dist/b26_*.png final/scene05-b/preview_v2_6/
+          cat > assets/scene05/b_v2_6/README.md <<'EOF'
+          # Scene 05 B v2.6 artwork pass candidate
 
-          - canonical SVG full-peninsula underlay remains the land-coverage authority
-          - ocean displacement remains constrained below the flat land underlay
-          - South Korea DEM remains a shallow relief overlay
-          - OSM road possibility layer + ten secondary rider-choice paths remain active in the daylight choice chapter
-          - all four fireworks are moved closer to Finish center and lower in the frame
-          - final camera begins its tilt earlier and uses a wider FOV so every primary burst stays visible with horizon context
+          - canonical full-peninsula 2D texture is the visual land surface and immutable alpha authority
+          - South Korea texture uses actual DEM elevation / slope / hillshade / source albedo; 3D relief is reduced to a shallow cue
+          - ocean palette is deeper and less cyan, with irregular subtle shimmer instead of visible sine bands
+          - real road possibility network is neutral and subordinate
+          - fifteen rider-choice traces now switch among real-road-grounded corridors, producing visible branches / detours / rejoins and late convergence
+          - route smoothing is stronger and Main Routes are less visually dominant
+          - camera cranes higher through the choice chapter so independent paths can be read as a national-scale freedom network
+          - cloud banks are larger depth/framing elements
+          - v2.5.2 fireworks safe-frame corrections are preserved
           - runtime remains approximately 40 seconds and cut-free
-          - revision directive: `docs/scene05/Scene05_B_v2.5_Artwork_Revision_Directive.md`
 
-          v2.5.2 remains a visual QA candidate, not yet a final-art acceptance.
+          v2.6 is a visual QA candidate, not final-art acceptance.
           EOF
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add assets/scene05/b_v2_5_2 final/scene05-b/preview_v2_5_2
+          git add assets/scene05/b_v2_6 final/scene05-b/preview_v2_6
           if ! git diff --cached --quiet; then
-            git commit -m 'Publish Scene 05 B v2.5.2 safe-frame QA'
+            git commit -m 'Publish Scene 05 B v2.6 artwork QA'
             git push
           fi

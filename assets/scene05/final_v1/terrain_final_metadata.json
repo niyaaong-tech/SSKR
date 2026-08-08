@@ -1,0 +1,14 @@
+{
+  "schema_version": "1.0",
+  "source": "South Korea Hero Terrain v0.2 derived maps",
+  "mesh_width": 640,
+  "mesh_height": 634,
+  "vertices": 119664,
+  "triangles": 233983,
+  "uv": true,
+  "vertical_exaggeration": 1.5,
+  "scene_m_per_unit": 10000.0,
+  "surface_texture": "terrain_surface_final.png",
+  "normal_texture": "terrain_normal_final.png",
+  "policy": "Geometry and height remain derived from Copernicus DEM; visual realism is added only through derived terrain shading/material."
+}

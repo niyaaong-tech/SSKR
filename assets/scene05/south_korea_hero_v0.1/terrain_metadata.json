@@ -1,0 +1,36 @@
+{
+  "schema_version": 1,
+  "asset": "South Korea Hero Terrain v0.1",
+  "source": "Copernicus DEM GLO-30 Public",
+  "bbox_wgs84": [
+    124.0,
+    33.0,
+    130.5,
+    39.0
+  ],
+  "local_crs_proj4": "+proj=aeqd +lat_0=36 +lon_0=127.25 +x_0=0 +y_0=0 +datum=WGS84 +units=m +no_defs +type=crs",
+  "local_bounds_m": [
+    -303808.8071586639,
+    -332794.6272268734,
+    303808.8071586639,
+    337769.9728729819
+  ],
+  "raster_size": [
+    2048,
+    2260
+  ],
+  "vertical_exaggeration": 1.5,
+  "scene_m_per_unit": 10000.0,
+  "coastline_clip": "PENDING_VERIFIED_SVG_WGS84_GEOREFERENCE",
+  "mesh": {
+    "mesh_width": 320,
+    "mesh_height": 353,
+    "vertices": 42909,
+    "triangles": 81388
+  },
+  "elevation_stats_m": {
+    "min": 0.5000001788139343,
+    "max": 1872.9639892578125,
+    "mean": 247.42770385742188
+  }
+}

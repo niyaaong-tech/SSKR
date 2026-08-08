@@ -1,0 +1,50 @@
+{
+  "built_at_utc": "2026-08-08T02:04:32.583449+00:00",
+  "note": "Actual GLO-30 DEM build; final authoritative coastline clip is intentionally deferred until verified SVG\u2194WGS84 georeferencing.",
+  "files": {
+    "albedo.png": {
+      "bytes": 1401574,
+      "sha256": "a4350738eb7472bcce51a8a4d15e89d9b2e1ff79128bbd48ab685f3aa9d9daa1"
+    },
+    "dem_scene_float32.tif": {
+      "bytes": 5698655,
+      "sha256": "e1a5b0d54d10ce2f13fc4b732ce02b50afd6a112c5eb60d129b56d613ce8c6cf"
+    },
+    "height_u16.png": {
+      "bytes": 2632231,
+      "sha256": "cd7408e0ed8bb1f15f0339f6ad193e0c4770b0a0c02723dac8e1be3f4867cf71"
+    },
+    "hillshade.png": {
+      "bytes": 1088004,
+      "sha256": "62335bd9b0d93ef8d4c7e5c4a83ff5b41a7ee3285f7c32fa7ea099bd4fef074d"
+    },
+    "land_mask.png": {
+      "bytes": 47057,
+      "sha256": "4ea42ea4a7af3a894af9d08ce1af37eca34e14f88c2367c50c3475aaacfc1c9c"
+    },
+    "normal.png": {
+      "bytes": 2985139,
+      "sha256": "cfb851c8555e196408219bbf931670d1e8962ef2564fb27edc5a6774c7d98e99"
+    },
+    "slope.png": {
+      "bytes": 1168073,
+      "sha256": "40497556051cdf4d02beeecbc878466c08ca6d809397d8e4da62f9b076433766"
+    },
+    "source_tiles.json": {
+      "bytes": 2246,
+      "sha256": "1f0bb747f4733063278d18afbd9c7a04a7d9296cc775883dafe0083afba71bf8"
+    },
+    "terrain_lod.glb": {
+      "bytes": 1492312,
+      "sha256": "135dcbd46946e24117b62b82298c5e5094107c93cda924c33406aad96e1dfe73"
+    },
+    "terrain_metadata.json": {
+      "bytes": 813,
+      "sha256": "aae233b16041759a69a1d537d3f44065d95f21c53b13f9f38d43f4d78e561733"
+    },
+    "terrain_qa_preview.png": {
+      "bytes": 1373685,
+      "sha256": "e2927382397e8a49c73f7c6f2078c0b67ba8d248b22d4d5f4361a8d0132efadf"
+    }
+  }
+}

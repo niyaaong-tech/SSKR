@@ -44,7 +44,7 @@ try{
   await capture(6.7,'final_067_day_network');
   await capture(9.65,'final_096_sunset_finish');
   await capture(10.85,'final_108_personal_recall');
-  await capture(12.25,'final_122_match_cut');
+  await capture(12.62,'final_126_match_cut');
 
   const state=await page.evaluate(()=>({
     ready:document.querySelector('#frame').classList.contains('ready'),

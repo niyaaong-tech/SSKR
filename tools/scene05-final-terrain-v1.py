@@ -28,7 +28,6 @@ def save_phase(name,base,normal_xyz,sun_vec,ambient,tint,land):
     dot=np.clip(normal_xyz[...,0]*s[0]+normal_xyz[...,1]*s[1]+normal_xyz[...,2]*s[2],0,1)
     shade=ambient+(1-ambient)*dot
     color=np.clip(base*(.58+.82*shade[...,None])*np.asarray(tint,dtype=np.float32),0,255)
-    # The mesh itself is land-only, but keep ocean pixels deterministic for QA/previews.
     color[~land]=np.array([18,47,67],dtype=np.float32)
     img=Image.fromarray(color.astype(np.uint8)).filter(ImageFilter.GaussianBlur(radius=.12))
     img=ImageEnhance.Contrast(img).enhance(1.045)
@@ -52,32 +51,24 @@ def main():
     py=(maxy-miny)/max(1,rh-1)
     gy,gx=np.gradient(elevation,py,px)
 
-    # World normal in Scene coordinates: +X east, +Y up, +Z south.
     nx=-gx*ve
     ny=np.ones_like(nx)
     nz=-gy*ve
     nrm=np.maximum(np.sqrt(nx*nx+ny*ny+nz*nz),1e-8)
     normal_xyz=np.stack([nx/nrm,ny/nrm,nz/nrm],axis=-1)
 
-    # Neutral low-saturation terrain base. Mountains are never painted as shapes;
-    # only the real DEM slope is allowed to nudge rocky/high-relief areas.
     ridge=np.clip(slope[...,None]*.13,0,.13)
     stone=np.array([145,142,132],dtype=np.float32)
     base=albedo*(1-ridge)+stone*ridge
     base=np.clip(base*1.08+5,0,255)
 
-    # Three analytical sun states from the same DEM. The presentation can now
-    # move East-low → high daylight → West-low without depending on PBR/browser quirks.
     save_phase('terrain_dawn_final.png',base,normal_xyz,(.98,.22,-.05),.18,(.72,.86,.96),land)
     save_phase('terrain_day_final.png',base,normal_xyz,(.28,.95,-.18),.42,(1.03,1.03,.99),land)
     save_phase('terrain_sunset_final.png',base,normal_xyz,(-.98,.19,.08),.17,(1.13,.89,.72),land)
 
-    # Day texture is also the static/PDF fallback surface.
     day=Image.open(OUT/'terrain_day_final.png').convert('RGB')
     day.save(OUT/'terrain_surface_final.png',quality=95)
 
-    # Retain a correct tangent-space normal asset for future PBR use, even though
-    # Final v1.1 uses deterministic DEM phase textures for the presentation render.
     tx=-gx*ve
     ty=gy*ve
     tz=np.ones_like(tx)
@@ -102,8 +93,10 @@ def main():
     scene=float(meta['scene_m_per_unit'])
     verts=np.column_stack([X.ravel()/scene,z.ravel()/scene,-Y.ravel()/scene])
 
+    # TextureLoader flips image Y by default, so top raster row must use v=0 here.
+    # This keeps the phase textures geographically aligned with the DEM mesh.
     uu=np.linspace(0,1,MESH_W)
-    vv=np.linspace(1,0,mh)
+    vv=np.linspace(0,1,mh)
     U,V=np.meshgrid(uu,vv)
     uvs=np.column_stack([U.ravel(),V.ravel()])
 
@@ -120,13 +113,14 @@ def main():
     mesh.export(OUT/'terrain_final_uv.glb')
 
     out_meta={
-        'schema_version':'1.1',
+        'schema_version':'1.2',
         'source':'South Korea Hero Terrain v0.2 derived maps',
         'mesh_width':MESH_W,
         'mesh_height':mh,
         'vertices':int(len(mesh.vertices)),
         'triangles':int(len(mesh.faces)),
         'uv':True,
+        'uv_orientation':'raster top row v=0 for Three.js TextureLoader default flipY',
         'vertical_exaggeration':ve,
         'scene_m_per_unit':meta['scene_m_per_unit'],
         'phase_textures':{

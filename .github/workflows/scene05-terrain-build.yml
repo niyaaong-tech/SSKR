@@ -8,6 +8,9 @@ on:
       - 'tools/scene05-build-direct.py'
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   build-terrain:
     runs-on: ubuntu-latest
@@ -30,7 +33,7 @@ jobs:
       - name: Build actual South Korea Hero terrain v0.1
         run: python tools/scene05-build-direct.py
 
-      - name: Upload generated terrain asset
+      - name: Upload full generated terrain artifact
         uses: actions/upload-artifact@v4
         with:
           name: SSKR-Scene05-SouthKoreaHero-Terrain-v0.1
@@ -38,3 +41,46 @@ jobs:
           if-no-files-found: error
           compression-level: 6
           retention-days: 30
+
+      - name: Publish web-ready provisional assets to repository
+        run: |
+          dst='assets/scene05/south_korea_hero_v0.1'
+          src='output/south_korea_hero_v0.1'
+          mkdir -p "$dst"
+          cp "$src/terrain_lod.glb" "$dst/"
+          cp "$src/height_u16.png" "$dst/"
+          cp "$src/normal.png" "$dst/"
+          cp "$src/albedo.png" "$dst/"
+          cp "$src/hillshade.png" "$dst/"
+          cp "$src/slope.png" "$dst/"
+          cp "$src/land_mask.png" "$dst/"
+          cp "$src/terrain_qa_preview.png" "$dst/"
+          cp "$src/terrain_metadata.json" "$dst/"
+          cp "$src/BUILD_PROVENANCE.json" "$dst/"
+          cp "$src/source_tiles.json" "$dst/"
+          cat > "$dst/README.md" <<'EOF'
+          # South Korea Hero Terrain v0.1 — provisional
+
+          Actual terrain generated from Copernicus DEM GLO-30 for Scene 05.
+
+          This is a real DEM-derived development asset, but it is **not the final geographic silhouette** yet.
+
+          - Actual mountain/elevation source: Copernicus DEM GLO-30
+          - Vertical exaggeration: 1.5x
+          - Web mesh: `terrain_lod.glb`
+          - Height/normal/albedo/hillshade/slope textures included
+          - Current land/ocean separation: provisional elevation threshold for QA
+          - Final coastline: must be replaced by the project canonical `korean_peninsula_precise.svg` after verified SVG↔WGS84 georeferencing
+          - Raw/derived GeoTIFF remains in the workflow artifact and is intentionally not committed here
+
+          Do not treat this v0.1 silhouette as the final map master. The purpose of this version is to verify that the real Korean mountain relief can be built and used in WebGL.
+          EOF
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add "$dst"
+          if git diff --cached --quiet; then
+            echo 'No asset changes to commit.'
+          else
+            git commit -m 'Add actual Scene 05 GLO-30 terrain asset v0.1'
+            git push
+          fi

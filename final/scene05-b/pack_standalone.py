@@ -14,12 +14,12 @@ def main():
       './assets/terrain_sunset_final.png':data_uri(DIST/'assets'/'terrain_sunset_final.png','image/png'),
       './assets/coast_shallow.png':data_uri(DIST/'assets'/'coast_shallow.png','image/png'),
       './assets/peninsula_surface_v30.png':data_uri(DIST/'assets'/'peninsula_surface_v30.png','image/png'),
-      './assets/road_choice_overlay_v29.png':data_uri(DIST/'assets'/'road_choice_overlay_v29.png','image/png'),
+      './assets/road_choice_overlay_v31.png':data_uri(DIST/'assets'/'road_choice_overlay_v31.png','image/png'),
       './assets/peninsula_surface_v30.json':data_uri(DIST/'assets'/'peninsula_surface_v30.json','application/json'),
       './assets/scene05_final_data_v1.json':data_uri(DIST/'assets'/'scene05_final_data_v1.json','application/json')}
     for old,new in replacements.items():html=html.replace(old,new);js=js.replace(old,new)
     html=html.replace('<link rel="stylesheet" href="./scene05-b.css" />',f'<style>{css}</style>').replace('<script type="module" src="./app.js"></script>',f'<script type="module">{js}</script>')
     for ref in ['./assets/','./app.js','./scene05-b.css']:
         if ref in html:raise SystemExit(f'Standalone pack left external reference: {ref}')
-    out=DIST/'SSKR_Scene05_B_ArtworkPass_OneTake_v3.0_standalone.html';out.write_text(html,encoding='utf-8');print(out,out.stat().st_size)
+    out=DIST/'SSKR_Scene05_B_ArtworkPass_OneTake_v3.1_standalone.html';out.write_text(html,encoding='utf-8');print(out,out.stat().st_size)
 if __name__=='__main__':main()

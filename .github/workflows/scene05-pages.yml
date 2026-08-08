@@ -1,22 +1,26 @@
-name: Deploy Scene 05 Final v1.8 to GitHub Pages
+name: Deploy Scene 05 B v2.3 to GitHub Pages
 
 on:
   push:
     branches: [main]
     paths:
       - '.github/workflows/scene05-pages.yml'
-      - 'final/scene05/index.html'
-      - 'final/scene05/scene05-final.css'
-      - 'final/scene05/pack_standalone.py'
-      - 'final/scene05/README.md'
+      - 'final/scene05-b/index.html'
+      - 'final/scene05-b/scene05-b.css'
+      - 'final/scene05-b/pack_standalone.py'
+      - 'final/scene05-b/README.md'
+      - 'final/scene05-b/src/**'
+      - 'tools/scene05-b-source-v20.py'
+      - 'tools/scene05-b-coast-source-v22.py'
+      - 'tools/scene05-b-source-v23.py'
+      - 'tools/scene05-b-art-textures-v22.py'
       - 'tools/scene05-final-data-v1.py'
       - 'tools/scene05-final-terrain-v1.py'
-      - 'tools/scene05-final-roadtexture-v1.py'
-      - 'tools/scene05-final-v17-source.py'
       - 'assets/scene05/road_hints_source_v1.geojson'
       - 'assets/scene05/route_network_v0.1/**'
       - 'assets/scene05/south_korea_hero_v0.2/**'
       - 'assets/vector/korean_peninsula_precise.svg'
+      - 'docs/scene05/Scene05_B_Extended_OneTake_Production_Plan_v2.0.md'
   workflow_dispatch:
 
 permissions:
@@ -31,7 +35,7 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
-    timeout-minutes: 35
+    timeout-minutes: 40
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -41,39 +45,50 @@ jobs:
         with:
           python-version: '3.12'
 
-      - name: Build terrain, daylight road context, route data, and renderer source
+      - name: Build real terrain and Scene 05 B cinematic assets
         run: |
           python -m pip install --upgrade pip
           python -m pip install numpy Pillow pyproj trimesh
           python tools/scene05-final-terrain-v1.py
-          python tools/scene05-final-roadtexture-v1.py
+          python tools/scene05-b-art-textures-v22.py
           python tools/scene05-final-data-v1.py
-          python tools/scene05-final-v17-source.py
+          python tools/scene05-b-source-v20.py
+          python tools/scene05-b-coast-source-v22.py
+          python tools/scene05-b-source-v23.py
+          test -s output/scene05_final_v1/terrain_final_uv.glb
+          test -s output/scene05_final_v1/terrain_dawn_final.png
+          test -s output/scene05_final_v1/terrain_day_final.png
+          test -s output/scene05_final_v1/terrain_sunset_final.png
+          test -s output/scene05_final_v1/coast_shallow.png
+          test -s output/scene05_final_v1/scene05_final_data_v1.json
+          test -s output/scene05-b-v23.js
 
       - name: Set up Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
           node-version: '22'
 
-      - name: Build deployable Scene 05
+      - name: Build deployable Scene 05 B v2.3
         run: |
           npm install --no-save --no-audit --no-fund three@0.185.1 gsap@3.15.0 esbuild
-          rm -rf final/scene05/dist
-          mkdir -p final/scene05/dist/assets
-          npx esbuild output/scene05_final_v1/scene05-final-v17.js --bundle --format=esm --target=es2022 --minify --outfile=final/scene05/dist/app.js
-          cp final/scene05/index.html final/scene05/dist/index.html
-          cp final/scene05/scene05-final.css final/scene05/dist/scene05-final.css
-          cp final/scene05/README.md final/scene05/dist/README.md
-          cp output/scene05_final_v1/terrain_final_uv.glb final/scene05/dist/assets/
-          cp output/scene05_final_v1/terrain_dawn_final.png final/scene05/dist/assets/
-          cp output/scene05_final_v1/terrain_day_final.png final/scene05/dist/assets/
-          cp output/scene05_final_v1/terrain_sunset_final.png final/scene05/dist/assets/
-          cp output/scene05_final_v1/scene05_final_data_v1.json final/scene05/dist/assets/
-          cp assets/vector/korean_peninsula_precise.svg final/scene05/dist/assets/
-          python final/scene05/pack_standalone.py
-          test -s final/scene05/dist/index.html
-          test -s final/scene05/dist/app.js
-          test -s final/scene05/dist/assets/terrain_final_uv.glb
+          rm -rf final/scene05-b/dist
+          mkdir -p final/scene05-b/dist/assets
+          npx esbuild output/scene05-b-v23.js --bundle --format=esm --target=es2022 --minify --outfile=final/scene05-b/dist/app.js
+          cp final/scene05-b/index.html final/scene05-b/dist/index.html
+          cp final/scene05-b/scene05-b.css final/scene05-b/dist/scene05-b.css
+          cp final/scene05-b/README.md final/scene05-b/dist/README.md
+          cp output/scene05_final_v1/terrain_final_uv.glb final/scene05-b/dist/assets/
+          cp output/scene05_final_v1/terrain_dawn_final.png final/scene05-b/dist/assets/
+          cp output/scene05_final_v1/terrain_day_final.png final/scene05-b/dist/assets/
+          cp output/scene05_final_v1/terrain_sunset_final.png final/scene05-b/dist/assets/
+          cp output/scene05_final_v1/coast_shallow.png final/scene05-b/dist/assets/
+          cp output/scene05_final_v1/scene05_final_data_v1.json final/scene05-b/dist/assets/
+          cp assets/vector/korean_peninsula_precise.svg final/scene05-b/dist/assets/
+          python final/scene05-b/pack_standalone.py
+          test -s final/scene05-b/dist/index.html
+          test -s final/scene05-b/dist/app.js
+          test -s final/scene05-b/dist/assets/terrain_final_uv.glb
+          test -s final/scene05-b/dist/SSKR_Scene05_B_Extended_OneTake_v2.3_standalone.html
 
       - name: Configure Pages
         uses: actions/configure-pages@v5
@@ -81,7 +96,7 @@ jobs:
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: final/scene05/dist
+          path: final/scene05-b/dist
 
   deploy:
     environment:
@@ -90,6 +105,6 @@ jobs:
     runs-on: ubuntu-latest
     needs: build
     steps:
-      - name: Deploy to GitHub Pages
+      - name: Deploy Scene 05 B v2.3 to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4

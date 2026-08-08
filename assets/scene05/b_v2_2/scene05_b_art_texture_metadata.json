@@ -1,0 +1,10 @@
+{
+  "schema_version": "2.2",
+  "policy": "Scene 05 B art-directed terrain material pass. Geometry/coastline remain authoritative; forest/plain/rock separation is procedural from elevation/slope/source albedo variation and is not a land-cover claim.",
+  "outputs": [
+    "terrain_dawn_final.png",
+    "terrain_day_final.png",
+    "terrain_sunset_final.png",
+    "coast_shallow.png"
+  ]
+}

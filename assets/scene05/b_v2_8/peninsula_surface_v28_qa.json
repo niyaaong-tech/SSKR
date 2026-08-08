@@ -1,0 +1,11 @@
+{
+  "texture_size": [
+    1792,
+    3307
+  ],
+  "land_pixels": 1990607,
+  "real_south_pixels": 1133814,
+  "alpha_authority": "canonical_svg_only",
+  "grid_vertices": 1595,
+  "dmz_transition": "soft"
+}

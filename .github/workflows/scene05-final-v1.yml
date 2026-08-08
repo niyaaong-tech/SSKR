@@ -1,4 +1,4 @@
-name: Scene 05 Final v1.2
+name: Scene 05 Final v1.3
 
 on:
   push:
@@ -24,7 +24,7 @@ permissions:
   contents: write
 
 jobs:
-  build-scene05-final-v12:
+  build-scene05-final-v13:
     runs-on: ubuntu-latest
     timeout-minutes: 35
     steps:
@@ -61,12 +61,12 @@ jobs:
           sudo apt-get install -y --no-install-recommends fonts-noto-cjk
           fc-cache -f
 
-      - name: Bundle final Three.js scene v1.2
+      - name: Bundle final Three.js scene v1.3
         run: |
           npm install --no-save --no-audit --no-fund three@0.185.1 gsap@3.15.0 esbuild puppeteer-core
           rm -rf final/scene05/dist
           mkdir -p final/scene05/dist/assets
-          npx esbuild final/scene05/src/scene05-final-v12.js --bundle --format=esm --target=es2022 --minify --outfile=final/scene05/dist/app.js
+          npx esbuild final/scene05/src/scene05-final-v13.js --bundle --format=esm --target=es2022 --minify --outfile=final/scene05/dist/app.js
           cp final/scene05/index.html final/scene05/dist/index.html
           cp final/scene05/scene05-final.css final/scene05/dist/scene05-final.css
           cp final/scene05/README.md final/scene05/dist/README.md
@@ -77,7 +77,7 @@ jobs:
           cp output/scene05_final_v1/scene05_final_data_v1.json final/scene05/dist/assets/
           cp assets/vector/korean_peninsula_precise.svg final/scene05/dist/assets/
           python final/scene05/pack_standalone.py
-          test -s final/scene05/dist/SSKR_Scene05_Final_v1.2_standalone.html
+          test -s final/scene05/dist/SSKR_Scene05_Final_v1.3_standalone.html
 
       - name: Headed Chromium exact-timeline visual QA
         timeout-minutes: 3
@@ -92,14 +92,14 @@ jobs:
             exit 1
           fi
           timeout 150s xvfb-run -a env BROWSER_PATH="$BROWSER" node final/scene05/qa.mjs
-          for f in final_010_scale final_029_dawn_start final_067_day_network final_096_sunset_finish final_108_personal_recall final_122_match_cut; do
+          for f in final_010_scale final_029_dawn_start final_067_day_network final_096_sunset_finish final_108_personal_recall final_126_match_cut; do
             test -s "final/scene05/dist/${f}.png"
           done
 
-      - name: Upload final portable scene v1.2
+      - name: Upload final portable scene v1.3
         uses: actions/upload-artifact@v4
         with:
-          name: SSKR-Scene05-Final-v1.2
+          name: SSKR-Scene05-Final-v1.3
           path: final/scene05/dist/
           if-no-files-found: error
           compression-level: 6
@@ -107,30 +107,30 @@ jobs:
 
       - name: Publish final production assets and QA frames
         run: |
-          mkdir -p assets/scene05/final_v1_2 final/scene05/preview_v1_2
-          cp output/scene05_final_v1/terrain_final_uv.glb assets/scene05/final_v1_2/
-          cp output/scene05_final_v1/terrain_dawn_final.png assets/scene05/final_v1_2/
-          cp output/scene05_final_v1/terrain_day_final.png assets/scene05/final_v1_2/
-          cp output/scene05_final_v1/terrain_sunset_final.png assets/scene05/final_v1_2/
-          cp output/scene05_final_v1/terrain_final_metadata.json assets/scene05/final_v1_2/
-          cp output/scene05_final_v1/scene05_final_data_v1.json assets/scene05/final_v1_2/
-          cp final/scene05/dist/final_*.png final/scene05/preview_v1_2/
-          cat > assets/scene05/final_v1_2/README.md <<'EOF'
-          # Scene 05 Final v1.2 production assets
+          mkdir -p assets/scene05/final_v1_3 final/scene05/preview_v1_3
+          cp output/scene05_final_v1/terrain_final_uv.glb assets/scene05/final_v1_3/
+          cp output/scene05_final_v1/terrain_dawn_final.png assets/scene05/final_v1_3/
+          cp output/scene05_final_v1/terrain_day_final.png assets/scene05/final_v1_3/
+          cp output/scene05_final_v1/terrain_sunset_final.png assets/scene05/final_v1_3/
+          cp output/scene05_final_v1/terrain_final_metadata.json assets/scene05/final_v1_3/
+          cp output/scene05_final_v1/scene05_final_data_v1.json assets/scene05/final_v1_3/
+          cp final/scene05/dist/final_*.png final/scene05/preview_v1_3/
+          cat > assets/scene05/final_v1_3/README.md <<'EOF'
+          # Scene 05 Final v1.3 production assets
 
-          - Copernicus DEM UV terrain mesh with corrected texture orientation
-          - analytical DEM lighting textures: east-dawn / daylight / west-sunset
-          - terrain-following Main Routes with real shared-road segments
-          - curated real OSM motorway/trunk/primary Road Hint context
-          - refined warm Start-node sun match cut
+          - Copernicus DEM UV terrain with corrected geographic texture orientation
+          - analytical east-dawn / daylight / west-sunset terrain lighting
+          - real-road Main Routes, shared Merged Segments, and balanced OSM Road Hint context
+          - sunset Start-node suppression so West Finish is the visual climax
+          - expanded warm Start-node sun match cut to Scene 06
           - exact final storyboard: `docs/scene05/Scene05_Final_Storyboard_ShotDesign_v1.0.md`
 
-          Terrain geometry remains real DEM data. Time-of-day relief is baked from the same DEM surface normals rather than generated imagery or browser-dependent PBR lighting.
+          Terrain geometry remains real DEM data. Graphic layers are intentionally abstracted only to communicate route choice, convergence, and personal memory.
           EOF
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add assets/scene05/final_v1_2 final/scene05/preview_v1_2
+          git add assets/scene05/final_v1_3 final/scene05/preview_v1_3
           if ! git diff --cached --quiet; then
-            git commit -m 'Publish Scene 05 final production assets v1.2'
+            git commit -m 'Publish Scene 05 final production assets v1.3'
             git push
           fi

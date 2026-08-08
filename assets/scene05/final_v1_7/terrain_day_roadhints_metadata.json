@@ -1,0 +1,39 @@
+{
+  "schema_version": "1.0",
+  "source": "OpenStreetMap curated major-road source",
+  "feature_counts": {
+    "motorway": 236,
+    "trunk": 146,
+    "primary": 154
+  },
+  "style": {
+    "motorway": {
+      "fill": [
+        42,
+        68,
+        61,
+        48
+      ],
+      "width": 5
+    },
+    "trunk": {
+      "fill": [
+        47,
+        74,
+        67,
+        44
+      ],
+      "width": 5
+    },
+    "primary": {
+      "fill": [
+        57,
+        82,
+        75,
+        28
+      ],
+      "width": 3
+    }
+  },
+  "policy": "Road Hint is baked only into daylight terrain as a dark, low-contrast real-road context layer. Main Route/Merged Segment remain separate gold graphic layers."
+}

@@ -22,7 +22,10 @@ MERGED_GRID_SCENE=1.05
 MERGED_OFFSET_M=72.0
 VISUAL_LIFT_SCENE=0.045
 ROAD_HINT_LIFT_SCENE=0.027
-ROAD_HINT_CLASSES={'motorway','trunk','primary'}
+# Visual possibility context should resemble roads a rider can plausibly explore.
+# Motorway is deliberately excluded from this layer; secondary roads add the local
+# branching density that v2.5/v2.6 were missing.
+ROAD_HINT_CLASSES={'trunk','primary','secondary'}
 
 
 def bilinear(arr,x,y):
@@ -116,10 +119,11 @@ def build_checkpoints(routes):
 
 
 def build_road_hints(tf,height,meta):
-    """Keep the full curated OSM major-road source so adjacent OSM way fragments reconnect visually.
+    """Keep connected OSM trunk/primary/secondary context.
 
-    Density is controlled in the renderer by very low opacity/width. Dropping individual way
-    fragments here made the network look like random dashes instead of a coherent road web.
+    Secondary roads are intentionally included for visual choice density. Motorways are
+    intentionally excluded from the rider-choice backdrop. Density is controlled only in
+    the renderer so adjacent OSM way fragments still reconnect visually.
     """
     if not ROAD_HINTS_SOURCE.exists():return []
     geo=json.loads(ROAD_HINTS_SOURCE.read_text('utf-8'))
@@ -166,17 +170,17 @@ def main():
     counts={k:sum(1 for r in road_hints if r['highway']==k) for k in sorted(ROAD_HINT_CLASSES)}
 
     result={
-        'schema_version':'1.4','status':'FINAL_SCENE_PRESENTATION_DATA','terrain_asset':'South Korea Hero Terrain v0.2','coastline_authority':'korean_peninsula_precise.svg','coordinate_system':route3d['coordinate_system'],'visual_route_lift_scene_units':VISUAL_LIFT_SCENE,'road_hint_lift_scene_units':ROAD_HINT_LIFT_SCENE,
+        'schema_version':'1.7-road-choice-context','status':'FINAL_SCENE_PRESENTATION_DATA','terrain_asset':'South Korea Hero Terrain v0.2','coastline_authority':'korean_peninsula_precise.svg','coordinate_system':route3d['coordinate_system'],'visual_route_lift_scene_units':VISUAL_LIFT_SCENE,'road_hint_lift_scene_units':ROAD_HINT_LIFT_SCENE,
         'policy':[
             'This is a cinematic presentation visualization, not an SSKR navigation engine.',
             'Start references and West Finish remain visual placeholders until product planning confirms official coordinates.',
             'Main routes are grounded in the real-road source topology and terrain-following DEM coordinates.',
             'Merged segments are sampled from shared real-road topology where available.',
-            'Road Hint retains the full curated OSM motorway/trunk/primary source to preserve visual continuity; low renderer opacity controls density.',
+            'Road Hint uses OSM trunk/primary/secondary context; motorway is excluded from the rider-choice backdrop.',
             'Every visible Dawn Start is connected to the journey network: five by Main Routes and four by subtle feeder lines.',
             'Uniform visual lifts prevent graphic layers from being buried by the decimated relief mesh; they do not alter source geography.'
         ],
-        'storyboard':{'duration_s':12.8,'personal_route_id':PERSONAL_ROUTE_ID,'beats':[['scale',0.0,0.8],['south_korea_hero',0.8,2.2],['dawn_start',2.2,3.5],['morning_crossing',3.5,5.5],['daylight_network',5.5,7.8],['sunset_convergence',7.8,10.2],['personal_recall',10.2,11.6],['match_cut',11.6,12.8]]},
+        'storyboard':{'duration_s':40.0,'personal_route_id':PERSONAL_ROUTE_ID,'beats':[['establish',0,3],['east_starts',3,7],['route_chase',7,12],['choice_encounter',12,17],['crane_reveal',17,22],['network_flight',22,28],['finish_convergence',28,33],['sunset_arrival',33,36],['festival_night',36,40]]},
         'starts':starts,'finish':finish,'main_routes':routes,'start_seeds':seeds,'merged_segments':merged,'road_hints':road_hints,'road_hint_counts':counts,'checkpoints':checkpoints
     }
     (OUT/'scene05_final_data_v1.json').write_text(json.dumps(result,ensure_ascii=False,indent=2),encoding='utf-8')

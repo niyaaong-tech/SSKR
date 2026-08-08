@@ -22,7 +22,7 @@ MERGED_GRID_SCENE=1.05
 MERGED_OFFSET_M=72.0
 VISUAL_LIFT_SCENE=0.045
 ROAD_HINT_LIFT_SCENE=0.027
-ROAD_HINT_QUOTA={'motorway':82,'trunk':72,'primary':86}
+ROAD_HINT_CLASSES={'motorway','trunk','primary'}
 
 
 def bilinear(arr,x,y):
@@ -115,38 +115,30 @@ def build_checkpoints(routes):
     return chosen
 
 
-def spatial_select(features,quota,grid_deg=.055):
-    """Select a geographically distributed subset instead of both carriageways of the same road."""
-    selected=[];cells=set()
-    ordered=sorted(features,key=lambda f:-float(f.get('properties',{}).get('length_km',0)))
-    for f in ordered:
-        coords=f.get('geometry',{}).get('coordinates') or []
-        if len(coords)<2:continue
-        mid=coords[len(coords)//2]
-        key=(round(float(mid[0])/grid_deg),round(float(mid[1])/grid_deg))
-        if key in cells:continue
-        cells.add(key);selected.append(f)
-        if len(selected)>=quota:break
-    return selected
-
-
 def build_road_hints(tf,height,meta):
+    """Keep the full curated OSM major-road source so adjacent OSM way fragments reconnect visually.
+
+    Density is controlled in the renderer by very low opacity/width. Dropping individual way
+    fragments here made the network look like random dashes instead of a coherent road web.
+    """
     if not ROAD_HINTS_SOURCE.exists():return []
     geo=json.loads(ROAD_HINTS_SOURCE.read_text('utf-8'))
-    all_features=geo.get('features',[])
-    features=[]
-    for highway,quota in ROAD_HINT_QUOTA.items():
-        subset=[f for f in all_features if f.get('properties',{}).get('highway')==highway]
-        features.extend(spatial_select(subset,quota))
     hints=[]
-    for f in features:
+    for f in geo.get('features',[]):
+        props=f.get('properties',{})
+        highway=props.get('highway')
+        if highway not in ROAD_HINT_CLASSES:continue
         geom=f.get('geometry',{})
         if geom.get('type')!='LineString':continue
         coords=geom.get('coordinates') or []
         if len(coords)<2:continue
-        pts=[scene_point(lon,lat,tf,height,meta,38.0,visual_lift=ROAD_HINT_LIFT_SCENE) for lon,lat in coords]
-        props=f.get('properties',{})
-        hints.append({'osm_way_id':props.get('osm_way_id'),'highway':props.get('highway','primary'),'length_km':props.get('length_km'),'points':pts})
+        pts=[scene_point(lon,lat,tf,height,meta,34.0,visual_lift=ROAD_HINT_LIFT_SCENE) for lon,lat in coords]
+        hints.append({
+            'osm_way_id':props.get('osm_way_id'),
+            'highway':highway,
+            'length_km':props.get('length_km'),
+            'points':pts
+        })
     return hints
 
 
@@ -171,16 +163,16 @@ def main():
     checkpoints=build_checkpoints(routes)
     road_hints=build_road_hints(tf,height,meta)
     finish={**route3d['finish'],'position':lift_point(route3d['finish']['position'])}
-    counts={k:sum(1 for r in road_hints if r['highway']==k) for k in ROAD_HINT_QUOTA}
+    counts={k:sum(1 for r in road_hints if r['highway']==k) for k in sorted(ROAD_HINT_CLASSES)}
 
     result={
-        'schema_version':'1.3','status':'FINAL_SCENE_PRESENTATION_DATA','terrain_asset':'South Korea Hero Terrain v0.2','coastline_authority':'korean_peninsula_precise.svg','coordinate_system':route3d['coordinate_system'],'visual_route_lift_scene_units':VISUAL_LIFT_SCENE,'road_hint_lift_scene_units':ROAD_HINT_LIFT_SCENE,
+        'schema_version':'1.4','status':'FINAL_SCENE_PRESENTATION_DATA','terrain_asset':'South Korea Hero Terrain v0.2','coastline_authority':'korean_peninsula_precise.svg','coordinate_system':route3d['coordinate_system'],'visual_route_lift_scene_units':VISUAL_LIFT_SCENE,'road_hint_lift_scene_units':ROAD_HINT_LIFT_SCENE,
         'policy':[
             'This is a cinematic presentation visualization, not an SSKR navigation engine.',
             'Start references and West Finish remain visual placeholders until product planning confirms official coordinates.',
             'Main routes are grounded in the real-road source topology and terrain-following DEM coordinates.',
             'Merged segments are sampled from shared real-road topology where available.',
-            'Road Hint uses a spatially de-duplicated motorway/trunk/primary OSM subset and remains intentionally subordinate.',
+            'Road Hint retains the full curated OSM motorway/trunk/primary source to preserve visual continuity; low renderer opacity controls density.',
             'Every visible Dawn Start is connected to the journey network: five by Main Routes and four by subtle feeder lines.',
             'Uniform visual lifts prevent graphic layers from being buried by the decimated relief mesh; they do not alter source geography.'
         ],

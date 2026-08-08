@@ -1,0 +1,10 @@
+{
+  "texture_size": [
+    1536,
+    2835
+  ],
+  "land_pixels": 1464126,
+  "south_real_terrain_pixels": 833982,
+  "alpha_authority": "canonical_svg_only",
+  "grid_vertices": 1225
+}

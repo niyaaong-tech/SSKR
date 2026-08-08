@@ -19,6 +19,7 @@ PERSONAL_ROUTE_ID='route_start_n02'
 MERGED_LIMIT=260
 MERGED_GRID_SCENE=1.05
 MERGED_OFFSET_M=72.0
+VISUAL_LIFT_SCENE=0.045  # 450m screen-space separation at national scale; not geographic data.
 
 
 def bilinear(arr,x,y):
@@ -29,6 +30,10 @@ def bilinear(arr,x,y):
     return float(arr[y0,x0]*(1-tx)*(1-ty)+arr[y0,x1]*tx*(1-ty)+arr[y1,x0]*(1-tx)*ty+arr[y1,x1]*tx*ty)
 
 
+def lift_point(p,amount=VISUAL_LIFT_SCENE):
+    return [float(p[0]),float(p[1])+amount,float(p[2])]
+
+
 def scene_point(lon,lat,tf,height,meta,offset_m):
     x,y=tf.transform(lon,lat)
     minx,miny,maxx,maxy=meta['local_bounds_m'];w,h=meta['raster_size']
@@ -36,7 +41,7 @@ def scene_point(lon,lat,tf,height,meta,offset_m):
     q=bilinear(height,px,py)/65535.0
     elev=max(0.0,q*float(meta['mesh']['max_elevation_m']))
     scene=float(meta['scene_m_per_unit']);ve=float(meta['vertical_exaggeration'])
-    return [x/scene,(elev*ve+offset_m)/scene,-y/scene]
+    return [x/scene,(elev*ve+offset_m)/scene+VISUAL_LIFT_SCENE,-y/scene]
 
 
 def dist2(a,b):
@@ -79,18 +84,11 @@ def infer_shared_from_routes(routes):
 
 
 def build_start_seeds(starts,routes):
-    """Give every visible Start a route relationship.
-
-    Five Starts already own full real-road Main Routes. The remaining four are
-    connected by short, subdued feeder lines to the nearest existing route so
-    the Dawn phase never suggests decorative/unrelated coastal lights.
-    """
     main_start_ids={r['start_id'] for r in routes}
     route_points=[p for r in routes for p in r['points']]
     seeds=[]
     for s in starts:
-        if s['id'] in main_start_ids:
-            continue
+        if s['id'] in main_start_ids:continue
         start=s['position']
         best=min(route_points,key=lambda p:dist2(start,p))
         dx=best[0]-start[0];dz=best[2]-start[2];d=math.sqrt(dx*dx+dz*dz)
@@ -125,53 +123,50 @@ def main():
     routes=[]
     for r in route3d['routes']:
         if r['id'] not in MAIN_ROUTE_IDS:continue
+        pts=[lift_point(p) for p in r['points']]
         routes.append({
             'id':r['id'],'start_id':r['start_id'],'distance_km':r['distance_km'],
-            'points':r['points'],
-            'convergence_from_index':int(len(r['points'])*.67)
+            'points':pts,'convergence_from_index':int(len(pts)*.67)
         })
 
     merged=build_shared_segments(raw,tf,height,meta)
     if not merged:merged=infer_shared_from_routes(routes)
-    starts=route3d['starts']
+    starts=[{**s,'position':lift_point(s['position'])} for s in route3d['starts']]
     seeds=build_start_seeds(starts,routes)
     checkpoints=build_checkpoints(routes)
-    finish=route3d['finish']
+    finish={**route3d['finish'],'position':lift_point(route3d['finish']['position'])}
 
     result={
-        'schema_version':'1.0',
+        'schema_version':'1.1',
         'status':'FINAL_SCENE_PRESENTATION_DATA',
         'terrain_asset':'South Korea Hero Terrain v0.2',
         'coastline_authority':'korean_peninsula_precise.svg',
         'coordinate_system':route3d['coordinate_system'],
+        'visual_route_lift_scene_units':VISUAL_LIFT_SCENE,
         'policy':[
             'This is a cinematic presentation visualization, not an SSKR navigation engine.',
             'Start references and West Finish remain visual placeholders until product planning confirms official coordinates.',
             'Main routes are grounded in the real-road source topology and terrain-following DEM coordinates.',
             'Merged segments are sampled from shared real-road topology where available; Road Hint remains intentionally subordinate.',
-            'Every visible Dawn Start is connected to the journey network: five by Main Routes and four by subtle feeder lines.'
+            'Every visible Dawn Start is connected to the journey network: five by Main Routes and four by subtle feeder lines.',
+            'A uniform 0.045 scene-unit visual lift prevents graphic routes from being buried by the decimated relief mesh; it does not alter source geography.'
         ],
         'storyboard':{
-            'duration_s':12.8,
-            'personal_route_id':PERSONAL_ROUTE_ID,
+            'duration_s':12.8,'personal_route_id':PERSONAL_ROUTE_ID,
             'beats':[
                 ['scale',0.0,0.8],['south_korea_hero',0.8,2.2],['dawn_start',2.2,3.5],
                 ['morning_crossing',3.5,5.5],['daylight_network',5.5,7.8],
                 ['sunset_convergence',7.8,10.2],['personal_recall',10.2,11.6],['match_cut',11.6,12.8]
             ]
         },
-        'starts':starts,
-        'finish':finish,
-        'main_routes':routes,
-        'start_seeds':seeds,
-        'merged_segments':merged,
-        'checkpoints':checkpoints
+        'starts':starts,'finish':finish,'main_routes':routes,'start_seeds':seeds,
+        'merged_segments':merged,'checkpoints':checkpoints
     }
     (OUT/'scene05_final_data_v1.json').write_text(json.dumps(result,ensure_ascii=False,indent=2),encoding='utf-8')
     print(json.dumps({
         'main_routes':len(routes),'starts':len(starts),'start_seeds':len(seeds),
         'merged_segments':len(merged),'checkpoints':len(checkpoints),
-        'personal_route':PERSONAL_ROUTE_ID
+        'personal_route':PERSONAL_ROUTE_ID,'visual_lift':VISUAL_LIFT_SCENE
     },indent=2))
 
 if __name__=='__main__':main()

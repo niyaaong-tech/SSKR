@@ -22,7 +22,7 @@ MERGED_GRID_SCENE=1.05
 MERGED_OFFSET_M=72.0
 VISUAL_LIFT_SCENE=0.045
 ROAD_HINT_LIFT_SCENE=0.027
-ROAD_HINT_LIMIT=240
+ROAD_HINT_QUOTA={'motorway':82,'trunk':72,'primary':86}
 
 
 def bilinear(arr,x,y):
@@ -115,31 +115,38 @@ def build_checkpoints(routes):
     return chosen
 
 
+def spatial_select(features,quota,grid_deg=.055):
+    """Select a geographically distributed subset instead of both carriageways of the same road."""
+    selected=[];cells=set()
+    ordered=sorted(features,key=lambda f:-float(f.get('properties',{}).get('length_km',0)))
+    for f in ordered:
+        coords=f.get('geometry',{}).get('coordinates') or []
+        if len(coords)<2:continue
+        mid=coords[len(coords)//2]
+        key=(round(float(mid[0])/grid_deg),round(float(mid[1])/grid_deg))
+        if key in cells:continue
+        cells.add(key);selected.append(f)
+        if len(selected)>=quota:break
+    return selected
+
+
 def build_road_hints(tf,height,meta):
-    if not ROAD_HINTS_SOURCE.exists():
-        return []
+    if not ROAD_HINTS_SOURCE.exists():return []
     geo=json.loads(ROAD_HINTS_SOURCE.read_text('utf-8'))
-    priority={'motorway':0,'trunk':1,'primary':2}
-    features=sorted(
-        geo.get('features',[]),
-        key=lambda f:(priority.get(f.get('properties',{}).get('highway'),9),-float(f.get('properties',{}).get('length_km',0)))
-    )[:ROAD_HINT_LIMIT]
+    all_features=geo.get('features',[])
+    features=[]
+    for highway,quota in ROAD_HINT_QUOTA.items():
+        subset=[f for f in all_features if f.get('properties',{}).get('highway')==highway]
+        features.extend(spatial_select(subset,quota))
     hints=[]
     for f in features:
         geom=f.get('geometry',{})
         if geom.get('type')!='LineString':continue
         coords=geom.get('coordinates') or []
         if len(coords)<2:continue
-        pts=[]
-        for lon,lat in coords:
-            pts.append(scene_point(lon,lat,tf,height,meta,38.0,visual_lift=ROAD_HINT_LIFT_SCENE))
+        pts=[scene_point(lon,lat,tf,height,meta,38.0,visual_lift=ROAD_HINT_LIFT_SCENE) for lon,lat in coords]
         props=f.get('properties',{})
-        hints.append({
-            'osm_way_id':props.get('osm_way_id'),
-            'highway':props.get('highway','primary'),
-            'length_km':props.get('length_km'),
-            'points':pts
-        })
+        hints.append({'osm_way_id':props.get('osm_way_id'),'highway':props.get('highway','primary'),'length_km':props.get('length_km'),'points':pts})
     return hints
 
 
@@ -155,10 +162,7 @@ def main():
     for r in route3d['routes']:
         if r['id'] not in MAIN_ROUTE_IDS:continue
         pts=[lift_point(p) for p in r['points']]
-        routes.append({
-            'id':r['id'],'start_id':r['start_id'],'distance_km':r['distance_km'],
-            'points':pts,'convergence_from_index':int(len(pts)*.67)
-        })
+        routes.append({'id':r['id'],'start_id':r['start_id'],'distance_km':r['distance_km'],'points':pts,'convergence_from_index':int(len(pts)*.67)})
 
     merged=build_shared_segments(raw,tf,height,meta)
     if not merged:merged=infer_shared_from_routes(routes)
@@ -167,40 +171,23 @@ def main():
     checkpoints=build_checkpoints(routes)
     road_hints=build_road_hints(tf,height,meta)
     finish={**route3d['finish'],'position':lift_point(route3d['finish']['position'])}
+    counts={k:sum(1 for r in road_hints if r['highway']==k) for k in ROAD_HINT_QUOTA}
 
     result={
-        'schema_version':'1.2',
-        'status':'FINAL_SCENE_PRESENTATION_DATA',
-        'terrain_asset':'South Korea Hero Terrain v0.2',
-        'coastline_authority':'korean_peninsula_precise.svg',
-        'coordinate_system':route3d['coordinate_system'],
-        'visual_route_lift_scene_units':VISUAL_LIFT_SCENE,
-        'road_hint_lift_scene_units':ROAD_HINT_LIFT_SCENE,
+        'schema_version':'1.3','status':'FINAL_SCENE_PRESENTATION_DATA','terrain_asset':'South Korea Hero Terrain v0.2','coastline_authority':'korean_peninsula_precise.svg','coordinate_system':route3d['coordinate_system'],'visual_route_lift_scene_units':VISUAL_LIFT_SCENE,'road_hint_lift_scene_units':ROAD_HINT_LIFT_SCENE,
         'policy':[
             'This is a cinematic presentation visualization, not an SSKR navigation engine.',
             'Start references and West Finish remain visual placeholders until product planning confirms official coordinates.',
             'Main routes are grounded in the real-road source topology and terrain-following DEM coordinates.',
             'Merged segments are sampled from shared real-road topology where available.',
-            'Road Hint uses a curated motorway/trunk/primary OSM subset and remains intentionally subordinate.',
+            'Road Hint uses a spatially de-duplicated motorway/trunk/primary OSM subset and remains intentionally subordinate.',
             'Every visible Dawn Start is connected to the journey network: five by Main Routes and four by subtle feeder lines.',
             'Uniform visual lifts prevent graphic layers from being buried by the decimated relief mesh; they do not alter source geography.'
         ],
-        'storyboard':{
-            'duration_s':12.8,'personal_route_id':PERSONAL_ROUTE_ID,
-            'beats':[
-                ['scale',0.0,0.8],['south_korea_hero',0.8,2.2],['dawn_start',2.2,3.5],
-                ['morning_crossing',3.5,5.5],['daylight_network',5.5,7.8],
-                ['sunset_convergence',7.8,10.2],['personal_recall',10.2,11.6],['match_cut',11.6,12.8]
-            ]
-        },
-        'starts':starts,'finish':finish,'main_routes':routes,'start_seeds':seeds,
-        'merged_segments':merged,'road_hints':road_hints,'checkpoints':checkpoints
+        'storyboard':{'duration_s':12.8,'personal_route_id':PERSONAL_ROUTE_ID,'beats':[['scale',0.0,0.8],['south_korea_hero',0.8,2.2],['dawn_start',2.2,3.5],['morning_crossing',3.5,5.5],['daylight_network',5.5,7.8],['sunset_convergence',7.8,10.2],['personal_recall',10.2,11.6],['match_cut',11.6,12.8]]},
+        'starts':starts,'finish':finish,'main_routes':routes,'start_seeds':seeds,'merged_segments':merged,'road_hints':road_hints,'road_hint_counts':counts,'checkpoints':checkpoints
     }
     (OUT/'scene05_final_data_v1.json').write_text(json.dumps(result,ensure_ascii=False,indent=2),encoding='utf-8')
-    print(json.dumps({
-        'main_routes':len(routes),'starts':len(starts),'start_seeds':len(seeds),
-        'merged_segments':len(merged),'road_hints':len(road_hints),'checkpoints':len(checkpoints),
-        'personal_route':PERSONAL_ROUTE_ID,'visual_lift':VISUAL_LIFT_SCENE
-    },indent=2))
+    print(json.dumps({'main_routes':len(routes),'starts':len(starts),'start_seeds':len(seeds),'merged_segments':len(merged),'road_hints':len(road_hints),'road_hint_counts':counts,'checkpoints':len(checkpoints),'personal_route':PERSONAL_ROUTE_ID,'visual_lift':VISUAL_LIFT_SCENE},indent=2))
 
 if __name__=='__main__':main()

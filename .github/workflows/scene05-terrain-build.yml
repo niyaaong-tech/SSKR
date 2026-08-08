@@ -24,6 +24,9 @@ jobs:
       - name: Install terrain dependencies
         run: python -m pip install boto3 numpy Pillow rasterio pyproj scipy trimesh
 
+      - name: Apply provisional ocean mask rule
+        run: sed -i 's/(dem>-100)/(dem>0.5)/' tools/scene05-build-direct.py
+
       - name: Build actual South Korea Hero terrain v0.1
         run: python tools/scene05-build-direct.py
 

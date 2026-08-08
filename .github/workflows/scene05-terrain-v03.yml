@@ -1,0 +1,101 @@
+name: Scene 05 Terrain v0.3
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/scene05-terrain-v03.yml'
+      - 'tools/scene05-georef-controlpoints-v03.py'
+      - 'tools/scene05-georef-build-v02.py'
+      - 'assets/scene05/control_points_v0.3.json'
+      - 'assets/vector/korean_peninsula_precise.svg'
+      - 'assets/vector/source_chunks/**'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-terrain-v03:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install geospatial dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install numpy Pillow scipy rasterio pyproj shapely geopandas pyogrio trimesh boto3 requests cairosvg opencv-python-headless gdown
+
+      - name: Restore canonical Korea SVG if needed
+        run: |
+          if [ ! -s assets/vector/korean_peninsula_precise.svg ]; then
+            python - <<'PY'
+          from pathlib import Path
+          import base64, gzip
+          root=Path('assets/vector')
+          parts=sorted((root/'source_chunks').glob('korean_peninsula_precise.svg.gz.b64.part*'))
+          if len(parts)!=6: raise SystemExit(f'Expected 6 SVG source chunks, got {len(parts)}')
+          raw=gzip.decompress(base64.b64decode(''.join(p.read_text('ascii').strip() for p in parts)))
+          (root/'korean_peninsula_precise.svg').write_bytes(raw)
+          PY
+          fi
+
+      - name: Build control-point refined South Korea Hero terrain v0.3
+        run: python tools/scene05-georef-controlpoints-v03.py
+
+      - name: Upload full v0.3 build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: SSKR-Scene05-SouthKoreaHero-Terrain-v0.3
+          path: output/south_korea_hero_v0.3/
+          if-no-files-found: error
+          compression-level: 6
+          retention-days: 30
+
+      - name: Publish web-ready v0.3 assets to repository
+        run: |
+          mkdir -p assets/scene05/south_korea_hero_v0.3
+          cp output/south_korea_hero_v0.3/albedo.png assets/scene05/south_korea_hero_v0.3/
+          cp output/south_korea_hero_v0.3/height_u16.png assets/scene05/south_korea_hero_v0.3/
+          cp output/south_korea_hero_v0.3/hillshade.png assets/scene05/south_korea_hero_v0.3/
+          cp output/south_korea_hero_v0.3/land_mask_precise_svg.png assets/scene05/south_korea_hero_v0.3/
+          cp output/south_korea_hero_v0.3/normal.png assets/scene05/south_korea_hero_v0.3/
+          cp output/south_korea_hero_v0.3/slope.png assets/scene05/south_korea_hero_v0.3/
+          cp output/south_korea_hero_v0.3/terrain_lod.glb assets/scene05/south_korea_hero_v0.3/
+          cp output/south_korea_hero_v0.3/terrain_qa_preview_v03.png assets/scene05/south_korea_hero_v0.3/
+          cp output/south_korea_hero_v0.3/control_points_svg_overlay_v03.png assets/scene05/south_korea_hero_v0.3/
+          cp output/south_korea_hero_v0.3/control_points_terrain_overlay_v03.png assets/scene05/south_korea_hero_v0.3/
+          cp output/south_korea_hero_v0.3/georef_reference_overlay_v03.png assets/scene05/south_korea_hero_v0.3/
+          cp output/south_korea_hero_v0.3/georef_control_points_v03.json assets/scene05/south_korea_hero_v0.3/
+          cp output/south_korea_hero_v0.3/terrain_metadata_v03.json assets/scene05/south_korea_hero_v0.3/
+          cp output/south_korea_hero_v0.3/BUILD_PROVENANCE_v03.json assets/scene05/south_korea_hero_v0.3/
+          cp output/south_korea_hero_v0.3/source_tiles.json assets/scene05/south_korea_hero_v0.3/
+          cat > assets/scene05/south_korea_hero_v0.3/README.md <<'EOF'
+          # South Korea Hero Terrain v0.3
+
+          Scene 05 control-point-refined terrain candidate.
+
+          - Elevation: Copernicus DEM GLO-30
+          - Final coastline geometry: SSKR canonical `korean_peninsula_precise.svg`
+          - Georeference: v0.2 affine seed + 13 real coastal reference points + quadratic coordinate transform
+          - Natural Earth: independent QA/reference only, never final coastline
+          - Vertical exaggeration: 1.5x
+
+          Control points are georeferencing references only. They are not confirmed SSKR event Start/Checkpoint/Finish spots.
+          EOF
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add assets/scene05/south_korea_hero_v0.3
+          if ! git diff --cached --quiet; then
+            git commit -m 'Publish Scene 05 South Korea Hero terrain v0.3'
+            git push
+          fi

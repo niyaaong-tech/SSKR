@@ -1,5 +1,5 @@
 {
-  "schema_version": "1.0",
+  "schema_version": "1.1",
   "source": "ESA WorldCover 10m 2021 v200",
   "license": "CC BY 4.0",
   "attribution": "© ESA WorldCover project 2021 / Contains modified Copernicus Sentinel data (2021) processed by ESA WorldCover consortium",
@@ -10,9 +10,21 @@
     "ESA_WorldCover_10m_2021_v200_N33E129_Map.tif",
     "ESA_WorldCover_10m_2021_v200_N36E123_Map.tif",
     "ESA_WorldCover_10m_2021_v200_N36E126_Map.tif",
-    "ESA_WorldCover_10m_2021_v200_N36E129_Map.tif"
+    "ESA_WorldCover_10m_2021_v200_N36E129_Map.tif",
+    "ESA_WorldCover_10m_2021_v200_N39E123_Map.tif",
+    "ESA_WorldCover_10m_2021_v200_N39E126_Map.tif",
+    "ESA_WorldCover_10m_2021_v200_N39E129_Map.tif",
+    "ESA_WorldCover_10m_2021_v200_N42E123_Map.tif",
+    "ESA_WorldCover_10m_2021_v200_N42E126_Map.tif",
+    "ESA_WorldCover_10m_2021_v200_N42E129_Map.tif"
   ],
-  "bbox_wgs84": [
+  "full_bbox_wgs84": [
+    123.5,
+    33.0,
+    132.0,
+    43.6
+  ],
+  "local_bbox_wgs84": [
     124.0,
     33.0,
     131.25,
@@ -25,20 +37,26 @@
     341185.29766357486,
     339026.5972163879
   ],
-  "raster_size": [
+  "local_raster_size": [
     2304,
     2284
   ],
-  "class_pixel_counts": {
-    "0": 2125392,
-    "10": 1091423,
-    "20": 1,
-    "30": 88423,
-    "40": 329580,
-    "50": 107859,
-    "60": 7986,
-    "80": 1510267,
-    "90": 1405
+  "peninsula_raster_size": [
+    1792,
+    3307
+  ],
+  "peninsula_alignment": "canonical SVG pixel grid via svg_px_to_epsg3857 affine",
+  "class_pixel_counts_peninsula": {
+    "0": 1772695,
+    "10": 2087675,
+    "20": 7,
+    "30": 128037,
+    "40": 543323,
+    "50": 86565,
+    "60": 8343,
+    "80": 1295462,
+    "90": 3878,
+    "100": 159
   },
   "purpose": "Scene 05 cinematic land-material classification; not navigation"
 }

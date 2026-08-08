@@ -31,7 +31,7 @@ def main():
     html=html.replace('<script type="module" src="./app.js"></script>',f'<script type="module">{js}</script>')
     for ref in ['./assets/','./app.js','./scene05-final.css']:
         if ref in html:raise SystemExit(f'Standalone pack left external reference: {ref}')
-    out=DIST/'SSKR_Scene05_Final_v1.1_standalone.html'
+    out=DIST/'SSKR_Scene05_Final_v1.2_standalone.html'
     out.write_text(html,encoding='utf-8')
     print(out,out.stat().st_size)
 

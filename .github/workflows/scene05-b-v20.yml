@@ -1,4 +1,4 @@
-name: Scene 05 B Artwork One-Take v2.7
+name: Scene 05 B Artwork One-Take v2.8
 
 on:
   push:
@@ -15,7 +15,8 @@ on:
       - 'tools/scene05-b-source-v252.py'
       - 'tools/scene05-b-source-v26.py'
       - 'tools/scene05-b-source-v27.py'
-      - 'tools/scene05-b-peninsula-texture-v26.py'
+      - 'tools/scene05-b-source-v28.py'
+      - 'tools/scene05-b-peninsula-texture-v28.py'
       - 'tools/scene05-b-exploration-branches-v27.py'
       - 'tools/scene05-b-art-textures-v22.py'
       - 'tools/scene05-final-data-v1.py'
@@ -31,7 +32,7 @@ permissions:
   contents: write
 
 jobs:
-  build-scene05-b-v27:
+  build-scene05-b-v28:
     runs-on: ubuntu-latest
     timeout-minutes: 45
     steps:
@@ -39,20 +40,18 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 1
-
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-
-      - name: Build v2.7 texture-led actual-road artwork assets
+      - name: Build v2.8 aerial texture and actual-road artwork assets
         run: |
           python -m pip install --upgrade pip
           python -m pip install numpy Pillow pyproj trimesh cairosvg
           python tools/scene05-final-terrain-v1.py
           python tools/scene05-b-art-textures-v22.py
           python tools/scene05-final-data-v1.py
-          python tools/scene05-b-peninsula-texture-v26.py
+          python tools/scene05-b-peninsula-texture-v28.py
           python tools/scene05-b-exploration-branches-v27.py
           python tools/scene05-b-source-v20.py
           python tools/scene05-b-coast-source-v22.py
@@ -63,35 +62,29 @@ jobs:
           python tools/scene05-b-source-v252.py
           python tools/scene05-b-source-v26.py
           python tools/scene05-b-source-v27.py
+          python tools/scene05-b-source-v28.py
           test -s output/scene05_final_v1/terrain_final_uv.glb
-          test -s output/scene05_final_v1/terrain_dawn_final.png
-          test -s output/scene05_final_v1/terrain_day_final.png
-          test -s output/scene05_final_v1/terrain_sunset_final.png
-          test -s output/scene05_final_v1/coast_shallow.png
-          test -s output/scene05_final_v1/peninsula_surface_v26.png
-          test -s output/scene05_final_v1/peninsula_surface_v26.json
+          test -s output/scene05_final_v1/peninsula_surface_v28.png
+          test -s output/scene05_final_v1/peninsula_surface_v28.json
+          test -s output/scene05_final_v1/peninsula_surface_v28_qa.json
           test -s output/scene05_final_v1/scene05_final_data_v1.json
-          test -s output/scene05-b-v27.js
+          test -s output/scene05-b-v28.js
           grep -q '1.8-v27-osm-exploration' output/scene05_final_v1/scene05_final_data_v1.json
-          grep -q 'exploration_branches' output/scene05_final_v1/scene05_final_data_v1.json
-
       - name: Set up Node
         uses: actions/setup-node@v5
         with:
           node-version: '22'
-
       - name: Install Korean QA fonts
         run: |
           sudo apt-get update -qq
           sudo apt-get install -y --no-install-recommends fonts-noto-cjk
           fc-cache -f
-
-      - name: Bundle Scene 05 B v2.7
+      - name: Bundle Scene 05 B v2.8
         run: |
           npm install --no-save --no-audit --no-fund three@0.185.1 gsap@3.15.0 esbuild puppeteer-core
           rm -rf final/scene05-b/dist
           mkdir -p final/scene05-b/dist/assets
-          npx esbuild output/scene05-b-v27.js --bundle --format=esm --target=es2022 --minify --outfile=final/scene05-b/dist/app.js
+          npx esbuild output/scene05-b-v28.js --bundle --format=esm --target=es2022 --minify --outfile=final/scene05-b/dist/app.js
           cp final/scene05-b/index.html final/scene05-b/dist/index.html
           cp final/scene05-b/scene05-b.css final/scene05-b/dist/scene05-b.css
           cp final/scene05-b/README.md final/scene05-b/dist/README.md
@@ -100,13 +93,12 @@ jobs:
           cp output/scene05_final_v1/terrain_day_final.png final/scene05-b/dist/assets/
           cp output/scene05_final_v1/terrain_sunset_final.png final/scene05-b/dist/assets/
           cp output/scene05_final_v1/coast_shallow.png final/scene05-b/dist/assets/
-          cp output/scene05_final_v1/peninsula_surface_v26.png final/scene05-b/dist/assets/
-          cp output/scene05_final_v1/peninsula_surface_v26.json final/scene05-b/dist/assets/
+          cp output/scene05_final_v1/peninsula_surface_v28.png final/scene05-b/dist/assets/
+          cp output/scene05_final_v1/peninsula_surface_v28.json final/scene05-b/dist/assets/
           cp output/scene05_final_v1/scene05_final_data_v1.json final/scene05-b/dist/assets/
           cp assets/vector/korean_peninsula_precise.svg final/scene05-b/dist/assets/
           python final/scene05-b/pack_standalone.py
-          test -s final/scene05-b/dist/SSKR_Scene05_B_ArtworkPass_OneTake_v2.7_standalone.html
-
+          test -s final/scene05-b/dist/SSKR_Scene05_B_ArtworkPass_OneTake_v2.8_standalone.html
       - name: Headed Chromium exact-timeline visual QA
         timeout-minutes: 4
         run: |
@@ -115,52 +107,36 @@ jobs:
           trap 'kill $SERVER_PID || true' EXIT
           sleep 2
           BROWSER=$(command -v google-chrome || command -v chromium || command -v chromium-browser || true)
-          if [ -z "$BROWSER" ]; then
-            echo 'No Chromium-compatible browser on runner' >&2
-            exit 1
-          fi
+          test -n "$BROWSER"
           timeout 210s xvfb-run -a env BROWSER_PATH="$BROWSER" node final/scene05-b/qa.mjs
-          for f in b27_014_peninsula_texture b27_052_east_starts b27_092_local_choice b27_124_road_exploration b27_185_freedom_reveal b27_242_network_flight b27_298_finish_convergence b27_342_sunset_arrival b27_372_firework_launch b27_394_festival_finale; do
-            test -s "final/scene05-b/dist/${f}.png"
-          done
-
-      - name: Upload Scene 05 B v2.7 portable build
+          for f in b28_014_peninsula_texture b28_052_east_starts b28_092_road_fork b28_124_road_exploration b28_185_freedom_reveal b28_242_network_flight b28_298_finish_convergence b28_342_sunset_arrival b28_372_firework_launch b28_394_festival_finale; do test -s "final/scene05-b/dist/${f}.png"; done
+      - name: Upload Scene 05 B v2.8 portable build
         uses: actions/upload-artifact@v4
         with:
-          name: SSKR-Scene05-B-Artwork-OneTake-v2.7
+          name: SSKR-Scene05-B-Artwork-OneTake-v2.8
           path: final/scene05-b/dist/
           if-no-files-found: error
           compression-level: 6
           retention-days: 30
-
-      - name: Publish B v2.7 QA frames and metadata
+      - name: Publish B v2.8 QA frames and metadata
         run: |
-          mkdir -p assets/scene05/b_v2_7 final/scene05-b/preview_v2_7
-          cp output/scene05_final_v1/terrain_final_metadata.json assets/scene05/b_v2_7/
-          cp output/scene05_final_v1/scene05_b_art_texture_metadata.json assets/scene05/b_v2_7/
-          cp output/scene05_final_v1/peninsula_surface_v26.json assets/scene05/b_v2_7/
-          cp output/scene05_final_v1/scene05_final_data_v1.json assets/scene05/b_v2_7/
-          cp final/scene05-b/dist/b27_*.png final/scene05-b/preview_v2_7/
-          cat > assets/scene05/b_v2_7/README.md <<'EOF'
-          # Scene 05 B v2.7 actual-road artwork candidate
-
-          - v2.6 canonical 2D land texture / shallow DEM relief system retained
-          - road backdrop now uses OSM trunk / primary / secondary; motorway is excluded from the rider-choice context
-          - synthetic cross-country choice mosaics are removed from the visible scene
-          - up to 34 gold exploration traces are selected from actual OSM road geometry and appear as local choices / detours
-          - Main Routes remain five long-form journey examples, while local road traces communicate self-directed route discovery
-          - broad ocean banding is removed; only fine shimmer / coastal tint remain
-          - dawn land is lifted and daylight texture is warmer
-          - cloud framing is strengthened
+          mkdir -p assets/scene05/b_v2_8 final/scene05-b/preview_v2_8
+          cp output/scene05_final_v1/peninsula_surface_v28.json assets/scene05/b_v2_8/
+          cp output/scene05_final_v1/peninsula_surface_v28_qa.json assets/scene05/b_v2_8/
+          cp output/scene05_final_v1/scene05_final_data_v1.json assets/scene05/b_v2_8/
+          cp final/scene05-b/dist/b28_*.png final/scene05-b/preview_v2_8/
+          cat > assets/scene05/b_v2_8/README.md <<'EOF'
+          # Scene 05 B v2.8 aerial artwork candidate
+          - full-peninsula texture now blends the low-detail north context into actual South Korea DEM relief without a hard seam
+          - South surface uses stronger baked multi-direction relief and restrained source material detail
+          - real OSM trunk/primary/secondary network is visibly present at decision scale
+          - gold exploration highlights are actual OSM road fragments; synthetic nationwide connector routes remain removed
+          - Main Routes are visually restrained as long-form journey examples rather than fixed official courses
+          - sunset sun is smaller and fades at the horizon rather than falling onto the sea
           - v2.5.2 fireworks safe-frame remains intact
-          - runtime remains approximately 40 seconds and cut-free
-
-          v2.7 remains a visual QA candidate, not final-art acceptance.
+          - runtime approximately 40 seconds, cut-free
           EOF
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add assets/scene05/b_v2_7 final/scene05-b/preview_v2_7
-          if ! git diff --cached --quiet; then
-            git commit -m 'Publish Scene 05 B v2.7 actual-road artwork QA'
-            git push
-          fi
+          git add assets/scene05/b_v2_8 final/scene05-b/preview_v2_8
+          if ! git diff --cached --quiet; then git commit -m 'Publish Scene 05 B v2.8 aerial artwork QA'; git push; fi

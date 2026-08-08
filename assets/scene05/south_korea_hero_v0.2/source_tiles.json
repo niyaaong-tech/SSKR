@@ -1,0 +1,99 @@
+{
+  "bbox_wgs84": [
+    124.0,
+    33.0,
+    131.25,
+    39.0
+  ],
+  "tiles": [
+    "Copernicus_DSM_COG_10_N33_00_E126_00_DEM.tif",
+    "Copernicus_DSM_COG_10_N33_00_E128_00_DEM.tif",
+    "Copernicus_DSM_COG_10_N33_00_E129_00_DEM.tif",
+    "Copernicus_DSM_COG_10_N33_00_E130_00_DEM.tif",
+    "Copernicus_DSM_COG_10_N33_00_E131_00_DEM.tif",
+    "Copernicus_DSM_COG_10_N34_00_E125_00_DEM.tif",
+    "Copernicus_DSM_COG_10_N34_00_E126_00_DEM.tif",
+    "Copernicus_DSM_COG_10_N34_00_E127_00_DEM.tif",
+    "Copernicus_DSM_COG_10_N34_00_E128_00_DEM.tif",
+    "Copernicus_DSM_COG_10_N34_00_E129_00_DEM.tif",
+    "Copernicus_DSM_COG_10_N34_00_E130_00_DEM.tif",
+    "Copernicus_DSM_COG_10_N34_00_E131_00_DEM.tif",
+    "Copernicus_DSM_COG_10_N35_00_E125_00_DEM.tif",
+    "Copernicus_DSM_COG_10_N35_00_E126_00_DEM.tif",
+    "Copernicus_DSM_COG_10_N35_00_E127_00_DEM.tif",
+    "Copernicus_DSM_COG_10_N35_00_E128_00_DEM.tif",
+    "Copernicus_DSM_COG_10_N35_00_E129_00_DEM.tif",
+    "Copernicus_DSM_COG_10_N36_00_E125_00_DEM.tif",
+    "Copernicus_DSM_COG_10_N36_00_E126_00_DEM.tif",
+    "Copernicus_DSM_COG_10_N36_00_E127_00_DEM.tif",
+    "Copernicus_DSM_COG_10_N36_00_E128_00_DEM.tif",
+    "Copernicus_DSM_COG_10_N36_00_E129_00_DEM.tif",
+    "Copernicus_DSM_COG_10_N37_00_E124_00_DEM.tif",
+    "Copernicus_DSM_COG_10_N37_00_E125_00_DEM.tif",
+    "Copernicus_DSM_COG_10_N37_00_E126_00_DEM.tif",
+    "Copernicus_DSM_COG_10_N37_00_E127_00_DEM.tif",
+    "Copernicus_DSM_COG_10_N37_00_E128_00_DEM.tif",
+    "Copernicus_DSM_COG_10_N37_00_E129_00_DEM.tif",
+    "Copernicus_DSM_COG_10_N37_00_E130_00_DEM.tif",
+    "Copernicus_DSM_COG_10_N37_00_E131_00_DEM.tif",
+    "Copernicus_DSM_COG_10_N38_00_E124_00_DEM.tif",
+    "Copernicus_DSM_COG_10_N38_00_E125_00_DEM.tif",
+    "Copernicus_DSM_COG_10_N38_00_E126_00_DEM.tif",
+    "Copernicus_DSM_COG_10_N38_00_E127_00_DEM.tif",
+    "Copernicus_DSM_COG_10_N38_00_E128_00_DEM.tif"
+  ],
+  "missing": [
+    {
+      "key": "Copernicus_DSM_COG_10_N33_00_E124_00_DEM/Copernicus_DSM_COG_10_N33_00_E124_00_DEM.tif",
+      "error": "An error occurred (404) when calling the HeadObject operation: Not Found"
+    },
+    {
+      "key": "Copernicus_DSM_COG_10_N33_00_E125_00_DEM/Copernicus_DSM_COG_10_N33_00_E125_00_DEM.tif",
+      "error": "An error occurred (404) when calling the HeadObject operation: Not Found"
+    },
+    {
+      "key": "Copernicus_DSM_COG_10_N33_00_E127_00_DEM/Copernicus_DSM_COG_10_N33_00_E127_00_DEM.tif",
+      "error": "An error occurred (404) when calling the HeadObject operation: Not Found"
+    },
+    {
+      "key": "Copernicus_DSM_COG_10_N34_00_E124_00_DEM/Copernicus_DSM_COG_10_N34_00_E124_00_DEM.tif",
+      "error": "An error occurred (404) when calling the HeadObject operation: Not Found"
+    },
+    {
+      "key": "Copernicus_DSM_COG_10_N35_00_E124_00_DEM/Copernicus_DSM_COG_10_N35_00_E124_00_DEM.tif",
+      "error": "An error occurred (404) when calling the HeadObject operation: Not Found"
+    },
+    {
+      "key": "Copernicus_DSM_COG_10_N35_00_E130_00_DEM/Copernicus_DSM_COG_10_N35_00_E130_00_DEM.tif",
+      "error": "An error occurred (404) when calling the HeadObject operation: Not Found"
+    },
+    {
+      "key": "Copernicus_DSM_COG_10_N35_00_E131_00_DEM/Copernicus_DSM_COG_10_N35_00_E131_00_DEM.tif",
+      "error": "An error occurred (404) when calling the HeadObject operation: Not Found"
+    },
+    {
+      "key": "Copernicus_DSM_COG_10_N36_00_E124_00_DEM/Copernicus_DSM_COG_10_N36_00_E124_00_DEM.tif",
+      "error": "An error occurred (404) when calling the HeadObject operation: Not Found"
+    },
+    {
+      "key": "Copernicus_DSM_COG_10_N36_00_E130_00_DEM/Copernicus_DSM_COG_10_N36_00_E130_00_DEM.tif",
+      "error": "An error occurred (404) when calling the HeadObject operation: Not Found"
+    },
+    {
+      "key": "Copernicus_DSM_COG_10_N36_00_E131_00_DEM/Copernicus_DSM_COG_10_N36_00_E131_00_DEM.tif",
+      "error": "An error occurred (404) when calling the HeadObject operation: Not Found"
+    },
+    {
+      "key": "Copernicus_DSM_COG_10_N38_00_E129_00_DEM/Copernicus_DSM_COG_10_N38_00_E129_00_DEM.tif",
+      "error": "An error occurred (404) when calling the HeadObject operation: Not Found"
+    },
+    {
+      "key": "Copernicus_DSM_COG_10_N38_00_E130_00_DEM/Copernicus_DSM_COG_10_N38_00_E130_00_DEM.tif",
+      "error": "An error occurred (404) when calling the HeadObject operation: Not Found"
+    },
+    {
+      "key": "Copernicus_DSM_COG_10_N38_00_E131_00_DEM/Copernicus_DSM_COG_10_N38_00_E131_00_DEM.tif",
+      "error": "An error occurred (404) when calling the HeadObject operation: Not Found"
+    }
+  ]
+}

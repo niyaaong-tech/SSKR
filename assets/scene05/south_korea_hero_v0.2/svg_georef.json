@@ -1,0 +1,53 @@
+{
+  "schema_version": 1,
+  "source_svg": "assets/vector/korean_peninsula_precise.svg",
+  "reference": "Natural Earth 10m Korea union; calibration/QA only",
+  "svg_px_to_epsg3857_matrix": [
+    [
+      1039.558690077945,
+      -12.659172137253638,
+      13824893.812572608
+    ],
+    [
+      11.783534601135445,
+      -1031.2807395606685,
+      5299232.831183137
+    ],
+    [
+      0.0,
+      0.0,
+      1.0
+    ]
+  ],
+  "epsg3857_to_svg_px_matrix": [
+    [
+      0.0009620805153759173,
+      -1.180972589406626e-05,
+      -13238.078477032075
+    ],
+    [
+      1.0992844729011272e-05,
+      -0.0009698030050864399,
+      4987.237013257451
+    ],
+    [
+      0.0,
+      0.0,
+      1.0
+    ]
+  ],
+  "reference_bounds_epsg3857": [
+    13797329.954603583,
+    3872839.3112854306,
+    14708679.28312072,
+    5362254.34097357
+  ],
+  "fit_metrics": {
+    "ecc": 0.9770484063987583,
+    "convention": "inverse",
+    "iou_natural_earth": 0.9088154747687586,
+    "mean_symmetric_boundary_distance_px": 5.959936919062052,
+    "mean_symmetric_boundary_distance_km": 4.728943440842164
+  },
+  "policy": "Final coastline comes only from canonical SVG."
+}

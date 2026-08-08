@@ -1,0 +1,57 @@
+{
+  "asset": "South Korea Hero Terrain v0.2",
+  "files": {
+    "georef_reference_overlay.png": {
+      "bytes": 39692,
+      "sha256": "ba399d4fb43c9d1745830d0c329f58364721cd0044a952bc14ce5025ebfa15fe"
+    },
+    "svg_georef.json": {
+      "bytes": 1139,
+      "sha256": "f7fde56d505a7b005afc4f27848a9ad5a32f9d0718749c9b54d02e494ca4b057"
+    },
+    "albedo.png": {
+      "bytes": 1377995,
+      "sha256": "3a48f27b18b8baa09358597431a67b6a5eaff845083da904603f6e0474bdb72a"
+    },
+    "slope.png": {
+      "bytes": 1116761,
+      "sha256": "d8144cf672bd5a87d1c8deaae8b97ad443326f0f4e0cd86a617a6cac935867dc"
+    },
+    "source_tiles.json": {
+      "bytes": 4588,
+      "sha256": "057c1a2d75ed867e2757978e697824ebe66867eec5fc5bb6cca18f64d84df9d1"
+    },
+    "terrain_lod.glb": {
+      "bytes": 2375516,
+      "sha256": "fd58c3f69b3a8f54838b8436e363a4872c0d4186a565c8b41b5bf37a39b8841b"
+    },
+    "terrain_qa_preview_v02.png": {
+      "bytes": 1401083,
+      "sha256": "fbbe4b5ece5fef54b0c89c7e0ef8561606e9e11e420db22f15a872fe2835e506"
+    },
+    "hillshade.png": {
+      "bytes": 999237,
+      "sha256": "b701f14db103f02cd304473dbbe6cef6d931b7e0bb13a07b4db5f969a34f410a"
+    },
+    "land_mask_precise_svg.png": {
+      "bytes": 21009,
+      "sha256": "28b7d0b521775935a39b8473b19f8fd2148af191cd04c5e0532db809a2c86f9c"
+    },
+    "dem_scene_float32.tif": {
+      "bytes": 5577677,
+      "sha256": "d5c9ee08aed63ea5f74bc7de084a4b3e1d282f9371444467db1c368f4a0db601"
+    },
+    "normal.png": {
+      "bytes": 2834010,
+      "sha256": "559a8319283c1a9645960c7a8eae6d106c4af585f2f9fb6439d866f963074e14"
+    },
+    "terrain_metadata.json": {
+      "bytes": 1196,
+      "sha256": "a4a885b7d82744be14a0d5b63cc078927469ea891ae258d689d08a2ccbc74912"
+    },
+    "height_u16.png": {
+      "bytes": 2542050,
+      "sha256": "784f7ccdf433ea5d1d0acc8bdee944b27d49496b921106059443affc8ece757a"
+    }
+  }
+}

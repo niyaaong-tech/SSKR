@@ -1,0 +1,532 @@
+{
+  "schema_version": "0.3.1",
+  "status": "KEEP_V02_SEED",
+  "policy": "Diagnostic only. Final coastline remains canonical SVG. OSM coastline is used only to resolve real geographic control coordinates.",
+  "overpass_endpoint": "https://overpass-api.de/api/interpreter",
+  "coastline_segment_count": 52499,
+  "control_point_count": 13,
+  "inlier_count": 8,
+  "approx_m_per_svg_px": 1035.3394056672437,
+  "seed_error_km": {
+    "mean": 3.6908961055115412,
+    "max": 8.200608910796696,
+    "median": 3.9833340531487775
+  },
+  "seed_inlier_error_km": {
+    "mean": 3.9499784992747577,
+    "max": 5.895503953499293
+  },
+  "refined_inlier_fit_error_km": {
+    "mean": 0.6963400960931442,
+    "max": 1.1329133048754603
+  },
+  "leave_one_out_inlier_error_km": {
+    "mean": 1.1035493270703942,
+    "max": 1.5665478983753893,
+    "median": 1.1841536143908513
+  },
+  "affine_matrix_seed_svg_to_refined_svg": [
+    [
+      1.0193396274722437,
+      -0.004336629626771663,
+      -2.162670376960354
+    ],
+    [
+      -0.007470291391449019,
+      1.01058726744941,
+      -5.984013295076932
+    ]
+  ],
+  "affine_transform_metrics": {
+    "singular_values": [
+      1.0223132483730861,
+      1.0076160653130637
+    ],
+    "rotation_deg_approx": -0.08844922019679098,
+    "translation_px": [
+      -2.162670376960354,
+      -5.984013295076932
+    ],
+    "sample_displacement_px": [
+      6.362826280438538,
+      16.81341932098901,
+      11.79090250673563,
+      6.94997884152385,
+      2.5408093993999623
+    ],
+    "max_sample_displacement_px": 16.81341932098901
+  },
+  "points": [
+    {
+      "id": "sokcho_lighthouse",
+      "name": "Sokcho Lighthouse",
+      "lat": 38.2016667,
+      "lon": 128.6002778,
+      "region": "east",
+      "source": "Ministry of Oceans and Fisheries lighthouse listing",
+      "resolved_coast_lon": 128.60026244400336,
+      "resolved_coast_lat": 38.201699714849525,
+      "landmark_to_coast_m": 4.9793986099382765,
+      "osm_coastline_way_id": 583557331,
+      "resolved_coast_mercator": [
+        14315715.731147796,
+        4607958.532750752
+      ],
+      "seed_svg_px": [
+        480.3739643627141,
+        675.7954210992402
+      ],
+      "canonical_boundary_svg_px": [
+        484.0,
+        674.0
+      ],
+      "seed_boundary_error_px": 4.046192205823189,
+      "seed_boundary_error_km": 4.1891822335924145,
+      "ransac_inlier": true,
+      "refined_svg_px": [
+        484.5708730591179,
+        673.3777011777727
+      ],
+      "refined_boundary_error_px": 0.8444831992243195,
+      "refined_boundary_error_km": 0.8743267335808794
+    },
+    {
+      "id": "jeongdongjin",
+      "name": "Jeongdongjin",
+      "lat": 37.689,
+      "lon": 129.034,
+      "region": "east",
+      "source": "OpenStreetMap/Mapcarta",
+      "resolved_coast_lon": 129.03584724368278,
+      "resolved_coast_lat": 37.690087283748895,
+      "landmark_to_coast_m": 256.28029250204656,
+      "osm_coastline_way_id": 22491885,
+      "resolved_coast_mercator": [
+        14364204.8092454,
+        4535737.575009302
+      ],
+      "seed_svg_px": [
+        527.8772713236922,
+        746.368555853699
+      ],
+      "canonical_boundary_svg_px": [
+        533.0,
+        744.0
+      ],
+      "seed_boundary_error_px": 5.643793575526872,
+      "seed_boundary_error_km": 5.843241886194599,
+      "ransac_inlier": true,
+      "refined_svg_px": [
+        532.6868267333906,
+        744.3431490395642
+      ],
+      "refined_boundary_error_px": 0.4645737382511309,
+      "refined_boundary_error_km": 0.4809914980495355
+    },
+    {
+      "id": "mukho_lighthouse",
+      "name": "Mukho Lighthouse",
+      "lat": 37.55445,
+      "lon": 129.11856,
+      "region": "east",
+      "source": "OpenStreetMap/Mapcarta",
+      "resolved_coast_lon": 129.1203598,
+      "resolved_coast_lat": 37.55422620000001,
+      "landmark_to_coast_m": 202.8023887121399,
+      "osm_coastline_way_id": 581824045,
+      "resolved_coast_mercator": [
+        14373612.703980269,
+        4516642.91559995
+      ],
+      "seed_svg_px": [
+        537.1539262324823,
+        764.9900334560389
+      ],
+      "canonical_boundary_svg_px": [
+        542.0,
+        762.0
+      ],
+      "seed_boundary_error_px": 5.6942717733223205,
+      "seed_boundary_error_km": 5.895503953499293,
+      "ransac_inlier": true,
+      "refined_svg_px": [
+        542.0621342408407,
+        763.0924778902767
+      ],
+      "refined_boundary_error_px": 1.094243393687245,
+      "refined_boundary_error_km": 1.1329133048754603
+    },
+    {
+      "id": "uljin_jinmimal_lighthouse",
+      "name": "Jinmimal Lighthouse, Uljin",
+      "lat": 36.89431,
+      "lon": 129.41778,
+      "region": "east",
+      "source": "OpenStreetMap/Mapcarta",
+      "resolved_coast_lon": 129.4181111,
+      "resolved_coast_lat": 36.8934046,
+      "landmark_to_coast_m": 131.304598185618,
+      "osm_coastline_way_id": 22491803,
+      "resolved_coast_mercator": [
+        14406758.227079306,
+        4424259.159927161
+      ],
+      "seed_svg_px": [
+        570.1336150095685,
+        854.9484409175693
+      ],
+      "canonical_boundary_svg_px": [
+        577.0,
+        851.0
+      ],
+      "seed_boundary_error_px": 7.920696214118945,
+      "seed_boundary_error_km": 8.200608910796696,
+      "ransac_inlier": false,
+      "refined_svg_px": [
+        575.2895216180515,
+        853.7569311857612
+      ],
+      "refined_boundary_error_px": 3.244442303098648,
+      "refined_boundary_error_km": 3.3590989658118175
+    },
+    {
+      "id": "yeongdeok_chuksan_lighthouse",
+      "name": "Chuksan Lighthouse, Yeongdeok",
+      "lat": 36.50747,
+      "lon": 129.4508,
+      "region": "east",
+      "source": "OpenStreetMap/Mapcarta",
+      "resolved_coast_lon": 129.44951910000003,
+      "resolved_coast_lat": 36.507746399999995,
+      "landmark_to_coast_m": 147.6381680056332,
+      "osm_coastline_way_id": 577465538,
+      "resolved_coast_mercator": [
+        14410254.549646147,
+        4370713.299209567
+      ],
+      "seed_svg_px": [
+        574.1297207644311,
+        906.9158120825332
+      ],
+      "canonical_boundary_svg_px": [
+        579.0,
+        907.0
+      ],
+      "seed_boundary_error_px": 4.871006819730482,
+      "seed_boundary_error_km": 5.043145305740848,
+      "ransac_inlier": true,
+      "refined_svg_px": [
+        579.1375473281333,
+        906.2446427334714
+      ],
+      "refined_boundary_error_px": 0.7677785276849843,
+      "refined_boundary_error_km": 0.794911364537443
+    },
+    {
+      "id": "homigot_sunrise_square",
+      "name": "Homigot Sunrise Square",
+      "lat": 36.07679,
+      "lon": 129.56803,
+      "region": "east",
+      "source": "OpenStreetMap/Mapcarta",
+      "resolved_coast_lon": 129.5695203,
+      "resolved_coast_lat": 36.0762627,
+      "landmark_to_coast_m": 181.099942856278,
+      "osm_coastline_way_id": 22493521,
+      "resolved_coast_mercator": [
+        14423613.02212472,
+        4311120.082282653
+      ],
+      "seed_svg_px": [
+        587.6854264083067,
+        964.8563405547957
+      ],
+      "canonical_boundary_svg_px": [
+        587.0,
+        964.0
+      ],
+      "seed_boundary_error_px": 1.0968721470581921,
+      "seed_boundary_error_km": 1.135634956828182,
+      "ransac_inlier": false,
+      "refined_svg_px": [
+        592.7041486569213,
+        964.6973380056535
+      ],
+      "refined_boundary_error_px": 5.7466157166097664,
+      "refined_boundary_error_km": 5.949697700632797
+    },
+    {
+      "id": "gampo_north_lighthouse",
+      "name": "Gampo North Lighthouse",
+      "lat": 35.80741,
+      "lon": 129.51126,
+      "region": "east_southeast",
+      "source": "GeoNames/OpenStreetMap via Mapcarta",
+      "resolved_coast_lon": 129.51166688563615,
+      "resolved_coast_lat": 35.807202592147405,
+      "landmark_to_coast_m": 53.49852102746234,
+      "osm_coastline_way_id": 576409430,
+      "resolved_coast_mercator": [
+        14417172.809497086,
+        4274125.071693635
+      ],
+      "seed_svg_px": [
+        581.9263242588859,
+        1000.6634167397929
+      ],
+      "canonical_boundary_svg_px": [
+        587.0,
+        1001.0
+      ],
+      "seed_boundary_error_px": 5.084827806034505,
+      "seed_boundary_error_km": 5.264522598620038,
+      "ransac_inlier": true,
+      "refined_svg_px": [
+        586.6783855899241,
+        1000.9265354540119
+      ],
+      "refined_boundary_error_px": 0.32989826960095026,
+      "refined_boundary_error_km": 0.3415566783793
+    },
+    {
+      "id": "ganjeolgot",
+      "name": "Ganjeolgot Cape",
+      "lat": 35.35921,
+      "lon": 129.36179,
+      "region": "southeast",
+      "source": "OpenStreetMap/Mapcarta",
+      "resolved_coast_lon": 129.3618425107857,
+      "resolved_coast_lat": 35.35933070737411,
+      "landmark_to_coast_m": 17.482520082758498,
+      "osm_coastline_way_id": 938805312,
+      "resolved_coast_mercator": [
+        14400494.436380312,
+        4212820.607131676
+      ],
+      "seed_svg_px": [
+        566.6043753776266,
+        1059.9333279311904
+      ],
+      "canonical_boundary_svg_px": [
+        567.0,
+        1061.0
+      ],
+      "seed_boundary_error_px": 1.1376766430785794,
+      "seed_boundary_error_km": 1.1778814594864815,
+      "ransac_inlier": false,
+      "refined_svg_px": [
+        570.8030842723039,
+        1060.9384124697235
+      ],
+      "refined_boundary_error_px": 3.803582916952194,
+      "refined_boundary_error_km": 3.9379992766433656
+    },
+    {
+      "id": "yeongdo_lighthouse",
+      "name": "Yeongdo Lighthouse, Taejongdae",
+      "lat": 35.05237,
+      "lon": 129.09207,
+      "region": "south_southeast",
+      "source": "GeoNames/OpenStreetMap via Mapcarta",
+      "resolved_coast_lon": 129.0925233,
+      "resolved_coast_lat": 35.05269849999999,
+      "landmark_to_coast_m": 67.39274388762013,
+      "osm_coastline_way_id": 299826742,
+      "resolved_coast_mercator": [
+        14370513.958974805,
+        4171044.967812089
+      ],
+      "seed_svg_px": [
+        538.2541010735331,
+        1100.117897749713
+      ],
+      "canonical_boundary_svg_px": [
+        536.0,
+        1097.0
+      ],
+      "seed_boundary_error_px": 3.8473702742741103,
+      "seed_boundary_error_km": 3.9833340531487775,
+      "ransac_inlier": false,
+      "refined_svg_px": [
+        541.7302606284192,
+        1101.7602118863333
+      ],
+      "refined_boundary_error_px": 7.449530459861189,
+      "refined_boundary_error_km": 7.712792438812712
+    },
+    {
+      "id": "ttangkkeut",
+      "name": "Ttangkkeut, Haenam",
+      "lat": 34.29682,
+      "lon": 126.52766,
+      "region": "southwest",
+      "source": "OpenStreetMap/Mapcarta",
+      "resolved_coast_lon": 126.52799810000002,
+      "resolved_coast_lat": 34.2966984,
+      "landmark_to_coast_m": 41.049155945642426,
+      "osm_coastline_way_id": 565100203,
+      "resolved_coast_mercator": [
+        14085032.319584288,
+        4068711.2899779845
+      ],
+      "seed_svg_px": [
+        264.8063110032963,
+        1196.2231506999715
+      ],
+      "canonical_boundary_svg_px": [
+        263.0,
+        1196.0
+      ],
+      "seed_boundary_error_px": 1.8200427674994348,
+      "seed_boundary_error_km": 1.8843619971918302,
+      "ransac_inlier": false,
+      "refined_svg_px": [
+        262.57731927788313,
+        1200.9256915250419
+      ],
+      "refined_boundary_error_px": 4.943793684279177,
+      "refined_boundary_error_km": 5.118504414823075
+    },
+    {
+      "id": "daecheon_beach",
+      "name": "Daecheon Beach",
+      "lat": 36.31125,
+      "lon": 126.51131,
+      "region": "west",
+      "source": "OpenStreetMap/Mapcarta",
+      "resolved_coast_lon": 126.51218638338885,
+      "resolved_coast_lat": 36.31164011429654,
+      "landmark_to_coast_m": 111.45447808135033,
+      "osm_coastline_way_id": 37100155,
+      "resolved_coast_mercator": [
+        14083272.167342566,
+        4343587.735878641
+      ],
+      "seed_svg_px": [
+        259.8666873466191,
+        929.6277983577415
+      ],
+      "canonical_boundary_svg_px": [
+        258.0,
+        931.0
+      ],
+      "seed_boundary_error_px": 2.316777718522986,
+      "seed_boundary_error_km": 2.3986512661587014,
+      "ransac_inlier": true,
+      "refined_svg_px": [
+        258.6982904431597,
+        931.5447233148744
+      ],
+      "refined_boundary_error_px": 0.8856257859705466,
+      "refined_boundary_error_km": 0.9169232748903313
+    },
+    {
+      "id": "mallipo_beach",
+      "name": "Mallipo Beach",
+      "lat": 36.7884,
+      "lon": 126.13957,
+      "region": "west",
+      "source": "OpenStreetMap/Mapcarta",
+      "resolved_coast_lon": 126.1426399826414,
+      "resolved_coast_lat": 36.786897963838314,
+      "landmark_to_coast_m": 400.47793304032683,
+      "osm_coastline_way_id": 905936191,
+      "resolved_coast_mercator": [
+        14042134.450186871,
+        4409444.591253503
+      ],
+      "seed_svg_px": [
+        219.51113981385606,
+        865.3074015724587
+      ],
+      "canonical_boundary_svg_px": [
+        218.0,
+        867.0
+      ],
+      "seed_boundary_error_px": 2.269015860221368,
+      "seed_boundary_error_km": 2.3492015321711404,
+      "ransac_inlier": true,
+      "refined_svg_px": [
+        217.84121539297934,
+        866.8448169857049
+      ],
+      "refined_boundary_error_px": 0.22202324056820735,
+      "refined_boundary_error_km": 0.22986940993420327
+    },
+    {
+      "id": "ara_west_sea_lock",
+      "name": "Ara West Sea Lock",
+      "lat": 37.55702,
+      "lon": 126.6038,
+      "region": "northwest",
+      "source": "OpenStreetMap/Mapcarta",
+      "resolved_coast_lon": 126.60365241620944,
+      "resolved_coast_lat": 37.55689815422789,
+      "landmark_to_coast_m": 23.72041415087742,
+      "osm_coastline_way_id": 871154016,
+      "resolved_coast_mercator": [
+        14093454.119541034,
+        4517018.110613757
+      ],
+      "seed_svg_px": [
+        267.61437997792564,
+        761.5464283859146
+      ],
+      "canonical_boundary_svg_px": [
+        268.0,
+        762.0
+      ],
+      "seed_boundary_error_px": 0.5953402476976053,
+      "seed_boundary_error_km": 0.6163792182210283,
+      "ransac_inlier": true,
+      "refined_svg_px": [
+        267.32472721245335,
+        761.6259534043253
+      ],
+      "refined_boundary_error_px": 0.7719483100161955,
+      "refined_boundary_error_km": 0.799228504498001
+    }
+  ],
+  "leave_one_out": [
+    {
+      "index": 0,
+      "error_px": 1.4619959845722044,
+      "error_km": 1.5136620537548828
+    },
+    {
+      "index": 1,
+      "error_px": 0.6331463419734105,
+      "error_km": 0.6555213573991402
+    },
+    {
+      "index": 2,
+      "error_px": 1.4484478258392643,
+      "error_km": 1.4996351111444353
+    },
+    {
+      "index": 3,
+      "error_px": 1.1170951703285656,
+      "error_km": 1.1565726497217257
+    },
+    {
+      "index": 4,
+      "error_px": 0.8084581089018132,
+      "error_km": 0.8370285379772671
+    },
+    {
+      "index": 5,
+      "error_px": 1.5130766681924934,
+      "error_km": 1.5665478983753893
+    },
+    {
+      "index": 6,
+      "error_px": 0.374459261386347,
+      "error_km": 0.3876924291303355
+    },
+    {
+      "index": 7,
+      "error_px": 1.170374248702581,
+      "error_km": 1.211734579059977
+    }
+  ]
+}

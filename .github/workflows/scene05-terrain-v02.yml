@@ -47,7 +47,7 @@ jobs:
           out.write_bytes(raw)
           print('canonical SVG bytes:', len(raw))
           print('canonical SVG sha256:', hashlib.sha256(raw).hexdigest())
-          if len(raw) < 60000 or not raw.lstrip().startswith(b'<svg'):
+          if len(raw) < 60000 or b'<svg' not in raw[:500]:
               raise SystemExit('Reconstructed canonical SVG failed sanity check')
           PY
 

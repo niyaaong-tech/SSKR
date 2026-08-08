@@ -51,6 +51,19 @@ jobs:
               raise SystemExit('Reconstructed canonical SVG failed sanity check')
           PY
 
+      - name: Patch raster coordinate reshape
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('tools/scene05-georef-build-v02.py')
+          s=p.read_text('utf-8')
+          old="X=np.asarray(xs);Y=np.asarray(ys);"
+          new="X=np.asarray(xs).reshape(h,w);Y=np.asarray(ys).reshape(h,w);"
+          if old not in s:
+              raise SystemExit('Expected precise_mask expression not found')
+          p.write_text(s.replace(old,new),encoding='utf-8')
+          PY
+
       - name: Build georeferenced South Korea Hero terrain v0.2
         run: python tools/scene05-georef-build-v02.py
 

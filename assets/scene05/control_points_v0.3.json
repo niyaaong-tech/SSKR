@@ -1,0 +1,24 @@
+{
+  "schema_version": 1,
+  "purpose": "Scene 05 canonical SVG to WGS84 control-point refinement",
+  "notes": [
+    "Coordinates are public map/reference coordinates collected for georeferencing QA, not confirmed SSKR event spots.",
+    "Each coordinate is snapped to the nearest canonical-SVG coastline boundary from the v0.2 affine seed before fitting the refined transform.",
+    "Event Start/Checkpoint/Finish coordinates remain a separate product-design dataset."
+  ],
+  "points": [
+    {"id":"sokcho_lighthouse","name":"Sokcho Lighthouse","lat":38.2016667,"lon":128.6002778,"region":"east","source":"Ministry of Oceans and Fisheries lighthouse listing"},
+    {"id":"jeongdongjin","name":"Jeongdongjin","lat":37.689,"lon":129.034,"region":"east","source":"OpenStreetMap/Mapcarta"},
+    {"id":"mukho_lighthouse","name":"Mukho Lighthouse","lat":37.55445,"lon":129.11856,"region":"east","source":"OpenStreetMap/Mapcarta"},
+    {"id":"uljin_jinmimal_lighthouse","name":"Jinmimal Lighthouse, Uljin","lat":36.89431,"lon":129.41778,"region":"east","source":"OpenStreetMap/Mapcarta"},
+    {"id":"yeongdeok_chuksan_lighthouse","name":"Chuksan Lighthouse, Yeongdeok","lat":36.50747,"lon":129.4508,"region":"east","source":"OpenStreetMap/Mapcarta"},
+    {"id":"homigot_sunrise_square","name":"Homigot Sunrise Square","lat":36.07679,"lon":129.56803,"region":"east","source":"OpenStreetMap/Mapcarta"},
+    {"id":"gampo_north_lighthouse","name":"Gampo North Lighthouse","lat":35.80741,"lon":129.51126,"region":"east_southeast","source":"GeoNames/OpenStreetMap via Mapcarta"},
+    {"id":"ganjeolgot","name":"Ganjeolgot Cape","lat":35.35921,"lon":129.36179,"region":"southeast","source":"OpenStreetMap/Mapcarta"},
+    {"id":"yeongdo_lighthouse","name":"Yeongdo Lighthouse, Taejongdae","lat":35.05237,"lon":129.09207,"region":"south_southeast","source":"GeoNames/OpenStreetMap via Mapcarta"},
+    {"id":"ttangkkeut","name":"Ttangkkeut, Haenam","lat":34.29682,"lon":126.52766,"region":"southwest","source":"OpenStreetMap/Mapcarta"},
+    {"id":"daecheon_beach","name":"Daecheon Beach","lat":36.31125,"lon":126.51131,"region":"west","source":"OpenStreetMap/Mapcarta"},
+    {"id":"mallipo_beach","name":"Mallipo Beach","lat":36.7884,"lon":126.13957,"region":"west","source":"OpenStreetMap/Mapcarta"},
+    {"id":"ara_west_sea_lock","name":"Ara West Sea Lock","lat":37.55702,"lon":126.6038,"region":"northwest","source":"OpenStreetMap/Mapcarta"}
+  ]
+}

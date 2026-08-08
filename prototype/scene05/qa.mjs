@@ -12,6 +12,8 @@ const browser=await puppeteer.launch({
   ]
 });
 
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+
 try{
   const page=await browser.newPage();
   await page.setViewport({width:1920,height:1080,deviceScaleFactor:1});
@@ -23,19 +25,26 @@ try{
   const canvas=await page.$('#three-stage canvas');
   if(!canvas)throw new Error('Three.js canvas was not created');
   if(errors.length)throw new Error(errors.join('\n'));
-  await new Promise(r=>setTimeout(r,2800));
-  await page.screenshot({path:'prototype/scene05/dist/keyframe_03s.png'});
-  await new Promise(r=>setTimeout(r,3700));
-  await page.screenshot({path:'prototype/scene05/dist/keyframe_07s.png'});
-  await new Promise(r=>setTimeout(r,3000));
-  await page.screenshot({path:'prototype/scene05/dist/keyframe_10s.png'});
+
+  await sleep(3400);
+  await page.screenshot({path:'prototype/scene05/dist/keyframe_034s.png'});
+  await sleep(3600);
+  await page.screenshot({path:'prototype/scene05/dist/keyframe_070s.png'});
+  await sleep(1900);
+  await page.screenshot({path:'prototype/scene05/dist/keyframe_089s.png'});
+  await sleep(1800);
+  await page.screenshot({path:'prototype/scene05/dist/keyframe_107s.png'});
+
   const state=await page.evaluate(()=>({
     ready:document.querySelector('#frame')?.classList.contains('ready'),
     overviewOpacity:getComputedStyle(document.querySelector('#overview-layer')).opacity,
     canvasOpacity:getComputedStyle(document.querySelector('#three-stage')).opacity,
     statementOpacity:getComputedStyle(document.querySelector('#statement')).opacity,
+    transitionOpacity:getComputedStyle(document.querySelector('#transition-copy')).opacity,
+    fontFamily:getComputedStyle(document.body).fontFamily,
     canvasSize:[document.querySelector('#three-stage canvas')?.width,document.querySelector('#three-stage canvas')?.height]
   }));
+  if(!state.ready)throw new Error('Scene did not reach ready state');
   console.log(JSON.stringify(state));
 }finally{
   await browser.close();

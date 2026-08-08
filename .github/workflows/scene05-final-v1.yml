@@ -1,4 +1,4 @@
-name: Scene 05 Final v1.5
+name: Scene 05 Final v1.6
 
 on:
   push:
@@ -13,6 +13,7 @@ on:
       - 'final/scene05/README.md'
       - 'tools/scene05-final-data-v1.py'
       - 'tools/scene05-final-terrain-v1.py'
+      - 'tools/scene05-final-v16-source.py'
       - 'assets/scene05/road_hints_source_v1.geojson'
       - 'assets/scene05/route_network_v0.1/**'
       - 'assets/scene05/south_korea_hero_v0.2/**'
@@ -24,7 +25,7 @@ permissions:
   contents: write
 
 jobs:
-  build-scene05-final-v15:
+  build-scene05-final-v16:
     runs-on: ubuntu-latest
     timeout-minutes: 35
     steps:
@@ -38,17 +39,19 @@ jobs:
         with:
           python-version: '3.12'
 
-      - name: Build final UV terrain, time-light textures, and cinematic route data
+      - name: Build final UV terrain, time-light textures, route data, and v1.6 renderer source
         run: |
           python -m pip install --upgrade pip
           python -m pip install numpy Pillow pyproj trimesh
           python tools/scene05-final-terrain-v1.py
           python tools/scene05-final-data-v1.py
+          python tools/scene05-final-v16-source.py
           test -s output/scene05_final_v1/terrain_final_uv.glb
           test -s output/scene05_final_v1/terrain_dawn_final.png
           test -s output/scene05_final_v1/terrain_day_final.png
           test -s output/scene05_final_v1/terrain_sunset_final.png
           test -s output/scene05_final_v1/scene05_final_data_v1.json
+          test -s output/scene05_final_v1/scene05-final-v16.js
 
       - name: Set up Node
         uses: actions/setup-node@v4
@@ -61,12 +64,12 @@ jobs:
           sudo apt-get install -y --no-install-recommends fonts-noto-cjk
           fc-cache -f
 
-      - name: Bundle final Three.js scene v1.5
+      - name: Bundle final Three.js scene v1.6
         run: |
           npm install --no-save --no-audit --no-fund three@0.185.1 gsap@3.15.0 esbuild puppeteer-core
           rm -rf final/scene05/dist
           mkdir -p final/scene05/dist/assets
-          npx esbuild final/scene05/src/scene05-final-v15.js --bundle --format=esm --target=es2022 --minify --outfile=final/scene05/dist/app.js
+          npx esbuild output/scene05_final_v1/scene05-final-v16.js --bundle --format=esm --target=es2022 --minify --outfile=final/scene05/dist/app.js
           cp final/scene05/index.html final/scene05/dist/index.html
           cp final/scene05/scene05-final.css final/scene05/dist/scene05-final.css
           cp final/scene05/README.md final/scene05/dist/README.md
@@ -77,7 +80,7 @@ jobs:
           cp output/scene05_final_v1/scene05_final_data_v1.json final/scene05/dist/assets/
           cp assets/vector/korean_peninsula_precise.svg final/scene05/dist/assets/
           python final/scene05/pack_standalone.py
-          test -s final/scene05/dist/SSKR_Scene05_Final_v1.5_standalone.html
+          test -s final/scene05/dist/SSKR_Scene05_Final_v1.6_standalone.html
 
       - name: Headed Chromium exact-timeline visual QA
         timeout-minutes: 3
@@ -96,10 +99,10 @@ jobs:
             test -s "final/scene05/dist/${f}.png"
           done
 
-      - name: Upload final portable scene v1.5
+      - name: Upload final portable scene v1.6
         uses: actions/upload-artifact@v4
         with:
-          name: SSKR-Scene05-Final-v1.5
+          name: SSKR-Scene05-Final-v1.6
           path: final/scene05/dist/
           if-no-files-found: error
           compression-level: 6
@@ -107,31 +110,30 @@ jobs:
 
       - name: Publish final production assets and QA frames
         run: |
-          mkdir -p assets/scene05/final_v1_5 final/scene05/preview_v1_5
-          cp output/scene05_final_v1/terrain_final_uv.glb assets/scene05/final_v1_5/
-          cp output/scene05_final_v1/terrain_dawn_final.png assets/scene05/final_v1_5/
-          cp output/scene05_final_v1/terrain_day_final.png assets/scene05/final_v1_5/
-          cp output/scene05_final_v1/terrain_sunset_final.png assets/scene05/final_v1_5/
-          cp output/scene05_final_v1/terrain_final_metadata.json assets/scene05/final_v1_5/
-          cp output/scene05_final_v1/scene05_final_data_v1.json assets/scene05/final_v1_5/
-          cp final/scene05/dist/final_*.png final/scene05/preview_v1_5/
-          cat > assets/scene05/final_v1_5/README.md <<'EOF'
-          # Scene 05 Final v1.5 production candidate
+          mkdir -p assets/scene05/final_v1_6 final/scene05/preview_v1_6
+          cp output/scene05_final_v1/terrain_final_uv.glb assets/scene05/final_v1_6/
+          cp output/scene05_final_v1/terrain_dawn_final.png assets/scene05/final_v1_6/
+          cp output/scene05_final_v1/terrain_day_final.png assets/scene05/final_v1_6/
+          cp output/scene05_final_v1/terrain_sunset_final.png assets/scene05/final_v1_6/
+          cp output/scene05_final_v1/terrain_final_metadata.json assets/scene05/final_v1_6/
+          cp output/scene05_final_v1/scene05_final_data_v1.json assets/scene05/final_v1_6/
+          cp final/scene05/dist/final_*.png final/scene05/preview_v1_6/
+          cat > assets/scene05/final_v1_6/README.md <<'EOF'
+          # Scene 05 Final v1.6 production candidate
 
           - Copernicus DEM UV terrain with analytical dawn/day/sunset relief
-          - full curated OSM motorway/trunk/primary Road Hint web retained for continuous context
-          - Road Hint rendered as a faint graphic overlay so the decimated terrain cannot swallow short real-road segments
+          - full continuous OSM motorway/trunk/primary Road Hint context rendered as dark low-contrast road structure
           - Main Route / Merged Segment / Checkpoint hierarchy remains dominant
-          - West Finish rendered as an unobscured graphic beacon and the strongest sunset node
-          - all presentation chrome disappears before the Start-node sun match cut to Scene 06
+          - restrained unobscured West Finish beacon is the sunset climax
+          - personal Route recall and clean warm-sun Scene 06 match cut
           - exact storyboard: `docs/scene05/Scene05_Final_Storyboard_ShotDesign_v1.0.md`
 
           Terrain geometry remains real DEM data. Graphic layers are abstracted only to communicate route choice, convergence, and personal memory.
           EOF
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add assets/scene05/final_v1_5 final/scene05/preview_v1_5
+          git add assets/scene05/final_v1_6 final/scene05/preview_v1_6
           if ! git diff --cached --quiet; then
-            git commit -m 'Publish Scene 05 final production candidate v1.5'
+            git commit -m 'Publish Scene 05 final production candidate v1.6'
             git push
           fi

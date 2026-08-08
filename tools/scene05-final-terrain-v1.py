@@ -26,7 +26,6 @@ def main():
     albedo=load_rgb('albedo.png')
     hill=np.array(Image.open(SRC/'hillshade.png').convert('L'),dtype=np.float32)/255.0
     slope=np.array(Image.open(SRC/'slope.png').convert('L'),dtype=np.float32)/255.0
-    normal=Image.open(SRC/'normal.png').convert('RGB')
 
     # Cinematic but restrained terrain surface: real derived hillshade provides relief,
     # while slope only nudges rocky ridges slightly cooler/brighter. No invented mountains.
@@ -35,23 +34,41 @@ def main():
     stone=np.array([145,142,132],dtype=np.float32)
     surface=albedo*shade[...,None]
     surface=surface*(1-ridge)+stone*ridge
-    # Slight warm-neutral lift for daylight readability, keep saturation low.
     surface=np.clip(surface*1.06+4,0,255).astype(np.uint8)
     surface[~land]=np.array([18,47,67],dtype=np.uint8)
     surf_img=Image.fromarray(surface).filter(ImageFilter.GaussianBlur(radius=.18))
     surf_img=ImageEnhance.Contrast(surf_img).enhance(1.07)
     surf_img.save(OUT/'terrain_surface_final.png',quality=95)
-    normal.save(OUT/'terrain_normal_final.png')
 
     rh,rw=h16.shape
+    max_elev=float(meta['mesh']['max_elevation_m'])
+    ve=float(meta['vertical_exaggeration'])
+    elevation=h16/65535.0*max_elev
+    minx,miny,maxx,maxy=meta['local_bounds_m']
+    px=(maxx-minx)/max(1,rw-1)
+    py=(maxy-miny)/max(1,rh-1)
+    gy,gx=np.gradient(elevation,py,px)
+
+    # Three.js normalMap expects tangent-space RGB. U points east; V points north,
+    # while raster rows increase south. Encode the real DEM gradient accordingly.
+    tx=-gx*ve
+    ty=gy*ve
+    tz=np.ones_like(tx)
+    norm=np.maximum(np.sqrt(tx*tx+ty*ty+tz*tz),1e-8)
+    tangent_normal=np.stack([
+        (tx/norm*.5+.5)*255.0,
+        (ty/norm*.5+.5)*255.0,
+        (tz/norm*.5+.5)*255.0,
+    ],axis=-1).clip(0,255).astype(np.uint8)
+    tangent_normal[~land]=np.array([128,128,255],dtype=np.uint8)
+    Image.fromarray(tangent_normal).save(OUT/'terrain_normal_final.png')
+
     mh=max(2,round(MESH_W*rh/rw))
     ci=np.linspace(0,rw-1,MESH_W).astype(int)
     ri=np.linspace(0,rh-1,mh).astype(int)
     q=h16[np.ix_(ri,ci)]/65535.0
     lm=land[np.ix_(ri,ci)]
-    max_elev=float(meta['mesh']['max_elevation_m'])
-    z=q*max_elev*float(meta['vertical_exaggeration'])
-    minx,miny,maxx,maxy=meta['local_bounds_m']
+    z=q*max_elev*ve
     xs=np.linspace(minx,maxx,MESH_W)
     ys=np.linspace(maxy,miny,mh)
     X,Y=np.meshgrid(xs,ys)
@@ -84,10 +101,11 @@ def main():
         'vertices':int(len(mesh.vertices)),
         'triangles':int(len(mesh.faces)),
         'uv':True,
-        'vertical_exaggeration':meta['vertical_exaggeration'],
+        'vertical_exaggeration':ve,
         'scene_m_per_unit':meta['scene_m_per_unit'],
         'surface_texture':'terrain_surface_final.png',
         'normal_texture':'terrain_normal_final.png',
+        'normal_space':'tangent-space derived directly from DEM gradient',
         'policy':'Geometry and height remain derived from Copernicus DEM; visual realism is added only through derived terrain shading/material.'
     }
     (OUT/'terrain_final_metadata.json').write_text(json.dumps(out_meta,indent=2),encoding='utf-8')

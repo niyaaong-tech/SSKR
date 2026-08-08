@@ -7,6 +7,19 @@
   <link rel="icon" href="data:," />
   <title>SSKR Scene 05 — Final Journey Map</title>
   <link rel="stylesheet" href="./scene05-final.css" />
+  <script>
+    // GitHub Actions uses software WebGL. In ?qa=1 mode, capture Three.js's
+    // RAF callback instead of running it continuously; the QA harness renders
+    // exactly once after each GSAP timeline seek. Normal playback is unchanged.
+    if (new URLSearchParams(location.search).has('qa')) {
+      window.__qaRafCallback = null;
+      window.requestAnimationFrame = (callback) => {
+        window.__qaRafCallback = callback;
+        return 1;
+      };
+      window.cancelAnimationFrame = () => {};
+    }
+  </script>
 </head>
 <body>
   <main id="frame" aria-label="SSKR Scene 05 final presentation scene">

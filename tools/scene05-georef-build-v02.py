@@ -142,7 +142,7 @@ def dem():
 
 
 def precise_mask(shape,crs,tr,Gi,svg):
-    h,w=shape;rows,cols=np.indices((h,w));xs,ys=rasterio.transform.xy(tr,rows,cols,offset='center');X=np.asarray(xs);Y=np.asarray(ys);t1=Transformer.from_crs(crs,'EPSG:4326',always_xy=True);lon,lat=t1.transform(X,Y);t2=Transformer.from_crs('EPSG:4326','EPSG:3857',always_xy=True);mx,my=t2.transform(lon,lat);sx=Gi[0,0]*mx+Gi[0,1]*my+Gi[0,2];sy=Gi[1,0]*mx+Gi[1,1]*my+Gi[1,2];xi=np.rint(sx).astype(np.int32);yi=np.rint(sy).astype(np.int32);v=(xi>=0)&(xi<svg.shape[1])&(yi>=0)&(yi<svg.shape[0]);o=np.zeros((h,w),np.uint8);o[v]=svg[yi[v],xi[v]];return o
+    h,w=shape;rows,cols=np.indices((h,w));xs,ys=rasterio.transform.xy(tr,rows,cols,offset='center');X=np.asarray(xs).reshape(h,w);Y=np.asarray(ys).reshape(h,w);t1=Transformer.from_crs(crs,'EPSG:4326',always_xy=True);lon,lat=t1.transform(X,Y);t2=Transformer.from_crs('EPSG:4326','EPSG:3857',always_xy=True);mx,my=t2.transform(lon,lat);sx=Gi[0,0]*mx+Gi[0,1]*my+Gi[0,2];sy=Gi[1,0]*mx+Gi[1,1]*my+Gi[1,2];xi=np.rint(sx).astype(np.int32);yi=np.rint(sy).astype(np.int32);v=(xi>=0)&(xi<svg.shape[1])&(yi>=0)&(yi<svg.shape[0]);o=np.zeros((h,w),np.uint8);o[v]=svg[yi[v],xi[v]];return o
 
 
 def build_maps_mesh(d,land,crs,bounds,tr):

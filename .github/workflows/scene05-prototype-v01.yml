@@ -45,7 +45,7 @@ jobs:
 
       - name: Bundle Three.js prototype
         run: |
-          npm install --no-save --no-audit --no-fund three@0.185.1 gsap@3.15.0 esbuild
+          npm install --no-save --no-audit --no-fund three@0.185.1 gsap@3.15.0 esbuild puppeteer-core
           rm -rf prototype/scene05/dist
           mkdir -p prototype/scene05/dist/assets
           npx esbuild prototype/scene05/src/scene05.js --bundle --format=esm --target=es2022 --minify --outfile=prototype/scene05/dist/app.js
@@ -56,7 +56,7 @@ jobs:
           cp assets/vector/korean_peninsula_precise.svg prototype/scene05/dist/assets/korean_peninsula_precise.svg
           cp prototype/scene05/generated/scene05_route_network_3d_v01.json prototype/scene05/dist/assets/scene05_route_network_3d_v01.json
 
-      - name: Headless visual smoke test and keyframes
+      - name: Headed Chromium WebGL QA and keyframes
         run: |
           python -m http.server 4173 --directory prototype/scene05/dist > /tmp/scene05-http.log 2>&1 &
           SERVER_PID=$!
@@ -67,13 +67,10 @@ jobs:
             echo 'No Chromium-compatible browser on runner' >&2
             exit 1
           fi
-          for SPEC in '2800 keyframe_03s' '6500 keyframe_07s' '9500 keyframe_10s'; do
-            set -- $SPEC
-            BUDGET=$1
-            NAME=$2
-            timeout 55s "$BROWSER" --headless=new --no-sandbox --disable-dev-shm-usage --use-angle=swiftshader --enable-webgl --ignore-gpu-blocklist --hide-scrollbars --window-size=1920,1080 --virtual-time-budget=$BUDGET --screenshot="prototype/scene05/dist/${NAME}.png" http://127.0.0.1:4173/
-            test -s "prototype/scene05/dist/${NAME}.png"
-          done
+          xvfb-run -a env BROWSER_PATH="$BROWSER" node prototype/scene05/qa.mjs
+          test -s prototype/scene05/dist/keyframe_03s.png
+          test -s prototype/scene05/dist/keyframe_07s.png
+          test -s prototype/scene05/dist/keyframe_10s.png
 
       - name: Upload portable prototype
         uses: actions/upload-artifact@v4

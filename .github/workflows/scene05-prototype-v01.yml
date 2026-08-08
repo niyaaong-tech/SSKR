@@ -1,4 +1,4 @@
-name: Scene 05 Prototype v0.1
+name: Scene 05 Prototype v0.2
 
 on:
   push:
@@ -17,7 +17,7 @@ permissions:
   contents: write
 
 jobs:
-  build-scene05-prototype:
+  build-scene05-prototype-v02:
     runs-on: ubuntu-latest
     timeout-minutes: 25
     steps:
@@ -43,7 +43,13 @@ jobs:
         with:
           node-version: '22'
 
-      - name: Bundle Three.js prototype
+      - name: Install Korean QA fonts
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends fonts-noto-cjk
+          fc-cache -f
+
+      - name: Bundle Three.js prototype v0.2
         run: |
           npm install --no-save --no-audit --no-fund three@0.185.1 gsap@3.15.0 esbuild puppeteer-core
           rm -rf prototype/scene05/dist
@@ -55,8 +61,10 @@ jobs:
           cp assets/scene05/south_korea_hero_v0.2/terrain_lod.glb prototype/scene05/dist/assets/terrain_lod.glb
           cp assets/vector/korean_peninsula_precise.svg prototype/scene05/dist/assets/korean_peninsula_precise.svg
           cp prototype/scene05/generated/scene05_route_network_3d_v01.json prototype/scene05/dist/assets/scene05_route_network_3d_v01.json
+          python prototype/scene05/pack_standalone.py
+          test -s prototype/scene05/dist/SSKR_Scene05_ThreeJS_Prototype_v0.2_standalone.html
 
-      - name: Headed Chromium WebGL QA and keyframes
+      - name: Headed Chromium WebGL QA and v0.2 keyframes
         run: |
           python -m http.server 4173 --directory prototype/scene05/dist > /tmp/scene05-http.log 2>&1 &
           SERVER_PID=$!
@@ -68,30 +76,32 @@ jobs:
             exit 1
           fi
           xvfb-run -a env BROWSER_PATH="$BROWSER" node prototype/scene05/qa.mjs
-          test -s prototype/scene05/dist/keyframe_03s.png
-          test -s prototype/scene05/dist/keyframe_07s.png
-          test -s prototype/scene05/dist/keyframe_10s.png
+          test -s prototype/scene05/dist/keyframe_034s.png
+          test -s prototype/scene05/dist/keyframe_070s.png
+          test -s prototype/scene05/dist/keyframe_089s.png
+          test -s prototype/scene05/dist/keyframe_107s.png
 
-      - name: Upload portable prototype
+      - name: Upload portable prototype v0.2
         uses: actions/upload-artifact@v4
         with:
-          name: SSKR-Scene05-ThreeJS-Prototype-v0.1
+          name: SSKR-Scene05-ThreeJS-Prototype-v0.2
           path: prototype/scene05/dist/
           if-no-files-found: error
           compression-level: 6
           retention-days: 30
 
-      - name: Publish route 3D data and QA keyframes
+      - name: Publish route 3D data and v0.2 QA keyframes
         run: |
-          mkdir -p assets/scene05/route_network_v0.1 prototype/scene05/preview
+          mkdir -p assets/scene05/route_network_v0.1 prototype/scene05/preview_v0.2
           cp prototype/scene05/generated/scene05_route_network_3d_v01.json assets/scene05/route_network_v0.1/
-          cp prototype/scene05/dist/keyframe_03s.png prototype/scene05/preview/
-          cp prototype/scene05/dist/keyframe_07s.png prototype/scene05/preview/
-          cp prototype/scene05/dist/keyframe_10s.png prototype/scene05/preview/
+          cp prototype/scene05/dist/keyframe_034s.png prototype/scene05/preview_v0.2/
+          cp prototype/scene05/dist/keyframe_070s.png prototype/scene05/preview_v0.2/
+          cp prototype/scene05/dist/keyframe_089s.png prototype/scene05/preview_v0.2/
+          cp prototype/scene05/dist/keyframe_107s.png prototype/scene05/preview_v0.2/
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add assets/scene05/route_network_v0.1/scene05_route_network_3d_v01.json prototype/scene05/preview
+          git add assets/scene05/route_network_v0.1/scene05_route_network_3d_v01.json prototype/scene05/preview_v0.2
           if ! git diff --cached --quiet; then
-            git commit -m 'Publish Scene 05 Three.js prototype QA assets v0.1'
+            git commit -m 'Publish Scene 05 Three.js prototype QA assets v0.2'
             git push
           fi

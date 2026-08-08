@@ -23,6 +23,7 @@ def main():
         './assets/terrain_dawn_final.png':data_uri(DIST/'assets'/'terrain_dawn_final.png','image/png'),
         './assets/terrain_day_final.png':data_uri(DIST/'assets'/'terrain_day_final.png','image/png'),
         './assets/terrain_sunset_final.png':data_uri(DIST/'assets'/'terrain_sunset_final.png','image/png'),
+        './assets/coast_shallow.png':data_uri(DIST/'assets'/'coast_shallow.png','image/png'),
         './assets/scene05_final_data_v1.json':data_uri(DIST/'assets'/'scene05_final_data_v1.json','application/json')
     }
     for old,new in replacements.items():
@@ -33,7 +34,7 @@ def main():
     for ref in ['./assets/','./app.js','./scene05-b.css']:
         if ref in html:
             raise SystemExit(f'Standalone pack left external reference: {ref}')
-    out=DIST/'SSKR_Scene05_B_Extended_OneTake_v2.1_standalone.html'
+    out=DIST/'SSKR_Scene05_B_Extended_OneTake_v2.2_standalone.html'
     out.write_text(html,encoding='utf-8')
     print(out,out.stat().st_size)
 

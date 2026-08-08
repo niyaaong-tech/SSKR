@@ -1,0 +1,131 @@
+name: Scene 05 B Extended One-Take v2.0
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/scene05-b-v20.yml'
+      - 'final/scene05-b/**'
+      - 'tools/scene05-final-data-v1.py'
+      - 'tools/scene05-final-terrain-v1.py'
+      - 'tools/scene05-final-roadtexture-v1.py'
+      - 'assets/scene05/road_hints_source_v1.geojson'
+      - 'assets/scene05/route_network_v0.1/**'
+      - 'assets/scene05/south_korea_hero_v0.2/**'
+      - 'assets/vector/korean_peninsula_precise.svg'
+      - 'docs/scene05/Scene05_B_Extended_OneTake_Production_Plan_v2.0.md'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-scene05-b-v20:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Build shared real-terrain and route assets
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install numpy Pillow pyproj trimesh
+          python tools/scene05-final-terrain-v1.py
+          python tools/scene05-final-roadtexture-v1.py
+          python tools/scene05-final-data-v1.py
+          test -s output/scene05_final_v1/terrain_final_uv.glb
+          test -s output/scene05_final_v1/terrain_dawn_final.png
+          test -s output/scene05_final_v1/terrain_day_final.png
+          test -s output/scene05_final_v1/terrain_sunset_final.png
+          test -s output/scene05_final_v1/scene05_final_data_v1.json
+
+      - name: Set up Node
+        uses: actions/setup-node@v5
+        with:
+          node-version: '22'
+
+      - name: Install Korean QA fonts
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends fonts-noto-cjk
+          fc-cache -f
+
+      - name: Bundle Scene 05 B v2.0
+        run: |
+          npm install --no-save --no-audit --no-fund three@0.185.1 gsap@3.15.0 esbuild puppeteer-core
+          rm -rf final/scene05-b/dist
+          mkdir -p final/scene05-b/dist/assets
+          npx esbuild final/scene05-b/src/scene05-b-v20.js --bundle --format=esm --target=es2022 --minify --outfile=final/scene05-b/dist/app.js
+          cp final/scene05-b/index.html final/scene05-b/dist/index.html
+          cp final/scene05-b/scene05-b.css final/scene05-b/dist/scene05-b.css
+          cp final/scene05-b/README.md final/scene05-b/dist/README.md
+          cp output/scene05_final_v1/terrain_final_uv.glb final/scene05-b/dist/assets/
+          cp output/scene05_final_v1/terrain_dawn_final.png final/scene05-b/dist/assets/
+          cp output/scene05_final_v1/terrain_day_final.png final/scene05-b/dist/assets/
+          cp output/scene05_final_v1/terrain_sunset_final.png final/scene05-b/dist/assets/
+          cp output/scene05_final_v1/scene05_final_data_v1.json final/scene05-b/dist/assets/
+          cp assets/vector/korean_peninsula_precise.svg final/scene05-b/dist/assets/
+          python final/scene05-b/pack_standalone.py
+          test -s final/scene05-b/dist/SSKR_Scene05_B_Extended_OneTake_v2.0_standalone.html
+
+      - name: Headed Chromium exact-timeline visual QA
+        timeout-minutes: 4
+        run: |
+          python -m http.server 4174 --directory final/scene05-b/dist > /tmp/scene05-b-http.log 2>&1 &
+          SERVER_PID=$!
+          trap 'kill $SERVER_PID || true' EXIT
+          sleep 2
+          BROWSER=$(command -v google-chrome || command -v chromium || command -v chromium-browser || true)
+          if [ -z "$BROWSER" ]; then
+            echo 'No Chromium-compatible browser on runner' >&2
+            exit 1
+          fi
+          timeout 210s xvfb-run -a env BROWSER_PATH="$BROWSER" node final/scene05-b/qa.mjs
+          for f in b_030_high_altitude b_090_east_starts b_160_route_chase b_240_crane_reveal b_320_day_network b_400_westward_sweep b_470_finish_descent b_510_sunset_hold b_550_blue_hour b_585_fireworks; do
+            test -s "final/scene05-b/dist/${f}.png"
+          done
+
+      - name: Upload Scene 05 B portable build
+        uses: actions/upload-artifact@v4
+        with:
+          name: SSKR-Scene05-B-Extended-OneTake-v2.0
+          path: final/scene05-b/dist/
+          if-no-files-found: error
+          compression-level: 6
+          retention-days: 30
+
+      - name: Publish B v2.0 QA frames and build metadata
+        run: |
+          mkdir -p assets/scene05/b_v2_0 final/scene05-b/preview_v2_0
+          cp output/scene05_final_v1/terrain_final_metadata.json assets/scene05/b_v2_0/
+          cp output/scene05_final_v1/terrain_day_roadhints_metadata.json assets/scene05/b_v2_0/
+          cp output/scene05_final_v1/scene05_final_data_v1.json assets/scene05/b_v2_0/
+          cp final/scene05-b/dist/b_*.png final/scene05-b/preview_v2_0/
+          cat > assets/scene05/b_v2_0/README.md <<'EOF'
+          # Scene 05 B v2.0 production candidate
+
+          - 60-second cut-free virtual-camera sequence
+          - real Copernicus DEM / canonical coastline / real-road-grounded route data retained
+          - procedural ocean, fog and cloud parallax added for cinematic aerial depth
+          - dynamic camera choreography from high-altitude approach to Finish-festival night sky
+          - Personal Recall and Solar Corona removed
+          - finish ending changed to sunset → blue hour → ordinary festival fireworks
+          - exact production plan: `docs/scene05/Scene05_B_Extended_OneTake_Production_Plan_v2.0.md`
+
+          B remains a review candidate. Accepted A v1.8 is preserved separately.
+          EOF
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add assets/scene05/b_v2_0 final/scene05-b/preview_v2_0
+          if ! git diff --cached --quiet; then
+            git commit -m 'Publish Scene 05 B v2.0 QA candidate'
+            git push
+          fi

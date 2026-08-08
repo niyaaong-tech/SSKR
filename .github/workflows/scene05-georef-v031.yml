@@ -57,21 +57,24 @@ jobs:
           from pathlib import Path
           p=Path('assets/scene05/georef_v0.3.1/georef_diagnostic_v031.json')
           d=json.loads(p.read_text('utf-8'))
-          Path('assets/scene05/georef_v0.3.1/README.md').write_text(f'''# Scene 05 Georef Diagnostic v0.3.1
-
-Status: **{d['status']}**
-
-This diagnostic resolves the 13 reference landmarks to actual OpenStreetMap `natural=coastline` geometry before comparing them with the canonical SSKR SVG boundary.
-
-- Seed error mean: **{d['seed_error_km']['mean']:.3f} km**
-- Seed error max: **{d['seed_error_km']['max']:.3f} km**
-- Affine inliers: **{d['inlier_count']} / {d['control_point_count']}**
-- Leave-one-out affine error mean: **{d['leave_one_out_inlier_error_km']['mean']:.3f} km**
-- Leave-one-out affine error max: **{d['leave_one_out_inlier_error_km']['max']:.3f} km**
-- Max sampled correction displacement: **{d['affine_transform_metrics']['max_sample_displacement_px']:.3f} px**
-
-The canonical `korean_peninsula_precise.svg` remains the final coastline. OSM is used only to resolve real-world geographic control coordinates. Control points are not confirmed SSKR event spots.
-''',encoding='utf-8')
+          lines=[
+              '# Scene 05 Georef Diagnostic v0.3.1',
+              '',
+              f"Status: **{d['status']}**",
+              '',
+              'This diagnostic resolves the 13 reference landmarks to actual OpenStreetMap `natural=coastline` geometry before comparing them with the canonical SSKR SVG boundary.',
+              '',
+              f"- Seed error mean: **{d['seed_error_km']['mean']:.3f} km**",
+              f"- Seed error max: **{d['seed_error_km']['max']:.3f} km**",
+              f"- Affine inliers: **{d['inlier_count']} / {d['control_point_count']}**",
+              f"- Leave-one-out affine error mean: **{d['leave_one_out_inlier_error_km']['mean']:.3f} km**",
+              f"- Leave-one-out affine error max: **{d['leave_one_out_inlier_error_km']['max']:.3f} km**",
+              f"- Max sampled correction displacement: **{d['affine_transform_metrics']['max_sample_displacement_px']:.3f} px**",
+              '',
+              'The canonical `korean_peninsula_precise.svg` remains the final coastline. OSM is used only to resolve real-world geographic control coordinates. Control points are not confirmed SSKR event spots.',
+              ''
+          ]
+          Path('assets/scene05/georef_v0.3.1/README.md').write_text('\n'.join(lines),encoding='utf-8')
           PY
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'

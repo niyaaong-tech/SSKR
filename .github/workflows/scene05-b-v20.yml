@@ -1,4 +1,4 @@
-name: Scene 05 B Extended One-Take v2.0
+name: Scene 05 B Extended One-Take v2.1
 
 on:
   push:
@@ -9,7 +9,6 @@ on:
       - 'tools/scene05-b-source-v20.py'
       - 'tools/scene05-final-data-v1.py'
       - 'tools/scene05-final-terrain-v1.py'
-      - 'tools/scene05-final-roadtexture-v1.py'
       - 'assets/scene05/road_hints_source_v1.geojson'
       - 'assets/scene05/route_network_v0.1/**'
       - 'assets/scene05/south_korea_hero_v0.2/**'
@@ -21,7 +20,7 @@ permissions:
   contents: write
 
 jobs:
-  build-scene05-b-v20:
+  build-scene05-b-v21:
     runs-on: ubuntu-latest
     timeout-minutes: 40
     steps:
@@ -35,12 +34,11 @@ jobs:
         with:
           python-version: '3.12'
 
-      - name: Build shared real-terrain and route assets
+      - name: Build clean real-terrain and route assets
         run: |
           python -m pip install --upgrade pip
           python -m pip install numpy Pillow pyproj trimesh
           python tools/scene05-final-terrain-v1.py
-          python tools/scene05-final-roadtexture-v1.py
           python tools/scene05-final-data-v1.py
           python tools/scene05-b-source-v20.py
           test -s output/scene05_final_v1/terrain_final_uv.glb
@@ -61,7 +59,7 @@ jobs:
           sudo apt-get install -y --no-install-recommends fonts-noto-cjk
           fc-cache -f
 
-      - name: Bundle Scene 05 B v2.0
+      - name: Bundle Scene 05 B v2.1
         run: |
           npm install --no-save --no-audit --no-fund three@0.185.1 gsap@3.15.0 esbuild puppeteer-core
           rm -rf final/scene05-b/dist
@@ -77,7 +75,7 @@ jobs:
           cp output/scene05_final_v1/scene05_final_data_v1.json final/scene05-b/dist/assets/
           cp assets/vector/korean_peninsula_precise.svg final/scene05-b/dist/assets/
           python final/scene05-b/pack_standalone.py
-          test -s final/scene05-b/dist/SSKR_Scene05_B_Extended_OneTake_v2.0_standalone.html
+          test -s final/scene05-b/dist/SSKR_Scene05_B_Extended_OneTake_v2.1_standalone.html
 
       - name: Headed Chromium exact-timeline visual QA
         timeout-minutes: 4
@@ -99,36 +97,38 @@ jobs:
       - name: Upload Scene 05 B portable build
         uses: actions/upload-artifact@v4
         with:
-          name: SSKR-Scene05-B-Extended-OneTake-v2.0
+          name: SSKR-Scene05-B-Extended-OneTake-v2.1
           path: final/scene05-b/dist/
           if-no-files-found: error
           compression-level: 6
           retention-days: 30
 
-      - name: Publish B v2.0 QA frames and build metadata
+      - name: Publish B v2.1 QA frames and build metadata
         run: |
-          mkdir -p assets/scene05/b_v2_0 final/scene05-b/preview_v2_0
-          cp output/scene05_final_v1/terrain_final_metadata.json assets/scene05/b_v2_0/
-          cp output/scene05_final_v1/terrain_day_roadhints_metadata.json assets/scene05/b_v2_0/
-          cp output/scene05_final_v1/scene05_final_data_v1.json assets/scene05/b_v2_0/
-          cp final/scene05-b/dist/b_*.png final/scene05-b/preview_v2_0/
-          cat > assets/scene05/b_v2_0/README.md <<'EOF'
-          # Scene 05 B v2.0 production candidate
+          mkdir -p assets/scene05/b_v2_1 final/scene05-b/preview_v2_1
+          cp output/scene05_final_v1/terrain_final_metadata.json assets/scene05/b_v2_1/
+          cp output/scene05_final_v1/scene05_final_data_v1.json assets/scene05/b_v2_1/
+          cp final/scene05-b/dist/b_*.png final/scene05-b/preview_v2_1/
+          cat > assets/scene05/b_v2_1/README.md <<'EOF'
+          # Scene 05 B v2.1 visual QA refinement
 
           - 60-second cut-free virtual-camera sequence
           - real Copernicus DEM / canonical coastline / real-road-grounded route data retained
-          - procedural ocean, fog and cloud parallax added for cinematic aerial depth
-          - dynamic camera choreography from high-altitude approach to Finish-festival night sky
-          - Personal Recall and Solar Corona removed
-          - finish ending changed to sunset → blue hour → ordinary festival fireworks
+          - daylight terrain no longer bakes the dense national Road Hint web; landscape readability takes priority
+          - presentation Route curves are visually resampled from real-road-grounded source points to remove GIS polyline faceting
+          - procedural ocean, physical scene background, stronger cloud framing and atmospheric depth
+          - west-coast chapter recomposed toward a low inland-to-sea horizon view
+          - sunset sun separated from the Finish marker
+          - Finish beacon restrained
+          - fireworks changed from point clouds to ordinary radial streak bursts
           - exact production plan: `docs/scene05/Scene05_B_Extended_OneTake_Production_Plan_v2.0.md`
 
-          B remains a review candidate. Accepted A v1.8 is preserved separately.
+          B v2.1 remains a visual review candidate. Accepted A v1.8 is preserved separately.
           EOF
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add assets/scene05/b_v2_0 final/scene05-b/preview_v2_0
+          git add assets/scene05/b_v2_1 final/scene05-b/preview_v2_1
           if ! git diff --cached --quiet; then
-            git commit -m 'Publish Scene 05 B v2.0 QA candidate'
+            git commit -m 'Publish Scene 05 B v2.1 visual QA candidate'
             git push
           fi

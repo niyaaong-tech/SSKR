@@ -1,0 +1,1018 @@
+{
+  "schema_version": "0.3.2",
+  "purpose": "Projection model selection without local/nonlinear warping",
+  "approx_m_per_svg_px": 1035.3394056672437,
+  "best_model": "equirectangular_lonlat",
+  "best_model_metrics": {
+    "inliers": 9,
+    "fit_error_km": {
+      "mean": 0.8728304713612304,
+      "max": 2.219039453312058,
+      "median": 0.7875418845587152
+    },
+    "loo_error_km": {
+      "mean": 1.252801825849842,
+      "max": 2.7659960299194024,
+      "median": 1.2548394574087638
+    }
+  },
+  "decision": "PROJECTION_CANDIDATE_FOUND",
+  "models": [
+    {
+      "model": "equirectangular_lonlat",
+      "crs": "lon/lat equirectangular approximation",
+      "inliers": 9,
+      "inlier_ids": [
+        "sokcho_lighthouse",
+        "jeongdongjin",
+        "mukho_lighthouse",
+        "uljin_jinmimal_lighthouse",
+        "yeongdeok_chuksan_lighthouse",
+        "gampo_north_lighthouse",
+        "daecheon_beach",
+        "mallipo_beach",
+        "ara_west_sea_lock"
+      ],
+      "fit_error_km": {
+        "mean": 0.8728304713612304,
+        "max": 2.219039453312058,
+        "median": 0.7875418845587152
+      },
+      "loo_error_km": {
+        "mean": 1.252801825849842,
+        "max": 2.7659960299194024,
+        "median": 1.2548394574087638
+      },
+      "affine_projected_to_svg": [
+        [
+          0.0012134830661040782,
+          -1.0323910531465346e-05,
+          -13525.862659371669
+        ],
+        [
+          1.5825685268861405e-06,
+          -0.0012353069571958844,
+          5872.022186862389
+        ]
+      ],
+      "projected_center": [
+        11561915.96910015,
+        4031264.4965193504
+      ],
+      "projected_scale_for_ransac": 121518.10835904579,
+      "all_point_error_km": [
+        {
+          "id": "sokcho_lighthouse",
+          "error_km": 0.7875418845587152
+        },
+        {
+          "id": "jeongdongjin",
+          "error_km": 0.21645821111706973
+        },
+        {
+          "id": "mukho_lighthouse",
+          "error_km": 0.5082333326782821
+        },
+        {
+          "id": "uljin_jinmimal_lighthouse",
+          "error_km": 2.219039453312058
+        },
+        {
+          "id": "yeongdeok_chuksan_lighthouse",
+          "error_km": 1.8244635182091116
+        },
+        {
+          "id": "homigot_sunrise_square",
+          "error_km": 6.323335785401689
+        },
+        {
+          "id": "gampo_north_lighthouse",
+          "error_km": 0.09304294229244663
+        },
+        {
+          "id": "ganjeolgot",
+          "error_km": 4.52315154145536
+        },
+        {
+          "id": "yeongdo_lighthouse",
+          "error_km": 9.59949451320869
+        },
+        {
+          "id": "ttangkkeut",
+          "error_km": 11.198438955602423
+        },
+        {
+          "id": "daecheon_beach",
+          "error_km": 1.0099606266348842
+        },
+        {
+          "id": "mallipo_beach",
+          "error_km": 0.3683013500261381
+        },
+        {
+          "id": "ara_west_sea_lock",
+          "error_km": 0.828432923422368
+        }
+      ],
+      "loo": [
+        {
+          "index": 0,
+          "error_px": 1.2829722802159613,
+          "error_km": 1.3283117580863417
+        },
+        {
+          "index": 1,
+          "error_px": 0.2749892078041535,
+          "error_km": 0.2847071629728584
+        },
+        {
+          "index": 2,
+          "error_px": 0.6248258752090643,
+          "error_km": 0.6469068502844679
+        },
+        {
+          "index": 3,
+          "error_px": 2.671583844658945,
+          "error_km": 2.7659960299194024
+        },
+        {
+          "index": 4,
+          "error_px": 2.3692336453641794,
+          "error_km": 2.4529609542781867
+        },
+        {
+          "index": 6,
+          "error_px": 0.1890283254455044,
+          "error_km": 0.19570847412102285
+        },
+        {
+          "index": 10,
+          "error_px": 1.6673393101263694,
+          "error_km": 1.7262620903918673
+        },
+        {
+          "index": 11,
+          "error_px": 0.5983773550919789,
+          "error_km": 0.6195236551856665
+        },
+        {
+          "index": 12,
+          "error_px": 1.2120078213386065,
+          "error_km": 1.2548394574087638
+        }
+      ]
+    },
+    {
+      "model": "web_mercator_epsg3857",
+      "crs": "EPSG:3857",
+      "inliers": 8,
+      "inlier_ids": [
+        "sokcho_lighthouse",
+        "jeongdongjin",
+        "mukho_lighthouse",
+        "yeongdeok_chuksan_lighthouse",
+        "gampo_north_lighthouse",
+        "daecheon_beach",
+        "mallipo_beach",
+        "ara_west_sea_lock"
+      ],
+      "fit_error_km": {
+        "mean": 0.6963400960930879,
+        "max": 1.1329133048743079,
+        "median": 0.797069934516216
+      },
+      "loo_error_km": {
+        "mean": 1.1035493270713483,
+        "max": 1.5665478983758108,
+        "median": 1.184153614392182
+      },
+      "affine_projected_to_svg": [
+        [
+          0.0009806391222454537,
+          -7.832445149384519e-06,
+          -13517.888453390677
+        ],
+        [
+          3.922207124297941e-06,
+          -0.0009799823467808557,
+          5132.94651574159
+        ]
+      ],
+      "projected_center": [
+        14291248.715748508,
+        4366398.764549282
+      ],
+      "projected_scale_for_ransac": 151901.62034434406,
+      "all_point_error_km": [
+        {
+          "id": "sokcho_lighthouse",
+          "error_km": 0.8743267335850997
+        },
+        {
+          "id": "jeongdongjin",
+          "error_km": 0.480991498046539
+        },
+        {
+          "id": "mukho_lighthouse",
+          "error_km": 1.1329133048743079
+        },
+        {
+          "id": "uljin_jinmimal_lighthouse",
+          "error_km": 3.359098965813072
+        },
+        {
+          "id": "yeongdeok_chuksan_lighthouse",
+          "error_km": 0.7949113645371904
+        },
+        {
+          "id": "homigot_sunrise_square",
+          "error_km": 5.949697700627405
+        },
+        {
+          "id": "gampo_north_lighthouse",
+          "error_km": 0.3415566783838573
+        },
+        {
+          "id": "ganjeolgot",
+          "error_km": 3.937999276635693
+        },
+        {
+          "id": "yeongdo_lighthouse",
+          "error_km": 7.71279243880761
+        },
+        {
+          "id": "ttangkkeut",
+          "error_km": 5.118504414824418
+        },
+        {
+          "id": "daecheon_beach",
+          "error_km": 0.9169232748874988
+        },
+        {
+          "id": "mallipo_beach",
+          "error_km": 0.22986940993496863
+        },
+        {
+          "id": "ara_west_sea_lock",
+          "error_km": 0.7992285044952416
+        }
+      ],
+      "loo": [
+        {
+          "index": 0,
+          "error_px": 1.4619959845708033,
+          "error_km": 1.5136620537534322
+        },
+        {
+          "index": 1,
+          "error_px": 0.6331463419707967,
+          "error_km": 0.655521357396434
+        },
+        {
+          "index": 2,
+          "error_px": 1.448447825836307,
+          "error_km": 1.4996351111413733
+        },
+        {
+          "index": 4,
+          "error_px": 1.1170951703237342,
+          "error_km": 1.1565726497167235
+        },
+        {
+          "index": 6,
+          "error_px": 0.8084581089113516,
+          "error_km": 0.8370285379871425
+        },
+        {
+          "index": 10,
+          "error_px": 1.5130766681929004,
+          "error_km": 1.5665478983758108
+        },
+        {
+          "index": 11,
+          "error_px": 0.3744592613881764,
+          "error_km": 0.3876924291322296
+        },
+        {
+          "index": 12,
+          "error_px": 1.170374248709983,
+          "error_km": 1.2117345790676406
+        }
+      ]
+    },
+    {
+      "model": "utm52n_epsg32652",
+      "crs": "EPSG:32652",
+      "inliers": 9,
+      "inlier_ids": [
+        "sokcho_lighthouse",
+        "jeongdongjin",
+        "mukho_lighthouse",
+        "uljin_jinmimal_lighthouse",
+        "yeongdeok_chuksan_lighthouse",
+        "gampo_north_lighthouse",
+        "daecheon_beach",
+        "mallipo_beach",
+        "ara_west_sea_lock"
+      ],
+      "fit_error_km": {
+        "mean": 1.2487712955886487,
+        "max": 2.2399798775759634,
+        "median": 1.2336266235942197
+      },
+      "loo_error_km": {
+        "mean": 1.9007857821835377,
+        "max": 2.7906794436853612,
+        "median": 2.2203608128395147
+      },
+      "affine_projected_to_svg": [
+        [
+          0.0012247295301347474,
+          -1.5127269054780574e-05,
+          -20.846728043042933
+        ],
+        [
+          -1.3230591727096962e-05,
+          -0.0012350604931290316,
+          5902.45062920051
+        ]
+      ],
+      "projected_center": [
+        444431.151600924,
+        4036941.9088506447
+      ],
+      "projected_scale_for_ransac": 121779.97530738437,
+      "all_point_error_km": [
+        {
+          "id": "sokcho_lighthouse",
+          "error_km": 0.7276277055184928
+        },
+        {
+          "id": "jeongdongjin",
+          "error_km": 0.7609832711486418
+        },
+        {
+          "id": "mukho_lighthouse",
+          "error_km": 0.490435817262171
+        },
+        {
+          "id": "uljin_jinmimal_lighthouse",
+          "error_km": 2.2399798775759634
+        },
+        {
+          "id": "yeongdeok_chuksan_lighthouse",
+          "error_km": 1.9868405435941259
+        },
+        {
+          "id": "homigot_sunrise_square",
+          "error_km": 7.171675061241457
+        },
+        {
+          "id": "gampo_north_lighthouse",
+          "error_km": 1.2336266235942197
+        },
+        {
+          "id": "ganjeolgot",
+          "error_km": 6.03672060891087
+        },
+        {
+          "id": "yeongdo_lighthouse",
+          "error_km": 11.170944636552194
+        },
+        {
+          "id": "ttangkkeut",
+          "error_km": 14.962168497818398
+        },
+        {
+          "id": "daecheon_beach",
+          "error_km": 1.4769219516244203
+        },
+        {
+          "id": "mallipo_beach",
+          "error_km": 0.8482247160021084
+        },
+        {
+          "id": "ara_west_sea_lock",
+          "error_km": 1.474301153977695
+        }
+      ],
+      "loo": [
+        {
+          "index": 0,
+          "error_px": 1.1835058530059486,
+          "error_km": 1.225330246454883
+        },
+        {
+          "index": 1,
+          "error_px": 0.9659677470774717,
+          "error_km": 1.0001044731529158
+        },
+        {
+          "index": 2,
+          "error_px": 0.6024875566997224,
+          "error_km": 0.6237791088754004
+        },
+        {
+          "index": 3,
+          "error_px": 2.695424735511594,
+          "error_km": 2.7906794436853612
+        },
+        {
+          "index": 4,
+          "error_px": 2.5804929879523497,
+          "error_km": 2.6716860764750754
+        },
+        {
+          "index": 6,
+          "error_px": 2.5162589469771626,
+          "error_km": 2.6051820426682197
+        },
+        {
+          "index": 10,
+          "error_px": 2.4560973043555343,
+          "error_km": 2.542894323352378
+        },
+        {
+          "index": 11,
+          "error_px": 1.3783455979137578,
+          "error_km": 1.4270555121480917
+        },
+        {
+          "index": 12,
+          "error_px": 2.144572881787072,
+          "error_km": 2.2203608128395147
+        }
+      ]
+    },
+    {
+      "model": "korea2000_unified_epsg5179",
+      "crs": "EPSG:5179",
+      "inliers": 9,
+      "inlier_ids": [
+        "sokcho_lighthouse",
+        "jeongdongjin",
+        "mukho_lighthouse",
+        "uljin_jinmimal_lighthouse",
+        "yeongdeok_chuksan_lighthouse",
+        "gampo_north_lighthouse",
+        "daecheon_beach",
+        "mallipo_beach",
+        "ara_west_sea_lock"
+      ],
+      "fit_error_km": {
+        "mean": 1.23344289206181,
+        "max": 2.218159741840274,
+        "median": 1.2125139472008222
+      },
+      "loo_error_km": {
+        "mean": 1.8761160090158056,
+        "max": 2.7635818104110377,
+        "median": 2.196904060849388
+      },
+      "affine_projected_to_svg": [
+        [
+          0.0012249890519759404,
+          4.306924552144136e-06,
+          -867.0490459994901
+        ],
+        [
+          6.140147474169427e-06,
+          -0.0012349777765096833,
+          3165.6959332264046
+        ]
+      ],
+      "projected_center": [
+        1078805.017222194,
+        1831309.735328133
+      ],
+      "projected_scale_for_ransac": 121849.87691529137,
+      "all_point_error_km": [
+        {
+          "id": "sokcho_lighthouse",
+          "error_km": 0.6996726940614104
+        },
+        {
+          "id": "jeongdongjin",
+          "error_km": 0.762276682668009
+        },
+        {
+          "id": "mukho_lighthouse",
+          "error_km": 0.47012114648431796
+        },
+        {
+          "id": "uljin_jinmimal_lighthouse",
+          "error_km": 2.218159741840274
+        },
+        {
+          "id": "yeongdeok_chuksan_lighthouse",
+          "error_km": 1.9864549742808286
+        },
+        {
+          "id": "homigot_sunrise_square",
+          "error_km": 7.170517561517616
+        },
+        {
+          "id": "gampo_north_lighthouse",
+          "error_km": 1.2125139472008222
+        },
+        {
+          "id": "ganjeolgot",
+          "error_km": 5.980494587002031
+        },
+        {
+          "id": "yeongdo_lighthouse",
+          "error_km": 11.116390246183183
+        },
+        {
+          "id": "ttangkkeut",
+          "error_km": 14.88493071001004
+        },
+        {
+          "id": "daecheon_beach",
+          "error_km": 1.4503468353085602
+        },
+        {
+          "id": "mallipo_beach",
+          "error_km": 0.8425082266424591
+        },
+        {
+          "id": "ara_west_sea_lock",
+          "error_km": 1.4589317800696076
+        }
+      ],
+      "loo": [
+        {
+          "index": 0,
+          "error_px": 1.1380264855459363,
+          "error_km": 1.1782436651787118
+        },
+        {
+          "index": 1,
+          "error_px": 0.9676603679349449,
+          "error_km": 1.0018569102255122
+        },
+        {
+          "index": 2,
+          "error_px": 0.5775602527245688,
+          "error_km": 0.5979708887928781
+        },
+        {
+          "index": 3,
+          "error_px": 2.6692520300915197,
+          "error_km": 2.7635818104110377
+        },
+        {
+          "index": 4,
+          "error_px": 2.580079852948841,
+          "error_km": 2.6712583415260824
+        },
+        {
+          "index": 6,
+          "error_px": 2.4736553703448703,
+          "error_km": 2.5610728809584433
+        },
+        {
+          "index": 10,
+          "error_px": 2.4116054023964417,
+          "error_km": 2.4968301040210457
+        },
+        {
+          "index": 11,
+          "error_px": 1.368947623765687,
+          "error_km": 1.4173254191791518
+        },
+        {
+          "index": 12,
+          "error_px": 2.121916782867501,
+          "error_km": 2.196904060849388
+        }
+      ]
+    },
+    {
+      "model": "korea2000_central2010_epsg5186",
+      "crs": "EPSG:5186",
+      "inliers": 9,
+      "inlier_ids": [
+        "sokcho_lighthouse",
+        "jeongdongjin",
+        "mukho_lighthouse",
+        "uljin_jinmimal_lighthouse",
+        "yeongdeok_chuksan_lighthouse",
+        "gampo_north_lighthouse",
+        "daecheon_beach",
+        "mallipo_beach",
+        "ara_west_sea_lock"
+      ],
+      "fit_error_km": {
+        "mean": 1.2286196730647883,
+        "max": 2.210824388677516,
+        "median": 1.2059289420208315
+      },
+      "loo_error_km": {
+        "mean": 1.8683656620323126,
+        "max": 2.7544712463051493,
+        "median": 2.190474434355436
+      },
+      "affine_projected_to_svg": [
+        [
+          0.0012243969046995028,
+          1.0782853700101069e-05,
+          61.423062148259234
+        ],
+        [
+          1.258956936372092e-05,
+          -0.0012342691944890079,
+          1439.5336443904619
+        ]
+      ],
+      "projected_center": [
+        323647.94312258426,
+        431768.2143330586
+      ],
+      "projected_scale_for_ransac": 121933.58837564084,
+      "all_point_error_km": [
+        {
+          "id": "sokcho_lighthouse",
+          "error_km": 0.6903846992071374
+        },
+        {
+          "id": "jeongdongjin",
+          "error_km": 0.7629468465959536
+        },
+        {
+          "id": "mukho_lighthouse",
+          "error_km": 0.4634280086150492
+        },
+        {
+          "id": "uljin_jinmimal_lighthouse",
+          "error_km": 2.210824388677516
+        },
+        {
+          "id": "yeongdeok_chuksan_lighthouse",
+          "error_km": 1.9864522404410048
+        },
+        {
+          "id": "homigot_sunrise_square",
+          "error_km": 7.170314392006928
+        },
+        {
+          "id": "gampo_north_lighthouse",
+          "error_km": 1.2059289420208315
+        },
+        {
+          "id": "ganjeolgot",
+          "error_km": 5.962289304513442
+        },
+        {
+          "id": "yeongdo_lighthouse",
+          "error_km": 11.099184421016469
+        },
+        {
+          "id": "ttangkkeut",
+          "error_km": 14.862771277556066
+        },
+        {
+          "id": "daecheon_beach",
+          "error_km": 1.4420551021785424
+        },
+        {
+          "id": "mallipo_beach",
+          "error_km": 0.8408249375768199
+        },
+        {
+          "id": "ara_west_sea_lock",
+          "error_km": 1.45473189227024
+        }
+      ],
+      "loo": [
+        {
+          "index": 0,
+          "error_px": 1.122914801142816,
+          "error_km": 1.1625979428301543
+        },
+        {
+          "index": 1,
+          "error_px": 0.9685279629114507,
+          "error_km": 1.0027551654928475
+        },
+        {
+          "index": 2,
+          "error_px": 0.5693469272045575,
+          "error_km": 0.589467309230438
+        },
+        {
+          "index": 3,
+          "error_px": 2.6604524383286456,
+          "error_km": 2.7544712463051493
+        },
+        {
+          "index": 4,
+          "error_px": 2.5801051900187697,
+          "error_km": 2.671284573993004
+        },
+        {
+          "index": 6,
+          "error_px": 2.4603786176088747,
+          "error_km": 2.547326935671567
+        },
+        {
+          "index": 10,
+          "error_px": 2.397723115298786,
+          "error_km": 2.4824572251480572
+        },
+        {
+          "index": 11,
+          "error_px": 1.3661762679192029,
+          "error_km": 1.4144561252641605
+        },
+        {
+          "index": 12,
+          "error_px": 2.1157066198438996,
+          "error_km": 2.190474434355436
+        }
+      ]
+    },
+    {
+      "model": "local_aeqd_36_1276",
+      "crs": "+proj=aeqd +lat_0=36 +lon_0=127.6 +datum=WGS84 +units=m +no_defs",
+      "inliers": 9,
+      "inlier_ids": [
+        "sokcho_lighthouse",
+        "jeongdongjin",
+        "mukho_lighthouse",
+        "uljin_jinmimal_lighthouse",
+        "yeongdeok_chuksan_lighthouse",
+        "gampo_north_lighthouse",
+        "daecheon_beach",
+        "mallipo_beach",
+        "ara_west_sea_lock"
+      ],
+      "fit_error_km": {
+        "mean": 1.2308097075172055,
+        "max": 2.2301405743657465,
+        "median": 1.2120825755630635
+      },
+      "loo_error_km": {
+        "mean": 1.8717688683146976,
+        "max": 2.7784893711765855,
+        "median": 2.168273605279945
+      },
+      "affine_projected_to_svg": [
+        [
+          0.0012245436215359488,
+          2.869369781984942e-06,
+          376.65873021129397
+        ],
+        [
+          4.82006308662585e-06,
+          -0.0012346215328099177,
+          975.9300607542981
+        ]
+      ],
+      "projected_center": [
+        69869.63022610951,
+        53114.213701014785
+      ],
+      "projected_scale_for_ransac": 121879.47775843952,
+      "all_point_error_km": [
+        {
+          "id": "sokcho_lighthouse",
+          "error_km": 0.7070260729041009
+        },
+        {
+          "id": "jeongdongjin",
+          "error_km": 0.7547235775048535
+        },
+        {
+          "id": "mukho_lighthouse",
+          "error_km": 0.47325872227489885
+        },
+        {
+          "id": "uljin_jinmimal_lighthouse",
+          "error_km": 2.2301405743657465
+        },
+        {
+          "id": "yeongdeok_chuksan_lighthouse",
+          "error_km": 1.9815020285720626
+        },
+        {
+          "id": "homigot_sunrise_square",
+          "error_km": 7.16294127679728
+        },
+        {
+          "id": "gampo_north_lighthouse",
+          "error_km": 1.2120825755630635
+        },
+        {
+          "id": "ganjeolgot",
+          "error_km": 5.993197394190288
+        },
+        {
+          "id": "yeongdo_lighthouse",
+          "error_km": 11.128685245007501
+        },
+        {
+          "id": "ttangkkeut",
+          "error_km": 14.876008196515103
+        },
+        {
+          "id": "daecheon_beach",
+          "error_km": 1.444156875257723
+        },
+        {
+          "id": "mallipo_beach",
+          "error_km": 0.8345965952929706
+        },
+        {
+          "id": "ara_west_sea_lock",
+          "error_km": 1.4398003459194284
+        }
+      ],
+      "loo": [
+        {
+          "index": 0,
+          "error_px": 1.1500780134343929,
+          "error_km": 1.1907210869001286
+        },
+        {
+          "index": 1,
+          "error_px": 0.9580643437570888,
+          "error_km": 0.9919217682564422
+        },
+        {
+          "index": 2,
+          "error_px": 0.581407764653624,
+          "error_km": 0.6019543695068037
+        },
+        {
+          "index": 3,
+          "error_px": 2.6836507486991055,
+          "error_km": 2.7784893711765855
+        },
+        {
+          "index": 4,
+          "error_px": 2.5736249927632833,
+          "error_km": 2.664575370417902
+        },
+        {
+          "index": 6,
+          "error_px": 2.472510524279658,
+          "error_km": 2.5598875767137064
+        },
+        {
+          "index": 10,
+          "error_px": 2.401230607163791,
+          "error_km": 2.4860886696909543
+        },
+        {
+          "index": 11,
+          "error_px": 1.3560847671831557,
+          "error_km": 1.404007996889811
+        },
+        {
+          "index": 12,
+          "error_px": 2.0942635752210754,
+          "error_km": 2.168273605279945
+        }
+      ]
+    },
+    {
+      "model": "korea_lcc_reference",
+      "crs": "+proj=lcc +lat_1=30 +lat_2=60 +lat_0=38 +lon_0=127.5 +datum=WGS84 +units=m +no_defs",
+      "inliers": 8,
+      "inlier_ids": [
+        "sokcho_lighthouse",
+        "jeongdongjin",
+        "mukho_lighthouse",
+        "uljin_jinmimal_lighthouse",
+        "yeongdeok_chuksan_lighthouse",
+        "gampo_north_lighthouse",
+        "daecheon_beach",
+        "mallipo_beach"
+      ],
+      "fit_error_km": {
+        "mean": 1.2470333717616113,
+        "max": 2.2338612050741866,
+        "median": 1.196783112329556
+      },
+      "loo_error_km": {
+        "mean": 2.079269573321361,
+        "max": 2.7849345922450897,
+        "median": 2.470678796591728
+      },
+      "affine_projected_to_svg": [
+        [
+          0.0012503534029578642,
+          9.833122232710823e-06,
+          367.6599070831552
+        ],
+        [
+          7.669577758220952e-06,
+          -0.001265988820450396,
+          701.8885125789528
+        ]
+      ],
+      "projected_center": [
+        77065.10054210409,
+        -164625.6669855396
+      ],
+      "projected_scale_for_ransac": 119207.3124976526,
+      "all_point_error_km": [
+        {
+          "id": "sokcho_lighthouse",
+          "error_km": 1.2683845492531691
+        },
+        {
+          "id": "jeongdongjin",
+          "error_km": 0.6371912447643836
+        },
+        {
+          "id": "mukho_lighthouse",
+          "error_km": 0.33860210537072327
+        },
+        {
+          "id": "uljin_jinmimal_lighthouse",
+          "error_km": 2.2338612050741866
+        },
+        {
+          "id": "yeongdeok_chuksan_lighthouse",
+          "error_km": 1.9819701093065982
+        },
+        {
+          "id": "homigot_sunrise_square",
+          "error_km": 6.988508551367377
+        },
+        {
+          "id": "gampo_north_lighthouse",
+          "error_km": 1.089544860161429
+        },
+        {
+          "id": "ganjeolgot",
+          "error_km": 6.026365965110548
+        },
+        {
+          "id": "yeongdo_lighthouse",
+          "error_km": 11.710726948637658
+        },
+        {
+          "id": "ttangkkeut",
+          "error_km": 17.19276672369281
+        },
+        {
+          "id": "daecheon_beach",
+          "error_km": 1.3015312247564577
+        },
+        {
+          "id": "mallipo_beach",
+          "error_km": 1.125181675405943
+        },
+        {
+          "id": "ara_west_sea_lock",
+          "error_km": 2.7864636335117696
+        }
+      ],
+      "loo": [
+        {
+          "index": 0,
+          "error_px": 2.305378462308992,
+          "error_km": 2.3868491670050562
+        },
+        {
+          "index": 1,
+          "error_px": 0.8269254620883374,
+          "error_km": 0.8561485164496501
+        },
+        {
+          "index": 2,
+          "error_px": 0.42137368563418326,
+          "error_km": 0.4362647812483113
+        },
+        {
+          "index": 3,
+          "error_px": 2.6898759740051497,
+          "error_km": 2.7849345922450897
+        },
+        {
+          "index": 4,
+          "error_px": 2.5975186547556994,
+          "error_km": 2.689313420224344
+        },
+        {
+          "index": 6,
+          "error_px": 2.4023964381623704,
+          "error_km": 2.4872957004641316
+        },
+        {
+          "index": 10,
+          "error_px": 2.452614574810363,
+          "error_km": 2.5392885162149805
+        },
+        {
+          "index": 11,
+          "error_px": 2.370297005297272,
+          "error_km": 2.454061892719325
+        }
+      ]
+    }
+  ]
+}

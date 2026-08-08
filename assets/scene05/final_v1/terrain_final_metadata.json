@@ -10,5 +10,6 @@
   "scene_m_per_unit": 10000.0,
   "surface_texture": "terrain_surface_final.png",
   "normal_texture": "terrain_normal_final.png",
+  "normal_space": "tangent-space derived directly from DEM gradient",
   "policy": "Geometry and height remain derived from Copernicus DEM; visual realism is added only through derived terrain shading/material."
 }

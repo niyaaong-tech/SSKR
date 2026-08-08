@@ -15,7 +15,8 @@
     "This is a cinematic presentation visualization, not an SSKR navigation engine.",
     "Start references and West Finish remain visual placeholders until product planning confirms official coordinates.",
     "Main routes are grounded in the real-road source topology and terrain-following DEM coordinates.",
-    "Merged segments are sampled from shared real-road topology where available; Road Hint remains intentionally subordinate."
+    "Merged segments are sampled from shared real-road topology where available; Road Hint remains intentionally subordinate.",
+    "Every visible Dawn Start is connected to the journey network: five by Main Routes and four by subtle feeder lines."
   ],
   "storyboard": {
     "duration_s": 12.8,
@@ -6855,6 +6856,48 @@
   ],
   "start_seeds": [
     {
+      "start_id": "start_n03",
+      "points": [
+        [
+          13.4351963775699,
+          0.01002047917176868,
+          -17.353875572270702
+        ],
+        [
+          13.364634832175472,
+          0.04544576696739949,
+          -17.375023400913136
+        ],
+        [
+          13.294073286781044,
+          0.027445766967399494,
+          -17.396171229555566
+        ]
+      ],
+      "role": "subtle_feeder_to_main_network"
+    },
+    {
+      "start_id": "start_n05",
+      "points": [
+        [
+          16.567604014892165,
+          0.008251952479961236,
+          -5.7919709456953745
+        ],
+        [
+          16.404974555022235,
+          0.04213456371227729,
+          -5.746581472504364
+        ],
+        [
+          16.242345095152306,
+          0.02413456371227729,
+          -5.7011919993133535
+        ]
+      ],
+      "role": "subtle_feeder_to_main_network"
+    },
+    {
       "start_id": "start_n06",
       "points": [
         [
@@ -6872,7 +6915,8 @@
           0.026926302620620512,
           1.8852555802308686
         ]
-      ]
+      ],
+      "role": "subtle_feeder_to_main_network"
     },
     {
       "start_id": "start_n08",
@@ -6892,7 +6936,8 @@
           0.021455822097927332,
           8.461427387720201
         ]
-      ]
+      ],
+      "role": "subtle_feeder_to_main_network"
     }
   ],
   "merged_segments": [

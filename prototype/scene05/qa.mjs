@@ -22,9 +22,11 @@ try{
   page.on('console',m=>{if(m.type()==='error')errors.push(`CONSOLE: ${m.text()}`)});
   await page.goto('http://127.0.0.1:4173/?qa=1',{waitUntil:'networkidle0',timeout:60000});
   await page.waitForSelector('#frame.ready',{timeout:30000});
-  await page.waitForFunction(()=>window.__scene05Timeline,{timeout:30000});
+  await sleep(600);
   const canvas=await page.$('#three-stage canvas');
   if(!canvas)throw new Error('Three.js canvas was not created');
+  const hasTimeline=await page.evaluate(()=>Boolean(window.__scene05Timeline));
+  if(!hasTimeline)throw new Error('Scene timeline is unavailable in the page main world');
   if(errors.length)throw new Error(errors.join('\n'));
 
   async function capture(time,name){

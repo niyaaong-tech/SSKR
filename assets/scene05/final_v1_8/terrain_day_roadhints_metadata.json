@@ -2,9 +2,9 @@
   "schema_version": "1.1",
   "source": "OpenStreetMap curated major-road source",
   "feature_counts": {
-    "motorway": 236,
-    "trunk": 146,
-    "primary": 154
+    "motorway": 20586,
+    "trunk": 24219,
+    "primary": 34470
   },
   "style": {
     "motorway": {

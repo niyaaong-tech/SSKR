@@ -39,16 +39,16 @@ try{
     await page.screenshot({path:`final/scene05-b/dist/${name}.png`});
   }
 
-  await capture(1.35,'b25_014_peninsula_integrity');
-  await capture(5.2,'b25_052_east_starts');
-  await capture(9.5,'b25_095_route_chase');
-  await capture(14.2,'b25_142_choice_merge');
-  await capture(19.5,'b25_195_choice_reveal');
-  await capture(25.0,'b25_250_network_freedom');
-  await capture(30.5,'b25_305_finish_descent');
-  await capture(34.5,'b25_345_sunset_arrival');
-  await capture(37.5,'b25_375_firework_launch');
-  await capture(39.35,'b25_394_fireworks_safeframe');
+  await capture(1.35,'b26_014_peninsula_texture');
+  await capture(5.2,'b26_052_east_starts');
+  await capture(9.2,'b26_092_first_fork');
+  await capture(12.4,'b26_124_choice_encounter');
+  await capture(18.5,'b26_185_freedom_reveal');
+  await capture(24.2,'b26_242_network_flight');
+  await capture(29.8,'b26_298_finish_convergence');
+  await capture(34.2,'b26_342_sunset_arrival');
+  await capture(37.2,'b26_372_firework_launch');
+  await capture(39.4,'b26_394_festival_finale');
 
   const state=await page.evaluate(()=>({
     ready:document.querySelector('#frame').classList.contains('ready'),
@@ -66,7 +66,7 @@ try{
     statement:getComputedStyle(document.querySelector('#statement')).opacity
   }));
   if(!state.ready||!state.paused)throw new Error('Deterministic Scene 05 B QA state not reached');
-  if(state.duration<39.7||state.duration>40.8)throw new Error(`Unexpected Scene 05 B v2.5 duration: ${state.duration}`);
+  if(state.duration<39.7||state.duration>40.8)throw new Error(`Unexpected Scene 05 B v2.6 duration: ${state.duration}`);
   console.log(JSON.stringify(state));
 }finally{
   await browser.close();

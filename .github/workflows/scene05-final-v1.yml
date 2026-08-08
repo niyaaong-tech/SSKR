@@ -71,6 +71,7 @@ jobs:
           test -s final/scene05/dist/SSKR_Scene05_Final_v1.0_standalone.html
 
       - name: Headed Chromium exact-timeline visual QA
+        timeout-minutes: 3
         run: |
           python -m http.server 4173 --directory final/scene05/dist > /tmp/scene05-final-http.log 2>&1 &
           SERVER_PID=$!
@@ -81,7 +82,7 @@ jobs:
             echo 'No Chromium-compatible browser on runner' >&2
             exit 1
           fi
-          xvfb-run -a env BROWSER_PATH="$BROWSER" node final/scene05/qa.mjs
+          timeout 150s xvfb-run -a env BROWSER_PATH="$BROWSER" node final/scene05/qa.mjs
           for f in final_010_scale final_029_dawn_start final_067_day_network final_096_sunset_finish final_108_personal_recall final_122_match_cut; do
             test -s "final/scene05/dist/${f}.png"
           done

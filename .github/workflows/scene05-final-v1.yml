@@ -1,0 +1,123 @@
+name: Scene 05 Final v1.0
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/scene05-final-v1.yml'
+      - 'final/scene05/**'
+      - 'tools/scene05-final-data-v1.py'
+      - 'tools/scene05-final-terrain-v1.py'
+      - 'assets/scene05/route_network_v0.1/**'
+      - 'assets/scene05/south_korea_hero_v0.2/**'
+      - 'assets/vector/korean_peninsula_precise.svg'
+      - 'docs/scene05/Scene05_Final_Storyboard_ShotDesign_v1.0.md'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-scene05-final-v1:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Build final UV terrain and cinematic route data
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install numpy Pillow pyproj trimesh
+          python tools/scene05-final-terrain-v1.py
+          python tools/scene05-final-data-v1.py
+          test -s output/scene05_final_v1/terrain_final_uv.glb
+          test -s output/scene05_final_v1/terrain_surface_final.png
+          test -s output/scene05_final_v1/scene05_final_data_v1.json
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install Korean QA fonts
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends fonts-noto-cjk
+          fc-cache -f
+
+      - name: Bundle final Three.js scene
+        run: |
+          npm install --no-save --no-audit --no-fund three@0.185.1 gsap@3.15.0 esbuild puppeteer-core
+          rm -rf final/scene05/dist
+          mkdir -p final/scene05/dist/assets
+          npx esbuild final/scene05/src/scene05-final.js --bundle --format=esm --target=es2022 --minify --outfile=final/scene05/dist/app.js
+          cp final/scene05/index.html final/scene05/dist/index.html
+          cp final/scene05/scene05-final.css final/scene05/dist/scene05-final.css
+          cp final/scene05/README.md final/scene05/dist/README.md
+          cp output/scene05_final_v1/terrain_final_uv.glb final/scene05/dist/assets/
+          cp output/scene05_final_v1/terrain_surface_final.png final/scene05/dist/assets/
+          cp output/scene05_final_v1/terrain_normal_final.png final/scene05/dist/assets/
+          cp output/scene05_final_v1/scene05_final_data_v1.json final/scene05/dist/assets/
+          cp assets/vector/korean_peninsula_precise.svg final/scene05/dist/assets/
+          python final/scene05/pack_standalone.py
+          test -s final/scene05/dist/SSKR_Scene05_Final_v1.0_standalone.html
+
+      - name: Headed Chromium exact-timeline visual QA
+        run: |
+          python -m http.server 4173 --directory final/scene05/dist > /tmp/scene05-final-http.log 2>&1 &
+          SERVER_PID=$!
+          trap 'kill $SERVER_PID || true' EXIT
+          sleep 2
+          BROWSER=$(command -v google-chrome || command -v chromium || command -v chromium-browser || true)
+          if [ -z "$BROWSER" ]; then
+            echo 'No Chromium-compatible browser on runner' >&2
+            exit 1
+          fi
+          xvfb-run -a env BROWSER_PATH="$BROWSER" node final/scene05/qa.mjs
+          for f in final_010_scale final_029_dawn_start final_067_day_network final_096_sunset_finish final_108_personal_recall final_122_match_cut; do
+            test -s "final/scene05/dist/${f}.png"
+          done
+
+      - name: Upload final portable scene
+        uses: actions/upload-artifact@v4
+        with:
+          name: SSKR-Scene05-Final-v1.0
+          path: final/scene05/dist/
+          if-no-files-found: error
+          compression-level: 6
+          retention-days: 30
+
+      - name: Publish final production assets and QA frames
+        run: |
+          mkdir -p assets/scene05/final_v1 final/scene05/preview_v1
+          cp output/scene05_final_v1/terrain_final_uv.glb assets/scene05/final_v1/
+          cp output/scene05_final_v1/terrain_surface_final.png assets/scene05/final_v1/
+          cp output/scene05_final_v1/terrain_normal_final.png assets/scene05/final_v1/
+          cp output/scene05_final_v1/terrain_final_metadata.json assets/scene05/final_v1/
+          cp output/scene05_final_v1/scene05_final_data_v1.json assets/scene05/final_v1/
+          cp final/scene05/dist/final_*.png final/scene05/preview_v1/
+          cat > assets/scene05/final_v1/README.md <<'EOF'
+          # Scene 05 Final v1.0 production assets
+
+          - UV terrain mesh derived from South Korea Hero Terrain v0.2
+          - final terrain surface/normal textures
+          - final cinematic route/merged/checkpoint data
+          - exact final storyboard: `docs/scene05/Scene05_Final_Storyboard_ShotDesign_v1.0.md`
+
+          These assets support the production-target Scene 05, not the retired v0.x prototype composition.
+          EOF
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add assets/scene05/final_v1 final/scene05/preview_v1
+          if ! git diff --cached --quiet; then
+            git commit -m 'Publish Scene 05 final production assets v1.0'
+            git push
+          fi

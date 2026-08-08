@@ -16,10 +16,13 @@ STATIC=OUT/'terrain_surface_final.png'
 PREVIEW=OUT/'terrain_day_roadhints_preview.png'
 SCALE=2
 
+# At national scale, the road web must survive projection/antialiasing but remain
+# clearly below the gold Main Route hierarchy. These are dark terrain-ink values,
+# not luminous HUD lines.
 STYLE={
-    'motorway': {'fill':(42,68,61,48),'width':5},
-    'trunk':    {'fill':(47,74,67,44),'width':5},
-    'primary':  {'fill':(57,82,75,28),'width':3},
+    'motorway': {'fill':(34,58,52,76),'width':9},
+    'trunk':    {'fill':(39,64,58,68),'width':8},
+    'primary':  {'fill':(50,76,69,44),'width':5},
 }
 
 
@@ -62,11 +65,11 @@ def main():
     baked.resize((1152,round(1152*h/w)),Image.Resampling.LANCZOS).save(PREVIEW,quality=92)
 
     report={
-        'schema_version':'1.0',
+        'schema_version':'1.1',
         'source':'OpenStreetMap curated major-road source',
         'feature_counts':counts,
         'style':STYLE,
-        'policy':'Road Hint is baked only into daylight terrain as a dark, low-contrast real-road context layer. Main Route/Merged Segment remain separate gold graphic layers.'
+        'policy':'Road Hint is baked only into daylight terrain as a continuous dark, low-contrast real-road context layer. Main Route/Merged Segment remain separate gold graphic layers and must dominate first-read.'
     }
     (OUT/'terrain_day_roadhints_metadata.json').write_text(json.dumps(report,ensure_ascii=False,indent=2),encoding='utf-8')
     print(json.dumps(report,ensure_ascii=False,indent=2))

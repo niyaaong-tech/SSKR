@@ -1,0 +1,44 @@
+{
+  "schema_version": "1.0",
+  "source": "ESA WorldCover 10m 2021 v200",
+  "license": "CC BY 4.0",
+  "attribution": "© ESA WorldCover project 2021 / Contains modified Copernicus Sentinel data (2021) processed by ESA WorldCover consortium",
+  "source_bucket": "s3://esa-worldcover/v200/2021/map",
+  "source_tiles": [
+    "ESA_WorldCover_10m_2021_v200_N33E123_Map.tif",
+    "ESA_WorldCover_10m_2021_v200_N33E126_Map.tif",
+    "ESA_WorldCover_10m_2021_v200_N33E129_Map.tif",
+    "ESA_WorldCover_10m_2021_v200_N36E123_Map.tif",
+    "ESA_WorldCover_10m_2021_v200_N36E126_Map.tif",
+    "ESA_WorldCover_10m_2021_v200_N36E129_Map.tif"
+  ],
+  "bbox_wgs84": [
+    124.0,
+    33.0,
+    131.25,
+    39.0
+  ],
+  "local_crs": "+proj=aeqd +lat_0=36 +lon_0=127.6 +x_0=0 +y_0=0 +datum=WGS84 +units=m +no_defs +type=crs",
+  "local_bounds_m": [
+    -336513.51669152937,
+    -332794.3346926665,
+    341185.29766357486,
+    339026.5972163879
+  ],
+  "raster_size": [
+    2304,
+    2284
+  ],
+  "class_pixel_counts": {
+    "0": 2125392,
+    "10": 1091423,
+    "20": 1,
+    "30": 88423,
+    "40": 329580,
+    "50": 107859,
+    "60": 7986,
+    "80": 1510267,
+    "90": 1405
+  },
+  "purpose": "Scene 05 cinematic land-material classification; not navigation"
+}

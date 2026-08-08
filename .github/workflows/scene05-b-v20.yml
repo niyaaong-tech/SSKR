@@ -1,4 +1,4 @@
-name: Scene 05 B Artwork One-Take v2.9
+name: Scene 05 B Artwork One-Take v3.0
 
 on:
   push:
@@ -17,9 +17,11 @@ on:
       - 'tools/scene05-b-source-v27.py'
       - 'tools/scene05-b-source-v28.py'
       - 'tools/scene05-b-source-v29.py'
-      - 'tools/scene05-b-peninsula-texture-v28.py'
+      - 'tools/scene05-b-source-v30.py'
+      - 'tools/scene05-b-peninsula-texture-v30.py'
       - 'tools/scene05-b-road-overlay-v29.py'
       - 'tools/scene05-b-choice-data-v29.py'
+      - 'tools/scene05-b-rider-trails-v30.py'
       - 'tools/scene05-b-art-textures-v22.py'
       - 'tools/scene05-final-data-v1.py'
       - 'tools/scene05-final-terrain-v1.py'
@@ -28,31 +30,28 @@ on:
       - 'assets/scene05/south_korea_hero_v0.2/**'
       - 'assets/vector/korean_peninsula_precise.svg'
   workflow_dispatch:
-
 permissions:
   contents: write
-
 jobs:
-  build-scene05-b-v29:
+  build-scene05-b-v30:
     runs-on: ubuntu-latest
-    timeout-minutes: 45
+    timeout-minutes: 50
     steps:
       - uses: actions/checkout@v4
-        with:
-          fetch-depth: 1
+        with: {fetch-depth: 1}
       - uses: actions/setup-python@v5
-        with:
-          python-version: '3.12'
-      - name: Build v2.9 texture-led route-choice assets
+        with: {python-version: '3.12'}
+      - name: Build v3.0 artwork assets
         run: |
           python -m pip install --upgrade pip
           python -m pip install numpy Pillow pyproj trimesh cairosvg
           python tools/scene05-final-terrain-v1.py
           python tools/scene05-b-art-textures-v22.py
           python tools/scene05-final-data-v1.py
-          python tools/scene05-b-peninsula-texture-v28.py
+          python tools/scene05-b-peninsula-texture-v30.py
           python tools/scene05-b-road-overlay-v29.py
           python tools/scene05-b-choice-data-v29.py
+          python tools/scene05-b-rider-trails-v30.py
           python tools/scene05-b-source-v20.py
           python tools/scene05-b-coast-source-v22.py
           python tools/scene05-b-source-v23.py
@@ -64,26 +63,25 @@ jobs:
           python tools/scene05-b-source-v27.py
           python tools/scene05-b-source-v28.py
           python tools/scene05-b-source-v29.py
-          test -s output/scene05_final_v1/peninsula_surface_v28.png
+          python tools/scene05-b-source-v30.py
+          test -s output/scene05_final_v1/peninsula_surface_v30.png
           test -s output/scene05_final_v1/road_choice_overlay_v29.png
-          test -s output/scene05_final_v1/road_choice_overlay_v29.json
           test -s output/scene05_final_v1/scene05_final_data_v1.json
-          test -s output/scene05-b-v29.js
-          grep -q '1.9-v29-texture-road-choice' output/scene05_final_v1/scene05_final_data_v1.json
+          test -s output/scene05-b-v30.js
+          grep -q '2.0-v30-connected-rider-trails' output/scene05_final_v1/scene05_final_data_v1.json
       - uses: actions/setup-node@v5
-        with:
-          node-version: '22'
+        with: {node-version: '22'}
       - name: Install Korean QA fonts
         run: |
           sudo apt-get update -qq
           sudo apt-get install -y --no-install-recommends fonts-noto-cjk
           fc-cache -f
-      - name: Bundle v2.9
+      - name: Bundle v3.0
         run: |
           npm install --no-save --no-audit --no-fund three@0.185.1 gsap@3.15.0 esbuild puppeteer-core
           rm -rf final/scene05-b/dist
           mkdir -p final/scene05-b/dist/assets
-          npx esbuild output/scene05-b-v29.js --bundle --format=esm --target=es2022 --minify --outfile=final/scene05-b/dist/app.js
+          npx esbuild output/scene05-b-v30.js --bundle --format=esm --target=es2022 --minify --outfile=final/scene05-b/dist/app.js
           cp final/scene05-b/index.html final/scene05-b/dist/index.html
           cp final/scene05-b/scene05-b.css final/scene05-b/dist/scene05-b.css
           cp final/scene05-b/README.md final/scene05-b/dist/README.md
@@ -92,49 +90,44 @@ jobs:
           cp output/scene05_final_v1/terrain_day_final.png final/scene05-b/dist/assets/
           cp output/scene05_final_v1/terrain_sunset_final.png final/scene05-b/dist/assets/
           cp output/scene05_final_v1/coast_shallow.png final/scene05-b/dist/assets/
-          cp output/scene05_final_v1/peninsula_surface_v28.png final/scene05-b/dist/assets/
-          cp output/scene05_final_v1/peninsula_surface_v28.json final/scene05-b/dist/assets/
+          cp output/scene05_final_v1/peninsula_surface_v30.png final/scene05-b/dist/assets/
+          cp output/scene05_final_v1/peninsula_surface_v30.json final/scene05-b/dist/assets/
           cp output/scene05_final_v1/road_choice_overlay_v29.png final/scene05-b/dist/assets/
           cp output/scene05_final_v1/scene05_final_data_v1.json final/scene05-b/dist/assets/
           cp assets/vector/korean_peninsula_precise.svg final/scene05-b/dist/assets/
           python final/scene05-b/pack_standalone.py
-          test -s final/scene05-b/dist/SSKR_Scene05_B_ArtworkPass_OneTake_v2.9_standalone.html
-      - name: Headed Chromium exact-timeline visual QA
+          test -s final/scene05-b/dist/SSKR_Scene05_B_ArtworkPass_OneTake_v3.0_standalone.html
+      - name: Headed Chromium visual QA
         timeout-minutes: 4
         run: |
-          python -m http.server 4174 --directory final/scene05-b/dist > /tmp/scene05-b-http.log 2>&1 &
-          SERVER_PID=$!
-          trap 'kill $SERVER_PID || true' EXIT
-          sleep 2
-          BROWSER=$(command -v google-chrome || command -v chromium || command -v chromium-browser || true)
-          test -n "$BROWSER"
+          python -m http.server 4174 --directory final/scene05-b/dist >/tmp/scene05-b-http.log 2>&1 & SERVER_PID=$!; trap 'kill $SERVER_PID || true' EXIT; sleep 2
+          BROWSER=$(command -v google-chrome || command -v chromium || command -v chromium-browser || true); test -n "$BROWSER"
           timeout 210s xvfb-run -a env BROWSER_PATH="$BROWSER" node final/scene05-b/qa.mjs
-          for f in b29_014_peninsula b29_052_east_starts b29_088_road_choices b29_112_chosen_branch b29_185_freedom_reveal b29_242_network_flight b29_298_finish b29_342_sunset b29_372_firework b29_394_finale; do test -s "final/scene05-b/dist/${f}.png"; done
+          for f in b30_014_peninsula b30_052_east_starts b30_088_road_choices b30_122_rider_trails b30_185_freedom_reveal b30_242_network_flight b30_298_finish b30_342_sunset b30_372_firework b30_394_finale; do test -s "final/scene05-b/dist/${f}.png"; done
       - uses: actions/upload-artifact@v4
         with:
-          name: SSKR-Scene05-B-Artwork-OneTake-v2.9
+          name: SSKR-Scene05-B-Artwork-OneTake-v3.0
           path: final/scene05-b/dist/
           if-no-files-found: error
           compression-level: 6
           retention-days: 30
-      - name: Publish v2.9 QA
+      - name: Publish v3.0 QA
         run: |
-          mkdir -p assets/scene05/b_v2_9 final/scene05-b/preview_v2_9
-          cp output/scene05_final_v1/peninsula_surface_v28.json assets/scene05/b_v2_9/
-          cp output/scene05_final_v1/road_choice_overlay_v29.json assets/scene05/b_v2_9/
-          cp output/scene05_final_v1/scene05_final_data_v1.json assets/scene05/b_v2_9/
-          cp final/scene05-b/dist/b29_*.png final/scene05-b/preview_v2_9/
-          cat > assets/scene05/b_v2_9/README.md <<'EOF'
-          # Scene 05 B v2.9 artwork QA candidate
-          - 106k+ real OSM trunk/primary/secondary way fragments are baked into a lightweight 2D road-choice field
-          - selected gold local choice traces are actual OSM road fragments, not synthetic cross-country connectors
-          - five Main Routes remain long journey examples and all graphic routes are conformed to the shallow 2.5D surface
-          - South Korea uses actual DEM-led v2.8 aerial texture; canonical SVG remains land alpha authority
-          - road field appears during choice/reveal, then disappears before Finish
-          - smaller sunset sun and v2.5.2 fireworks safe-frame retained
+          mkdir -p assets/scene05/b_v3_0 final/scene05-b/preview_v3_0
+          cp output/scene05_final_v1/peninsula_surface_v30.json assets/scene05/b_v3_0/
+          cp output/scene05_final_v1/road_choice_overlay_v29.json assets/scene05/b_v3_0/
+          cp output/scene05_final_v1/scene05_final_data_v1.json assets/scene05/b_v3_0/
+          cp final/scene05-b/dist/b30_*.png final/scene05-b/preview_v3_0/
+          cat > assets/scene05/b_v3_0/README.md <<'EOF'
+          # Scene 05 B v3.0 artwork QA candidate
+          - richer, darker actual-DEM South Korea aerial surface and seamless non-banded North context
+          - 106k+ actual OSM trunk/primary/secondary road fragments remain a baked choice field
+          - 18 longer rider trails are connected sequences of actual OSM road ways and animate independently through the middle act
+          - five coast-to-Finish Main Routes are visually quieter examples, not prescribed courses
+          - all route graphics are vertically conformed to shallow 2.5D relief
+          - smaller horizon sun and safe-frame fireworks retained
           - approximately 40 seconds, cut-free
           EOF
-          git config user.name 'github-actions[bot]'
-          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add assets/scene05/b_v2_9 final/scene05-b/preview_v2_9
-          if ! git diff --cached --quiet; then git commit -m 'Publish Scene 05 B v2.9 artwork QA'; git push; fi
+          git config user.name 'github-actions[bot]'; git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add assets/scene05/b_v3_0 final/scene05-b/preview_v3_0
+          if ! git diff --cached --quiet; then git commit -m 'Publish Scene 05 B v3.0 artwork QA'; git push; fi

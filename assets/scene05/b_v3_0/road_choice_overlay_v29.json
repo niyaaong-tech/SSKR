@@ -1,0 +1,16 @@
+{
+  "schema_version": "2.9",
+  "source": "assets/scene05/choice_roads_source_v1.geojson",
+  "texture": "road_choice_overlay_v29.png",
+  "size": [
+    1792,
+    3307
+  ],
+  "counts": {
+    "primary": 34470,
+    "secondary": 47604,
+    "trunk": 24219
+  },
+  "segments": 110174,
+  "policy": "Actual OSM trunk/primary/secondary road backdrop. Presentation context only; not navigation or official SSKR routes."
+}

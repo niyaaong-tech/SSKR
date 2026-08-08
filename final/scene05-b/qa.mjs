@@ -39,16 +39,16 @@ try{
     await page.screenshot({path:`final/scene05-b/dist/${name}.png`});
   }
 
-  await capture(3.0,'b_030_high_altitude');
-  await capture(9.0,'b_090_east_starts');
-  await capture(16.0,'b_160_route_chase');
-  await capture(24.0,'b_240_crane_reveal');
-  await capture(32.0,'b_320_day_network');
-  await capture(40.0,'b_400_westward_sweep');
-  await capture(47.0,'b_470_finish_descent');
-  await capture(51.0,'b_510_sunset_hold');
-  await capture(55.0,'b_550_blue_hour');
-  await capture(58.5,'b_585_fireworks');
+  await capture(2.0,'b24_020_establish');
+  await capture(5.2,'b24_052_east_starts');
+  await capture(9.5,'b24_095_route_chase');
+  await capture(14.0,'b24_140_encounter_merge');
+  await capture(19.5,'b24_195_crane_reveal');
+  await capture(25.0,'b24_250_network_west');
+  await capture(30.5,'b24_305_finish_descent');
+  await capture(34.5,'b24_345_sunset_arrival');
+  await capture(37.2,'b24_372_bluehour_festival');
+  await capture(39.3,'b24_393_fireworks_finale');
 
   const state=await page.evaluate(()=>({
     ready:document.querySelector('#frame').classList.contains('ready'),
@@ -66,7 +66,7 @@ try{
     statement:getComputedStyle(document.querySelector('#statement')).opacity
   }));
   if(!state.ready||!state.paused)throw new Error('Deterministic Scene 05 B QA state not reached');
-  if(state.duration<59.8||state.duration>61.0)throw new Error(`Unexpected Scene 05 B duration: ${state.duration}`);
+  if(state.duration<39.7||state.duration>40.8)throw new Error(`Unexpected Scene 05 B v2.4 duration: ${state.duration}`);
   console.log(JSON.stringify(state));
 }finally{
   await browser.close();

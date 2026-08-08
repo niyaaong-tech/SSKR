@@ -1,0 +1,383 @@
+{
+  "schema_version": 3,
+  "asset": "South Korea Hero Terrain v0.3",
+  "source_elevation": "Copernicus DEM GLO-30 Public",
+  "source_coastline": "SSKR canonical korean_peninsula_precise.svg",
+  "georef_model": "quadratic WGS84/WebMercator -> canonical SVG pixels, seeded by v0.2 affine and 13 coastline control points",
+  "seed_metrics_v02": {
+    "ecc": 0.9770479841973829,
+    "convention": "inverse",
+    "iou_natural_earth": 0.9088141371706028,
+    "mean_symmetric_boundary_distance_px": 5.959239052545053,
+    "mean_symmetric_boundary_distance_km": 4.728389714966712
+  },
+  "south_korea_reference_qa": {
+    "iou_south_korea_natural_earth": 0.7239633562085261,
+    "mean_symmetric_boundary_distance_px": 15.354464812450278,
+    "mean_symmetric_boundary_distance_km": 8.930502433649362
+  },
+  "approx_seed_m_per_svg_px": 1035.3430512730438,
+  "control_point_cv": {
+    "mean_km": 4.0588685434340706,
+    "max_km": 11.860775817657633,
+    "points": [
+      {
+        "id": "sokcho_lighthouse",
+        "error_px": 3.039300819794803,
+        "error_km": 3.1467189845030146
+      },
+      {
+        "id": "jeongdongjin",
+        "error_px": 0.03861275394851585,
+        "error_km": 0.03997744649111167
+      },
+      {
+        "id": "mukho_lighthouse",
+        "error_px": 0.8816913574178253,
+        "error_km": 0.9128530202700431
+      },
+      {
+        "id": "uljin_jinmimal_lighthouse",
+        "error_px": 3.837142153715691,
+        "error_km": 3.9727584655964225
+      },
+      {
+        "id": "yeongdeok_chuksan_lighthouse",
+        "error_px": 1.837580763200141,
+        "error_km": 1.9025264743322825
+      },
+      {
+        "id": "homigot_sunrise_square",
+        "error_px": 5.438198260140356,
+        "error_km": 5.630400780081474
+      },
+      {
+        "id": "gampo_north_lighthouse",
+        "error_px": 3.9255796532304723,
+        "error_km": 4.064321616191014
+      },
+      {
+        "id": "ganjeolgot",
+        "error_px": 2.4668379494072616,
+        "error_km": 2.5540235295354528
+      },
+      {
+        "id": "yeongdo_lighthouse",
+        "error_px": 5.247627803113733,
+        "error_km": 5.433094981621032
+      },
+      {
+        "id": "ttangkkeut",
+        "error_px": 11.455889719908567,
+        "error_km": 11.860775817657633
+      },
+      {
+        "id": "daecheon_beach",
+        "error_px": 7.539031206945773,
+        "error_km": 7.8054835734419346
+      },
+      {
+        "id": "mallipo_beach",
+        "error_px": 2.298488780917446,
+        "error_km": 2.3797243877519274
+      },
+      {
+        "id": "ara_west_sea_lock",
+        "error_px": 2.9580842633789866,
+        "error_km": 3.062631987169574
+      }
+    ]
+  },
+  "control_points": [
+    {
+      "id": "sokcho_lighthouse",
+      "name": "Sokcho Lighthouse",
+      "lat": 38.2016667,
+      "lon": 128.6002778,
+      "region": "east",
+      "source": "Ministry of Oceans and Fisheries lighthouse listing",
+      "mx": 14315717.440569524,
+      "my": 4607953.855968966,
+      "seed_svg_px": [
+        480.37584714842524,
+        675.7996694373924
+      ],
+      "snap_svg_px": [
+        484.0,
+        674.0
+      ],
+      "snap_distance_px": 4.046392711472979,
+      "fit_residual_px": 1.2846917345091557
+    },
+    {
+      "id": "jeongdongjin",
+      "name": "Jeongdongjin",
+      "lat": 37.689,
+      "lon": 129.034,
+      "region": "east",
+      "source": "OpenStreetMap/Mapcarta",
+      "mx": 14363999.175019262,
+      "my": 4535584.6235354105,
+      "seed_svg_px": [
+        527.6814887623241,
+        746.514248671062
+      ],
+      "snap_svg_px": [
+        533.0,
+        744.0
+      ],
+      "snap_distance_px": 5.882857143023445,
+      "fit_residual_px": 0.02830853341518072
+    },
+    {
+      "id": "mukho_lighthouse",
+      "name": "Mukho Lighthouse",
+      "lat": 37.55445,
+      "lon": 129.11856,
+      "region": "east",
+      "source": "OpenStreetMap/Mapcarta",
+      "mx": 14373412.351160742,
+      "my": 4516674.3410128355,
+      "seed_svg_px": [
+        536.9610745214541,
+        764.9569437741147
+      ],
+      "snap_svg_px": [
+        542.0,
+        762.0
+      ],
+      "snap_distance_px": 5.842455516443001,
+      "fit_residual_px": 0.6608537137766297
+    },
+    {
+      "id": "uljin_jinmimal_lighthouse",
+      "name": "Jinmimal Lighthouse, Uljin",
+      "lat": 36.89431,
+      "lon": 129.41778,
+      "region": "east",
+      "source": "OpenStreetMap/Mapcarta",
+      "mx": 14406721.369195903,
+      "my": 4424385.185297368,
+      "seed_svg_px": [
+        570.0971141527061,
+        854.825204720627
+      ],
+      "snap_svg_px": [
+        577.0,
+        851.0
+      ],
+      "snap_distance_px": 7.8918961077472956,
+      "fit_residual_px": 2.8913924535939524
+    },
+    {
+      "id": "yeongdeok_chuksan_lighthouse",
+      "name": "Chuksan Lighthouse, Yeongdeok",
+      "lat": 36.50747,
+      "lon": 129.4508,
+      "region": "east",
+      "source": "OpenStreetMap/Mapcarta",
+      "mx": 14410397.138781898,
+      "my": 4370675.019097019,
+      "seed_svg_px": [
+        574.2679533911814,
+        906.953716451415
+      ],
+      "snap_svg_px": [
+        579.0,
+        907.0
+      ],
+      "snap_distance_px": 4.732272950168967,
+      "fit_residual_px": 1.441386654224043
+    },
+    {
+      "id": "homigot_sunrise_square",
+      "name": "Homigot Sunrise Square",
+      "lat": 36.07679,
+      "lon": 129.56803,
+      "region": "east",
+      "source": "OpenStreetMap/Mapcarta",
+      "mx": 14423447.122687593,
+      "my": 4311192.70849048,
+      "seed_svg_px": [
+        587.525696589797,
+        964.7831354634645
+      ],
+      "snap_svg_px": [
+        587.0,
+        964.0
+      ],
+      "snap_distance_px": 0.943216867247406,
+      "fit_residual_px": 3.91334604555861
+    },
+    {
+      "id": "gampo_north_lighthouse",
+      "name": "Gampo North Lighthouse",
+      "lat": 35.80741,
+      "lon": 129.51126,
+      "region": "east_southeast",
+      "source": "GeoNames/OpenStreetMap via Mapcarta",
+      "mx": 14417127.51519526,
+      "my": 4274153.5412909975,
+      "seed_svg_px": [
+        581.8832798386666,
+        1000.6342058181303
+      ],
+      "snap_svg_px": [
+        587.0,
+        1001.0
+      ],
+      "snap_distance_px": 5.129778805454064,
+      "fit_residual_px": 2.992300283939141
+    },
+    {
+      "id": "ganjeolgot",
+      "name": "Ganjeolgot Cape",
+      "lat": 35.35921,
+      "lon": 129.36179,
+      "region": "southeast",
+      "source": "OpenStreetMap/Mapcarta",
+      "mx": 14400488.59090639,
+      "my": 4212804.130817069,
+      "seed_svg_px": [
+        566.600053123102,
+        1059.947859565094
+      ],
+      "snap_svg_px": [
+        567.0,
+        1061.0
+      ],
+      "snap_distance_px": 1.1255918439224415,
+      "fit_residual_px": 1.7031221906586922
+    },
+    {
+      "id": "yeongdo_lighthouse",
+      "name": "Yeongdo Lighthouse, Taejongdae",
+      "lat": 35.05237,
+      "lon": 129.09207,
+      "region": "south_southeast",
+      "source": "GeoNames/OpenStreetMap via Mapcarta",
+      "mx": 14370463.497849626,
+      "my": 4171000.2972762245,
+      "seed_svg_px": [
+        538.2074099418678,
+        1100.1590205253979
+      ],
+      "snap_svg_px": [
+        536.0,
+        1097.0
+      ],
+      "snap_distance_px": 3.8538382596240126,
+      "fit_residual_px": 2.1634865783819484
+    },
+    {
+      "id": "ttangkkeut",
+      "name": "Ttangkkeut, Haenam",
+      "lat": 34.29682,
+      "lon": 126.52766,
+      "region": "southwest",
+      "source": "OpenStreetMap/Mapcarta",
+      "mx": 14084994.682464449,
+      "my": 4068727.6753499387,
+      "seed_svg_px": [
+        264.77245524832324,
+        1196.2037621043041
+      ],
+      "snap_svg_px": [
+        263.0,
+        1196.0
+      ],
+      "snap_distance_px": 1.7841290879471268,
+      "fit_residual_px": 0.36803279903706787
+    },
+    {
+      "id": "daecheon_beach",
+      "name": "Daecheon Beach",
+      "lat": 36.31125,
+      "lon": 126.51131,
+      "region": "west",
+      "source": "OpenStreetMap/Mapcarta",
+      "mx": 14083174.608789979,
+      "my": 4343533.843119374,
+      "seed_svg_px": [
+        259.7751876454713,
+        929.6768717675754
+      ],
+      "snap_svg_px": [
+        258.0,
+        931.0
+      ],
+      "snap_distance_px": 2.2140369229244743,
+      "fit_residual_px": 1.0325354069776256
+    },
+    {
+      "id": "mallipo_beach",
+      "name": "Mallipo Beach",
+      "lat": 36.7884,
+      "lon": 126.13957,
+      "region": "west",
+      "source": "OpenStreetMap/Mapcarta",
+      "mx": 14041792.70128249,
+      "my": 4409653.374062195,
+      "seed_svg_px": [
+        219.1815392543649,
+        865.0991245176101
+      ],
+      "snap_svg_px": [
+        218.0,
+        867.0
+      ],
+      "snap_distance_px": 2.238160541417033,
+      "fit_residual_px": 0.843511990282736
+    },
+    {
+      "id": "ara_west_sea_lock",
+      "name": "Ara West Sea Lock",
+      "lat": 37.55702,
+      "lon": 126.6038,
+      "region": "northwest",
+      "source": "OpenStreetMap/Mapcarta",
+      "mx": 14093470.548493449,
+      "my": 4517035.220481381,
+      "seed_svg_px": [
+        267.6311497814204,
+        761.5285486384782
+      ],
+      "snap_svg_px": [
+        268.0,
+        762.0
+      ],
+      "snap_distance_px": 0.5985957484203722,
+      "fit_residual_px": 1.2900618961627557
+    }
+  ],
+  "poly_model": {
+    "center": [
+      14291169.74941512,
+      4366413.370446096
+    ],
+    "scale": 151900.301808699,
+    "bx": [
+      459.46401782595876,
+      149.79639362831762,
+      0.46527754486616696,
+      1.3455168619832203,
+      2.106921367326248,
+      -0.015980008633649585
+    ],
+    "by": [
+      906.9635979061225,
+      2.061495545343523,
+      -147.52821988516303,
+      -0.616476976440346,
+      2.0601214360947004,
+      0.14604991051745772
+    ]
+  },
+  "mesh": {
+    "mesh_width": 480,
+    "mesh_height": 476,
+    "vertices": 66392,
+    "triangles": 129030,
+    "max_elevation_m": 1877.379638671875
+  }
+}

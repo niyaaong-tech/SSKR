@@ -1,0 +1,27 @@
+{
+  "schema_version": 3,
+  "asset": "South Korea Hero Terrain v0.3",
+  "bbox_wgs84": [
+    124.0,
+    33.0,
+    131.25,
+    39.0
+  ],
+  "vertical_exaggeration": 1.5,
+  "scene_m_per_unit": 10000.0,
+  "coastline_clip": "APPLIED_FROM_CONTROLPOINT_GEOREFERENCED_CANONICAL_SVG",
+  "south_korea_reference_qa": {
+    "iou_south_korea_natural_earth": 0.7239633562085261,
+    "mean_symmetric_boundary_distance_px": 15.354464812450278,
+    "mean_symmetric_boundary_distance_km": 8.930502433649362
+  },
+  "control_point_cv_mean_km": 4.0588685434340706,
+  "control_point_cv_max_km": 11.860775817657633,
+  "mesh": {
+    "mesh_width": 480,
+    "mesh_height": 476,
+    "vertices": 66392,
+    "triangles": 129030,
+    "max_elevation_m": 1877.379638671875
+  }
+}

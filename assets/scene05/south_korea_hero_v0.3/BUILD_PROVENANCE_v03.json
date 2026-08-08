@@ -1,0 +1,5 @@
+{
+  "canonical_svg_sha256": "39e28eed5939bf959aa4f60d47c625743dd61942c7138c1c77729c3c1784c09f",
+  "control_points_sha256": "8a4b0adf6bf0821ff3c64ac9c1fa565aaf4fe9423be615d22881108145b9f6a1",
+  "builder": "tools/scene05-georef-controlpoints-v03.py"
+}

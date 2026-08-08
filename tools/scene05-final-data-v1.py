@@ -12,6 +12,7 @@ from pyproj import CRS, Transformer
 ROOT=Path.cwd()
 ROUTE3D=ROOT/'assets'/'scene05'/'route_network_v0.1'/'scene05_route_network_3d_v01.json'
 ROUTE_RAW=ROOT/'assets'/'scene05'/'route_network_v0.1'/'scene05_route_network_v01.json'
+ROAD_HINTS_SOURCE=ROOT/'assets'/'scene05'/'road_hints_source_v1.geojson'
 TERRAIN=ROOT/'assets'/'scene05'/'south_korea_hero_v0.2'
 OUT=ROOT/'output'/'scene05_final_v1'
 MAIN_ROUTE_IDS={'route_start_n01','route_start_n02','route_start_n04','route_start_n07','route_start_n09'}
@@ -19,7 +20,9 @@ PERSONAL_ROUTE_ID='route_start_n02'
 MERGED_LIMIT=260
 MERGED_GRID_SCENE=1.05
 MERGED_OFFSET_M=72.0
-VISUAL_LIFT_SCENE=0.045  # 450m screen-space separation at national scale; not geographic data.
+VISUAL_LIFT_SCENE=0.045
+ROAD_HINT_LIFT_SCENE=0.027
+ROAD_HINT_LIMIT=240
 
 
 def bilinear(arr,x,y):
@@ -34,14 +37,14 @@ def lift_point(p,amount=VISUAL_LIFT_SCENE):
     return [float(p[0]),float(p[1])+amount,float(p[2])]
 
 
-def scene_point(lon,lat,tf,height,meta,offset_m):
+def scene_point(lon,lat,tf,height,meta,offset_m,visual_lift=VISUAL_LIFT_SCENE):
     x,y=tf.transform(lon,lat)
     minx,miny,maxx,maxy=meta['local_bounds_m'];w,h=meta['raster_size']
     px=(x-minx)/(maxx-minx)*(w-1);py=(maxy-y)/(maxy-miny)*(h-1)
     q=bilinear(height,px,py)/65535.0
     elev=max(0.0,q*float(meta['mesh']['max_elevation_m']))
     scene=float(meta['scene_m_per_unit']);ve=float(meta['vertical_exaggeration'])
-    return [x/scene,(elev*ve+offset_m)/scene+VISUAL_LIFT_SCENE,-y/scene]
+    return [x/scene,(elev*ve+offset_m)/scene+visual_lift,-y/scene]
 
 
 def dist2(a,b):
@@ -112,6 +115,34 @@ def build_checkpoints(routes):
     return chosen
 
 
+def build_road_hints(tf,height,meta):
+    if not ROAD_HINTS_SOURCE.exists():
+        return []
+    geo=json.loads(ROAD_HINTS_SOURCE.read_text('utf-8'))
+    priority={'motorway':0,'trunk':1,'primary':2}
+    features=sorted(
+        geo.get('features',[]),
+        key=lambda f:(priority.get(f.get('properties',{}).get('highway'),9),-float(f.get('properties',{}).get('length_km',0)))
+    )[:ROAD_HINT_LIMIT]
+    hints=[]
+    for f in features:
+        geom=f.get('geometry',{})
+        if geom.get('type')!='LineString':continue
+        coords=geom.get('coordinates') or []
+        if len(coords)<2:continue
+        pts=[]
+        for lon,lat in coords:
+            pts.append(scene_point(lon,lat,tf,height,meta,38.0,visual_lift=ROAD_HINT_LIFT_SCENE))
+        props=f.get('properties',{})
+        hints.append({
+            'osm_way_id':props.get('osm_way_id'),
+            'highway':props.get('highway','primary'),
+            'length_km':props.get('length_km'),
+            'points':pts
+        })
+    return hints
+
+
 def main():
     OUT.mkdir(parents=True,exist_ok=True)
     route3d=json.loads(ROUTE3D.read_text('utf-8'))
@@ -134,22 +165,25 @@ def main():
     starts=[{**s,'position':lift_point(s['position'])} for s in route3d['starts']]
     seeds=build_start_seeds(starts,routes)
     checkpoints=build_checkpoints(routes)
+    road_hints=build_road_hints(tf,height,meta)
     finish={**route3d['finish'],'position':lift_point(route3d['finish']['position'])}
 
     result={
-        'schema_version':'1.1',
+        'schema_version':'1.2',
         'status':'FINAL_SCENE_PRESENTATION_DATA',
         'terrain_asset':'South Korea Hero Terrain v0.2',
         'coastline_authority':'korean_peninsula_precise.svg',
         'coordinate_system':route3d['coordinate_system'],
         'visual_route_lift_scene_units':VISUAL_LIFT_SCENE,
+        'road_hint_lift_scene_units':ROAD_HINT_LIFT_SCENE,
         'policy':[
             'This is a cinematic presentation visualization, not an SSKR navigation engine.',
             'Start references and West Finish remain visual placeholders until product planning confirms official coordinates.',
             'Main routes are grounded in the real-road source topology and terrain-following DEM coordinates.',
-            'Merged segments are sampled from shared real-road topology where available; Road Hint remains intentionally subordinate.',
+            'Merged segments are sampled from shared real-road topology where available.',
+            'Road Hint uses a curated motorway/trunk/primary OSM subset and remains intentionally subordinate.',
             'Every visible Dawn Start is connected to the journey network: five by Main Routes and four by subtle feeder lines.',
-            'A uniform 0.045 scene-unit visual lift prevents graphic routes from being buried by the decimated relief mesh; it does not alter source geography.'
+            'Uniform visual lifts prevent graphic layers from being buried by the decimated relief mesh; they do not alter source geography.'
         ],
         'storyboard':{
             'duration_s':12.8,'personal_route_id':PERSONAL_ROUTE_ID,
@@ -160,12 +194,12 @@ def main():
             ]
         },
         'starts':starts,'finish':finish,'main_routes':routes,'start_seeds':seeds,
-        'merged_segments':merged,'checkpoints':checkpoints
+        'merged_segments':merged,'road_hints':road_hints,'checkpoints':checkpoints
     }
     (OUT/'scene05_final_data_v1.json').write_text(json.dumps(result,ensure_ascii=False,indent=2),encoding='utf-8')
     print(json.dumps({
         'main_routes':len(routes),'starts':len(starts),'start_seeds':len(seeds),
-        'merged_segments':len(merged),'checkpoints':len(checkpoints),
+        'merged_segments':len(merged),'road_hints':len(road_hints),'checkpoints':len(checkpoints),
         'personal_route':PERSONAL_ROUTE_ID,'visual_lift':VISUAL_LIFT_SCENE
     },indent=2))
 

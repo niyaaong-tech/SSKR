@@ -34,7 +34,7 @@ def main():
     for ref in ['./assets/','./app.js','./scene05-b.css']:
         if ref in html:
             raise SystemExit(f'Standalone pack left external reference: {ref}')
-    out=DIST/'SSKR_Scene05_B_Extended_OneTake_v2.2_standalone.html'
+    out=DIST/'SSKR_Scene05_B_Extended_OneTake_v2.3_standalone.html'
     out.write_text(html,encoding='utf-8')
     print(out,out.stat().st_size)
 

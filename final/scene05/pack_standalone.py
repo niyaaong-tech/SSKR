@@ -20,8 +20,9 @@ def main():
     replacements={
         './assets/korean_peninsula_precise.svg':data_uri(DIST/'assets'/'korean_peninsula_precise.svg','image/svg+xml'),
         './assets/terrain_final_uv.glb':data_uri(DIST/'assets'/'terrain_final_uv.glb','model/gltf-binary'),
-        './assets/terrain_surface_final.png':data_uri(DIST/'assets'/'terrain_surface_final.png','image/png'),
-        './assets/terrain_normal_final.png':data_uri(DIST/'assets'/'terrain_normal_final.png','image/png'),
+        './assets/terrain_dawn_final.png':data_uri(DIST/'assets'/'terrain_dawn_final.png','image/png'),
+        './assets/terrain_day_final.png':data_uri(DIST/'assets'/'terrain_day_final.png','image/png'),
+        './assets/terrain_sunset_final.png':data_uri(DIST/'assets'/'terrain_sunset_final.png','image/png'),
         './assets/scene05_final_data_v1.json':data_uri(DIST/'assets'/'scene05_final_data_v1.json','application/json')
     }
     for old,new in replacements.items():
@@ -30,7 +31,7 @@ def main():
     html=html.replace('<script type="module" src="./app.js"></script>',f'<script type="module">{js}</script>')
     for ref in ['./assets/','./app.js','./scene05-final.css']:
         if ref in html:raise SystemExit(f'Standalone pack left external reference: {ref}')
-    out=DIST/'SSKR_Scene05_Final_v1.0_standalone.html'
+    out=DIST/'SSKR_Scene05_Final_v1.1_standalone.html'
     out.write_text(html,encoding='utf-8')
     print(out,out.stat().st_size)
 

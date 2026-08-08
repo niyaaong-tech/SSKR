@@ -24,28 +24,29 @@ def unit(v):
 
 def material_base(height,slope,albedo,land):
     elev=height/max(float(height.max()),1.0)
-    low=smoothstep(.02,.25,elev)
-    high=smoothstep(.38,.82,elev)
-    steep=smoothstep(.22,.72,slope)
-    plain=(1.0-smoothstep(.08,.32,elev))*(1.0-smoothstep(.10,.42,slope))
-    rock=np.clip(steep*(.40+.60*high),0,1)
+    low=smoothstep(.02,.28,elev)
+    high=smoothstep(.40,.84,elev)
+    steep=smoothstep(.25,.75,slope)
+    plain=(1.0-smoothstep(.08,.34,elev))*(1.0-smoothstep(.12,.46,slope))
+    rock=np.clip(steep*(.34+.66*high),0,1)
 
-    forest=np.array([54,88,50],dtype=np.float32)
-    mountain=np.array([45,72,46],dtype=np.float32)
-    farmland=np.array([101,121,73],dtype=np.float32)
-    stone=np.array([128,121,105],dtype=np.float32)
+    forest=np.array([61,84,57],dtype=np.float32)
+    mountain=np.array([52,72,51],dtype=np.float32)
+    farmland=np.array([108,115,81],dtype=np.float32)
+    stone=np.array([132,126,114],dtype=np.float32)
 
-    base=forest[None,None,:]*(1-low[...,None])+mountain[None,None,:]*low[...,None]
-    base=base*(1-plain[...,None]*.55)+farmland[None,None,:]*(plain[...,None]*.55)
-    base=base*(1-rock[...,None]*.64)+stone[None,None,:]*(rock[...,None]*.64)
+    procedural=forest[None,None,:]*(1-low[...,None])+mountain[None,None,:]*low[...,None]
+    procedural=procedural*(1-plain[...,None]*.38)+farmland[None,None,:]*(plain[...,None]*.38)
+    procedural=procedural*(1-rock[...,None]*.50)+stone[None,None,:]*(rock[...,None]*.50)
 
-    # Reuse real/source albedo only as low-amplitude material variation; do not turn the scene into satellite imagery.
+    # Preserve real source surface variation strongly enough to avoid a painted-map look.
+    # The procedural layer only organizes the palette by terrain form.
+    base=albedo*.56+procedural*.44
     lum=(albedo[...,0]*.2126+albedo[...,1]*.7152+albedo[...,2]*.0722)/255.0
-    variation=np.clip(.86+(lum-.5)*.32, .76, 1.10)
+    variation=np.clip(.94+(lum-.5)*.14,.88,1.06)
     base*=variation[...,None]
 
-    # Gentle elevation cooling keeps mountain masses distinct without fake snow.
-    base*=np.stack([1-.04*high,1-.015*high,1+.025*high],axis=-1)
+    base*=np.stack([1-.025*high,1-.010*high,1+.018*high],axis=-1)
     base[~land]=np.array([18,47,67],dtype=np.float32)
     return np.clip(base,0,255)
 
@@ -65,27 +66,24 @@ def normals(height,meta):
 def phase(base,nrm,land,sun,ambient,tint,name,contrast,saturation,brightness):
     s=unit(sun)
     dot=np.clip(nrm[...,0]*s[0]+nrm[...,1]*s[1]+nrm[...,2]*s[2],0,1)
-    # Filmic terrain light: retain ambient detail while giving ridgelines directional shape.
-    shade=ambient+(1-ambient)*np.power(dot,.78)
-    color=base*(.52+.92*shade[...,None])*np.asarray(tint,dtype=np.float32)
+    shade=ambient+(1-ambient)*np.power(dot,.76)
+    color=base*(.46+1.00*shade[...,None])*np.asarray(tint,dtype=np.float32)
     color[~land]=np.array([18,47,67],dtype=np.float32)
     img=Image.fromarray(np.clip(color,0,255).astype(np.uint8),'RGB')
     img=ImageEnhance.Contrast(img).enhance(contrast)
     img=ImageEnhance.Color(img).enhance(saturation)
     img=ImageEnhance.Brightness(img).enhance(brightness)
-    img=img.filter(ImageFilter.GaussianBlur(.08))
+    img=img.filter(ImageFilter.GaussianBlur(.06))
     img.save(OUT/name,quality=95)
 
 
 def coast_map(land):
-    # A soft coastal influence mask for the separate procedural ocean plane.
-    # It is not bathymetry; it only gives the coast a readable shallow-water art band.
     mask=Image.fromarray((land.astype(np.uint8)*255),'L')
-    near=np.asarray(mask.filter(ImageFilter.GaussianBlur(13)),dtype=np.float32)/255.0
-    far=np.asarray(mask.filter(ImageFilter.GaussianBlur(42)),dtype=np.float32)/255.0
+    near=np.asarray(mask.filter(ImageFilter.GaussianBlur(11)),dtype=np.float32)/255.0
+    far=np.asarray(mask.filter(ImageFilter.GaussianBlur(35)),dtype=np.float32)/255.0
     water=(~land).astype(np.float32)
-    band=np.clip((near*.78+far*.38)*water,0,1)
-    band=np.power(band,.62)
+    band=np.clip((near*.72+far*.30)*water,0,1)
+    band=np.power(band,.70)
     Image.fromarray((band*255).astype(np.uint8),'L').save(OUT/'coast_shallow.png')
 
 
@@ -100,14 +98,14 @@ def main():
     nrm=normals(height,meta)
     base=material_base(height,slope,albedo,land)
 
-    phase(base,nrm,land,(.98,.20,-.06),.19,(.70,.83,.95),'terrain_dawn_final.png',1.12,1.06,.96)
-    phase(base,nrm,land,(.34,.93,-.20),.40,(1.04,1.06,1.00),'terrain_day_final.png',1.12,1.15,1.00)
-    phase(base,nrm,land,(-.98,.18,.08),.16,(1.17,.87,.70),'terrain_sunset_final.png',1.13,1.10,.96)
+    phase(base,nrm,land,(.98,.20,-.06),.18,(.72,.84,.95),'terrain_dawn_final.png',1.13,1.02,.95)
+    phase(base,nrm,land,(.34,.93,-.20),.39,(1.03,1.035,1.00),'terrain_day_final.png',1.13,1.05,.99)
+    phase(base,nrm,land,(-.98,.18,.08),.15,(1.14,.89,.74),'terrain_sunset_final.png',1.14,1.05,.95)
     coast_map(land)
 
     report={
-      'schema_version':'2.2',
-      'policy':'Scene 05 B art-directed terrain material pass. Geometry/coastline remain authoritative; forest/plain/rock separation is procedural from elevation/slope/source albedo variation and is not a land-cover claim.',
+      'schema_version':'2.3',
+      'policy':'Scene 05 B naturalized terrain material pass. Geometry/coastline remain authoritative; source albedo is preserved as the majority surface signal, with restrained terrain-driven palette organization from elevation/slope. This is art direction, not land-cover classification.',
       'outputs':['terrain_dawn_final.png','terrain_day_final.png','terrain_sunset_final.png','coast_shallow.png']
     }
     (OUT/'scene05_b_art_texture_metadata.json').write_text(json.dumps(report,ensure_ascii=False,indent=2),encoding='utf-8')

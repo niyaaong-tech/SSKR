@@ -20,20 +20,27 @@ try{
   const errors=[];
   page.on('pageerror',e=>errors.push(`PAGEERROR: ${e.message}`));
   page.on('console',m=>{if(m.type()==='error')errors.push(`CONSOLE: ${m.text()}`)});
-  await page.goto('http://127.0.0.1:4173/',{waitUntil:'networkidle0',timeout:60000});
+  await page.goto('http://127.0.0.1:4173/?qa=1',{waitUntil:'networkidle0',timeout:60000});
   await page.waitForSelector('#frame.ready',{timeout:30000});
+  await page.waitForFunction(()=>window.__scene05Timeline,{timeout:30000});
   const canvas=await page.$('#three-stage canvas');
   if(!canvas)throw new Error('Three.js canvas was not created');
   if(errors.length)throw new Error(errors.join('\n'));
 
-  await sleep(3400);
-  await page.screenshot({path:'prototype/scene05/dist/keyframe_034s.png'});
-  await sleep(3600);
-  await page.screenshot({path:'prototype/scene05/dist/keyframe_070s.png'});
-  await sleep(1900);
-  await page.screenshot({path:'prototype/scene05/dist/keyframe_089s.png'});
-  await sleep(1800);
-  await page.screenshot({path:'prototype/scene05/dist/keyframe_107s.png'});
+  async function capture(time,name){
+    await page.evaluate(t=>{
+      const tl=window.__scene05Timeline;
+      if(!tl)throw new Error('Scene timeline is unavailable');
+      tl.pause().seek(t,false);
+    },time);
+    await sleep(300);
+    await page.screenshot({path:`prototype/scene05/dist/${name}.png`});
+  }
+
+  await capture(3.4,'keyframe_034s');
+  await capture(7.0,'keyframe_070s');
+  await capture(8.9,'keyframe_089s');
+  await capture(10.7,'keyframe_107s');
 
   const state=await page.evaluate(()=>({
     ready:document.querySelector('#frame')?.classList.contains('ready'),
@@ -42,9 +49,11 @@ try{
     statementOpacity:getComputedStyle(document.querySelector('#statement')).opacity,
     transitionOpacity:getComputedStyle(document.querySelector('#transition-copy')).opacity,
     fontFamily:getComputedStyle(document.body).fontFamily,
+    timelineTime:window.__scene05Timeline?.time(),
+    timelinePaused:window.__scene05Timeline?.paused(),
     canvasSize:[document.querySelector('#three-stage canvas')?.width,document.querySelector('#three-stage canvas')?.height]
   }));
-  if(!state.ready)throw new Error('Scene did not reach ready state');
+  if(!state.ready||!state.timelinePaused)throw new Error('Deterministic QA state was not reached');
   console.log(JSON.stringify(state));
 }finally{
   await browser.close();

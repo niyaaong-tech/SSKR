@@ -1,0 +1,19 @@
+{
+  "schema_version": "1.1",
+  "source": "South Korea Hero Terrain v0.2 derived maps",
+  "mesh_width": 640,
+  "mesh_height": 634,
+  "vertices": 119664,
+  "triangles": 233983,
+  "uv": true,
+  "vertical_exaggeration": 1.5,
+  "scene_m_per_unit": 10000.0,
+  "phase_textures": {
+    "dawn": "terrain_dawn_final.png",
+    "day": "terrain_day_final.png",
+    "sunset": "terrain_sunset_final.png"
+  },
+  "static_surface_texture": "terrain_surface_final.png",
+  "normal_texture": "terrain_normal_final.png",
+  "policy": "Geometry remains Copernicus DEM. Dawn/day/sunset relief is analytically baked from the same DEM normals; no invented mountain geometry or image-generation terrain."
+}

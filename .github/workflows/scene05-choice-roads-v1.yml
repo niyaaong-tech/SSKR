@@ -1,0 +1,41 @@
+name: Scene 05 Choice Roads Source v1
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/scene05-choice-roads-v1.yml'
+      - 'tools/scene05-choice-roads-source-v1.py'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-choice-roads-source:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Query real trunk primary secondary roads
+        run: |
+          python -m pip install requests
+          python tools/scene05-choice-roads-source-v1.py
+          test -s output/scene05_choice_roads_source_v1/scene05_choice_roads_source_v1.geojson
+      - uses: actions/upload-artifact@v4
+        with:
+          name: SSKR-Scene05-ChoiceRoads-Source-v1
+          path: output/scene05_choice_roads_source_v1/
+          retention-days: 30
+      - name: Publish choice-road source
+        run: |
+          cp output/scene05_choice_roads_source_v1/scene05_choice_roads_source_v1.geojson assets/scene05/choice_roads_source_v1.geojson
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add assets/scene05/choice_roads_source_v1.geojson
+          if ! git diff --cached --quiet; then git commit -m 'Publish Scene 05 real choice-road source v1'; git push; fi

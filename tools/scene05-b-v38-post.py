@@ -20,9 +20,10 @@ patch('QA diagnostics.\\n', 'QA diagnostics.\n', 'v38 banner normalization')
 
 # ---------------------------------------------------------------------------
 # Run82 visual QA showed that the first world-space sunset implementation read as
-# a solid laser/spotlight. Make the sea reflection camera-relative, broken by water
-# ripples and significantly less emissive. Also remove the old UV-space white path
-# that was visible as a diagonal streak even during dawn/day.
+# a solid laser/spotlight. Run84 removed the beam but the hard-thresholded paired
+# sines produced a visible dot-grid. Keep the reflection camera-relative, but make
+# it a soft elongated water highlight driven only by the shader's existing water
+# shimmer. Also remove the old UV-space white path visible during dawn/day.
 # ---------------------------------------------------------------------------
 patch(
     '''  uSunDir: { value: new THREE.Vector2(1,0) },
@@ -53,18 +54,15 @@ patch(
       float along=dot(rel,viewRay);
       float across=abs(rel.x*viewRay.y-rel.y*viewRay.x);
       float travel=clamp(along/max(uReflectionLength,.001),0.0,1.0);
-      float width=uReflectionWidth*mix(.52,1.10,travel);
-      float lane=exp(-pow(across/max(width,.001),2.0)*2.25);
-      float reach=smoothstep(0.0,uReflectionLength*.075,along)*(1.0-smoothstep(uReflectionLength*.70,uReflectionLength,along));
-      float rippleA=.5+.5*sin(vWorld.x*5.3+vWorld.z*8.7+uTime*.46);
-      float rippleB=.5+.5*sin(vWorld.x*12.1-vWorld.z*6.2-uTime*.33);
-      float broken=smoothstep(.48,.80,rippleA*.58+rippleB*.42);
-      float path=lane*reach*(.10+.90*broken)*(.32+.68*shimmer);''',
-    'v38 broken sea reflection path'
+      float width=uReflectionWidth*mix(.60,1.22,travel);
+      float lane=exp(-pow(across/max(width,.001),2.0)*1.75);
+      float reach=smoothstep(0.0,uReflectionLength*.08,along)*(1.0-smoothstep(uReflectionLength*.68,uReflectionLength,along));
+      float path=lane*reach*(.34+.66*shimmer);''',
+    'v38 soft sea reflection path'
 )
 patch(
     'c+=vec3(1.00,0.42,0.11)*path*warm*(0.19+0.34*shimmer);',
-    'c+=vec3(1.00,0.40,0.085)*path*warm*(0.070+0.115*shimmer);',
+    'c+=vec3(1.00,0.40,0.085)*path*warm*(0.045+0.080*shimmer);',
     'v38 reflection energy restraint'
 )
 patch(
@@ -73,8 +71,8 @@ patch(
     'remove legacy dawn/day reflection streak'
 )
 
-# Lower the apparent sun to the horizon and make the reflected lane wider but less
-# intense. Direction itself is now updated from the actual camera each frame.
+# Place the actual sun at the sea horizon in the final west-coast camera rather
+# than inside the water. Reflection direction is updated from the camera each frame.
 patch(
     '''  const westSunWorld = finish.clone().add(new THREE.Vector3(-diag * .34, diag * .055, -diag * .035));
   const reflectionDir = finish.clone().sub(westSunWorld);
@@ -82,21 +80,21 @@ patch(
   oceanUniforms.uSunDir.value.set(reflectionDir.x, reflectionDir.z).normalize();
   oceanUniforms.uReflectionWidth.value = diag * .052;
   oceanUniforms.uReflectionLength.value = diag * .68;''',
-    '''  const westSunWorld = finish.clone().add(new THREE.Vector3(-diag * .34, diag * .028, -diag * .035));
+    '''  const westSunWorld = finish.clone().add(new THREE.Vector3(-diag * .34, diag * .063, -diag * .035));
   oceanUniforms.uSunWorld.value.set(westSunWorld.x, westSunWorld.z);
-  oceanUniforms.uReflectionWidth.value = diag * .072;
-  oceanUniforms.uReflectionLength.value = diag * .62;''',
-    'v38 low horizon camera-relative sunset'
+  oceanUniforms.uReflectionWidth.value = diag * .088;
+  oceanUniforms.uReflectionLength.value = diag * .60;''',
+    'v38 horizon camera-relative sunset'
 )
 patch(
     'sunSprite.position.copy(finish).add(new THREE.Vector3(-diag * .34, diag * .055, -diag * .035));',
-    'sunSprite.position.copy(finish).add(new THREE.Vector3(-diag * .34, diag * .028, -diag * .035));',
-    'v38 lower visible sun body'
+    'sunSprite.position.copy(finish).add(new THREE.Vector3(-diag * .34, diag * .063, -diag * .035));',
+    'v38 visible sun body on horizon'
 )
 patch(
     ".to(sunSprite.position, { y: finish.y + diag * .040, duration: 4.5, ease: 'sine.inOut' }, 21.4)",
-    ".to(sunSprite.position, { y: finish.y + diag * .018, duration: 4.5, ease: 'sine.inOut' }, 21.4)",
-    'v38 sun settles on horizon'
+    ".to(sunSprite.position, { y: finish.y + diag * .061, duration: 4.5, ease: 'sine.inOut' }, 21.4)",
+    'v38 sun settles at horizon'
 )
 patch(
     '  oceanUniforms.uTime.value = t;',
@@ -124,4 +122,4 @@ patch(
 )
 
 p.write_text(text, encoding='utf-8')
-print('normalized and refined v3.8 generated source', p)
+print('normalized and polished v3.8 generated source', p)

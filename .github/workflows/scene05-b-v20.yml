@@ -10,6 +10,7 @@ on:
       - 'tools/scene05-b-source-v*.py'
       - 'tools/scene05-b-sky-assets-v37.py'
       - 'tools/scene05-b-v37-prep.py'
+      - 'tools/scene05-b-v37-post.py'
       - 'tools/scene05-b-v35-framing-fix.py'
       - 'tools/scene05-b-v36-evening-fix.py'
       - 'tools/scene05-b-peninsula-*.py'
@@ -83,6 +84,7 @@ jobs:
           python tools/scene05-b-v36-evening-fix.py
           python tools/scene05-b-v37-prep.py
           python tools/scene05-b-source-v37.py
+          python tools/scene05-b-v37-post.py
 
           test -s output/scene05_final_v1/sky_dawn_v37.jpg
           test -s output/scene05_final_v1/sky_sunset_v37.jpg
@@ -92,6 +94,7 @@ jobs:
           grep -q 'Scene 05 B v3.7' output/scene05-b-v37.js
           grep -q 'buildPhotoEnvironment' output/scene05-b-v37.js
           grep -q 'cloudGroup.visible = false' output/scene05-b-v37.js
+          grep -q "introTarget, 38.0" output/scene05-b-v37.js
           grep -q 'finishBeat = 18.92' output/scene05-b-v37.js
       - uses: actions/setup-node@v5
         with: {node-version: '22'}

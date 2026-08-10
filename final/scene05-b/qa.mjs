@@ -41,15 +41,16 @@ try {
     await page.screenshot({ path: `final/scene05-b/dist/${name}.png` });
   }
 
-  await cap(1.5, 'b35_015_peninsula');
-  await cap(4.5, 'b35_045_east_approach');
-  await cap(7.2, 'b35_072_start_cascade');
-  await cap(12.0, 'b35_120_journeys');
-  await cap(18.9, 'b35_189_finish_arrival');
-  await cap(21.0, 'b35_210_finish_pulse');
-  await cap(24.0, 'b35_240_sunset_descent');
-  await cap(27.5, 'b35_275_core_message');
-  await cap(29.5, 'b35_295_final_hold');
+  await cap(1.5, 'b36_015_peninsula');
+  await cap(4.5, 'b36_045_east_dawn');
+  await cap(7.2, 'b36_072_start_dawn');
+  await cap(12.0, 'b36_120_route_day');
+  await cap(16.5, 'b36_165_late_day');
+  await cap(18.9, 'b36_189_finish_evening');
+  await cap(21.0, 'b36_210_finish_sunset');
+  await cap(24.0, 'b36_240_sunset_descent');
+  await cap(27.5, 'b36_275_core_message');
+  await cap(29.5, 'b36_295_final_hold');
 
   const s = await page.evaluate(() => ({
     ready: document.querySelector('#frame').classList.contains('ready'),
@@ -57,7 +58,7 @@ try {
     paused: window.__scene05Timeline.paused()
   }));
   if (!s.ready || !s.paused || s.duration < 29.9 || s.duration > 30.2) {
-    throw new Error(`Bad v3.5 QA ${JSON.stringify(s)}`);
+    throw new Error(`Bad v3.6 QA ${JSON.stringify(s)}`);
   }
   console.log(JSON.stringify(s));
 } finally {

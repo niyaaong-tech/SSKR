@@ -4,7 +4,7 @@ body{display:grid;place-items:center;color:#f7f8fa;font-family:-apple-system,Bli
 #frame{position:relative;width:min(100vw,calc(100vh*16/9));height:min(100vh,calc(100vw*9/16));overflow:hidden;background:#03080e;isolation:isolate}
 #atmosphere,#three-stage,#overview-layer,#light-wash,#vignette,#grain{position:absolute;inset:0}
 .sky-layer{position:absolute;inset:-5%;opacity:0;will-change:opacity,transform}
-.horizon-glow{position:absolute;opacity:0;pointer-events:none;filter:blur(34px);mix-blend-mode:screen;will-change:opacity,transform}
+.horizon-glow{position:absolute;z-index:3;opacity:0;pointer-events:none;filter:blur(34px);mix-blend-mode:screen;will-change:opacity,transform}
 #sky-night{opacity:1;background:radial-gradient(ellipse at 62% 38%,rgba(31,55,70,.28),transparent 43%),linear-gradient(180deg,#02060b 0%,#07111c 52%,#091016 100%)}
 #sky-dawn{background:radial-gradient(circle at 86% 55%,rgba(255,212,143,.38) 0%,rgba(246,161,91,.16) 18%,transparent 42%),linear-gradient(180deg,#06111e 0%,#183342 53%,#243f42 76%,#1b2c2e 100%)}
 #sky-day{background:radial-gradient(circle at 58% 4%,rgba(247,248,250,.44),transparent 36%),linear-gradient(180deg,#6f91a6 0%,#9fb5b6 48%,#718d82 100%)}

@@ -1,36 +1,55 @@
-# SSKR Scene 05 B — 30s Journey Choreography v3.5
+# SSKR Scene 05 B — 30s Journey Foundation Polish v3.6
 
-This is the revised production-candidate B version of Scene 05.
+This pass keeps the accepted v3.5 choreography and corrects three visible foundation defects before adding new visual assets.
 
 Scene 05 A v1.8 remains accepted and untouched under `final/scene05/`.
 
-## Visual target
+## v3.6 correction scope
 
-> Reality in structure, Art in appearance.
+1. full-peninsula surface continuity
+2. single coastline authority
+3. Dawn → Day → Sunset lighting tied to journey progress
 
-The scene should read as a cinematic aerial landscape of real Korean terrain rather than a GIS render or game board. v3.5 focuses first on choreography and narrative clarity, before another visual-asset pass.
+## Surface continuity
 
-Priority:
+- canonical Korean peninsula SVG alpha remains the land/coast authority
+- ESA WorldCover remains the material source across the full peninsula
+- South Korea Copernicus DEM detail is retained
+- DEM contribution now fades at all four raster edges instead of exposing a rectangular material boundary over North Korea
+- North Korea intentionally uses restrained lower-detail contextual relief rather than invented fine terrain
 
-1. clear journey storytelling
-2. one continuous cinematic camera move
-3. real terrain / route credibility
-4. restrained presentation graphics
-5. later visual-art improvements to surface, sky and sunset assets
+## Coastline correction
+
+The previous presentation could show a doubled shoreline because the full-peninsula SVG surface and a South-Korea-bounds shallow-water mask were projected independently.
+
+For v3.6:
+
+- texture-side coastline rim/shelf painting is removed
+- the misregistered shallow-water tint is disabled
+- the canonical SVG alpha is the one visible coastline boundary
+
+A richer near-shore treatment can be rebuilt later from the same canonical coastline coordinate space.
+
+## Lighting correction
+
+The 30-second choreography remains unchanged, but time-of-day now follows the ride:
+
+- 0–6s — predawn / dawn establishes the peninsula and East Coast
+- 6–9s — Start cascade remains visibly dawn-lit; cool ambient + warm East Coast glow
+- 9–14s — routes launch while dawn grows naturally into neutral daylight
+- 15–19s — daylight gradually bends warm toward late afternoon
+- 17–22s — sunset begins before the routes reach Finish so arrival already reads as evening
+- 22–30s — West Coast sunset tone settles while Finish event light fades before the core message
 
 ## 30-second one-take
 
-The entire scene is one continuous virtual-camera shot:
-
-- 0–3s — Korean peninsula centered in frame
-- 3–6s — gradual approach toward the north/mid East Coast of South Korea
-- 6–9s — East Coast Start points ignite in rapid succession, with a wider framing than previous versions
-- 9–19s — no single hero Route; complete participant journeys begin with short offsets and draw slowly for about ten seconds while the camera pulls back and rotates
-- 19–22s — routes reach one West Coast Finish within one beat; a symbolic Finish/festival light pulse appears and daylight begins warming into sunset
-- 22–26s — camera descends and lowers its pitch toward the West Coast sunset horizon
-- 26–30s — fireworks are removed; the sunset color settles and the core message is revealed in the center
-
-There are no editorial cuts inside the scene.
+- 0–3s — full Korean peninsula centered
+- 3–6s — gradual East Coast approach
+- 6–9s — Start points ignite in rapid succession
+- 9–19s — participant routes draw slowly together while the camera pulls back and rotates
+- 19–22s — routes reach one West Coast Finish; restrained symbolic Finish pulse
+- 22–26s — camera descends toward the West Coast horizon
+- 26–30s — Finish light clears; core message remains over sunset tone
 
 ## Core message
 
@@ -39,42 +58,22 @@ There are no editorial cuts inside the scene.
 현장은 축제가 되고 기억은 영원이 됩니다.
 ```
 
-## Removed from the previous 60-second structure
-
-- hero Route chase
-- separate representative Route before the participant journeys
-- daylight network-flight chapter
-- checkpoint reaction showcase
-- convergence-only route chapter
-- blue-hour reframe
-- firework launches and firework finale
-
-## Retained systems
-
-- canonical Korean peninsula / South Korea terrain geometry
-- Copernicus DEM-based relief
-- ESA WorldCover-informed terrain texture
-- real-road route graph and complete participant journeys
-- ocean shader
-- simple atmospheric fog / color progression
-- lightweight cloud framing
-- Finish festival light cluster, used only as a restrained symbolic light event
-
 ## Data authority
 
 - coastline: `assets/vector/korean_peninsula_precise.svg`
-- terrain: Copernicus GLO-30 based South Korea Hero Terrain v0.2 / final UV rebuild
-- surface: ESA WorldCover-informed texture pass
+- South Korea terrain: Copernicus GLO-30 based South Korea Hero Terrain v0.2
+- peninsula surface: ESA WorldCover-informed full-peninsula texture
 - route topology: actual-road participant-route data
-- finish coordinate: current west-coast visual placeholder only
+- Finish coordinate: current west-coast visual placeholder only
 
 ## QA keyframes
 
-- 0.0s — peninsula centered
-- 4.5s — East Coast approach
-- 7.2s — Start cascade
-- 12.0s — participant journeys in progress
-- 18.9s — near-simultaneous Finish
-- 21.0s — Finish light pulse / sunset transition
-- 24.0s — low West Coast sunset approach
-- 27.5s — core message reveal
+- 1.5s — full peninsula / seam inspection
+- 4.5s — East Coast dawn approach
+- 7.2s — dawn Start cascade
+- 12.0s — participant journeys / daylight transition
+- 18.9s — evening Finish arrival
+- 21.0s — Finish pulse / sunset
+- 24.0s — West Coast descent
+- 27.5s — core message
+- 29.5s — final hold

@@ -9,7 +9,8 @@ on:
       - 'final/scene05-b/**'
       - 'tools/scene05-b-source-v*.py'
       - 'tools/scene05-b-v35-framing-fix.py'
-      - 'tools/scene05-b-peninsula-texture-v*.py'
+      - 'tools/scene05-b-v36-evening-fix.py'
+      - 'tools/scene05-b-peninsula-*.py'
       - 'tools/scene05-b-surface-relief-v34.py'
       - 'tools/scene05-b-conform-relief-v34.py'
       - 'tools/scene05-b-participant-routes-v32.py'
@@ -43,6 +44,7 @@ jobs:
           python tools/scene05-b-peninsula-texture-v33.py
           python tools/scene05-b-surface-relief-v34.py
           python tools/scene05-b-peninsula-texture-v36.py
+          python tools/scene05-b-peninsula-coastfix-v36.py
           python tools/scene05-b-road-overlay-v31.py
           python tools/scene05-b-choice-data-v29.py
           python tools/scene05-b-participant-routes-v32.py
@@ -66,6 +68,7 @@ jobs:
           python tools/scene05-b-source-v35.py
           python tools/scene05-b-v35-framing-fix.py
           python tools/scene05-b-source-v36.py
+          python tools/scene05-b-v36-evening-fix.py
           test -s output/scene05_final_v1/peninsula_surface_v36.png
           test -s output/scene05_final_v1/peninsula_surface_v36_qa.json
           test -s output/scene05_final_v1/peninsula_surface_v34.json
@@ -74,6 +77,7 @@ jobs:
           grep -q 'Scene 05 B v3.6' output/scene05-b-v36.js
           grep -q 'coast\*0.00\*coastDay' output/scene05-b-v36.js
           grep -q 'finishBeat = 18.92' output/scene05-b-v36.js
+          grep -q 'duration: 3.1' output/scene05-b-v36.js
       - uses: actions/setup-node@v5
         with: {node-version: '22'}
       - name: Install fonts
@@ -114,7 +118,7 @@ jobs:
           cp output/scene05_final_v1/road_choice_overlay_v31.json assets/scene05/b_v3_6/
           cp output/scene05_final_v1/scene05_final_data_v1.json assets/scene05/b_v3_6/
           cp final/scene05-b/dist/b36_*.png final/scene05-b/preview_v3_6/
-          printf '%s\n' '# Scene 05 B v3.6' '- v3.5 30-second choreography retained' '- DEM material contribution feathered at all raster edges to remove North/South rectangular seam' '- canonical SVG alpha is the single visible coastline authority' '- South-Korea-bounds shallow-water tint disabled to remove doubled shoreline' '- East Coast Start remains dawn-lit' '- route travel grades naturally into daylight' '- Finish arrives after the scene has already warmed into evening' '- current status: Foundation Polish QA Candidate' > assets/scene05/b_v3_6/README.md
+          printf '%s\n' '# Scene 05 B v3.6' '- v3.5 30-second choreography retained' '- DEM material contribution feathered at all raster edges to remove rectangular peninsula seam' '- WorldCover class-0/class-80 raster disagreement is extrapolated to the canonical SVG land edge' '- canonical SVG alpha is the single visible coastline authority' '- South-Korea-bounds shallow-water tint disabled to remove doubled shoreline' '- East Coast Start remains dawn-lit with directional warm horizon light' '- route travel grades naturally into daylight' '- sunset/evening transition completes by the 18.92s Finish beat' '- current status: Foundation Polish QA Candidate' > assets/scene05/b_v3_6/README.md
           git config user.name 'github-actions[bot]'; git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add assets/scene05/b_v3_6 final/scene05-b/preview_v3_6
           if ! git diff --cached --quiet; then git commit -m 'Publish Scene 05 B v3.6 foundation polish QA'; git push; fi

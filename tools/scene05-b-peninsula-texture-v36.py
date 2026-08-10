@@ -85,6 +85,54 @@ def palette(wc):
     return out
 
 
+def fill_worldcover_land_gaps(classrgb, wc, land):
+    """Extrapolate nearby valid WorldCover material into class-0 land-edge gaps.
+
+    The canonical SVG is slightly more detailed than the rasterized WorldCover source.
+    Pixels that are land in the SVG but class 0 in WorldCover previously inherited one
+    flat fallback green, creating a visible ribbon parallel to the coast. Weighted
+    Gaussian extrapolation keeps the SVG edge authoritative while continuing the local
+    material family naturally to that edge.
+    """
+    valid = (wc > 0) & land
+    holes = (wc == 0) & land
+    if not holes.any():
+        return classrgb, 0, 0
+
+    radius = 18
+    weight_img = Image.fromarray((valid.astype(np.uint8) * 255), 'L').filter(ImageFilter.GaussianBlur(radius))
+    weight = np.asarray(weight_img, np.float32) / 255.0
+    extrap = np.zeros_like(classrgb, dtype=np.float32)
+    for ch in range(3):
+        src = np.where(valid, classrgb[..., ch], 0.0)
+        blurred = Image.fromarray(np.clip(src, 0, 255).astype(np.uint8), 'L').filter(ImageFilter.GaussianBlur(radius))
+        num = np.asarray(blurred, np.float32)
+        extrap[..., ch] = num / np.maximum(weight, .015)
+
+    fillable = holes & (weight > .018)
+    classrgb = classrgb.copy()
+    classrgb[fillable] = np.clip(extrap[fillable], 0, 255)
+
+    # A very small residue may be farther from valid raster classes (tiny islands or
+    # antialiased SVG edge pixels). Blend it toward the nearest broad extrapolated field
+    # rather than reintroducing the old uniform ribbon.
+    residue = holes & ~fillable
+    if residue.any():
+        coarse_weight_img = Image.fromarray((valid.astype(np.uint8) * 255), 'L').filter(ImageFilter.GaussianBlur(42))
+        coarse_weight = np.asarray(coarse_weight_img, np.float32) / 255.0
+        coarse = np.zeros_like(classrgb, dtype=np.float32)
+        for ch in range(3):
+            src = np.where(valid, classrgb[..., ch], 0.0)
+            blurred = Image.fromarray(np.clip(src, 0, 255).astype(np.uint8), 'L').filter(ImageFilter.GaussianBlur(42))
+            num = np.asarray(blurred, np.float32)
+            coarse[..., ch] = num / np.maximum(coarse_weight, .008)
+        coarse_fillable = residue & (coarse_weight > .010)
+        classrgb[coarse_fillable] = np.clip(coarse[coarse_fillable], 0, 255)
+        fillable |= coarse_fillable
+
+    return classrgb, int(holes.sum()), int(fillable.sum())
+
+
 def main():
     if not WC.exists():
         raise SystemExit('ESA WorldCover peninsula source missing')
@@ -102,6 +150,7 @@ def main():
         wc_img = wc_img.resize((W, H), Image.Resampling.NEAREST)
     wc = np.asarray(wc_img, dtype=np.uint8)
     classrgb = palette(wc)
+    classrgb, wc_gap_pixels, wc_gap_filled = fill_worldcover_land_gaps(classrgb, wc, land)
     rgb = classrgb * contextual_shade(H, W)[..., None]
 
     # Project every canonical peninsula texel into the South Korea DEM space.
@@ -159,8 +208,8 @@ def main():
     rgb[wc == 40] = rgb[wc == 40] * .84 + np.array([138, 130, 82], np.float32) * .16
 
     # v3.6 coast fix: the canonical SVG alpha is the only land-edge authority.
-    # The previous texture-side bright rim/shelf duplicated the separately projected
-    # ocean coast mask and could read as a second coastline. Do not paint an outline.
+    # No texture-side rim/shelf is painted; filled WorldCover gaps continue local
+    # materials all the way to the canonical coastline.
     rgba = np.zeros((H, W, 4), dtype=np.uint8)
     rgba[..., :3] = np.clip(rgb, 0, 255).astype(np.uint8)
     rgba[..., 3] = land.astype(np.uint8) * 255
@@ -196,6 +245,7 @@ def main():
         'policy': [
             'Canonical SVG alpha is the sole land-edge authority.',
             'ESA WorldCover 2021 controls land-cover material distribution across the full peninsula.',
+            'WorldCover class-0 gaps inside canonical land are locally extrapolated from neighboring valid material instead of painted as a uniform coastal ribbon.',
             'Copernicus GLO-30 controls real relief where the Scene05 DEM exists, with four-edge feathering to remove rectangular seams.',
             'North Korea keeps restrained full-peninsula contextual relief rather than invented fine terrain detail.',
             'No texture-side coastline outline is painted.'
@@ -205,12 +255,20 @@ def main():
     (OUT / 'peninsula_surface_v36_qa.json').write_text(json.dumps({
         'land_pixels': int(land.sum()),
         'worldcover_land_pixels': int(((wc > 0) & land).sum()),
+        'worldcover_gap_land_pixels': wc_gap_pixels,
+        'worldcover_gap_filled_pixels': wc_gap_filled,
         'dem_inside_pixels': int(inside.sum()),
         'dem_full_weight_pixels': int((dem_weight > .98).sum()),
         'dem_feather_pixels': int(((dem_weight > .02) & (dem_weight < .98)).sum()),
         'coast_outline_painted': False
     }, indent=2))
-    print(json.dumps({'texture': [W, H], 'dem_inside': int(inside.sum()), 'dem_feather': int(((dem_weight > .02) & (dem_weight < .98)).sum())}, indent=2))
+    print(json.dumps({
+        'texture': [W, H],
+        'worldcover_gap_land_pixels': wc_gap_pixels,
+        'worldcover_gap_filled_pixels': wc_gap_filled,
+        'dem_inside': int(inside.sum()),
+        'dem_feather': int(((dem_weight > .02) & (dem_weight < .98)).sum())
+    }, indent=2))
 
 
 if __name__ == '__main__':

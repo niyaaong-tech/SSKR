@@ -21,7 +21,8 @@ import {
 import {
   DataTextureLoader,
   parseUint8Array,
-  STBNLoader
+  STBNLoader,
+  DEFAULT_STBN_URL
 } from '@takram/three-geospatial';
 
 const $ = (s) => document.querySelector(s);
@@ -37,7 +38,7 @@ const CLOUD_LOCAL_URL = ASSET + 'clouds/local_weather.png';
 const CLOUD_SHAPE_URL = ASSET + 'clouds/shape.bin';
 const CLOUD_DETAIL_URL = ASSET + 'clouds/shape_detail.bin';
 const CLOUD_TURB_URL = ASSET + 'clouds/turbulence.png';
-const STBN_URL = ASSET + 'core/stbn.bin';
+const STBN_URL = DEFAULT_STBN_URL;
 
 const CENTER_LON = THREE.MathUtils.degToRad(127.6);
 const CENTER_LAT = THREE.MathUtils.degToRad(36.0);

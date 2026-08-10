@@ -19,27 +19,32 @@ def patch(old: str, new: str, label: str, count: int = 1):
 patch('QA diagnostics.\\n', 'QA diagnostics.\n', 'v38 banner normalization')
 
 # ---------------------------------------------------------------------------
-# Run82 visual QA showed that the first world-space sunset implementation read as
-# a solid laser/spotlight. Run84 removed the beam but the hard-thresholded paired
-# sines produced a visible dot-grid. Keep the reflection camera-relative, but make
-# it a soft elongated water highlight driven only by the shader's existing water
-# shimmer. Also remove the old UV-space white path visible during dawn/day.
+# Sunset reflection: camera-relative, soft, and explicitly time-gated. Run82 was
+# a solid beam, run84 became a shader grid, run85 became clean but too faint and
+# appeared too early. The final pass keeps it absent through Finish convergence,
+# then lets a restrained warm water path emerge only during the west-coast descent.
 # ---------------------------------------------------------------------------
 patch(
     '''  uSunDir: { value: new THREE.Vector2(1,0) },
-  uReflectionWidth: { value: 4.0 },''',
+  uReflectionWidth: { value: 4.0 },
+  uReflectionLength: { value: 28.0 }''',
     '''  uSunDir: { value: new THREE.Vector2(1,0) },
   uCameraXZ: { value: new THREE.Vector2(20,0) },
-  uReflectionWidth: { value: 4.0 },''',
-    'v38 camera-relative reflection uniform'
+  uReflectionWidth: { value: 4.0 },
+  uReflectionLength: { value: 28.0 },
+  uReflectionStrength: { value: 0.0 }''',
+    'v38 camera-relative reflection uniforms'
 )
 patch(
     '''    uniform vec2 uSunDir;
-    uniform float uReflectionWidth;''',
+    uniform float uReflectionWidth;
+    uniform float uReflectionLength;''',
     '''    uniform vec2 uSunDir;
     uniform vec2 uCameraXZ;
-    uniform float uReflectionWidth;''',
-    'v38 camera-relative reflection shader uniform'
+    uniform float uReflectionWidth;
+    uniform float uReflectionLength;
+    uniform float uReflectionStrength;''',
+    'v38 reflection shader uniforms'
 )
 patch(
     '''      vec2 rel=vWorld.xz-uSunWorld;
@@ -57,13 +62,13 @@ patch(
       float width=uReflectionWidth*mix(.60,1.22,travel);
       float lane=exp(-pow(across/max(width,.001),2.0)*1.75);
       float reach=smoothstep(0.0,uReflectionLength*.08,along)*(1.0-smoothstep(uReflectionLength*.68,uReflectionLength,along));
-      float path=lane*reach*(.34+.66*shimmer);''',
-    'v38 soft sea reflection path'
+      float path=lane*reach*(.34+.66*shimmer)*uReflectionStrength;''',
+    'v38 soft time-gated sea reflection path'
 )
 patch(
     'c+=vec3(1.00,0.42,0.11)*path*warm*(0.19+0.34*shimmer);',
-    'c+=vec3(1.00,0.40,0.085)*path*warm*(0.045+0.080*shimmer);',
-    'v38 reflection energy restraint'
+    'c+=vec3(1.00,0.40,0.085)*path*warm*(0.070+0.120*shimmer);',
+    'v38 reflection energy'
 )
 patch(
     'c+=vec3(0.80,0.88,0.92)*path*(1.0-warm)*0.06;',
@@ -71,8 +76,8 @@ patch(
     'remove legacy dawn/day reflection streak'
 )
 
-# Place the actual sun at the sea horizon in the final west-coast camera rather
-# than inside the water. Reflection direction is updated from the camera each frame.
+# Put the visible sun on the final sea horizon. Its XZ still comes from Finish
+# geography; only the elevation is corrected from actual run85 framing.
 patch(
     '''  const westSunWorld = finish.clone().add(new THREE.Vector3(-diag * .34, diag * .055, -diag * .035));
   const reflectionDir = finish.clone().sub(westSunWorld);
@@ -80,20 +85,21 @@ patch(
   oceanUniforms.uSunDir.value.set(reflectionDir.x, reflectionDir.z).normalize();
   oceanUniforms.uReflectionWidth.value = diag * .052;
   oceanUniforms.uReflectionLength.value = diag * .68;''',
-    '''  const westSunWorld = finish.clone().add(new THREE.Vector3(-diag * .34, diag * .063, -diag * .035));
+    '''  const westSunWorld = finish.clone().add(new THREE.Vector3(-diag * .34, diag * .070, -diag * .035));
   oceanUniforms.uSunWorld.value.set(westSunWorld.x, westSunWorld.z);
   oceanUniforms.uReflectionWidth.value = diag * .088;
-  oceanUniforms.uReflectionLength.value = diag * .60;''',
+  oceanUniforms.uReflectionLength.value = diag * .60;
+  oceanUniforms.uReflectionStrength.value = 0.0;''',
     'v38 horizon camera-relative sunset'
 )
 patch(
     'sunSprite.position.copy(finish).add(new THREE.Vector3(-diag * .34, diag * .055, -diag * .035));',
-    'sunSprite.position.copy(finish).add(new THREE.Vector3(-diag * .34, diag * .063, -diag * .035));',
+    'sunSprite.position.copy(finish).add(new THREE.Vector3(-diag * .34, diag * .070, -diag * .035));',
     'v38 visible sun body on horizon'
 )
 patch(
     ".to(sunSprite.position, { y: finish.y + diag * .040, duration: 4.5, ease: 'sine.inOut' }, 21.4)",
-    ".to(sunSprite.position, { y: finish.y + diag * .061, duration: 4.5, ease: 'sine.inOut' }, 21.4)",
+    ".to(sunSprite.position, { y: finish.y + diag * .070, duration: 4.5, ease: 'sine.inOut' }, 21.4)",
     'v38 sun settles at horizon'
 )
 patch(
@@ -102,11 +108,22 @@ patch(
     'v38 reflection follows camera'
 )
 
+# Reflection is not a Finish effect. It appears only once the camera commits to the
+# west horizon (22–30s), and peaks gently around the message/hold.
+patch(
+    '  return tl;',
+    '''  tl.to(oceanUniforms.uReflectionStrength, { value: .0, duration: .01 }, 0.0)
+    .to(oceanUniforms.uReflectionStrength, { value: .10, duration: 1.2, ease: 'sine.inOut' }, 21.6)
+    .to(oceanUniforms.uReflectionStrength, { value: .62, duration: 2.2, ease: 'sine.inOut' }, 22.8)
+    .to(oceanUniforms.uReflectionStrength, { value: .82, duration: 2.0, ease: 'sine.inOut' }, 25.0)
+    .to(oceanUniforms.uReflectionStrength, { value: .72, duration: 3.0, ease: 'sine.inOut' }, 27.0);
+  return tl;''',
+    'v38 sunset reflection timing'
+)
+
 # ---------------------------------------------------------------------------
-# The first diagnostic pass used the same tight camera for full-peninsula views,
-# so the mandatory whole-peninsula surface QA was cropped. Give whole/mask/land
-# modes a genuinely near-orthographic overview while retaining the tighter regional
-# South/East/West crops.
+# Mandatory QA framing: whole peninsula for full/land/ocean/texture/mask; tighter
+# regional crops for South/East/West coast inspection.
 # ---------------------------------------------------------------------------
 patch(
     '''  camera.position.set(target.x + d * .025, target.y + d * 1.18, target.z + d * .10);
@@ -122,4 +139,4 @@ patch(
 )
 
 p.write_text(text, encoding='utf-8')
-print('normalized and polished v3.8 generated source', p)
+print('normalized and finalized v3.8 sunset source', p)

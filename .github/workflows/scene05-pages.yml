@@ -1,11 +1,10 @@
-name: Deploy Scene 05 B v3.5 to GitHub Pages
+name: Deploy Scene 05 B v3.6 to GitHub Pages
 
 on:
   push:
     branches:
       - main
-      - feature/scene05-v35-30s-choreography
-      - fix/scene05-v35-framing
+      - feature/scene05-v36-foundation-polish
     paths:
       - '.github/workflows/scene05-pages.yml'
       - 'final/scene05-b/index.html'
@@ -15,9 +14,9 @@ on:
       - 'final/scene05-b/src/**'
       - 'tools/scene05-b-source-v*.py'
       - 'tools/scene05-b-v35-framing-fix.py'
+      - 'tools/scene05-b-peninsula-texture-v*.py'
       - 'tools/scene05-b-surface-relief-v34.py'
       - 'tools/scene05-b-conform-relief-v34.py'
-      - 'tools/scene05-b-peninsula-texture-v33.py'
       - 'tools/scene05-b-participant-routes-v32.py'
       - 'tools/scene05-b-road-overlay-v31.py'
       - 'tools/scene05-b-choice-data-v29.py'
@@ -52,7 +51,7 @@ jobs:
         with:
           python-version: '3.12'
 
-      - name: Build Scene 05 B v3.5 assets
+      - name: Build Scene 05 B v3.6 assets
         run: |
           python -m pip install --upgrade pip
           python -m pip install numpy Pillow pyproj trimesh cairosvg
@@ -61,6 +60,7 @@ jobs:
           python tools/scene05-final-data-v1.py
           python tools/scene05-b-peninsula-texture-v33.py
           python tools/scene05-b-surface-relief-v34.py
+          python tools/scene05-b-peninsula-texture-v36.py
           python tools/scene05-b-road-overlay-v31.py
           python tools/scene05-b-choice-data-v29.py
           python tools/scene05-b-participant-routes-v32.py
@@ -83,27 +83,30 @@ jobs:
           python tools/scene05-b-source-v34.py
           python tools/scene05-b-source-v35.py
           python tools/scene05-b-v35-framing-fix.py
+          python tools/scene05-b-source-v36.py
           test -s output/scene05_final_v1/terrain_final_uv.glb
-          test -s output/scene05_final_v1/peninsula_surface_v33.png
+          test -s output/scene05_final_v1/peninsula_surface_v36.png
+          test -s output/scene05_final_v1/peninsula_surface_v36_qa.json
           test -s output/scene05_final_v1/peninsula_surface_v34.json
           test -s output/scene05_final_v1/road_choice_overlay_v31.png
           test -s output/scene05_final_v1/scene05_final_data_v1.json
-          test -s output/scene05-b-v35.js
-          grep -q '30s choreography' output/scene05-b-v35.js
-          grep -q 'introBounds' output/scene05-b-v35.js
-          grep -q 'finishBeat = 18.92' output/scene05-b-v35.js
+          test -s output/scene05-b-v36.js
+          grep -q 'Scene 05 B v3.6' output/scene05-b-v36.js
+          grep -q 'coast\*0.00\*coastDay' output/scene05-b-v36.js
+          grep -q 'toneMappingExposure: 1.06' output/scene05-b-v36.js
+          grep -q 'finishBeat = 18.92' output/scene05-b-v36.js
 
       - name: Set up Node
         uses: actions/setup-node@v5
         with:
           node-version: '22'
 
-      - name: Build deployable Scene 05 B v3.5
+      - name: Build deployable Scene 05 B v3.6
         run: |
           npm install --no-save --no-audit --no-fund three@0.185.1 gsap@3.15.0 esbuild
           rm -rf final/scene05-b/dist
           mkdir -p final/scene05-b/dist/assets
-          npx esbuild output/scene05-b-v35.js --bundle --format=esm --target=es2022 --minify --outfile=final/scene05-b/dist/app.js
+          npx esbuild output/scene05-b-v36.js --bundle --format=esm --target=es2022 --minify --outfile=final/scene05-b/dist/app.js
           cp final/scene05-b/index.html final/scene05-b/dist/index.html
           cp final/scene05-b/scene05-b.css final/scene05-b/dist/scene05-b.css
           cp final/scene05-b/README.md final/scene05-b/dist/README.md
@@ -112,7 +115,7 @@ jobs:
           cp output/scene05_final_v1/terrain_day_final.png final/scene05-b/dist/assets/
           cp output/scene05_final_v1/terrain_sunset_final.png final/scene05-b/dist/assets/
           cp output/scene05_final_v1/coast_shallow.png final/scene05-b/dist/assets/
-          cp output/scene05_final_v1/peninsula_surface_v33.png final/scene05-b/dist/assets/
+          cp output/scene05_final_v1/peninsula_surface_v36.png final/scene05-b/dist/assets/
           cp output/scene05_final_v1/peninsula_surface_v34.json final/scene05-b/dist/assets/
           cp output/scene05_final_v1/road_choice_overlay_v31.png final/scene05-b/dist/assets/
           cp output/scene05_final_v1/scene05_final_data_v1.json final/scene05-b/dist/assets/
@@ -120,7 +123,7 @@ jobs:
           python final/scene05-b/pack_standalone.py
           test -s final/scene05-b/dist/index.html
           test -s final/scene05-b/dist/app.js
-          test -s final/scene05-b/dist/SSKR_Scene05_B_30s_Journey_v3.5_standalone.html
+          test -s final/scene05-b/dist/SSKR_Scene05_B_30s_Journey_v3.6_standalone.html
 
       - name: Configure Pages
         if: github.ref == 'refs/heads/main'
@@ -140,6 +143,6 @@ jobs:
     runs-on: ubuntu-latest
     needs: build
     steps:
-      - name: Deploy Scene 05 B v3.5 to GitHub Pages
+      - name: Deploy Scene 05 B v3.6 to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4

@@ -31,7 +31,6 @@ def fit_equirect(src: Path, out: Path, *, brightness: float, contrast: float, sa
 
 def cloud_veil(src: Image.Image, out: Path):
     # Extract real photographic cloud structure from the CC0 pure-sky panorama.
-    # This is deliberately low-opacity atmospheric texture, not a hero cloud render.
     crop = src.crop((0, 70, src.width, 690)).resize((1536, 512), Image.Resampling.LANCZOS)
     rgb = np.asarray(crop, np.float32)
     gray = np.asarray(crop.convert('L'), np.float32)
@@ -40,9 +39,8 @@ def cloud_veil(src: Image.Image, out: Path):
     bright = np.clip((gray - 102.0) / 110.0, 0.0, 1.0)
     structure = np.clip((local - 3.0) / 32.0, 0.0, 1.0)
     alpha = np.clip((structure * .72 + bright * .28) * 76.0, 0, 76)
-    # Keep the veil away from the extreme vertical edges to avoid a rectangular card read.
     yy = np.linspace(0, 1, alpha.shape[0], dtype=np.float32)[:, None]
-    feather = np.sin(np.clip(yy, 0, 1) * np.pi) ** .72
+    feather = np.clip(np.sin(np.clip(yy, 0, 1) * np.pi), 0.0, 1.0) ** .72
     alpha *= feather
     alpha = np.asarray(Image.fromarray(alpha.astype(np.uint8), 'L').filter(ImageFilter.GaussianBlur(3)), np.uint8)
     cool = rgb * .28 + np.array([224, 232, 235], np.float32)[None, None, :] * .72

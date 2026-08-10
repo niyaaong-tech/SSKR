@@ -11,9 +11,9 @@ if count != 1:
     raise SystemExit(f'v37 post opening FOV: expected 1, found {count}')
 text = text.replace(old, new, 1)
 
-# Bind the v3.7 camera-grade overlay without touching the historical v2.0 source.
-dom_old = "const lightWash = document.getElementById('light-wash');"
-dom_new = "const dawnGrade = document.getElementById('dawn-grade');\nconst lightWash = document.getElementById('light-wash');"
+# Bind the v3.7 camera-grade overlay using the existing DOM query helper.
+dom_old = "const lightWash = $('#light-wash');"
+dom_new = "const dawnGrade = $('#dawn-grade');\nconst lightWash = $('#light-wash');"
 if text.count(dom_old) != 1:
     raise SystemExit(f'v37 post dawn-grade DOM anchor: expected 1, found {text.count(dom_old)}')
 text = text.replace(dom_old, dom_new, 1)

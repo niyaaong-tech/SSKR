@@ -1,0 +1,61 @@
+{
+  "schema_version": "3.8",
+  "source_surface": "peninsula_surface_v36.png",
+  "production_surface": "peninsula_surface_v38.png",
+  "mask_debug": "peninsula_mask_debug_v38.png",
+  "land_pixels": 1990607,
+  "transparent_pixels": 3935537,
+  "canonical_coast_pixels": 31261,
+  "edge_rgb_extrapolated_transparent_pixels": 464780,
+  "alpha_unique_values": [
+    0,
+    255
+  ],
+  "alpha_is_binary": true,
+  "north_v36_base_weight": 0.06,
+  "north_v36_directional_detail_weight": 0.0,
+  "south_v36_base_weight_max": 0.78,
+  "worldcover_class_counts_on_land": {
+    "0": 8,
+    "10": 1342832,
+    "20": 3,
+    "30": 103988,
+    "40": 355262,
+    "50": 60036,
+    "60": 5588,
+    "70": 0,
+    "80": 122030,
+    "90": 774,
+    "95": 0,
+    "100": 86
+  },
+  "runtime_sampling_policy_required": {
+    "generateMipmaps": false,
+    "minFilter": "LinearFilter",
+    "magFilter": "LinearFilter",
+    "alphaTest": 0.42
+  },
+  "policy": [
+    "Canonical SVG-derived binary alpha remains the only coastline authority.",
+    "Class-0 and WorldCover-water disagreements are not used to define the coastline.",
+    "WorldCover categories are softened into low-frequency material families rather than displayed as raw categorical blocks.",
+    "v3.6 real DEM/albedo relief remains the physical detail authority in South Korea.",
+    "North Korea is driven by WorldCover low-frequency material plus non-directional microtexture; legacy random contextual shade is reduced to a 6% color-continuity seed and carries zero directional-detail gain.",
+    "Procedural noise is low-amplitude material breakup only and does not invent geographic relief.",
+    "Land RGB is extrapolated into transparent edge texels to prevent linear-filter dark fringe."
+  ],
+  "v36_reference": {
+    "land_pixels": 1990607,
+    "worldcover_land_pixels": 1990599,
+    "worldcover_gap_land_pixels": 8,
+    "worldcover_gap_filled_pixels": 8,
+    "dem_inside_pixels": 1161342,
+    "dem_full_weight_pixels": 868343,
+    "dem_feather_pixels": 262578,
+    "coast_outline_painted": false,
+    "worldcover_water_inside_canonical_land_pixels": 122030,
+    "canonical_land_raster_mismatch_pixels": 122038,
+    "canonical_land_raster_mismatch_filled_pixels": 120383,
+    "coastline_authority": "canonical SVG alpha only; class-0/class-80 raster disagreement extrapolated from adjacent land material"
+  }
+}

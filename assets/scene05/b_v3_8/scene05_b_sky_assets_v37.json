@@ -1,0 +1,25 @@
+{
+  "schema_version": "3.7",
+  "purpose": "Lightweight photographic atmosphere assets for Scene 05 B Resource Polish Pass 1.",
+  "license": "CC0 (Poly Haven assets).",
+  "sources": [
+    {
+      "name": "Qwantani Dawn (Pure Sky)",
+      "url": "https://dl.polyhaven.org/file/ph-assets/HDRIs/extra/Tonemapped%20JPG/qwantani_dawn_puresky.jpg"
+    },
+    {
+      "name": "Industrial Sunset (Pure Sky)",
+      "url": "https://dl.polyhaven.org/file/ph-assets/HDRIs/extra/Tonemapped%20JPG/industrial_sunset_puresky.jpg"
+    }
+  ],
+  "outputs": [
+    "sky_dawn_v37.jpg",
+    "sky_sunset_v37.jpg",
+    "cloud_veil_v37.png"
+  ],
+  "policy": [
+    "Photographic sky resources replace hand-drawn hero clouds.",
+    "Cloud veil is derived from the CC0 sunset panorama and used only at restrained opacity.",
+    "All downloaded source panoramas are build-time inputs; deploy output keeps only compressed presentation assets."
+  ]
+}

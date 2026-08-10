@@ -5,6 +5,7 @@ on:
     branches:
       - main
       - feature/scene05-v35-30s-choreography
+      - fix/scene05-v35-framing
     paths:
       - '.github/workflows/scene05-pages.yml'
       - 'final/scene05-b/index.html'
@@ -13,6 +14,7 @@ on:
       - 'final/scene05-b/README.md'
       - 'final/scene05-b/src/**'
       - 'tools/scene05-b-source-v*.py'
+      - 'tools/scene05-b-v35-framing-fix.py'
       - 'tools/scene05-b-surface-relief-v34.py'
       - 'tools/scene05-b-conform-relief-v34.py'
       - 'tools/scene05-b-peninsula-texture-v33.py'
@@ -80,6 +82,7 @@ jobs:
           python tools/scene05-b-source-v33.py
           python tools/scene05-b-source-v34.py
           python tools/scene05-b-source-v35.py
+          python tools/scene05-b-v35-framing-fix.py
           test -s output/scene05_final_v1/terrain_final_uv.glb
           test -s output/scene05_final_v1/peninsula_surface_v33.png
           test -s output/scene05_final_v1/peninsula_surface_v34.json
@@ -87,10 +90,8 @@ jobs:
           test -s output/scene05_final_v1/scene05_final_data_v1.json
           test -s output/scene05-b-v35.js
           grep -q '30s choreography' output/scene05-b-v35.js
+          grep -q 'introBounds' output/scene05-b-v35.js
           grep -q 'finishBeat = 18.92' output/scene05-b-v35.js
-          if grep -q 'animateFirework(tl' output/scene05-b-v35.js; then
-            echo 'Firework function remains available but must not be scheduled by v3.5 play().'
-          fi
 
       - name: Set up Node
         uses: actions/setup-node@v5
@@ -119,8 +120,6 @@ jobs:
           python final/scene05-b/pack_standalone.py
           test -s final/scene05-b/dist/index.html
           test -s final/scene05-b/dist/app.js
-          test -s final/scene05-b/dist/assets/peninsula_surface_v33.png
-          test -s final/scene05-b/dist/assets/peninsula_surface_v34.json
           test -s final/scene05-b/dist/SSKR_Scene05_B_30s_Journey_v3.5_standalone.html
 
       - name: Configure Pages

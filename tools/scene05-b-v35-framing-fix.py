@@ -69,5 +69,34 @@ patch(
 'remove floating sunset placeholder'
 )
 
+patch(
+"""  for (const n of startNodes.values()) {
+    tl.to(n.userData.core.material, { opacity: 0, duration: 1.6 }, 20.5)
+      .to(n.userData.ring.material, { opacity: 0, duration: 1.6 }, 20.5)
+      .to(n.userData.sprite.material, { opacity: 0, duration: 1.6 }, 20.5);
+  }
+
+  // 22-26s — descend toward the west-coast horizon.
+""",
+"""  for (const n of startNodes.values()) {
+    tl.to(n.userData.core.material, { opacity: 0, duration: 1.6 }, 20.5)
+      .to(n.userData.ring.material, { opacity: 0, duration: 1.6 }, 20.5)
+      .to(n.userData.sprite.material, { opacity: 0, duration: 1.6 }, 20.5);
+  }
+
+  // The Finish beat ends before the sunset/message chapter. Do not leave a large
+  // HUD-like glow in the lowered coastal shot.
+  tl.to(finishNode.userData.core.material, { opacity: 0, duration: 1.25, ease: 'sine.inOut' }, 23.35)
+    .to(finishNode.userData.sprite.material, { opacity: 0, duration: 1.25, ease: 'sine.inOut' }, 23.35)
+    .to(finishNode.userData.ring.material, { opacity: 0, duration: .9 }, 23.35);
+  festivalGroup.traverse(o => {
+    if (o.material) tl.to(o.material, { opacity: 0, duration: 1.35, ease: 'sine.inOut' }, 23.45);
+  });
+
+  // 22-26s — descend toward the west-coast horizon.
+""",
+'fade Finish lights before core message'
+)
+
 path.write_text(text, encoding='utf-8')
 print(path)

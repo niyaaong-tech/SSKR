@@ -4,10 +4,12 @@ on:
     branches:
       - main
       - feature/scene05-v35-30s-choreography
+      - fix/scene05-v35-framing
     paths:
       - '.github/workflows/scene05-b-v20.yml'
       - 'final/scene05-b/**'
       - 'tools/scene05-b-source-v35.py'
+      - 'tools/scene05-b-v35-framing-fix.py'
       - 'tools/scene05-b-source-v34.py'
       - 'tools/scene05-b-surface-relief-v34.py'
       - 'tools/scene05-b-conform-relief-v34.py'
@@ -65,11 +67,13 @@ jobs:
           python tools/scene05-b-source-v33.py
           python tools/scene05-b-source-v34.py
           python tools/scene05-b-source-v35.py
+          python tools/scene05-b-v35-framing-fix.py
           test -s output/scene05_final_v1/peninsula_surface_v33.png
           test -s output/scene05_final_v1/peninsula_surface_v34.json
           test -s output/scene05_final_v1/road_choice_overlay_v31.png
           test -s output/scene05-b-v35.js
           grep -q '30s choreography' output/scene05-b-v35.js
+          grep -q 'introBounds' output/scene05-b-v35.js
           grep -q 'finishBeat = 18.92' output/scene05-b-v35.js
       - uses: actions/setup-node@v5
         with: {node-version: '22'}
@@ -110,7 +114,7 @@ jobs:
           cp output/scene05_final_v1/road_choice_overlay_v31.json assets/scene05/b_v3_5/
           cp output/scene05_final_v1/scene05_final_data_v1.json assets/scene05/b_v3_5/
           cp final/scene05-b/dist/b35_*.png final/scene05-b/preview_v3_5/
-          printf '%s\n' '# Scene 05 B v3.5' '- 30-second one-take choreography' '- peninsula centered first, then East Coast approach' '- Start points ignite in rapid sequence' '- no hero-route chapter; complete participant routes draw slowly together' '- participant routes resolve at one Finish in one beat' '- Finish uses a restrained symbolic light pulse' '- camera descends toward west-coast sunset' '- fireworks removed' '- ending core message centered over sunset' '- current status: Choreography QA Candidate' > assets/scene05/b_v3_5/README.md
+          printf '%s\n' '# Scene 05 B v3.5' '- 30-second one-take choreography' '- full peninsula centered first, then East Coast approach' '- Start points ignite in rapid sequence' '- no hero-route chapter; complete participant routes draw slowly together' '- participant routes resolve at one Finish in one beat' '- Finish uses a restrained symbolic light pulse' '- camera descends toward west-coast sunset framing' '- legacy floating Sun sprite and fireworks removed from the timeline' '- ending core message centered over sunset tone' '- current status: Choreography QA Candidate' > assets/scene05/b_v3_5/README.md
           git config user.name 'github-actions[bot]'; git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add assets/scene05/b_v3_5 final/scene05-b/preview_v3_5
           if ! git diff --cached --quiet; then git commit -m 'Publish Scene 05 B v3.5 choreography QA'; git push; fi

@@ -11,5 +11,5 @@ def main():
     html=html.replace('<link rel="stylesheet" href="./scene05-b.css" />',f'<style>{css}</style>').replace('<script type="module" src="./app.js"></script>',f'<script type="module">{js}</script>')
     for ref in ['./assets/','./app.js','./scene05-b.css']:
         if ref in html:raise SystemExit(f'Standalone pack left external reference: {ref}')
-    out=DIST/'SSKR_Scene05_B_ArtworkPass_OneTake_v3.4_standalone.html';out.write_text(html,encoding='utf-8');print(out,out.stat().st_size)
+    out=DIST/'SSKR_Scene05_B_30s_Journey_v3.5_standalone.html';out.write_text(html,encoding='utf-8');print(out,out.stat().st_size)
 if __name__=='__main__':main()

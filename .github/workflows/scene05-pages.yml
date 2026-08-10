@@ -14,6 +14,7 @@ on:
       - 'final/scene05-b/src/**'
       - 'tools/scene05-b-source-v*.py'
       - 'tools/scene05-b-sky-assets-v37.py'
+      - 'tools/scene05-b-v37-prep.py'
       - 'tools/scene05-b-v35-framing-fix.py'
       - 'tools/scene05-b-v36-evening-fix.py'
       - 'tools/scene05-b-peninsula-*.py'
@@ -98,6 +99,7 @@ jobs:
           python tools/scene05-b-v35-framing-fix.py
           python tools/scene05-b-source-v36.py
           python tools/scene05-b-v36-evening-fix.py
+          python tools/scene05-b-v37-prep.py
           python tools/scene05-b-source-v37.py
 
           test -s output/scene05_final_v1/terrain_final_uv.glb

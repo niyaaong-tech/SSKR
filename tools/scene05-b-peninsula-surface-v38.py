@@ -86,8 +86,8 @@ def main():
         wc_img = wc_img.resize((w, h), Image.Resampling.NEAREST)
     wc = np.asarray(wc_img, dtype=np.uint8)
 
-    # Preserve v3.6 real-data detail, but soften categorical WorldCover blocks into
-    # broad material families so the land reads as aerial landscape rather than GIS.
+    # Preserve v3.6 real-data detail in South Korea, but soften categorical
+    # WorldCover blocks into broad material families across the full peninsula.
     target = base.copy()
     valid_class = np.zeros_like(land)
     for code, color in PALETTE.items():
@@ -99,13 +99,24 @@ def main():
     target[land & ~valid_class] = base[land & ~valid_class]
     target_img = Image.fromarray(np.clip(target, 0, 255).astype(np.uint8), 'RGB')
     target_soft = np.asarray(target_img.filter(ImageFilter.GaussianBlur(3.2)), dtype=np.float32)
-    rgb = base * .56 + target_soft * .44
 
-    # Recover medium-scale information already present in the v3.6 physical surface.
+    # v3.6 contains real DEM/albedo detail in South Korea but also a legacy random
+    # contextual-shade continuity cue in the North. Do not let that cue define v3.8
+    # geography: North is overwhelmingly WorldCover material, while the contribution
+    # of the v3.6 physical surface rises smoothly only into the South DEM region.
+    y01 = np.linspace(0.0, 1.0, h, dtype=np.float32)[:, None]
+    south_detail = smoothstep(.34, .60, y01)[..., None]
+    base_weight = .06 + south_detail * .72
+    rgb = base * base_weight + target_soft * (1.0 - base_weight)
+
+    # Recover medium-scale information already present in the v3.6 physical surface,
+    # but gate it to the real South Korea DEM/albedo coverage. No directional pseudo
+    # relief is carried into North Korea.
     lum = base[..., 0] * .2126 + base[..., 1] * .7152 + base[..., 2] * .0722
     lum_low = pil_blur_gray(lum, 13.0)
     rel = np.clip((lum + 18.0) / (lum_low + 18.0), .86, 1.14)
-    rgb *= (0.94 + rel[..., None] * .06)
+    detail_gain = 0.94 + rel * .06
+    rgb *= 1.0 + (detail_gain[..., None] - 1.0) * south_detail
 
     # Deterministic low-amplitude material breakup only; this never defines geography.
     n_low = blurred_noise(h, w, 3801, 76, 4.0)
@@ -123,8 +134,7 @@ def main():
     rgb[grass] *= np.array([.985, 1.005, .975], np.float32)
 
     # One broad grade across North/South so the two source-detail levels share a world.
-    y = np.linspace(0.0, 1.0, h, dtype=np.float32)[:, None]
-    north_unify = (1.0 - smoothstep(.34, .60, y))[..., None]
+    north_unify = (1.0 - smoothstep(.34, .60, y01))[..., None]
     neutral = np.array([91, 104, 72], np.float32)
     rgb = rgb * (1.0 - north_unify * .045) + neutral * (north_unify * .045)
     rgb[~land] = base[~land]
@@ -167,6 +177,9 @@ def main():
         'edge_rgb_extrapolated_transparent_pixels': int(outer_extrap.sum()),
         'alpha_unique_values': unique_alpha,
         'alpha_is_binary': unique_alpha == [0, 255],
+        'north_v36_base_weight': 0.06,
+        'north_v36_directional_detail_weight': 0.0,
+        'south_v36_base_weight_max': 0.78,
         'worldcover_class_counts_on_land': {
             str(code): int((land & (wc == code)).sum())
             for code in sorted(set(PALETTE) | {0, 80})
@@ -182,6 +195,7 @@ def main():
             'Class-0 and WorldCover-water disagreements are not used to define the coastline.',
             'WorldCover categories are softened into low-frequency material families rather than displayed as raw categorical blocks.',
             'v3.6 real DEM/albedo relief remains the physical detail authority in South Korea.',
+            'North Korea is driven by WorldCover low-frequency material plus non-directional microtexture; legacy random contextual shade is reduced to a 6% color-continuity seed and carries zero directional-detail gain.',
             'Procedural noise is low-amplitude material breakup only and does not invent geographic relief.',
             'Land RGB is extrapolated into transparent edge texels to prevent linear-filter dark fringe.'
         ],
@@ -194,6 +208,8 @@ def main():
         'land_pixels': report['land_pixels'],
         'edge_rgb_extrapolated_transparent_pixels': report['edge_rgb_extrapolated_transparent_pixels'],
         'alpha_unique_values': unique_alpha,
+        'north_v36_base_weight': report['north_v36_base_weight'],
+        'north_v36_directional_detail_weight': report['north_v36_directional_detail_weight'],
     }, indent=2))
 
 

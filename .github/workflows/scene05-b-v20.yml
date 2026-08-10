@@ -1,9 +1,10 @@
-name: Scene 05 B Artwork One-Take v3.7
+name: Scene 05 B Artwork One-Take v3.8
 on:
   push:
     branches:
       - main
       - feature/scene05-v37-resource-polish
+      - feature/scene05-v38-surface-overhaul
     paths:
       - '.github/workflows/scene05-b-v20.yml'
       - 'final/scene05-b/**'
@@ -11,6 +12,7 @@ on:
       - 'tools/scene05-b-sky-assets-v37.py'
       - 'tools/scene05-b-v37-prep.py'
       - 'tools/scene05-b-v37-post.py'
+      - 'tools/scene05-b-v38-post.py'
       - 'tools/scene05-b-v35-framing-fix.py'
       - 'tools/scene05-b-v36-evening-fix.py'
       - 'tools/scene05-b-peninsula-*.py'
@@ -29,7 +31,7 @@ on:
   workflow_dispatch:
 permissions: {contents: write}
 jobs:
-  build-scene05-b-v37:
+  build-scene05-b-v38:
     runs-on: ubuntu-latest
     timeout-minutes: 55
     steps:
@@ -37,7 +39,7 @@ jobs:
         with: {fetch-depth: 1}
       - uses: actions/setup-python@v5
         with: {python-version: '3.12'}
-      - name: Build v3.7 resource polish artwork
+      - name: Build v3.8 peninsula surface and sunset artwork
         run: |
           python -m pip install --upgrade pip
           python -m pip install numpy Pillow pyproj trimesh cairosvg
@@ -48,6 +50,7 @@ jobs:
           python tools/scene05-b-surface-relief-v34.py
           python tools/scene05-b-peninsula-texture-v36.py
           python tools/scene05-b-peninsula-coastfix-v36.py
+          python tools/scene05-b-peninsula-surface-v38.py
           python tools/scene05-b-road-overlay-v31.py
           python tools/scene05-b-choice-data-v29.py
           python tools/scene05-b-participant-routes-v32.py
@@ -85,43 +88,65 @@ jobs:
           python tools/scene05-b-v37-prep.py
           python tools/scene05-b-source-v37.py
           python tools/scene05-b-v37-post.py
+          python tools/scene05-b-source-v38.py
+          python tools/scene05-b-v38-post.py
 
           test -s output/scene05_final_v1/sky_dawn_v37.jpg
           test -s output/scene05_final_v1/sky_sunset_v37.jpg
           test -s output/scene05_final_v1/cloud_veil_v37.png
           test -s output/scene05_final_v1/scene05_b_sky_assets_v37.json
-          test -s output/scene05-b-v37.js
-          grep -q 'Scene 05 B v3.7' output/scene05-b-v37.js
-          grep -q 'buildPhotoEnvironment' output/scene05-b-v37.js
-          grep -q 'cloudGroup.visible = false' output/scene05-b-v37.js
-          grep -q "introTarget, 38.0" output/scene05-b-v37.js
-          grep -q 'finishBeat = 18.92' output/scene05-b-v37.js
+          test -s output/scene05_final_v1/peninsula_surface_v38.png
+          test -s output/scene05_final_v1/peninsula_mask_debug_v38.png
+          test -s output/scene05_final_v1/peninsula_surface_v38_qa.json
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          q=json.loads(Path('output/scene05_final_v1/peninsula_surface_v38_qa.json').read_text())
+          assert q['alpha_is_binary'], q
+          assert q['alpha_unique_values'] == [0,255], q['alpha_unique_values']
+          assert q['runtime_sampling_policy_required']['alphaTest'] == 0.42
+          print(json.dumps({k:q[k] for k in ['land_pixels','canonical_coast_pixels','edge_rgb_extrapolated_transparent_pixels','alpha_unique_values']}, indent=2))
+          PY
+          test -s output/scene05-b-v38.js
+          grep -q 'Scene 05 B v3.8' output/scene05-b-v38.js
+          grep -q 'MeshStandardMaterial' output/scene05-b-v38.js
+          grep -q 'alphaTest: .42' output/scene05-b-v38.js
+          grep -q 'uSunWorld' output/scene05-b-v38.js
+          grep -q '__scene05Diagnostic' output/scene05-b-v38.js
+          grep -q "introTarget, 38.0" output/scene05-b-v38.js
+          grep -q 'finishBeat = 18.92' output/scene05-b-v38.js
       - uses: actions/setup-node@v5
         with: {node-version: '22'}
       - name: Install fonts
         run: sudo apt-get update -qq && sudo apt-get install -y --no-install-recommends fonts-noto-cjk && fc-cache -f
-      - name: Bundle v3.7
+      - name: Bundle v3.8
         run: |
           npm install --no-save --no-audit --no-fund three@0.185.1 gsap@3.15.0 esbuild puppeteer-core
           rm -rf final/scene05-b/dist && mkdir -p final/scene05-b/dist/assets
-          npx esbuild output/scene05-b-v37.js --bundle --format=esm --target=es2022 --minify --outfile=final/scene05-b/dist/app.js
+          npx esbuild output/scene05-b-v38.js --bundle --format=esm --target=es2022 --minify --outfile=final/scene05-b/dist/app.js
           cp final/scene05-b/index.html final/scene05-b/dist/index.html
           cp final/scene05-b/scene05-b.css final/scene05-b/dist/scene05-b.css
           cp final/scene05-b/README.md final/scene05-b/dist/README.md
-          cp output/scene05_final_v1/{terrain_final_uv.glb,terrain_dawn_final.png,terrain_day_final.png,terrain_sunset_final.png,coast_shallow.png,peninsula_surface_v36.png,peninsula_surface_v34.json,road_choice_overlay_v31.png,scene05_final_data_v1.json,sky_dawn_v37.jpg,sky_sunset_v37.jpg,cloud_veil_v37.png,scene05_b_sky_assets_v37.json} final/scene05-b/dist/assets/
+          cp output/scene05_final_v1/{terrain_final_uv.glb,terrain_dawn_final.png,terrain_day_final.png,terrain_sunset_final.png,coast_shallow.png,peninsula_surface_v38.png,peninsula_mask_debug_v38.png,peninsula_surface_v38_qa.json,peninsula_surface_v34.json,road_choice_overlay_v31.png,scene05_final_data_v1.json,sky_dawn_v37.jpg,sky_sunset_v37.jpg,cloud_veil_v37.png,scene05_b_sky_assets_v37.json} final/scene05-b/dist/assets/
           cp assets/vector/korean_peninsula_precise.svg final/scene05-b/dist/assets/
           python final/scene05-b/pack_standalone.py
-          test -s final/scene05-b/dist/SSKR_Scene05_B_30s_Journey_v3.7_standalone.html
-      - name: Visual QA
-        timeout-minutes: 4
+          test -s final/scene05-b/dist/SSKR_Scene05_B_30s_Journey_v3.8_standalone.html
+      - name: Visual QA — keyframes and surface diagnostics
+        timeout-minutes: 5
         run: |
           python -m http.server 4174 --directory final/scene05-b/dist >/tmp/http.log 2>&1 & SERVER_PID=$!; trap 'kill $SERVER_PID || true' EXIT; sleep 2
           BROWSER=$(command -v google-chrome || command -v chromium || command -v chromium-browser || true); test -n "$BROWSER"
-          timeout 210s xvfb-run -a env BROWSER_PATH="$BROWSER" node final/scene05-b/qa.mjs
-          for f in b37_015_peninsula b37_045_east_dawn b37_072_start_dawn b37_120_route_day b37_165_late_day b37_189_finish_evening b37_210_finish_sunset b37_240_sunset_descent b37_275_core_message b37_295_final_hold; do test -s "final/scene05-b/dist/${f}.png"; done
+          timeout 260s xvfb-run -a env BROWSER_PATH="$BROWSER" node final/scene05-b/qa.mjs
+          for f in \
+            b38_015_peninsula b38_045_east_dawn b38_072_start_dawn b38_120_route_day b38_165_late_day \
+            b38_189_finish_evening b38_210_finish_sunset b38_240_sunset_descent b38_275_core_message b38_295_final_hold \
+            b38_diag_surface_full b38_diag_surface_south b38_diag_surface_east b38_diag_surface_west \
+            b38_diag_land_only b38_diag_land_ocean b38_diag_texture_only b38_diag_canonical_mask; do
+            test -s "final/scene05-b/dist/${f}.png"
+          done
       - uses: actions/upload-artifact@v4
         with:
-          name: SSKR-Scene05-B-Artwork-OneTake-v3.7
+          name: SSKR-Scene05-B-Artwork-OneTake-v3.8
           path: final/scene05-b/dist/
           if-no-files-found: error
           compression-level: 6
@@ -129,11 +154,11 @@ jobs:
       - name: Publish QA
         if: github.ref == 'refs/heads/main'
         run: |
-          mkdir -p assets/scene05/b_v3_7 final/scene05-b/preview_v3_7
-          cp output/scene05_final_v1/scene05_b_sky_assets_v37.json assets/scene05/b_v3_7/
-          cp output/scene05_final_v1/peninsula_surface_v36_qa.json assets/scene05/b_v3_7/
-          cp final/scene05-b/dist/b37_*.png final/scene05-b/preview_v3_7/
-          printf '%s\n' '# Scene 05 B v3.7' '- v3.5 30-second choreography retained' '- v3.6 peninsula/coast continuity retained' '- Poly Haven CC0 dawn and sunset pure-sky resources integrated as lightweight build assets' '- legacy canvas-painted cloud sprites disabled' '- real-photo-derived low-opacity cloud veil added for depth' '- ocean shimmer frequency reduced and sunset reflection broadened' '- Start and Finish glow weights restrained' '- current status: Resource Polish QA Candidate' > assets/scene05/b_v3_7/README.md
+          mkdir -p assets/scene05/b_v3_8 final/scene05-b/preview_v3_8
+          cp output/scene05_final_v1/scene05_b_sky_assets_v37.json assets/scene05/b_v3_8/
+          cp output/scene05_final_v1/peninsula_surface_v38_qa.json assets/scene05/b_v3_8/
+          cp final/scene05-b/dist/b38_*.png final/scene05-b/preview_v3_8/
+          printf '%s\n' '# Scene 05 B v3.8' '- v3.5 30-second choreography retained unchanged' '- full-peninsula WorldCover/DEM surface rebuilt as an art-directed aerial material' '- canonical binary coastline uses edge-RGB extrapolation, mipmaps off and alpha cutoff to prevent parallel fringe' '- shallow surface now receives restrained spatial lighting' '- West Sea sunset uses explicit horizon warmth, visible sun direction and world-space sea reflection' '- QA adds surface-only and coastline diagnostic frames' '- current status: Surface Overhaul QA Candidate' > assets/scene05/b_v3_8/README.md
           git config user.name 'github-actions[bot]'; git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add assets/scene05/b_v3_7 final/scene05-b/preview_v3_7
-          if ! git diff --cached --quiet; then git commit -m 'Publish Scene 05 B v3.7 resource polish QA'; git push; fi
+          git add assets/scene05/b_v3_8 final/scene05-b/preview_v3_8
+          if ! git diff --cached --quiet; then git commit -m 'Publish Scene 05 B v3.8 surface overhaul QA'; git push; fi

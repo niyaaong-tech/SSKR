@@ -1,0 +1,15 @@
+{
+  "schema_version": "3.1",
+  "texture": "road_choice_overlay_v31.png",
+  "source": "assets/scene05/choice_roads_source_v1.geojson",
+  "size": [
+    1792,
+    3307
+  ],
+  "counts": {
+    "primary": 34470,
+    "secondary": 47604,
+    "trunk": 24219
+  },
+  "policy": "Actual OSM trunk/primary/secondary roads, dark integrated context only; not navigation or official routes."
+}

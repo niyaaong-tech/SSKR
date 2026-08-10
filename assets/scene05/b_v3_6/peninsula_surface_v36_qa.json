@@ -1,0 +1,14 @@
+{
+  "land_pixels": 1990607,
+  "worldcover_land_pixels": 1990599,
+  "worldcover_gap_land_pixels": 8,
+  "worldcover_gap_filled_pixels": 8,
+  "dem_inside_pixels": 1161342,
+  "dem_full_weight_pixels": 868343,
+  "dem_feather_pixels": 262578,
+  "coast_outline_painted": false,
+  "worldcover_water_inside_canonical_land_pixels": 122030,
+  "canonical_land_raster_mismatch_pixels": 122038,
+  "canonical_land_raster_mismatch_filled_pixels": 120383,
+  "coastline_authority": "canonical SVG alpha only; class-0/class-80 raster disagreement extrapolated from adjacent land material"
+}

@@ -1,0 +1,11 @@
+# Scene 05 B v3.5
+- 30-second one-take choreography
+- peninsula centered first, then East Coast approach
+- Start points ignite in rapid sequence
+- no hero-route chapter; complete participant routes draw slowly together
+- participant routes resolve at one Finish in one beat
+- Finish uses a restrained symbolic light pulse
+- camera descends toward west-coast sunset
+- fireworks removed
+- ending core message centered over sunset
+- current status: Choreography QA Candidate

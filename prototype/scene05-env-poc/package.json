@@ -1,0 +1,19 @@
+{
+  "name": "sskr-scene05-env-poc",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "build": "esbuild src/main.js --bundle --format=esm --platform=browser --target=es2022 --minify --outfile=dist/app.js"
+  },
+  "dependencies": {
+    "@takram/three-atmosphere": "0.19.1",
+    "@takram/three-clouds": "0.7.6",
+    "@takram/three-geospatial": "0.9.1",
+    "postprocessing": "6.38.3",
+    "three": "0.184.0"
+  },
+  "devDependencies": {
+    "esbuild": "^0.25.0"
+  }
+}

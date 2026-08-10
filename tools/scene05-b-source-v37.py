@@ -33,7 +33,6 @@ patch(
 "]).then(([gltf, dawnTex, dayTex, sunsetTex, coastTex, peninsulaTex, roadOverlayTex, photoDawnTex, photoSunsetTex, photoCloudTex, peninsulaMeta, data]) => {",
 'v37 atmosphere destructuring'
 )
-
 patch(
 'let peninsulaSurfaceBounds = null;',
 '''let peninsulaSurfaceBounds = null;
@@ -140,7 +139,6 @@ helpers = r'''function buildPhotoEnvironment(dawnTex, sunsetTex, cloudTex) {
 
 '''
 patch(helper_anchor, helpers + helper_anchor, 'v37 photo environment helpers')
-
 patch(
 '  buildPeninsulaSurface(peninsulaMeta, peninsulaTex);',
 '  buildPeninsulaSurface(peninsulaMeta, peninsulaTex);\n  buildPhotoEnvironment(photoDawnTex, photoSunsetTex, photoCloudTex);',
@@ -149,25 +147,25 @@ patch(
 patch('  buildClouds(terrainBounds);', '  buildClouds(terrainBounds);\n  cloudGroup.visible = false;', 'disable legacy painted clouds')
 
 # ---------------------------------------------------------------------------
-# 2) Water polish: less procedural micro-noise, broader and softer sunset reflection.
+# 2) Water polish against the current v2.6+ ocean shader.
 # ---------------------------------------------------------------------------
 patch(
-'''      vec3 dawn=vec3(0.035,0.125,0.190);
-      vec3 day=vec3(0.035,0.235,0.360);
-      vec3 sunset=vec3(0.080,0.105,0.165);
-      vec3 night=vec3(0.015,0.038,0.075);''',
-'''      vec3 dawn=vec3(0.022,0.090,0.145);
-      vec3 day=vec3(0.028,0.195,0.315);
-      vec3 sunset=vec3(0.062,0.078,0.125);
-      vec3 night=vec3(0.012,0.030,0.060);''',
+'''      vec3 dawn=vec3(0.025,0.090,0.145);
+      vec3 day=vec3(0.022,0.135,0.225);
+      vec3 sunset=vec3(0.040,0.070,0.125);
+      vec3 night=vec3(0.010,0.026,0.058);''',
+'''      vec3 dawn=vec3(0.020,0.078,0.128);
+      vec3 day=vec3(0.024,0.162,0.270);
+      vec3 sunset=vec3(0.054,0.068,0.112);
+      vec3 night=vec3(0.010,0.026,0.052);''',
 'v37 ocean palette'
 )
-patch('float micro=sin(vUv.x*210.0+uTime*0.42)*sin(vUv.y*170.0-uTime*0.34);',
-      'float micro=sin(vUv.x*92.0+uTime*0.31)*sin(vUv.y*74.0-uTime*0.24);',
-      'v37 softer sea microstructure')
-patch('float broad=sin(vUv.x*41.0+vUv.y*35.0+uTime*0.13);',
-      'float broad=sin(vUv.x*22.0+vUv.y*18.0+uTime*0.10);',
-      'v37 broader sea undulation')
+patch(
+'float micro=sin(vUv.x*173.0+vUv.y*61.0+uTime*0.29)*sin(vUv.y*139.0-vUv.x*37.0-uTime*0.19);',
+'float micro=sin(vUv.x*92.0+vUv.y*31.0+uTime*0.22)*sin(vUv.y*74.0-vUv.x*21.0-uTime*0.15);',
+'v37 softer sea microstructure'
+)
+# v2.7 already removed the conspicuous broad sine band; keep it at zero.
 patch('float path=pow(max(0.0,1.0-abs(vUv.x-sunX)*7.5),4.0);',
       'float path=pow(max(0.0,1.0-abs(vUv.x-sunX)*5.0),3.2);',
       'v37 broader sunset reflection')
@@ -176,7 +174,7 @@ patch('c+=vec3(0.98,0.47,0.18)*path*warm*(0.18+0.32*shimmer);',
       'v37 restrained reflection intensity')
 
 # ---------------------------------------------------------------------------
-# 3) Refine start/finish graphics while retaining v3.5 choreography.
+# 3) Refine Start / Finish graphics while retaining v3.5 choreography.
 # ---------------------------------------------------------------------------
 patch(
 "nodeOpacity(tl, n, t, { core: .96, ring: .52, glow: .62, duration: .20 });",
@@ -195,7 +193,7 @@ patch(
 )
 
 # ---------------------------------------------------------------------------
-# 4) Photo-sky and cloud timeline: dawn -> daylight restraint -> sunset reveal.
+# 4) Photo-sky / cloud timeline: dawn -> restrained day -> sunset reveal.
 # ---------------------------------------------------------------------------
 reset_anchor = '  bloom.strength = .52;'
 reset_block = '''  bloom.strength = .52;
@@ -243,16 +241,14 @@ photo_finish = finish_anchor + '''
   photoCloudPlanes.forEach((p, i) => tl.to(p.material, { opacity: i ? .060 : .078, duration: 3.8 }, 17.2 + i * .10));'''
 patch(finish_anchor, photo_finish, 'v37 sunset photo atmosphere')
 
-# Fade cloud overlay for the message while keeping the photographic sunset horizon.
+# Fade photographic cloud overlay for the core message.
 message_anchor = "tl.to(statement, { opacity: .97, clipPath: 'inset(0 0% 0 0)', filter: 'blur(0px)', letterSpacing: '0em', duration: 2.3, ease: 'power2.out' }, 26.0)"
 if message_anchor in text:
     patch(message_anchor, "photoCloudPlanes.forEach((p, i) => tl.to(p.material, { opacity: i ? .018 : .026, duration: 2.4 }, 25.6 + i * .08));\n  " + message_anchor, 'v37 message cloud restraint')
 
-# Static/reduced-motion fallback.
-static_anchor = "function showStatic(data) {"
+static_anchor = 'function showStatic(data) {'
 patch(static_anchor, static_anchor + "\n  if (photoSkyUniforms) { photoSkyUniforms.uMix.value=.35; photoSkyUniforms.uOpacity.value=.20; photoSkyUniforms.uIntensity.value=.90; }\n  photoCloudPlanes.forEach((p,i)=>p.material.opacity=i?.018:.028);", 'v37 static atmosphere')
 
-# Keep the photo sky infinitely distant and drift the real-photo cloud veil slowly.
 render_anchor = '  oceanUniforms.uTime.value = t;'
 render_block = '''  oceanUniforms.uTime.value = t;
   if (photoSkySphere) photoSkySphere.position.copy(camera.position);

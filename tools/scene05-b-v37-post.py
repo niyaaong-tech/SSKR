@@ -11,9 +11,15 @@ if count != 1:
     raise SystemExit(f'v37 post opening FOV: expected 1, found {count}')
 text = text.replace(old, new, 1)
 
+# Bind the v3.7 camera-grade overlay without touching the historical v2.0 source.
+dom_old = "const lightWash = document.getElementById('light-wash');"
+dom_new = "const dawnGrade = document.getElementById('dawn-grade');\nconst lightWash = document.getElementById('light-wash');"
+if text.count(dom_old) != 1:
+    raise SystemExit(f'v37 post dawn-grade DOM anchor: expected 1, found {text.count(dom_old)}')
+text = text.replace(dom_old, dom_new, 1)
+
 # Add these tweens last so they win over older accumulated lighting tweens at the
-# same timestamps. Start points must still be riding out under dawn; daylight begins
-# only when participant routes launch at 9s.
+# same timestamps. Start points remain in dawn; daylight begins at route launch.
 anchor = '  return tl;'
 if text.count(anchor) != 1:
     raise SystemExit(f'v37 post timeline return: expected 1, found {text.count(anchor)}')
@@ -26,8 +32,15 @@ polish = '''  // v3.7 final dawn hold — explicit art-direction override.
     .to(renderer, { toneMappingExposure: 1.06, duration: 4.6, ease: 'sine.inOut' }, 9.0)
     .to(oceanUniforms.uPhase, { value: .45, duration: 2.6, ease: 'sine.inOut' }, 5.2)
     .to(oceanUniforms.uPhase, { value: 1.0, duration: 4.5, ease: 'sine.inOut' }, 9.0);
+  if (dawnGrade) {
+    gsap.set(dawnGrade, { opacity: .28 });
+    tl.to(dawnGrade, { opacity: .34, duration: 2.8, ease: 'sine.inOut' }, 0)
+      .to(dawnGrade, { opacity: .43, duration: 2.2, ease: 'sine.inOut' }, 3.0)
+      .to(dawnGrade, { opacity: .48, duration: 2.4, ease: 'sine.inOut' }, 5.2)
+      .to(dawnGrade, { opacity: 0, duration: 3.0, ease: 'sine.inOut' }, 9.0);
+  }
 
 '''
 text = text.replace(anchor, polish + anchor, 1)
 p.write_text(text, encoding='utf-8')
-print('restored approved intro framing and dawn hold', p)
+print('restored approved intro framing and cinematic dawn hold', p)

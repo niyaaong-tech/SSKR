@@ -127,7 +127,7 @@ jobs:
         run: |
           npm install --no-audit --no-fund --package-lock=false
           rm -rf dist
-          mkdir -p dist/assets/clouds dist/assets/core
+          mkdir -p dist/assets/clouds
           npm run build
           cp index.html dist/index.html
           cp ../../assets/scene05/south_korea_hero_v0.2/terrain_lod.glb dist/assets/
@@ -136,12 +136,10 @@ jobs:
           cp node_modules/@takram/three-clouds/assets/shape.bin dist/assets/clouds/
           cp node_modules/@takram/three-clouds/assets/shape_detail.bin dist/assets/clouds/
           cp node_modules/@takram/three-clouds/assets/turbulence.png dist/assets/clouds/
-          cp node_modules/@takram/three-geospatial/assets/stbn.bin dist/assets/core/
           test -s dist/index.html
           test -s dist/app.js
           test -s dist/assets/terrain_lod.glb
           test -s dist/assets/clouds/shape.bin
-          test -s dist/assets/core/stbn.bin
 
       - name: Add ENV POC to Pages artifact
         if: github.ref == 'refs/heads/main'

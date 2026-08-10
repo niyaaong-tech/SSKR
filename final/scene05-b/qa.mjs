@@ -32,34 +32,59 @@ try {
   await sleep(350);
   if (errors.length) throw new Error(errors.join('\n'));
 
+  async function renderFrame() {
+    await page.evaluate(() => {
+      if (typeof window.__qaRafCallback !== 'function') throw new Error('QA RAF callback missing');
+      window.__qaRafCallback(performance.now());
+    });
+    await sleep(180);
+  }
+
   async function cap(t, name) {
     await page.evaluate(x => {
       window.__scene05Timeline.pause().seek(x, false);
-      window.__qaRafCallback(performance.now());
     }, t);
-    await sleep(170);
+    await renderFrame();
     await page.screenshot({ path: `final/scene05-b/dist/${name}.png` });
   }
 
-  await cap(1.5, 'b37_015_peninsula');
-  await cap(4.5, 'b37_045_east_dawn');
-  await cap(7.2, 'b37_072_start_dawn');
-  await cap(12.0, 'b37_120_route_day');
-  await cap(16.5, 'b37_165_late_day');
-  await cap(18.9, 'b37_189_finish_evening');
-  await cap(21.0, 'b37_210_finish_sunset');
-  await cap(24.0, 'b37_240_sunset_descent');
-  await cap(27.5, 'b37_275_core_message');
-  await cap(29.5, 'b37_295_final_hold');
+  await cap(1.5, 'b38_015_peninsula');
+  await cap(4.5, 'b38_045_east_dawn');
+  await cap(7.2, 'b38_072_start_dawn');
+  await cap(12.0, 'b38_120_route_day');
+  await cap(16.5, 'b38_165_late_day');
+  await cap(18.9, 'b38_189_finish_evening');
+  await cap(21.0, 'b38_210_finish_sunset');
+  await cap(24.0, 'b38_240_sunset_descent');
+  await cap(27.5, 'b38_275_core_message');
+  await cap(29.5, 'b38_295_final_hold');
 
   const s = await page.evaluate(() => ({
     ready: document.querySelector('#frame').classList.contains('ready'),
     duration: window.__scene05Timeline.duration(),
-    paused: window.__scene05Timeline.paused()
+    paused: window.__scene05Timeline.paused(),
+    diagnostics: typeof window.__scene05Diagnostic === 'function'
   }));
-  if (!s.ready || !s.paused || s.duration < 29.9 || s.duration > 30.2) {
-    throw new Error(`Bad v3.7 QA ${JSON.stringify(s)}`);
+  if (!s.ready || !s.paused || !s.diagnostics || s.duration < 29.9 || s.duration > 30.2) {
+    throw new Error(`Bad v3.8 QA ${JSON.stringify(s)}`);
   }
+
+  async function diag(mode, name) {
+    await page.evaluate(m => window.__scene05Diagnostic(m), mode);
+    await renderFrame();
+    await page.screenshot({ path: `final/scene05-b/dist/${name}.png` });
+  }
+
+  await diag('full', 'b38_diag_surface_full');
+  await diag('south', 'b38_diag_surface_south');
+  await diag('east', 'b38_diag_surface_east');
+  await diag('west', 'b38_diag_surface_west');
+  await diag('land', 'b38_diag_land_only');
+  await diag('land_ocean', 'b38_diag_land_ocean');
+  await diag('texture', 'b38_diag_texture_only');
+  await diag('mask', 'b38_diag_canonical_mask');
+
+  if (errors.length) throw new Error(errors.join('\n'));
   console.log(JSON.stringify(s));
 } finally {
   await browser.close();

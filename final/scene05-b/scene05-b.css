@@ -23,7 +23,9 @@ body{display:grid;place-items:center;color:#f7f8fa;font-family:-apple-system,Bli
 #light-wash{z-index:6;pointer-events:none;opacity:.10;mix-blend-mode:soft-light;background:linear-gradient(95deg,rgba(22,58,89,.20),transparent 46%,rgba(255,199,107,.12))}
 #vignette{z-index:7;pointer-events:none;background:radial-gradient(ellipse at 51% 46%,transparent 36%,rgba(0,0,0,.09) 66%,rgba(0,0,0,.56) 100%)}
 #grain{z-index:8;pointer-events:none;opacity:.032;mix-blend-mode:soft-light;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 150 150' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.78' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.7'/%3E%3C/svg%3E")}
-.scene-mark{position:absolute;z-index:12;top:5.2%;left:5.3%;display:flex;flex-direction:column;gap:5px;text-transform:uppercase;letter-spacing:.17em;font-size:clamp(9px,.66vw,13px);font-weight:500;opacity:.28;text-shadow:0 2px 22px rgba(0,0,0,.34)}
+/* v3.8.2: the generated finale already contains the small upper-left scene mark.
+   Keep the live mark over the map, but let the matte naturally cover it during handoff. */
+.scene-mark{position:absolute;z-index:4;top:5.2%;left:5.3%;display:flex;flex-direction:column;gap:5px;text-transform:uppercase;letter-spacing:.17em;font-size:clamp(9px,.66vw,13px);font-weight:500;opacity:.28;text-shadow:0 2px 22px rgba(0,0,0,.34)}
 .scene-mark strong{font-size:clamp(10px,.74vw,15px);letter-spacing:.11em;font-weight:650}
 .statement{position:absolute;z-index:12;left:50%;top:51%;width:min(82%,1280px);max-width:82%;transform:translate(-50%,-50%);text-align:center;opacity:0;clip-path:inset(0 100% 0 0);filter:blur(2px);text-shadow:0 4px 34px rgba(0,0,0,.72);will-change:opacity,clip-path,filter,letter-spacing}
 .statement p{margin:0;line-height:1.28;letter-spacing:-.035em}

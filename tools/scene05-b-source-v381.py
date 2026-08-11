@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import re
 from pathlib import Path
 
 ROOT = Path.cwd()
@@ -7,14 +8,26 @@ out = ROOT / 'output' / 'scene05-b-v381.js'
 text = src.read_text('utf-8')
 
 
+def fail(label: str, detail: str) -> None:
+    message = f'{label}: {detail}'
+    print(f'::error title=Scene 05 B v3.8.1 patch::{message}')
+    raise SystemExit(message)
+
+
 def patch(old: str, new: str, label: str, count: int = 1):
     global text
     found = text.count(old)
     if found != count:
-        message = f'{label}: expected {count}, found {found}'
-        print(f'::error title=Scene 05 B v3.8.1 patch::{message}')
-        raise SystemExit(message)
+        fail(label, f'expected {count}, found {found}')
     text = text.replace(old, new, count)
+
+
+def patch_re(pattern: str, repl: str, label: str, count: int = 1):
+    global text
+    text2, found = re.subn(pattern, repl, text, count=count)
+    if found != count:
+        fail(label, f'expected regex {count}, found {found}')
+    text = text2
 
 
 # ---------------------------------------------------------------------------
@@ -41,11 +54,12 @@ patch(
 # anti-alias coverage, with extrapolated land RGB underneath to avoid a dark fringe.
 patch('    alphaTest: .42,', '    alphaTest: .08,', 'v381 antialiased canonical coast cutoff')
 
-# v2.6 already restrained the original v2.2 coast tint to 40%. v3.8.1 reduces that
-# remaining shallow-water coloration to a trace so it cannot read as a second coast.
-patch(
-    'base=mix(base,vec3(0.030,0.205,0.285),coast*0.40*coastDay);',
-    'base=mix(base,vec3(0.030,0.205,0.285),coast*0.045*coastDay);',
+# Earlier passes changed the shallow-water RGB and strength more than once. Match the
+# semantic shader expression instead of one historical color literal, and preserve
+# its currently tuned RGB while reducing only the coastline-band strength.
+patch_re(
+    r'base=mix\(base,(vec3\([^\n;]+?\)),coast\*[0-9.]+\*coastDay\);',
+    r'base=mix(base,\1,coast*0.045*coastDay);',
     'v381 shallow water restraint'
 )
 
@@ -73,8 +87,7 @@ patch(
     'const photoCloudPlanes = [];',
     '''const photoCloudPlanes = [];
 let finaleMatte = null;
-let finaleMatteMaterial = null;
-const finaleMatteState = { opacity: 0 };''',
+let finaleMatteMaterial = null;''',
     'v381 finale globals'
 )
 

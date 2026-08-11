@@ -1,25 +1,26 @@
-# SSKR Scene 05 B — Coast + Photographic Finale v3.8.1
+# SSKR Scene 05 B — Generated Sunset Finale v3.8.2
 
-This pass keeps the accepted 30-second participant-route choreography and corrects the three visible v3.8 failures: coastline edge quality, the synthetic sun floating in front of the sea, and the low-quality / mismatched sky-sea-sun finale.
+This pass keeps the accepted 30-second participant-route choreography and replaces the generic photographic West Sea ending with the SSKR-generated cinematic sunset artwork approved for the Scene 05 visual direction.
 
 Scene 05 A v1.8 remains accepted and untouched under `final/scene05/`.
 
-## v3.8.1 scope
+## v3.8.2 scope
 
-1. higher-resolution canonical Korean peninsula coastline
-2. single coastline authority from `korean_peninsula_precise.svg`
-3. strong suppression of the legacy shallow-water parallel coast band
-4. 4K-class photographic coastal environment assets
-5. photographed sun, sea and reflection instead of a generated sun/reflection pair
-6. clean 22–24s handoff from WebGL map space to the photographic West Sea finale
-7. no route choreography change
-8. no Takram, fireworks, canvas-painted clouds, or synthetic finale sun
+1. retain the v3.8.1 high-resolution canonical Korean peninsula coastline
+2. retain single coastline authority from `korean_peninsula_precise.svg`
+3. retain suppression of the legacy shallow-water parallel coast band
+4. keep the existing dawn/map environment for 0–22s
+5. replace the visible 22–30s finale with the generated SSKR sunset artwork
+6. preserve the authored sky, sun, sea, natural reflection, islands and rocky shore as one image
+7. fade the live HTML scene mark before the artwork handoff because the generated artwork already contains its own restrained scene mark
+8. no route choreography change
+9. no Takram, fireworks, canvas-painted clouds, synthetic finale sun or procedural sunset reflection
 
 ## Peninsula / coastline
 
 `assets/vector/korean_peninsula_precise.svg` remains the coastline authority.
 
-The v3.8.1 build:
+The retained v3.8.1 coastline build:
 
 - rasterizes the canonical SVG directly at 2688px width rather than upscaling the previous binary alpha
 - preserves anti-aliased edge coverage
@@ -30,30 +31,27 @@ The v3.8.1 build:
 
 The accepted WorldCover / South DEM material treatment remains the base surface; this pass does not replace the Korean peninsula with a downloaded map image.
 
-## Coastal photographic resource
+## Finale artwork source
 
-Build-time source:
+The visible finale is reconstructed from the project source under:
 
-- Poly Haven `Umhlanga Sunrise` — CC0 coastal panorama
+`assets/scene05/finale_generated_v382/q50-part00.b64` … `q50-part06.b64`
 
-The same real coastal panorama is used to produce:
+The split base64 files encode one 1280×720 WebP copy of the approved generated artwork. The build script reconstructs the image and performs only a source-preserving Lanczos upscale to the existing 3840×2160 runtime plate path:
 
-- `sky_dawn_v381.jpg` — cool East dawn environment
-- `sky_sunset_env_v381.jpg` — warm-graded West transition environment
-- `west_sunset_matte_v381.jpg` — 3840×2160 rectilinear photographic finale plate
+`west_sunset_matte_v381.jpg`
 
-The finale plate is a perspective projection and color retime of the real panorama. The script does **not** paint a sun, horizon glow, wave highlight, or reflection.
+No additional sun, horizon glow, cloud layer, wave highlight, shoreline, island or sea reflection is painted by the build script.
 
 ## Sunset finale architecture
 
-v3.8 used separate systems for sky, sprite sun, ocean shader and synthetic reflection. v3.8.1 removes that visual mismatch.
-
 - `sunSprite` remains disabled
-- procedural sunset reflection strength is forced to zero
-- the visible final sun is the photographed sun
-- the visible final reflection is the photographed sea reflection
-- sky, horizon, waves, sun and reflection therefore share one photographic exposure and texture style
-- the finale matte is a DOM/CSS layer outside Three.js `EffectComposer`, preventing UnrealBloom from blowing out the photographic sky
+- procedural sunset reflection strength remains forced to zero
+- the visible final sun is the sun authored in the SSKR artwork
+- the visible sea reflection is the reflection authored in the same artwork
+- sky, clouds, horizon, sea, sun, reflection and foreground coastline therefore remain one art-directed visual system
+- the finale matte remains a DOM/CSS layer outside Three.js `EffectComposer`, preventing UnrealBloom or map tone mapping from altering the artwork
+- the original HTML scene mark fades out just before the finale crossfade, preventing a duplicate label over the artwork's baked scene mark
 
 ## 30-second one-take
 
@@ -62,9 +60,10 @@ v3.8 used separate systems for sky, sprite sun, ocean shader and synthetic refle
 - 6–9s — Start-point cascade
 - 9–19s — participant routes travel westward
 - 19–22s — Finish convergence
-- 22–24.3s — map/aerial view hands off to the photographic West Sea horizon
-- 24.3–26s — full photographic sunset settles
-- 26–30s — core message over the West Sea sunset
+- 21.86–22.38s — live HTML scene mark exits
+- 22–24.3s — map/aerial view hands off to the generated West Sea sunset artwork
+- 24.3–26s — generated sunset settles
+- 26–30s — core message over the sunset artwork
 
 ## Core message
 
@@ -78,7 +77,8 @@ v3.8 used separate systems for sky, sprite sun, ocean shader and synthetic refle
 - coastline: `assets/vector/korean_peninsula_precise.svg`
 - South terrain detail: Copernicus GLO-30 based South Korea Hero Terrain v0.2
 - full-peninsula surface material: ESA WorldCover-informed custom surface pipeline
-- coastal photographic source: Poly Haven CC0 `Umhlanga Sunrise`
+- 0–22s dawn environment: Poly Haven CC0 `Umhlanga Sunrise`
+- 22–30s visible finale: SSKR generated project artwork
 - route topology: actual-road participant-route data
 
 ## QA
@@ -90,8 +90,9 @@ Mandatory captures:
 
 Structural finale assertions require:
 
-- photographic matte fully visible by final hold
+- generated matte fully visible by final hold
 - WebGL map stage fully faded out by final hold
+- live HTML scene mark faded out before the artwork becomes dominant
 - synthetic sun invisible
 - procedural sunset reflection disabled
 

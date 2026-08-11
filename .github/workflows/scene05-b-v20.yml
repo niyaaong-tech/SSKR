@@ -41,10 +41,13 @@ jobs:
         with: {fetch-depth: 1}
       - uses: actions/setup-python@v5
         with: {python-version: '3.12'}
-      - name: Build v3.8.1 peninsula coast and photographic matte artwork
+      - name: Install Python build dependencies
         run: |
           python -m pip install --upgrade pip
           python -m pip install numpy Pillow pyproj trimesh cairosvg
+
+      - name: Build peninsula and route resources
+        run: |
           python tools/scene05-final-terrain-v1.py
           python tools/scene05-b-art-textures-v22.py
           python tools/scene05-final-data-v1.py
@@ -59,6 +62,8 @@ jobs:
           python tools/scene05-b-participant-routes-v32.py
           python tools/scene05-b-conform-relief-v34.py
 
+      - name: Fetch CC0 coastal photographic sources
+        run: |
           mkdir -p output/scene05_final_v1
           curl -fL --retry 3 --retry-delay 2 -A 'SSKR-Scene05/1.0' \
             'https://dl.polyhaven.org/file/ph-assets/HDRIs/extra/Tonemapped%20JPG/umhlanga_sunrise.jpg' \
@@ -72,8 +77,19 @@ jobs:
           || curl -fL --retry 3 --retry-delay 2 -A 'SSKR-Scene05/1.0' \
             'https://cdn.polyhaven.com/asset_img/backplates/umhlanga_sunrise/DSC08482.jpg' \
             -o output/scene05_final_v1/polyhaven_umhlanga_sunrise_DSC08482.jpg
-          python tools/scene05-b-matte-assets-v381.py
+          ls -lh output/scene05_final_v1/polyhaven_*.jpg
 
+      - name: Build 4K photographic environment and finale matte
+        run: |
+          python tools/scene05-b-matte-assets-v381.py
+          test -s output/scene05_final_v1/sky_dawn_v381.jpg
+          test -s output/scene05_final_v1/sky_sunset_env_v381.jpg
+          test -s output/scene05_final_v1/west_sunset_matte_v381.jpg
+          test -s output/scene05_final_v1/cloud_veil_v381.png
+          test -s output/scene05_final_v1/scene05_b_matte_assets_v381.json
+
+      - name: Generate Scene 05 B v3.8.1 source
+        run: |
           python tools/scene05-b-source-v20.py
           python tools/scene05-b-coast-source-v22.py
           python tools/scene05-b-source-v23.py
@@ -101,11 +117,8 @@ jobs:
           python tools/scene05-b-v38-post.py
           python tools/scene05-b-source-v381.py
 
-          test -s output/scene05_final_v1/sky_dawn_v381.jpg
-          test -s output/scene05_final_v1/sky_sunset_env_v381.jpg
-          test -s output/scene05_final_v1/west_sunset_matte_v381.jpg
-          test -s output/scene05_final_v1/cloud_veil_v381.png
-          test -s output/scene05_final_v1/scene05_b_matte_assets_v381.json
+      - name: Validate v3.8.1 source contracts
+        run: |
           test -s output/scene05_final_v1/peninsula_surface_v381.png
           test -s output/scene05_final_v1/peninsula_mask_debug_v381.png
           test -s output/scene05_final_v1/peninsula_surface_v381_qa.json
@@ -130,6 +143,7 @@ jobs:
           grep -q 'uReflectionStrength.value = 0.0' output/scene05-b-v381.js
           grep -q '__scene05V381State' output/scene05-b-v381.js
           grep -q '__scene05Diagnostic' output/scene05-b-v381.js
+
       - uses: actions/setup-node@v5
         with: {node-version: '22'}
       - name: Install fonts

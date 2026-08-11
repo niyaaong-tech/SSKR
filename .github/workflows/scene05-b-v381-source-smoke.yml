@@ -60,7 +60,7 @@ jobs:
       - name: Validate v3.8.1 structural contracts
         run: |
           test -s output/scene05-b-v381.js
-          grep -q 'west_sunset_matte_v381.jpg' output/scene05-b-v381.js
+          grep -q "finaleMatteV381 = \$('#finale-matte-v381')" output/scene05-b-v381.js
           grep -q 'sunSprite.visible = false' output/scene05-b-v381.js
           grep -q 'uReflectionStrength.value = 0.0' output/scene05-b-v381.js
           grep -q '__scene05V381State' output/scene05-b-v381.js

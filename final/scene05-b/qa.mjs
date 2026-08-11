@@ -69,7 +69,14 @@ try {
   if (!s.ready || !s.paused || !s.diagnostics || s.duration < 29.9 || s.duration > 30.2) {
     throw new Error(`Bad v3.8.1 QA ${JSON.stringify(s)}`);
   }
-  if (!s.v381 || s.v381.matteOpacity < .98 || !s.v381.matteVisible || s.v381.syntheticSunVisible || Math.abs(s.v381.reflectionStrength) > .001) {
+  if (
+    !s.v381 ||
+    s.v381.matteOpacity < .98 ||
+    !s.v381.matteVisible ||
+    s.v381.mapStageOpacity > .001 ||
+    s.v381.syntheticSunVisible ||
+    Math.abs(s.v381.reflectionStrength) > .001
+  ) {
     throw new Error(`Bad v3.8.1 finale state ${JSON.stringify(s.v381)}`);
   }
 

@@ -74,8 +74,8 @@ patch(
 # ---------------------------------------------------------------------------
 patch(
     "const stage = $('#three-stage');",
-    "const stage = $('#three-stage');\nconst finaleMatteV381 = $('#finale-matte-v381');",
-    'v381 DOM matte reference'
+    "const stage = $('#three-stage');\nconst finaleMatteV381 = $('#finale-matte-v381');\nconst sceneMarkV382 = document.querySelector('.scene-mark');",
+    'v381 DOM matte and v382 scene-mark references'
 )
 
 # The old sprite sun is the exact cause of the floating-in-front-of-the-sea error.
@@ -104,9 +104,14 @@ patch(
 
 # A decisive photographic handoff avoids the long ghosted double-exposure seen in
 # earlier iterations. The WebGL map stage fades out in lockstep as the 2D coastal
-# photograph becomes dominant. By 24.3s no transparent map/island residue remains.
+# image becomes dominant. By 24.3s no transparent map/island residue remains.
+# v3.8.2 artwork contains its own restrained upper-left scene mark, so the live
+# HTML mark exits just before the matte enters to avoid a brief duplicate label.
 return_anchor = '  return tl;'
-matte_timeline = r'''  if (finaleMatteV381) {
+matte_timeline = r'''  if (sceneMarkV382) {
+    tl.to(sceneMarkV382, { opacity: 0, duration: .52, ease: 'sine.inOut' }, 21.86);
+  }
+  if (finaleMatteV381) {
     gsap.set(finaleMatteV381, { opacity: 0, scale: 1.025 });
     tl.to(finaleMatteV381, { opacity: .08, duration: .35, ease: 'sine.inOut' }, 22.30)
       .to(stage, { opacity: .92, duration: .35, ease: 'sine.inOut' }, 22.30)
@@ -123,26 +128,28 @@ matte_timeline = r'''  if (finaleMatteV381) {
     matteOpacity: finaleMatteV381 ? Number(getComputedStyle(finaleMatteV381).opacity) : -1,
     matteVisible: !!finaleMatteV381,
     mapStageOpacity: stage ? Number(getComputedStyle(stage).opacity) : -1,
+    sceneMarkOpacity: sceneMarkV382 ? Number(getComputedStyle(sceneMarkV382).opacity) : -1,
     syntheticSunVisible: !!(typeof sunSprite !== 'undefined' && sunSprite && sunSprite.visible),
     reflectionStrength: oceanUniforms.uReflectionStrength ? oceanUniforms.uReflectionStrength.value : -1
   });
 '''
-patch(return_anchor, matte_timeline + return_anchor, 'v381 DOM matte timeline')
+patch(return_anchor, matte_timeline + return_anchor, 'v382 generated-art matte timeline')
 
 # Surface diagnostic mode must never be hidden behind the photographic finale.
 patch(
     '  if (photoSkySphere) photoSkySphere.visible = false;',
     '''  if (photoSkySphere) photoSkySphere.visible = false;
   if (stage) stage.style.opacity = '1';
+  if (sceneMarkV382) sceneMarkV382.style.opacity = '0';
   if (finaleMatteV381) {
     finaleMatteV381.style.display = 'none';
     finaleMatteV381.style.opacity = '0';
   }''',
-    'hide DOM matte in coast diagnostics'
+    'hide DOM matte and scene mark in coast diagnostics'
 )
 
 out.write_text(
-    '// Scene 05 B v3.8.1 — high-resolution canonical coastline + post-process-free photographic finale.\n'
+    '// Scene 05 B v3.8.2 — canonical coastline + SSKR generated-art sunset finale.\n'
     '// Finale DOM asset: west_sunset_matte_v381.jpg\n'
     + text,
     encoding='utf-8'

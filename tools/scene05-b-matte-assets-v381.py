@@ -63,16 +63,25 @@ def _load_generated_finale() -> tuple[Image.Image, dict]:
         path = GEN_DIR / f'q50-part{i:02d}.b64'
         if not path.exists():
             raise SystemExit(f'missing generated finale source part: {path}')
-        text = path.read_text(encoding='ascii').strip()
+        text = ''.join(path.read_text(encoding='ascii').split())
         parts.append(text)
         part_names.append(path.name)
 
-    raw = base64.b64decode(''.join(parts), validate=True)
+    encoded = ''.join(parts)
+    # The source is split across UTF-8 text files only to move one authored binary
+    # through GitHub's contents API. GitHub does not care about base64 terminal
+    # padding, so normalize it deterministically at reconstruction time.
+    encoded += '=' * (-len(encoded) % 4)
+    raw = base64.b64decode(encoded, validate=True)
     if len(raw) < 30_000:
         raise SystemExit(f'generated finale source unexpectedly small: {len(raw)} bytes')
 
-    with Image.open(io.BytesIO(raw)) as opened:
-        im = opened.convert('RGB')
+    try:
+        with Image.open(io.BytesIO(raw)) as opened:
+            opened.load()
+            im = opened.convert('RGB')
+    except Exception as exc:
+        raise SystemExit(f'generated finale source could not be decoded as an image: {exc}') from exc
 
     if im.size != GEN_SOURCE_SIZE:
         raise SystemExit(f'generated finale size mismatch: {im.size} != {GEN_SOURCE_SIZE}')
@@ -80,6 +89,7 @@ def _load_generated_finale() -> tuple[Image.Image, dict]:
     return im, {
         'encoding': 'base64-split-webp',
         'parts': part_names,
+        'encoded_chars': len(encoded),
         'source_bytes': len(raw),
         'source_size': list(im.size),
     }

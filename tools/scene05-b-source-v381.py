@@ -41,11 +41,11 @@ patch(
 # anti-alias coverage, with extrapolated land RGB underneath to avoid a dark fringe.
 patch('    alphaTest: .42,', '    alphaTest: .08,', 'v381 antialiased canonical coast cutoff')
 
-# The old coast-shallow texture may describe water character but must not read as a
-# second coastline. Keep only a nearly invisible near-shore tint.
+# v2.6 already restrained the original v2.2 coast tint to 40%. v3.8.1 reduces that
+# remaining shallow-water coloration to a trace so it cannot read as a second coast.
 patch(
-    'base=mix(base,vec3(0.045,0.315,0.390),coast*0.62*coastDay);',
-    'base=mix(base,vec3(0.045,0.315,0.390),coast*0.045*coastDay);',
+    'base=mix(base,vec3(0.030,0.205,0.285),coast*0.40*coastDay);',
+    'base=mix(base,vec3(0.030,0.205,0.285),coast*0.045*coastDay);',
     'v381 shallow water restraint'
 )
 

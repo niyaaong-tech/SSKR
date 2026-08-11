@@ -130,6 +130,32 @@ def _project_equirect(
     return Image.fromarray(dst, 'RGB')
 
 
+def _sunset_grade(im: Image.Image) -> Image.Image:
+    """Retimes the real capture toward richer west-sunset color without repainting light."""
+    a = np.asarray(im.convert('RGB'), np.float32) / 255.0
+    r, g, b = a[..., 0], a[..., 1], a[..., 2]
+    lum = r * .2126 + g * .7152 + b * .0722
+    warm = np.clip((r - b) * 1.30 + (r - g) * .80, 0.0, 1.0)
+    highlight = np.clip(warm * 1.80 * np.clip((lum - .35) / .55, 0.0, 1.0), 0.0, 1.0)
+
+    out = a.copy()
+    # Global late-day grade: keep the upper sky cool while moving the horizon and
+    # photographed cloud highlights away from pastel sunrise toward amber/orange.
+    out[..., 0] *= .98
+    out[..., 1] *= .91
+    out[..., 2] *= .88
+    # Only warm photographed highlights receive extra orange separation. Geometry,
+    # sun position, glow shape and reflection remain untouched source information.
+    out[..., 1] *= 1.0 - .16 * highlight
+    out[..., 2] *= 1.0 - .28 * highlight
+
+    graded = Image.fromarray(np.clip(out * 255.0, 0, 255).astype(np.uint8), 'RGB')
+    graded = ImageEnhance.Contrast(graded).enhance(1.08)
+    graded = ImageEnhance.Color(graded).enhance(1.06)
+    graded = ImageEnhance.Brightness(graded).enhance(.88)
+    return graded
+
+
 def _build_sunset_plate(src: Path, dst: Path) -> dict:
     im = Image.open(src).convert('RGB')
     w, h = im.size
@@ -157,12 +183,9 @@ def _build_sunset_plate(src: Path, dst: Path) -> dict:
         out_size=(3840, 2160),
     )
 
-    # Re-time sunrise capture into SSKR's west sunset palette without repainting any
-    # spatial light. Sun disk, haze, clouds, wave highlights and reflection stay real.
-    plate = _tint(plate, (1.06, .96, .88))
-    plate = ImageEnhance.Contrast(plate).enhance(1.06)
-    plate = ImageEnhance.Color(plate).enhance(1.09)
-    plate = ImageEnhance.Brightness(plate).enhance(.91)
+    # Re-time the real coastal capture into SSKR's west sunset palette. No sun disk,
+    # horizon glow, cloud, wave highlight or reflection is drawn by this script.
+    plate = _sunset_grade(plate)
     plate.save(dst, 'JPEG', quality=92, optimize=True, progressive=True, subsampling=1)
 
     return {
@@ -178,6 +201,15 @@ def _build_sunset_plate(src: Path, dst: Path) -> dict:
             'target_sun_normalized': [target_x, target_y],
         },
         'output_size': [3840, 2160],
+        'grade': {
+            'mode': 'source-preserving west-sunset retime',
+            'global_rgb_scale': [.98, .91, .88],
+            'warm_highlight_green_reduction_max': .16,
+            'warm_highlight_blue_reduction_max': .28,
+            'contrast': 1.08,
+            'saturation': 1.06,
+            'brightness': .88,
+        },
     }
 
 
@@ -222,7 +254,7 @@ def main() -> None:
         'sunset_plate': plate,
         'policy': [
             'The finale uses one real coastal panorama for sky, photographed sun, sea, waves and photographed reflection.',
-            'The west treatment is a color grade and perspective projection only; no sun or reflection is painted or synthesized.',
+            'The west treatment is a source-preserving color grade and perspective projection only; no sun or reflection is painted or synthesized.',
             'The visible finale plate is rendered outside WebGL post-processing so UnrealBloom cannot blow out the photograph.',
             'High-resolution derivatives remain 4K-class rather than the v3.7 2K pure-sky pipeline.',
         ],

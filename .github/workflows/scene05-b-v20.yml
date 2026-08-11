@@ -1,16 +1,15 @@
-name: Scene 05 B Artwork One-Take v3.8.1
+name: Scene 05 B Artwork One-Take v3.8.2
+
 on:
   push:
     branches:
       - main
-      - feature/scene05-v37-resource-polish
-      - feature/scene05-v38-surface-overhaul
-      - feature/scene05-v381-coast-sunset-matte
+      - feature/scene05-v382-generated-finale
     paths:
       - '.github/workflows/scene05-b-v20.yml'
       - 'final/scene05-b/**'
+      - 'assets/scene05/finale_generated_v382/**'
       - 'tools/scene05-b-source-v*.py'
-      - 'tools/scene05-b-sky-assets-v37.py'
       - 'tools/scene05-b-matte-assets-v381.py'
       - 'tools/scene05-b-v37-prep.py'
       - 'tools/scene05-b-v37-post.py'
@@ -23,24 +22,28 @@ on:
       - 'tools/scene05-b-participant-routes-v32.py'
       - 'tools/scene05-b-road-overlay-v31.py'
       - 'tools/scene05-b-choice-data-v29.py'
-      - 'tools/scene05-final-*.py'
       - 'tools/scene05-b-art-textures-v22.py'
+      - 'tools/scene05-final-*.py'
       - 'assets/scene05/worldcover_v1/**'
       - 'assets/scene05/choice_roads_source_v1.geojson'
       - 'assets/scene05/route_network_v0.1/**'
       - 'assets/scene05/south_korea_hero_v0.2/**'
       - 'assets/vector/korean_peninsula_precise.svg'
   workflow_dispatch:
-permissions: {contents: write}
+
+permissions:
+  contents: read
+
 jobs:
-  build-scene05-b-v381:
+  build-scene05-b-v382:
     runs-on: ubuntu-latest
     timeout-minutes: 60
     steps:
       - uses: actions/checkout@v4
-        with: {fetch-depth: 1}
       - uses: actions/setup-python@v5
-        with: {python-version: '3.12'}
+        with:
+          python-version: '3.12'
+
       - name: Install Python build dependencies
         run: |
           python -m pip install --upgrade pip
@@ -62,24 +65,14 @@ jobs:
           python tools/scene05-b-participant-routes-v32.py
           python tools/scene05-b-conform-relief-v34.py
 
-      - name: Fetch CC0 coastal photographic sources
+      - name: Fetch dawn environment
         run: |
           mkdir -p output/scene05_final_v1
           curl -fL --retry 3 --retry-delay 2 -A 'SSKR-Scene05/1.0' \
             'https://dl.polyhaven.org/file/ph-assets/HDRIs/extra/Tonemapped%20JPG/umhlanga_sunrise.jpg' \
             -o output/scene05_final_v1/polyhaven_umhlanga_sunrise.jpg
-          curl -fL --retry 3 --retry-delay 2 -A 'SSKR-Scene05/1.0' \
-            'https://dl.polyhaven.org/file/ph-assets/HDRIs/extra/Tonemapped%20JPG/the_sky_is_on_fire.jpg' \
-            -o output/scene05_final_v1/polyhaven_the_sky_is_on_fire.jpg
-          curl -fL --retry 3 --retry-delay 2 -A 'SSKR-Scene05/1.0' \
-            'https://dl.polyhaven.org/file/ph-assets/HDRIs/extra/Backplates/umhlanga_sunrise/jpg_pretty/DSC08482.jpg' \
-            -o output/scene05_final_v1/polyhaven_umhlanga_sunrise_DSC08482.jpg \
-          || curl -fL --retry 3 --retry-delay 2 -A 'SSKR-Scene05/1.0' \
-            'https://cdn.polyhaven.com/asset_img/backplates/umhlanga_sunrise/DSC08482.jpg' \
-            -o output/scene05_final_v1/polyhaven_umhlanga_sunrise_DSC08482.jpg
-          ls -lh output/scene05_final_v1/polyhaven_*.jpg
 
-      - name: Build 4K photographic environment and finale matte
+      - name: Build SSKR generated-art finale
         run: |
           python tools/scene05-b-matte-assets-v381.py
           test -s output/scene05_final_v1/sky_dawn_v381.jpg
@@ -88,7 +81,7 @@ jobs:
           test -s output/scene05_final_v1/cloud_veil_v381.png
           test -s output/scene05_final_v1/scene05_b_matte_assets_v381.json
 
-      - name: Generate Scene 05 B v3.8.1 source
+      - name: Generate Scene 05 B v3.8.2 source
         run: |
           python tools/scene05-b-source-v20.py
           python tools/scene05-b-coast-source-v22.py
@@ -117,7 +110,7 @@ jobs:
           python tools/scene05-b-v38-post.py
           python tools/scene05-b-source-v381.py
 
-      - name: Validate v3.8.1 source contracts
+      - name: Validate v3.8.2 source contracts
         run: |
           test -s output/scene05_final_v1/peninsula_surface_v381.png
           test -s output/scene05_final_v1/peninsula_mask_debug_v381.png
@@ -131,24 +124,30 @@ jobs:
           assert q['alpha_transition_pixel_count'] > 0, q
           assert q['runtime_sampling_policy_required']['alphaTest'] == 0.08
           m=json.loads(Path('output/scene05_final_v1/scene05_b_matte_assets_v381.json').read_text())
+          assert m['schema_version'] == '3.8.2', m
+          assert m['sunset_plate']['source_size'] == [1280,720], m['sunset_plate']
+          assert m['sunset_plate']['output_size'] == [3840,2160], m['sunset_plate']
+          assert m['sunset_plate']['visual_authority'] == 'SSKR generated project artwork', m['sunset_plate']
           assert Image.open('output/scene05_final_v1/west_sunset_matte_v381.jpg').size == (3840,2160)
-          assert Image.open('output/scene05_final_v1/sky_dawn_v381.jpg').size == (4096,2048)
-          assert Image.open('output/scene05_final_v1/sky_sunset_env_v381.jpg').size == (4096,2048)
-          print(json.dumps({'coast': q['texture_size'], 'coast_transition_px': q['alpha_transition_pixel_count'], 'matte': m['sunset_plate']}, indent=2))
+          print(json.dumps({'coast': q['texture_size'], 'matte': m['sunset_plate']}, indent=2))
           PY
           test -s output/scene05-b-v381.js
-          grep -q 'Scene 05 B v3.8.1' output/scene05-b-v381.js
+          grep -q 'Scene 05 B v3.8.2' output/scene05-b-v381.js
           grep -q 'west_sunset_matte_v381.jpg' output/scene05-b-v381.js
+          grep -q 'sceneMarkV382' output/scene05-b-v381.js
           grep -q 'sunSprite.visible = false' output/scene05-b-v381.js
           grep -q 'uReflectionStrength.value = 0.0' output/scene05-b-v381.js
           grep -q '__scene05V381State' output/scene05-b-v381.js
           grep -q '__scene05Diagnostic' output/scene05-b-v381.js
 
       - uses: actions/setup-node@v5
-        with: {node-version: '22'}
+        with:
+          node-version: '22'
+
       - name: Install fonts
         run: sudo apt-get update -qq && sudo apt-get install -y --no-install-recommends fonts-noto-cjk && fc-cache -f
-      - name: Bundle v3.8.1
+
+      - name: Bundle v3.8.2
         run: |
           npm install --no-save --no-audit --no-fund three@0.185.1 gsap@3.15.0 esbuild puppeteer-core
           rm -rf final/scene05-b/dist && mkdir -p final/scene05-b/dist/assets
@@ -160,11 +159,16 @@ jobs:
           cp assets/vector/korean_peninsula_precise.svg final/scene05-b/dist/assets/
           python final/scene05-b/pack_standalone.py
           test -s final/scene05-b/dist/SSKR_Scene05_B_30s_Journey_v3.8.1_standalone.html
-      - name: Visual QA — v3.8.1 keyframes and coastline diagnostics
+
+      - name: Visual QA — generated finale and coastline diagnostics
         timeout-minutes: 6
         run: |
-          python -m http.server 4174 --directory final/scene05-b/dist >/tmp/http.log 2>&1 & SERVER_PID=$!; trap 'kill $SERVER_PID || true' EXIT; sleep 2
-          BROWSER=$(command -v google-chrome || command -v chromium || command -v chromium-browser || true); test -n "$BROWSER"
+          python -m http.server 4174 --directory final/scene05-b/dist >/tmp/http.log 2>&1 &
+          SERVER_PID=$!
+          trap 'kill $SERVER_PID || true' EXIT
+          sleep 2
+          BROWSER=$(command -v google-chrome || command -v chromium || command -v chromium-browser || true)
+          test -n "$BROWSER"
           timeout 320s xvfb-run -a env BROWSER_PATH="$BROWSER" node final/scene05-b/qa.mjs
           for f in \
             b381_015_peninsula b381_045_east_dawn b381_072_start_dawn b381_120_route_day b381_165_late_day \
@@ -173,21 +177,11 @@ jobs:
             b381_diag_land_only b381_diag_land_ocean b381_diag_texture_only b381_diag_canonical_mask; do
             test -s "final/scene05-b/dist/${f}.png"
           done
+
       - uses: actions/upload-artifact@v4
         with:
-          name: SSKR-Scene05-B-Artwork-OneTake-v3.8.1
+          name: SSKR-Scene05-B-Artwork-OneTake-v3.8.2
           path: final/scene05-b/dist/
           if-no-files-found: error
           compression-level: 6
           retention-days: 30
-      - name: Publish QA
-        if: github.ref == 'refs/heads/main'
-        run: |
-          mkdir -p assets/scene05/b_v3_8_1 final/scene05-b/preview_v3_8_1
-          cp output/scene05_final_v1/scene05_b_matte_assets_v381.json assets/scene05/b_v3_8_1/
-          cp output/scene05_final_v1/peninsula_surface_v381_qa.json assets/scene05/b_v3_8_1/
-          cp final/scene05-b/dist/b381_*.png final/scene05-b/preview_v3_8_1/
-          printf '%s\n' '# Scene 05 B v3.8.1' '- v3.5 30-second route choreography retained unchanged' '- canonical SVG is re-rasterized at higher resolution with anti-aliased edge coverage' '- shallow-water coloration is restrained so it cannot read as a second coastline' '- Poly Haven coastal photographic resources replace the 2K pure-sky finale pipeline' '- the visible finale uses one 4K plate for sky, real photographed sun, sea and real reflection' '- synthetic sun sprite and procedural sunset reflection are disabled' '- current status: Coast + Photographic Matte QA Candidate' > assets/scene05/b_v3_8_1/README.md
-          git config user.name 'github-actions[bot]'; git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add assets/scene05/b_v3_8_1 final/scene05-b/preview_v3_8_1
-          if ! git diff --cached --quiet; then git commit -m 'Publish Scene 05 B v3.8.1 coast and matte QA'; git push; fi

@@ -1,64 +1,70 @@
-# SSKR Scene 05 B — Resource Polish Pass 1 v3.7
+# SSKR Scene 05 B — Coast + Photographic Finale v3.8.1
 
-This pass keeps the accepted v3.5 choreography and v3.6 foundation corrections, then raises visible quality with lightweight photographic atmosphere resources rather than a heavy geospatial renderer.
+This pass keeps the accepted 30-second participant-route choreography and corrects the three visible v3.8 failures: coastline edge quality, the synthetic sun floating in front of the sea, and the low-quality / mismatched sky-sea-sun finale.
 
 Scene 05 A v1.8 remains accepted and untouched under `final/scene05/`.
 
-## v3.7 scope
+## v3.8.1 scope
 
-1. photographic dawn / sunset sky resources
-2. real-photo-derived lightweight cloud veil
-3. explicit cinematic dawn grade through the Start cascade
-4. softer sea motion and sunset reflection
-5. restrained Start / Finish presentation FX
-6. no Takram or other large runtime environment system
+1. higher-resolution canonical Korean peninsula coastline
+2. single coastline authority from `korean_peninsula_precise.svg`
+3. strong suppression of the legacy shallow-water parallel coast band
+4. 4K-class photographic coastal environment assets
+5. photographed sun, sea and reflection instead of a generated sun/reflection pair
+6. clean 22–24s handoff from WebGL map space to the photographic West Sea finale
+7. no route choreography change
+8. no Takram, fireworks, canvas-painted clouds, or synthetic finale sun
 
-## Sky resources
+## Peninsula / coastline
 
-Build-time CC0 sources from Poly Haven:
+`assets/vector/korean_peninsula_precise.svg` remains the coastline authority.
 
-- `Qwantani Dawn (Pure Sky)` — dawn / East Coast atmosphere
-- `Industrial Sunset (Pure Sky)` — West Coast evening atmosphere
+The v3.8.1 build:
 
-The large source panoramas are build inputs only. The deployed scene uses compressed 2048×1024 presentation derivatives and a small transparent cloud veil derived from the sunset panorama.
+- rasterizes the canonical SVG directly at 2688px width rather than upscaling the previous binary alpha
+- preserves anti-aliased edge coverage
+- extrapolates neighboring land RGB beneath transparent edge texels
+- disables mipmaps for the peninsula texture
+- uses linear sampling with a low alpha cutoff
+- reduces the old shallow-water coastline contribution to a trace so it does not read as a second shore
 
-## Atmosphere behavior
+The accepted WorldCover / South DEM material treatment remains the base surface; this pass does not replace the Korean peninsula with a downloaded map image.
 
-- 0–9s — cool photographic dawn atmosphere; the Start cascade remains visibly pre-daylight
-- 9–12s — dawn camera grade recedes as participant routes launch
-- 12–15s — neutral daylight emphasizes terrain and Route travel
-- 15–19s — sunset resource returns gradually
-- 19–26s — sunset becomes the dominant horizon environment while the camera descends west
-- 26–30s — cloud veil recedes so the core message and sunset remain clean
+## Coastal photographic resource
 
-The old canvas-painted cloud sprites are disabled in v3.7.
+Build-time source:
 
-## Sea polish
+- Poly Haven `Umhlanga Sunrise` — CC0 coastal panorama
 
-The lightweight existing ocean remains, but its art treatment is softened:
+The same real coastal panorama is used to produce:
 
-- reduced high-frequency procedural shimmer
-- broader low-frequency visual rhythm
-- darker dawn/day/sunset palette
-- broader and less game-like warm sunset reflection
-- v3.6 single-coastline authority remains unchanged
+- `sky_dawn_v381.jpg` — cool East dawn environment
+- `sky_sunset_env_v381.jpg` — warm-graded West transition environment
+- `west_sunset_matte_v381.jpg` — 3840×2160 rectilinear photographic finale plate
 
-## FX polish
+The finale plate is a perspective projection and color retime of the real panorama. The script does **not** paint a sun, horizon glow, wave highlight, or reflection.
 
-- Start pulses keep their rapid-cascade timing but use smaller ring/glow weight
-- Finish halo remains symbolic rather than explosive
-- fireworks remain removed
-- Route choreography remains unchanged
+## Sunset finale architecture
+
+v3.8 used separate systems for sky, sprite sun, ocean shader and synthetic reflection. v3.8.1 removes that visual mismatch.
+
+- `sunSprite` remains disabled
+- procedural sunset reflection strength is forced to zero
+- the visible final sun is the photographed sun
+- the visible final reflection is the photographed sea reflection
+- sky, horizon, waves, sun and reflection therefore share one photographic exposure and texture style
+- the finale matte is a DOM/CSS layer outside Three.js `EffectComposer`, preventing UnrealBloom from blowing out the photographic sky
 
 ## 30-second one-take
 
-- 0–3s — full Korean peninsula centered
+- 0–3s — full Korean peninsula
 - 3–6s — East Coast dawn approach
-- 6–9s — Start points ignite in rapid succession under dawn grade
-- 9–19s — participant routes cross the country as dawn becomes day, then late afternoon
-- 19–22s — near-simultaneous West Coast Finish in evening light
-- 22–26s — low West Coast sunset approach
-- 26–30s — core message over photographic sunset
+- 6–9s — Start-point cascade
+- 9–19s — participant routes travel westward
+- 19–22s — Finish convergence
+- 22–24.3s — map/aerial view hands off to the photographic West Sea horizon
+- 24.3–26s — full photographic sunset settles
+- 26–30s — core message over the West Sea sunset
 
 ## Core message
 
@@ -70,18 +76,23 @@ The lightweight existing ocean remains, but its art treatment is softened:
 ## Data / resource authority
 
 - coastline: `assets/vector/korean_peninsula_precise.svg`
-- terrain: Copernicus GLO-30 based South Korea Hero Terrain v0.2
-- surface: ESA WorldCover-informed full-peninsula material
-- sky: Poly Haven CC0 pure-sky photographic resources, processed at build time
+- South terrain detail: Copernicus GLO-30 based South Korea Hero Terrain v0.2
+- full-peninsula surface material: ESA WorldCover-informed custom surface pipeline
+- coastal photographic source: Poly Haven CC0 `Umhlanga Sunrise`
 - route topology: actual-road participant-route data
 
-## QA result
+## QA
 
-Feature-branch Visual QA passed after direct frame review:
+Mandatory captures:
 
-- 7.2s — darker/cooler dawn Start
-- 12.0s — daylight recovered cleanly for Route travel
-- 18.9s — evening Finish retained
-- 27.5s — photographic sky/horizon visible behind the core message
+- journey: 1.5 / 4.5 / 7.2 / 12.0 / 16.5 / 18.9 / 21.0 / 24.0 / 27.5 / 29.5 seconds
+- surface diagnostics: full / South / East / West / land-only / land+ocean / texture-only / canonical mask
 
-Current status: **Resource Polish QA Candidate — ready for main deployment check**.
+Structural finale assertions require:
+
+- photographic matte fully visible by final hold
+- WebGL map stage fully faded out by final hold
+- synthetic sun invisible
+- procedural sunset reflection disabled
+
+Status before main merge: **feature-branch visual QA required; do not merge on automation alone.**

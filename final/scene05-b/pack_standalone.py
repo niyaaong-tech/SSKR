@@ -20,12 +20,13 @@ def main():
       './assets/terrain_day_final.png':data_uri(DIST/'assets'/'terrain_day_final.png','image/png'),
       './assets/terrain_sunset_final.png':data_uri(DIST/'assets'/'terrain_sunset_final.png','image/png'),
       './assets/coast_shallow.png':data_uri(DIST/'assets'/'coast_shallow.png','image/png'),
-      './assets/peninsula_surface_v38.png':data_uri(DIST/'assets'/'peninsula_surface_v38.png','image/png'),
-      './assets/peninsula_mask_debug_v38.png':data_uri(DIST/'assets'/'peninsula_mask_debug_v38.png','image/png'),
+      './assets/peninsula_surface_v381.png':data_uri(DIST/'assets'/'peninsula_surface_v381.png','image/png'),
+      './assets/peninsula_mask_debug_v381.png':data_uri(DIST/'assets'/'peninsula_mask_debug_v381.png','image/png'),
       './assets/road_choice_overlay_v31.png':data_uri(DIST/'assets'/'road_choice_overlay_v31.png','image/png'),
-      './assets/sky_dawn_v37.jpg':data_uri(DIST/'assets'/'sky_dawn_v37.jpg','image/jpeg'),
-      './assets/sky_sunset_v37.jpg':data_uri(DIST/'assets'/'sky_sunset_v37.jpg','image/jpeg'),
-      './assets/cloud_veil_v37.png':data_uri(DIST/'assets'/'cloud_veil_v37.png','image/png'),
+      './assets/sky_dawn_v381.jpg':data_uri(DIST/'assets'/'sky_dawn_v381.jpg','image/jpeg'),
+      './assets/sky_sunset_env_v381.jpg':data_uri(DIST/'assets'/'sky_sunset_env_v381.jpg','image/jpeg'),
+      './assets/cloud_veil_v381.png':data_uri(DIST/'assets'/'cloud_veil_v381.png','image/png'),
+      './assets/west_sunset_matte_v381.jpg':data_uri(DIST/'assets'/'west_sunset_matte_v381.jpg','image/jpeg'),
       './assets/peninsula_surface_v34.json':data_uri(DIST/'assets'/'peninsula_surface_v34.json','application/json'),
       './assets/scene05_final_data_v1.json':data_uri(DIST/'assets'/'scene05_final_data_v1.json','application/json')
     }
@@ -37,7 +38,7 @@ def main():
     for ref in ['./assets/','./app.js','./scene05-b.css']:
         if ref in html:
             raise SystemExit(f'Standalone pack left external reference: {ref}')
-    out=DIST/'SSKR_Scene05_B_30s_Journey_v3.8_standalone.html'
+    out=DIST/'SSKR_Scene05_B_30s_Journey_v3.8.1_standalone.html'
     out.write_text(html,encoding='utf-8')
     print(out,out.stat().st_size)
 

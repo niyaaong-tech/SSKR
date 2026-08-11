@@ -48,25 +48,36 @@ try {
     await page.screenshot({ path: `final/scene05-b/dist/${name}.png` });
   }
 
-  await cap(1.5, 'b38_015_peninsula');
-  await cap(4.5, 'b38_045_east_dawn');
-  await cap(7.2, 'b38_072_start_dawn');
-  await cap(12.0, 'b38_120_route_day');
-  await cap(16.5, 'b38_165_late_day');
-  await cap(18.9, 'b38_189_finish_evening');
-  await cap(21.0, 'b38_210_finish_sunset');
-  await cap(24.0, 'b38_240_sunset_descent');
-  await cap(27.5, 'b38_275_core_message');
-  await cap(29.5, 'b38_295_final_hold');
+  await cap(1.5, 'b381_015_peninsula');
+  await cap(4.5, 'b381_045_east_dawn');
+  await cap(7.2, 'b381_072_start_dawn');
+  await cap(12.0, 'b381_120_route_day');
+  await cap(16.5, 'b381_165_late_day');
+  await cap(18.9, 'b381_189_finish_evening');
+  await cap(21.0, 'b381_210_finish_sunset');
+  await cap(24.0, 'b381_240_matte_transition');
+  await cap(27.5, 'b381_275_core_message');
+  await cap(29.5, 'b381_295_final_hold');
 
   const s = await page.evaluate(() => ({
     ready: document.querySelector('#frame').classList.contains('ready'),
     duration: window.__scene05Timeline.duration(),
     paused: window.__scene05Timeline.paused(),
-    diagnostics: typeof window.__scene05Diagnostic === 'function'
+    diagnostics: typeof window.__scene05Diagnostic === 'function',
+    v381: typeof window.__scene05V381State === 'function' ? window.__scene05V381State() : null
   }));
   if (!s.ready || !s.paused || !s.diagnostics || s.duration < 29.9 || s.duration > 30.2) {
-    throw new Error(`Bad v3.8 QA ${JSON.stringify(s)}`);
+    throw new Error(`Bad v3.8.1 QA ${JSON.stringify(s)}`);
+  }
+  if (
+    !s.v381 ||
+    s.v381.matteOpacity < .98 ||
+    !s.v381.matteVisible ||
+    s.v381.mapStageOpacity > .001 ||
+    s.v381.syntheticSunVisible ||
+    Math.abs(s.v381.reflectionStrength) > .001
+  ) {
+    throw new Error(`Bad v3.8.1 finale state ${JSON.stringify(s.v381)}`);
   }
 
   async function diag(mode, name) {
@@ -75,14 +86,14 @@ try {
     await page.screenshot({ path: `final/scene05-b/dist/${name}.png` });
   }
 
-  await diag('full', 'b38_diag_surface_full');
-  await diag('south', 'b38_diag_surface_south');
-  await diag('east', 'b38_diag_surface_east');
-  await diag('west', 'b38_diag_surface_west');
-  await diag('land', 'b38_diag_land_only');
-  await diag('land_ocean', 'b38_diag_land_ocean');
-  await diag('texture', 'b38_diag_texture_only');
-  await diag('mask', 'b38_diag_canonical_mask');
+  await diag('full', 'b381_diag_surface_full');
+  await diag('south', 'b381_diag_surface_south');
+  await diag('east', 'b381_diag_surface_east');
+  await diag('west', 'b381_diag_surface_west');
+  await diag('land', 'b381_diag_land_only');
+  await diag('land_ocean', 'b381_diag_land_ocean');
+  await diag('texture', 'b381_diag_texture_only');
+  await diag('mask', 'b381_diag_canonical_mask');
 
   if (errors.length) throw new Error(errors.join('\n'));
   console.log(JSON.stringify(s));

@@ -103,21 +103,26 @@ patch(
 )
 
 # A decisive photographic handoff avoids the long ghosted double-exposure seen in
-# run92. By 24s the plate is nearly opaque; 26-30s is entirely photographic beneath
-# the unchanged message/vignette/grain UI layers.
+# earlier iterations. The WebGL map stage fades out in lockstep as the 2D coastal
+# photograph becomes dominant. By 24.3s no transparent map/island residue remains.
 return_anchor = '  return tl;'
 matte_timeline = r'''  if (finaleMatteV381) {
     gsap.set(finaleMatteV381, { opacity: 0, scale: 1.025 });
     tl.to(finaleMatteV381, { opacity: .08, duration: .35, ease: 'sine.inOut' }, 22.30)
+      .to(stage, { opacity: .92, duration: .35, ease: 'sine.inOut' }, 22.30)
       .to(finaleMatteV381, { opacity: .24, duration: .42, ease: 'sine.inOut' }, 22.65)
+      .to(stage, { opacity: .72, duration: .42, ease: 'sine.inOut' }, 22.65)
       .to(finaleMatteV381, { opacity: .72, duration: .60, ease: 'power2.inOut' }, 23.07)
+      .to(stage, { opacity: .22, duration: .60, ease: 'power2.inOut' }, 23.07)
       .to(finaleMatteV381, { opacity: .96, duration: .62, ease: 'sine.inOut' }, 23.67)
+      .to(stage, { opacity: 0, duration: .62, ease: 'sine.inOut' }, 23.67)
       .to(finaleMatteV381, { opacity: 1.0, scale: 1.0, duration: 1.15, ease: 'sine.out' }, 24.29);
   }
 
   window.__scene05V381State = () => ({
     matteOpacity: finaleMatteV381 ? Number(getComputedStyle(finaleMatteV381).opacity) : -1,
     matteVisible: !!finaleMatteV381,
+    mapStageOpacity: stage ? Number(getComputedStyle(stage).opacity) : -1,
     syntheticSunVisible: !!(typeof sunSprite !== 'undefined' && sunSprite && sunSprite.visible),
     reflectionStrength: oceanUniforms.uReflectionStrength ? oceanUniforms.uReflectionStrength.value : -1
   });
@@ -128,6 +133,7 @@ patch(return_anchor, matte_timeline + return_anchor, 'v381 DOM matte timeline')
 patch(
     '  if (photoSkySphere) photoSkySphere.visible = false;',
     '''  if (photoSkySphere) photoSkySphere.visible = false;
+  if (stage) stage.style.opacity = '1';
   if (finaleMatteV381) {
     finaleMatteV381.style.display = 'none';
     finaleMatteV381.style.opacity = '0';

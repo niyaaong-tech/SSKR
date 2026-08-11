@@ -11,7 +11,9 @@ def patch(old: str, new: str, label: str, count: int = 1):
     global text
     found = text.count(old)
     if found != count:
-        raise SystemExit(f'{label}: expected {count}, found {found}')
+        message = f'{label}: expected {count}, found {found}'
+        print(f'::error title=Scene 05 B v3.8.1 patch::{message}')
+        raise SystemExit(message)
     text = text.replace(old, new, count)
 
 

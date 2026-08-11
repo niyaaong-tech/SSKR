@@ -1,0 +1,65 @@
+name: Scene 05 B v3.8.1 Sunset Candidates
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - feature/scene05-v381-coast-sunset-matte
+    paths:
+      - '.github/workflows/scene05-b-v381-sunset-candidates.yml'
+permissions: {contents: read}
+jobs:
+  candidates:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+          sparse-checkout: |
+            .github
+          sparse-checkout-cone-mode: true
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.12'}
+      - name: Fetch Cape Hill CC0 backplates
+        run: |
+          mkdir -p candidates
+          base='https://dl.polyhaven.org/file/ph-assets/HDRIs/extra/Backplates/cape_hill/jpg_pretty'
+          for f in IMG_0252 IMG_0255 IMG_0257 IMG_0259 IMG_0262 IMG_0266 IMG_0268; do
+            curl -fL --retry 3 --retry-delay 2 -A 'SSKR-Scene05/1.0' "$base/$f.jpg" -o "candidates/$f.jpg"
+          done
+          ls -lh candidates
+      - name: Build candidate contact sheet
+        run: |
+          python -m pip install Pillow
+          python - <<'PY'
+          from pathlib import Path
+          from PIL import Image, ImageDraw, ImageFont
+          files=sorted(Path('candidates').glob('*.jpg'))
+          thumb_w,thumb_h=720,405
+          label_h=42
+          cols=2
+          rows=(len(files)+cols-1)//cols
+          sheet=Image.new('RGB',(cols*thumb_w,rows*(thumb_h+label_h)),(18,18,18))
+          draw=ImageDraw.Draw(sheet)
+          for i,p in enumerate(files):
+              im=Image.open(p).convert('RGB')
+              iw,ih=im.size
+              scale=max(thumb_w/iw,thumb_h/ih)
+              nw,nh=round(iw*scale),round(ih*scale)
+              im=im.resize((nw,nh),Image.Resampling.LANCZOS)
+              left=(nw-thumb_w)//2; top=(nh-thumb_h)//2
+              im=im.crop((left,top,left+thumb_w,top+thumb_h))
+              x=(i%cols)*thumb_w; y=(i//cols)*(thumb_h+label_h)
+              sheet.paste(im,(x,y))
+              draw.rectangle((x,y+thumb_h,x+thumb_w,y+thumb_h+label_h),fill=(18,18,18))
+              draw.text((x+12,y+thumb_h+10),p.stem,fill=(240,240,240))
+          sheet.save('candidates/cape_hill_contact.jpg',quality=92,subsampling=1)
+          print('contact',sheet.size)
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: SSKR-Scene05-B-v381-Sunset-Candidates
+          path: candidates/
+          if-no-files-found: error
+          compression-level: 4
+          retention-days: 7

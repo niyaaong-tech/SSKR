@@ -136,7 +136,9 @@ patch(
 )
 
 out.write_text(
-    '// Scene 05 B v3.8.1 — high-resolution canonical coastline + post-process-free photographic finale.\n' + text,
+    '// Scene 05 B v3.8.1 — high-resolution canonical coastline + post-process-free photographic finale.\n'
+    '// Finale DOM asset: west_sunset_matte_v381.jpg\n'
+    + text,
     encoding='utf-8'
 )
 print(out)

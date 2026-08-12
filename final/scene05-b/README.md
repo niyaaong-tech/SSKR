@@ -1,6 +1,6 @@
 # SSKR Scene 05 B — Three-Reference Sunset Finale v3.8.3
 
-This focused pass keeps the accepted v3.8.2 0–22 second participant-route choreography unchanged and refines only the West Sea finale. Three user-provided images are preserved as project references; the two storyboard sheets remain reference-only, while the clean West Sea sunset image becomes the visible finale plate.
+This focused pass keeps the accepted v3.8.2 0–22 second participant-route choreography unchanged and refines only the West Sea finale. Three user-provided images are preserved as normalized project working references; the two storyboard sheets remain reference-only, while the clean West Sea sunset image becomes the visible finale plate.
 
 Scene 05 A v1.8 remains accepted and untouched under `final/scene05/`.
 
@@ -23,11 +23,11 @@ Repository reference directory:
 
 `assets/scene05/finale_v383_refs/`
 
-- `concept_01.jpg` — `05컨셉1.png`, storyboard/timing/lighting reference only
-- `concept_02.jpg` — `05컨셉2.png`, storyboard/composition/message-placement reference only
-- `concept_03.jpg` — `CC65DB36-D551-40D2-A2B7-8B473AF491C0.jpeg`, selected visible finale plate
+- `concept_01.webp` — `05컨셉1.png`, storyboard/timing/lighting reference only
+- `concept_02.webp` — `05컨셉2.png`, storyboard/composition/message-placement reference only
+- `concept_03.webp` — `CC65DB36-D551-40D2-A2B7-8B473AF491C0.jpeg`, selected visible finale plate
 
-The three files are repository JPEG working copies. The build validates all three and upscales only `concept_03.jpg` to the 4K runtime matte without repainting.
+The three files are normalized WebP working copies derived from the user-provided attachments. The original attachments remain the source authority. Repository normalization is limited to resize + WebP compression; the build validates all three and upscales only `concept_03.webp` to the 4K runtime matte without repainting or procedural reconstruction.
 
 ## Peninsula / coastline
 
@@ -46,7 +46,7 @@ No generated map image replaces the canonical coastline or the established World
 
 - `sunSprite` remains disabled
 - procedural sunset reflection strength remains forced to zero
-- the visible final sun and sea reflection are authored inside `concept_03.jpg`
+- the visible final sun and sea reflection are authored inside `concept_03.webp`
 - the matte stays outside the Three.js `EffectComposer`
 - the live HTML scene mark exits before the authored finale becomes dominant
 - the baked upper-left mark in the selected artwork therefore never doubles with the live mark
@@ -80,7 +80,7 @@ The copy replaces the more absolute “기억은 영원이 됩니다” wording 
 - South terrain detail: Copernicus GLO-30 based South Korea Hero Terrain v0.2
 - full-peninsula surface material: ESA WorldCover-informed custom surface pipeline
 - 0–22s dawn environment: Poly Haven CC0 `Umhlanga Sunrise`
-- 22–30s visible finale: `assets/scene05/finale_v383_refs/concept_03.jpg`
+- 22–30s visible finale: `assets/scene05/finale_v383_refs/concept_03.webp`
 - route topology: actual-road participant-route data
 
 ## QA

@@ -21,10 +21,10 @@ REPORT_OUT = OUT / 'scene05_b_matte_assets_v383.json'
 
 COAST_URL = 'https://dl.polyhaven.org/file/ph-assets/HDRIs/extra/Tonemapped%20JPG/umhlanga_sunrise.jpg'
 FINAL_SIZE = (3840, 2160)
-VISIBLE_ASSET = REF_DIR / 'concept_03.jpg'
+VISIBLE_ASSET = REF_DIR / 'concept_03.webp'
 MIN_REF_BYTES = 4_000
-MIN_REF_WIDTH = 640
-MIN_REF_HEIGHT = 360
+MIN_REF_WIDTH = 400
+MIN_REF_HEIGHT = 300
 
 
 def _check_source(path: Path) -> None:
@@ -70,7 +70,7 @@ def _load_ref(name: str) -> tuple[Image.Image, dict]:
         'source_size': list(im.size),
         'source_bytes': len(raw),
         'sha256': hashlib.sha256(raw).hexdigest(),
-        'encoding': 'repository-jpeg-working-copy',
+        'encoding': 'repository-webp-working-copy',
     }
 
 
@@ -100,9 +100,9 @@ def main() -> None:
     _check_source(COAST_SRC)
 
     references = [
-        _ref_meta('concept_01.jpg', '05컨셉1.png', 'reference-only storyboard / timing and lighting direction'),
-        _ref_meta('concept_02.jpg', '05컨셉2.png', 'reference-only storyboard / finale composition direction'),
-        _ref_meta('concept_03.jpg', 'CC65DB36-D551-40D2-A2B7-8B473AF491C0.jpeg', 'selected visible 22-30s West Sea sunset finale plate'),
+        _ref_meta('concept_01.webp', '05컨셉1.png', 'reference-only storyboard / timing and lighting direction'),
+        _ref_meta('concept_02.webp', '05컨셉2.png', 'reference-only storyboard / finale composition direction'),
+        _ref_meta('concept_03.webp', 'CC65DB36-D551-40D2-A2B7-8B473AF491C0.jpeg', 'selected visible 22-30s West Sea sunset finale plate'),
     ]
 
     # 0-22s resources are intentionally identical to v3.8.2.
@@ -124,7 +124,7 @@ def main() -> None:
             },
             {
                 'name': 'SSKR v3.8.3 user-provided finale reference working copies',
-                'source_location': 'assets/scene05/finale_v383_refs/concept_01.jpg .. concept_03.jpg',
+                'source_location': 'assets/scene05/finale_v383_refs/concept_01.webp .. concept_03.webp',
                 'role': 'three imported candidates; concept_03 selected for the visible 22-30s plate',
             },
         ],

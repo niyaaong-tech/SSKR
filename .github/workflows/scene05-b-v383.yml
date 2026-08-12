@@ -84,7 +84,7 @@ jobs:
           m=json.loads(Path('output/scene05_final_v1/scene05_b_matte_assets_v383.json').read_text())
           assert m['schema_version'] == '3.8.3', m
           p=m['sunset_plate']
-          assert p['source_asset'] == 'concept_03.jpg', p
+          assert p['source_asset'] == 'concept_03.webp', p
           assert p['output_size'] == [3840,2160], p
           assert len(m['references']) == 3, m
           assert Image.open('output/scene05_final_v1/west_sunset_matte_v383.jpg').size == (3840,2160)

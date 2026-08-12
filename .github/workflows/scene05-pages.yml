@@ -135,7 +135,7 @@ jobs:
           from pathlib import Path
           m=json.loads(Path('output/scene05_final_v1/scene05_b_matte_assets_v383.json').read_text())
           assert m['schema_version'] == '3.8.3', m
-          assert m['sunset_plate']['source_asset'] == 'concept_03.jpg', m['sunset_plate']
+          assert m['sunset_plate']['source_asset'] == 'concept_03.webp', m['sunset_plate']
           assert len(m['references']) == 3, m
           PY
 

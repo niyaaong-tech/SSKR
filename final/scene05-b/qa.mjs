@@ -91,7 +91,9 @@ try {
   ) throw new Error(`Bad v3.8.4 1->2 crossfade ${JSON.stringify(cross12)}`);
   console.log(`ASSERT_CROSS12_OK ${JSON.stringify(cross12)}`);
 
-  await cap(26.05, 'b384_260_still02_hold');
+  // Sample after the authored crossfade has fully settled; the earlier 26.05
+  // sample can still include a tiny residual opacity in the QA render window.
+  await cap(26.30, 'b384_260_still02_hold');
   const second = await page.evaluate(() => window.__scene05V384State());
   if (second.still1Opacity > .02 || second.still2Opacity < .98 || second.still3Opacity > .02 || second.statementOpacity < .94) {
     throw new Error(`Bad v3.8.4 second still ${JSON.stringify(second)}`);

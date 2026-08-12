@@ -6,7 +6,7 @@ if (!executablePath) throw new Error('BROWSER_PATH is required');
 const browser = await puppeteer.launch({
   headless: false,
   executablePath,
-  protocolTimeout: 300000,
+  protocolTimeout: 120000,
   args: [
     '--no-sandbox',
     '--disable-dev-shm-usage',
@@ -43,7 +43,11 @@ try {
   }
 
   async function seek(t) {
-    await page.evaluate(x => window.__scene05Timeline.pause().seek(x, false), t);
+    // Do not return the GSAP Timeline object to Puppeteer. Returning pause().seek()
+    // makes CDP attempt to serialize the large/cyclic timeline and can hang for minutes.
+    await page.evaluate(x => {
+      window.__scene05Timeline.pause().seek(x, false);
+    }, t);
     await renderFrame();
   }
 
@@ -115,7 +119,9 @@ try {
 
   async function diag(mode, name) {
     console.log(`DIAG_START ${name} mode=${mode}`);
-    await page.evaluate(m => window.__scene05Diagnostic(m), mode);
+    await page.evaluate(m => {
+      window.__scene05Diagnostic(m);
+    }, mode);
     await renderFrame();
     await page.screenshot({ path: `final/scene05-b/dist/${name}.png` });
     console.log(`DIAG_OK ${name}`);

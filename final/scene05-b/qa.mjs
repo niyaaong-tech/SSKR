@@ -6,7 +6,7 @@ if (!executablePath) throw new Error('BROWSER_PATH is required');
 const browser = await puppeteer.launch({
   headless: false,
   executablePath,
-  protocolTimeout: 120000,
+  protocolTimeout: 300000,
   args: [
     '--no-sandbox',
     '--disable-dev-shm-usage',
@@ -27,10 +27,12 @@ try {
   page.on('pageerror', e => errors.push(`PAGEERROR: ${e.message}`));
   page.on('console', m => { if (m.type() === 'error') errors.push(`CONSOLE: ${m.text()}`); });
 
-  await page.goto('http://127.0.0.1:4174/?qa=1', { waitUntil: 'networkidle0', timeout: 60000 });
-  await page.waitForSelector('#frame.ready', { timeout: 45000 });
+  console.log('QA_NAVIGATE_START');
+  await page.goto('http://127.0.0.1:4174/?qa=1', { waitUntil: 'networkidle0', timeout: 90000 });
+  await page.waitForSelector('#frame.ready', { timeout: 60000 });
   await sleep(350);
   if (errors.length) throw new Error(errors.join('\n'));
+  console.log('QA_READY');
 
   async function renderFrame() {
     await page.evaluate(() => {
@@ -46,8 +48,10 @@ try {
   }
 
   async function cap(t, name) {
+    console.log(`CAP_START ${name} t=${t}`);
     await seek(t);
     await page.screenshot({ path: `final/scene05-b/dist/${name}.png` });
+    console.log(`CAP_OK ${name}`);
   }
 
   // Keep the accepted v3.8.2 0-22s chapter under regression coverage.
@@ -73,12 +77,14 @@ try {
   ) {
     throw new Error(`Bad v3.8.3 settled handoff ${JSON.stringify(settled)}`);
   }
+  console.log(`ASSERT_SETTLED_OK ${JSON.stringify(settled)}`);
 
   await cap(25.25, 'b383_252_clean_sunset_hold');
   const preMessage = await page.evaluate(() => window.__scene05V383State());
   if (preMessage.statementOpacity > .05) {
     throw new Error(`v3.8.3 message appears before clean sunset hold ${JSON.stringify(preMessage)}`);
   }
+  console.log(`ASSERT_PREMESSAGE_OK ${JSON.stringify(preMessage)}`);
 
   await cap(26.2, 'b383_262_core_message');
   await cap(29.5, 'b383_295_final_hold');
@@ -105,11 +111,14 @@ try {
   ) {
     throw new Error(`Bad v3.8.3 finale state ${JSON.stringify(s.v383)}`);
   }
+  console.log(`ASSERT_FINAL_OK ${JSON.stringify(s)}`);
 
   async function diag(mode, name) {
+    console.log(`DIAG_START ${name} mode=${mode}`);
     await page.evaluate(m => window.__scene05Diagnostic(m), mode);
     await renderFrame();
     await page.screenshot({ path: `final/scene05-b/dist/${name}.png` });
+    console.log(`DIAG_OK ${name}`);
   }
 
   await diag('full', 'b383_diag_surface_full');

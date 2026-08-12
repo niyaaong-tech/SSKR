@@ -1,26 +1,20 @@
-name: Deploy Scene 05 B v3.8.4 to GitHub Pages
+name: Scene 05 B Three-Still Finale QA v3.8.4
 
 on:
   push:
     branches:
-      - main
       - feature/scene05-v384-three-still-finale
     paths:
-      - '.github/workflows/scene05-pages.yml'
-      - 'final/scene05-b/index.html'
-      - 'final/scene05-b/scene05-b.css'
-      - 'final/scene05-b/pack_standalone.py'
-      - 'final/scene05-b/README.md'
-      - 'final/scene05-b/src/**'
-      - 'tools/scene05-b-source-v*.py'
+      - '.github/workflows/scene05-b-v384.yml'
+      - 'assets/scene05/finale_v384_stills/**'
+      - 'assets/scene05/finale_v383_refs/**'
       - 'tools/scene05-b-matte-assets-v383.py'
-      - 'tools/scene05-b-matte-assets-v381.py'
-      - 'tools/scene05-b-sky-assets-v37.py'
-      - 'tools/scene05-b-v37-prep.py'
-      - 'tools/scene05-b-v37-post.py'
+      - 'tools/scene05-b-source-v383.py'
+      - 'tools/scene05-b-source-v384.py'
+      - 'final/scene05-b/**'
+      - 'tools/scene05-b-source-v*.py'
+      - 'tools/scene05-b-v37-*.py'
       - 'tools/scene05-b-v38-post.py'
-      - 'tools/scene05-b-v35-framing-fix.py'
-      - 'tools/scene05-b-v36-evening-fix.py'
       - 'tools/scene05-b-peninsula-*.py'
       - 'tools/scene05-b-surface-relief-v34.py'
       - 'tools/scene05-b-conform-relief-v34.py'
@@ -29,8 +23,6 @@ on:
       - 'tools/scene05-b-choice-data-v29.py'
       - 'tools/scene05-b-art-textures-v22.py'
       - 'tools/scene05-final-*.py'
-      - 'assets/scene05/finale_v383_refs/**'
-      - 'assets/scene05/finale_v384_stills/**'
       - 'assets/scene05/worldcover_v1/**'
       - 'assets/scene05/choice_roads_source_v1.geojson'
       - 'assets/scene05/route_network_v0.1/**'
@@ -40,30 +32,24 @@ on:
 
 permissions:
   contents: read
-  pages: write
-  id-token: write
-
-concurrency:
-  group: scene05-pages
-  cancel-in-progress: true
 
 jobs:
-  build:
+  build-scene05-b-v384:
     runs-on: ubuntu-latest
-    timeout-minutes: 55
+    timeout-minutes: 60
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
 
-      - name: Build Scene 05 B v3.8.4 assets
+      - name: Install Python build dependencies
         run: |
           python -m pip install --upgrade pip
           python -m pip install numpy Pillow pyproj trimesh cairosvg
+
+      - name: Build peninsula and route resources
+        run: |
           python tools/scene05-final-terrain-v1.py
           python tools/scene05-b-art-textures-v22.py
           python tools/scene05-final-data-v1.py
@@ -78,12 +64,36 @@ jobs:
           python tools/scene05-b-participant-routes-v32.py
           python tools/scene05-b-conform-relief-v34.py
 
+      - name: Fetch dawn environment and build inherited v3.8.3 assets
+        run: |
           mkdir -p output/scene05_final_v1
           curl -fL --retry 3 --retry-delay 2 -A 'SSKR-Scene05/1.0' \
             'https://dl.polyhaven.org/file/ph-assets/HDRIs/extra/Tonemapped%20JPG/umhlanga_sunrise.jpg' \
             -o output/scene05_final_v1/polyhaven_umhlanga_sunrise.jpg
           python tools/scene05-b-matte-assets-v383.py
+          test -s output/scene05_final_v1/sky_dawn_v381.jpg
+          test -s output/scene05_final_v1/sky_sunset_env_v381.jpg
+          test -s output/scene05_final_v1/cloud_veil_v381.png
 
+      - name: Validate v3.8.4 still assets
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          from PIL import Image
+          root=Path('assets/scene05/finale_v384_stills')
+          names=['finale_still_01_v384.avif','finale_still_02_v384.avif','finale_still_03_v384.avif']
+          for name in names:
+              p=root/name
+              assert p.stat().st_size > 9000, (name,p.stat().st_size)
+              with Image.open(p) as im:
+                  im.verify()
+              with Image.open(p) as im:
+                  assert im.width == 1024 and im.height == 576, (name,im.size)
+                  print(name, im.size, p.stat().st_size)
+          PY
+
+      - name: Generate Scene 05 B v3.8.4 runtime
+        run: |
           python tools/scene05-b-source-v20.py
           python tools/scene05-b-coast-source-v22.py
           python tools/scene05-b-source-v23.py
@@ -112,31 +122,26 @@ jobs:
           python tools/scene05-b-source-v381.py
           python tools/scene05-b-source-v383.py
           python tools/scene05-b-source-v384.py
-
-          test -s output/scene05_final_v1/terrain_final_uv.glb
-          test -s output/scene05_final_v1/peninsula_surface_v381.png
-          test -s output/scene05_final_v1/road_choice_overlay_v31.png
-          test -s output/scene05_final_v1/scene05_final_data_v1.json
-          test -s output/scene05_final_v1/sky_dawn_v381.jpg
-          test -s output/scene05_final_v1/sky_sunset_env_v381.jpg
-          test -s output/scene05_final_v1/cloud_veil_v381.png
-          test -s assets/scene05/finale_v384_stills/finale_still_01_v384.avif
-          test -s assets/scene05/finale_v384_stills/finale_still_02_v384.avif
-          test -s assets/scene05/finale_v384_stills/finale_still_03_v384.avif
           test -s output/scene05-b-v384.js
           grep -q 'Scene 05 B v3.8.4' output/scene05-b-v384.js
           grep -q '__scene05V384State' output/scene05-b-v384.js
+          grep -q 'finaleStillV384_3' output/scene05-b-v384.js
           grep -q 'sunSprite.visible = false' output/scene05-b-v384.js
           grep -q 'uReflectionStrength.value = 0.0' output/scene05-b-v384.js
 
-      - name: Set up Node
-        uses: actions/setup-node@v5
+      - uses: actions/setup-node@v5
         with:
           node-version: '22'
 
-      - name: Build deployable Scene 05 B v3.8.4
+      - name: Install fonts and JS dependencies
         run: |
-          npm install --no-save --no-audit --no-fund three@0.185.1 gsap@3.15.0 esbuild
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends fonts-noto-cjk
+          fc-cache -f
+          npm install --no-save --no-audit --no-fund three@0.185.1 gsap@3.15.0 esbuild puppeteer-core
+
+      - name: Bundle v3.8.4
+        run: |
           rm -rf final/scene05-b/dist
           mkdir -p final/scene05-b/dist/assets
           npx esbuild output/scene05-b-v384.js --bundle --format=esm --target=es2022 --minify --outfile=final/scene05-b/dist/app.js
@@ -147,28 +152,32 @@ jobs:
           cp assets/scene05/finale_v384_stills/finale_still_*_v384.avif final/scene05-b/dist/assets/
           cp assets/vector/korean_peninsula_precise.svg final/scene05-b/dist/assets/
           python final/scene05-b/pack_standalone.py
-          test -s final/scene05-b/dist/index.html
-          test -s final/scene05-b/dist/app.js
           test -s final/scene05-b/dist/SSKR_Scene05_B_30s_Journey_v3.8.4_standalone.html
 
-      - name: Configure Pages
-        if: github.ref == 'refs/heads/main'
-        uses: actions/configure-pages@v5
+      - name: Visual QA keyframes
+        timeout-minutes: 6
+        run: |
+          python -m http.server 4174 --directory final/scene05-b/dist >/tmp/http.log 2>&1 &
+          SERVER_PID=$!
+          trap 'kill $SERVER_PID || true' EXIT
+          sleep 2
+          BROWSER=$(command -v google-chrome || command -v chromium || command -v chromium-browser || true)
+          test -n "$BROWSER"
+          timeout 320s xvfb-run -a env BROWSER_PATH="$BROWSER" node final/scene05-b/qa.mjs
+          for f in \
+            b384_015_peninsula b384_045_east_dawn b384_072_start_dawn b384_120_route_day b384_165_late_day \
+            b384_189_finish_evening b384_210_finish_sunset b384_224_handoff_start b384_234_handoff_resolve \
+            b384_244_still01_message b384_255_still01_to_02 b384_260_still02_hold b384_275_still02_to_03 \
+            b384_281_still03_hold b384_295_final_hold b384_diag_surface_full b384_diag_surface_south \
+            b384_diag_surface_east b384_diag_surface_west b384_diag_land_only b384_diag_land_ocean \
+            b384_diag_texture_only b384_diag_canonical_mask; do
+            test -s "final/scene05-b/dist/${f}.png"
+          done
 
-      - name: Upload Pages artifact
-        if: github.ref == 'refs/heads/main'
-        uses: actions/upload-pages-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
-          path: final/scene05-b/dist
-
-  deploy:
-    if: github.ref == 'refs/heads/main'
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    runs-on: ubuntu-latest
-    needs: build
-    steps:
-      - name: Deploy Scene 05 B v3.8.4 to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
+          name: SSKR-Scene05-B-Three-Still-Finale-v3.8.4
+          path: final/scene05-b/dist/
+          if-no-files-found: error
+          compression-level: 6
+          retention-days: 30

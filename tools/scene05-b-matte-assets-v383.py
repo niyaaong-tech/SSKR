@@ -22,6 +22,9 @@ REPORT_OUT = OUT / 'scene05_b_matte_assets_v383.json'
 COAST_URL = 'https://dl.polyhaven.org/file/ph-assets/HDRIs/extra/Tonemapped%20JPG/umhlanga_sunrise.jpg'
 FINAL_SIZE = (3840, 2160)
 VISIBLE_ASSET = REF_DIR / 'concept_03.jpg'
+MIN_REF_BYTES = 4_000
+MIN_REF_WIDTH = 640
+MIN_REF_HEIGHT = 360
 
 
 def _check_source(path: Path) -> None:
@@ -44,12 +47,24 @@ def _fit_equirect(src: Path, dst: Path, *, tint, brightness: float, contrast: fl
 
 def _load_ref(name: str) -> tuple[Image.Image, dict]:
     path = REF_DIR / name
-    if not path.exists() or path.stat().st_size < 10_000:
+    if not path.exists():
         raise SystemExit(f'missing Scene 05 v3.8.3 reference asset: {path}')
     raw = path.read_bytes()
-    with Image.open(path) as opened:
-        opened.load()
-        im = opened.convert('RGB')
+    if len(raw) < MIN_REF_BYTES:
+        raise SystemExit(f'reference asset unexpectedly small: {path} ({len(raw)} bytes)')
+    try:
+        with Image.open(path) as opened:
+            opened.verify()
+        with Image.open(path) as opened:
+            opened.load()
+            im = opened.convert('RGB')
+    except Exception as exc:
+        raise SystemExit(f'invalid Scene 05 v3.8.3 reference image: {path}: {exc}') from exc
+    if im.width < MIN_REF_WIDTH or im.height < MIN_REF_HEIGHT:
+        raise SystemExit(
+            f'reference asset resolution too small: {path} ({im.width}x{im.height}; '
+            f'minimum {MIN_REF_WIDTH}x{MIN_REF_HEIGHT})'
+        )
     return im, {
         'asset': name,
         'source_size': list(im.size),

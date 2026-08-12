@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import re
 from pathlib import Path
 
 ROOT = Path.cwd()
@@ -19,6 +20,14 @@ def patch(old: str, new: str, label: str, count: int = 1) -> None:
     if found != count:
         fail(label, f'expected {count}, found {found}')
     text = text.replace(old, new, count)
+
+
+def patch_re(pattern: str, repl: str, label: str, count: int = 1) -> None:
+    global text
+    text2, found = re.subn(pattern, repl, text, count=count)
+    if found != count:
+        fail(label, f'expected regex {count}, found {found}')
+    text = text2
 
 
 # Finale-only v3.8.3 pass. Everything before the existing 22s handoff remains untouched.
@@ -85,17 +94,18 @@ patch(old_timeline, new_timeline, 'v383 matte handoff timeline')
 
 # Leave the sunset unobstructed after the handoff, then reveal the final message quickly
 # enough to preserve a ~3.8s readable hold inside the existing 30-second duration.
-patch(
-    "tl.to(statement, { opacity: .97, clipPath: 'inset(0 0% 0 0)', filter: 'blur(0px)', letterSpacing: '0em', duration: 2.3, ease: 'power2.out' }, 26.0)",
+# Match the semantic statement reveal regardless of timing values inherited from earlier passes.
+patch_re(
+    r"tl\.to\(statement, \{ opacity: \.97, clipPath: 'inset\(0 0% 0 0\)', filter: 'blur\(0px\)', letterSpacing: '0em', duration: [0-9.]+, ease: 'power2\.out' \}, [0-9.]+\)",
     "tl.to(statement, { opacity: .97, clipPath: 'inset(0 0% 0 0)', filter: 'blur(0px)', letterSpacing: '0em', duration: .85, ease: 'power2.out' }, 25.35)",
     'v383 message reveal timing'
 )
 
 # Diagnostic mode stays authoritative: no finale matte or live mark can cover coastline checks.
-patch('if (sceneMarkV382) sceneMarkV382.style.opacity = \'0\';', "if (sceneMarkV383) sceneMarkV383.style.opacity = '0';", 'v383 diagnostic scene mark')
+patch("if (sceneMarkV382) sceneMarkV382.style.opacity = '0';", "if (sceneMarkV383) sceneMarkV383.style.opacity = '0';", 'v383 diagnostic scene mark')
 patch('if (finaleMatteV381) {', 'if (finaleMatteV383) {', 'v383 diagnostic matte guard')
-patch('finaleMatteV381.style.display = \'none\';', "finaleMatteV383.style.display = 'none';", 'v383 diagnostic matte display')
-patch('finaleMatteV381.style.opacity = \'0\';', "finaleMatteV383.style.opacity = '0';", 'v383 diagnostic matte opacity')
+patch("finaleMatteV381.style.display = 'none';", "finaleMatteV383.style.display = 'none';", 'v383 diagnostic matte display')
+patch("finaleMatteV381.style.opacity = '0';", "finaleMatteV383.style.opacity = '0';", 'v383 diagnostic matte opacity')
 
 # Normalize generated-source banner only; no choreography code is changed here.
 text = text.replace('Scene 05 B v3.8.2 — canonical coastline + SSKR generated-art sunset finale.',

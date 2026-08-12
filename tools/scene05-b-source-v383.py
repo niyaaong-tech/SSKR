@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-import re
 from pathlib import Path
 
 ROOT = Path.cwd()
@@ -22,17 +21,8 @@ def patch(old: str, new: str, label: str, count: int = 1) -> None:
     text = text.replace(old, new, count)
 
 
-def patch_re(pattern: str, repl: str, label: str, count: int = 1) -> None:
-    global text
-    text2, found = re.subn(pattern, repl, text, count=count)
-    if found != count:
-        fail(label, f'expected regex {count}, found {found}')
-    text = text2
-
-
 # Finale-only v3.8.3 pass. Everything before the existing 22s handoff remains untouched.
-# The visible matte URL itself lives in index.html; the generated JS only carries the
-# v3.8.2 DOM-asset banner, so update that exact source anchor rather than inventing a URL token.
+# The visible matte URL itself lives in index.html; generated JS carries the asset banner.
 patch('// Finale DOM asset: west_sunset_matte_v381.jpg', '// Finale DOM asset: west_sunset_matte_v383.jpg', 'v383 finale matte banner')
 patch("const finaleMatteV381 = $('#finale-matte-v381');", "const finaleMatteV383 = $('#finale-matte-v383');", 'v383 matte DOM reference')
 patch("const sceneMarkV382 = document.querySelector('.scene-mark');", "const sceneMarkV383 = document.querySelector('.scene-mark');", 'v383 scene mark reference')
@@ -68,7 +58,7 @@ new_timeline = r'''  if (sceneMarkV383) {
   if (finaleMatteV383) {
     gsap.set(finaleMatteV383, { opacity: 0, scale: 1.018 });
     // v3.8.3: short, decisive handoff. The map is completely gone before the
-    // authored sunset becomes a hold, avoiding the long ghosted double exposure.
+    // authored sunset becomes a hold, avoiding a prolonged ghosted double exposure.
     tl.to(finaleMatteV383, { opacity: .12, duration: .28, ease: 'sine.inOut' }, 22.16)
       .to(stage, { opacity: .88, duration: .28, ease: 'sine.inOut' }, 22.16)
       .to(finaleMatteV383, { opacity: .38, duration: .36, ease: 'sine.inOut' }, 22.44)
@@ -92,14 +82,26 @@ new_timeline = r'''  if (sceneMarkV383) {
 '''
 patch(old_timeline, new_timeline, 'v383 matte handoff timeline')
 
-# Leave the sunset unobstructed after the handoff, then reveal the final message quickly
-# enough to preserve a ~3.8s readable hold inside the existing 30-second duration.
-# Match the semantic statement reveal regardless of timing values inherited from earlier passes.
-patch_re(
-    r"tl\.to\(statement, \{ opacity: \.97, clipPath: 'inset\(0 0% 0 0\)', filter: 'blur\(0px\)', letterSpacing: '0em', duration: [0-9.]+, ease: 'power2\.out' \}, [0-9.]+\)",
-    "tl.to(statement, { opacity: .97, clipPath: 'inset(0 0% 0 0)', filter: 'blur(0px)', letterSpacing: '0em', duration: .85, ease: 'power2.out' }, 25.35)",
-    'v383 message reveal timing'
-)
+# v3.8.2's actual statement tween is a multiline block inherited from v3.5:
+# 26.15s start / 2.25s reveal. Replace that exact block, leaving a clean sunset
+# appreciation beat after the matte settles and a ~3.8s readable hold at the end.
+old_statement = r'''    .to(statement, {
+      opacity: 1,
+      clipPath: 'inset(0 0% 0 0)',
+      filter: 'blur(0px)',
+      letterSpacing: '-.035em',
+      duration: 2.25,
+      ease: 'power2.out'
+    }, 26.15);'''
+new_statement = r'''    .to(statement, {
+      opacity: .97,
+      clipPath: 'inset(0 0% 0 0)',
+      filter: 'blur(0px)',
+      letterSpacing: '-.035em',
+      duration: .85,
+      ease: 'power2.out'
+    }, 25.35);'''
+patch(old_statement, new_statement, 'v383 message reveal timing')
 
 # Diagnostic mode stays authoritative: no finale matte or live mark can cover coastline checks.
 patch("if (sceneMarkV382) sceneMarkV382.style.opacity = '0';", "if (sceneMarkV383) sceneMarkV383.style.opacity = '0';", 'v383 diagnostic scene mark')
@@ -107,7 +109,7 @@ patch('if (finaleMatteV381) {', 'if (finaleMatteV383) {', 'v383 diagnostic matte
 patch("finaleMatteV381.style.display = 'none';", "finaleMatteV383.style.display = 'none';", 'v383 diagnostic matte display')
 patch("finaleMatteV381.style.opacity = '0';", "finaleMatteV383.style.opacity = '0';", 'v383 diagnostic matte opacity')
 
-# Normalize generated-source banner only; no choreography code is changed here.
+# Normalize generated-source banner only; no 0-22s choreography code is changed here.
 text = text.replace('Scene 05 B v3.8.2 — canonical coastline + SSKR generated-art sunset finale.',
                     'Scene 05 B v3.8.3 — v3.8.2 map choreography + user-provided West Sea sunset finale.', 1)
 

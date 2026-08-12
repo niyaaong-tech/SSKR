@@ -26,9 +26,9 @@ def main():
       './assets/sky_dawn_v381.jpg':data_uri(DIST/'assets'/'sky_dawn_v381.jpg','image/jpeg'),
       './assets/sky_sunset_env_v381.jpg':data_uri(DIST/'assets'/'sky_sunset_env_v381.jpg','image/jpeg'),
       './assets/cloud_veil_v381.png':data_uri(DIST/'assets'/'cloud_veil_v381.png','image/png'),
-      './assets/finale_still_01_v384.webp':data_uri(DIST/'assets'/'finale_still_01_v384.webp','image/webp'),
-      './assets/finale_still_02_v384.webp':data_uri(DIST/'assets'/'finale_still_02_v384.webp','image/webp'),
-      './assets/finale_still_03_v384.webp':data_uri(DIST/'assets'/'finale_still_03_v384.webp','image/webp'),
+      './assets/finale_still_01_v384.avif':data_uri(DIST/'assets'/'finale_still_01_v384.avif','image/avif'),
+      './assets/finale_still_02_v384.avif':data_uri(DIST/'assets'/'finale_still_02_v384.avif','image/avif'),
+      './assets/finale_still_03_v384.avif':data_uri(DIST/'assets'/'finale_still_03_v384.avif','image/avif'),
       './assets/peninsula_surface_v34.json':data_uri(DIST/'assets'/'peninsula_surface_v34.json','application/json'),
       './assets/scene05_final_data_v1.json':data_uri(DIST/'assets'/'scene05_final_data_v1.json','application/json')
     }

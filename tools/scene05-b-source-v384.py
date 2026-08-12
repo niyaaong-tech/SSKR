@@ -24,7 +24,7 @@ def patch(old: str, new: str, label: str, count: int = 1) -> None:
 # v3.8.4 is finale-only. The accepted 0-22s map/route choreography remains untouched.
 patch(
     "const finaleMatteV383 = $('#finale-matte-v383');",
-    "const finaleMatteV384 = $('#finale-matte-v384');\nconst finaleStillV384_1 = $('#finale-still-v384-1');\nconst finaleStillV384_2 = $('#finale-still-v384-2');\nconst finaleStillV384_3 = $('#finale-still-v384-3');",
+    "const finaleMatteV384 = $('#finale-matte-v384');\nconst finaleStillV384_1 = $('#finale-still-v384-1');\nconst finaleStillV384_2 = $('#finale-still-v384-2');\nconst finaleStillV384_3 = $('#finale-still-v384-3');\nconst finaleCross12V384 = { value: 0 };\nconst finaleCross23V384 = { value: 0 };",
     'v384 finale DOM references'
 )
 patch(
@@ -68,6 +68,8 @@ new_timeline = r'''  if (sceneMarkV384) {
     gsap.set(finaleMatteV384, { opacity: 0, scale: 1.018 });
     gsap.set(finaleStillV384_1, { opacity: 1 });
     gsap.set([finaleStillV384_2, finaleStillV384_3], { opacity: 0 });
+    finaleCross12V384.value = 0;
+    finaleCross23V384.value = 0;
 
     // Keep the accepted v3.8.3 map-to-finale handoff, but make the first
     // user still the authored finale surface.
@@ -82,11 +84,29 @@ new_timeline = r'''  if (sceneMarkV384) {
       .to(finaleMatteV384, { opacity: 1.0, scale: 1.0, duration: .65, ease: 'sine.out' }, 23.80)
 
       // User direction: still 01 for 3s from finale entry, smooth switch to
-      // still 02, then two seconds later smooth switch to still 03.
-      .to(finaleStillV384_2, { opacity: 1, duration: .72, ease: 'sine.inOut' }, 25.16)
-      .to(finaleStillV384_1, { opacity: 0, duration: .72, ease: 'sine.inOut' }, 25.16)
-      .to(finaleStillV384_3, { opacity: 1, duration: .72, ease: 'sine.inOut' }, 27.16)
-      .to(finaleStillV384_2, { opacity: 0, duration: .72, ease: 'sine.inOut' }, 27.16);
+      // still 02, then exactly two seconds later smooth switch to still 03.
+      // One shared progress tween drives each pair so their opacities remain
+      // complementary during normal playback and arbitrary QA timeline seeks.
+      .to(finaleCross12V384, {
+        value: 1,
+        duration: .72,
+        ease: 'sine.inOut',
+        onUpdate: () => {
+          const p = finaleCross12V384.value;
+          if (finaleStillV384_1) finaleStillV384_1.style.opacity = String(1 - p);
+          if (finaleStillV384_2) finaleStillV384_2.style.opacity = String(p);
+        }
+      }, 25.16)
+      .to(finaleCross23V384, {
+        value: 1,
+        duration: .72,
+        ease: 'sine.inOut',
+        onUpdate: () => {
+          const p = finaleCross23V384.value;
+          if (finaleStillV384_2) finaleStillV384_2.style.opacity = String(1 - p);
+          if (finaleStillV384_3) finaleStillV384_3.style.opacity = String(p);
+        }
+      }, 27.16);
   }
 
   window.__scene05V384State = () => ({
@@ -95,6 +115,8 @@ new_timeline = r'''  if (sceneMarkV384) {
     still1Opacity: finaleStillV384_1 ? Number(getComputedStyle(finaleStillV384_1).opacity) : -1,
     still2Opacity: finaleStillV384_2 ? Number(getComputedStyle(finaleStillV384_2).opacity) : -1,
     still3Opacity: finaleStillV384_3 ? Number(getComputedStyle(finaleStillV384_3).opacity) : -1,
+    cross12Progress: finaleCross12V384.value,
+    cross23Progress: finaleCross23V384.value,
     mapStageOpacity: stage ? Number(getComputedStyle(stage).opacity) : -1,
     sceneMarkOpacity: sceneMarkV384 ? Number(getComputedStyle(sceneMarkV384).opacity) : -1,
     statementOpacity: statement ? Number(getComputedStyle(statement).opacity) : -1,
@@ -134,7 +156,7 @@ text = text.replace(
     'Scene 05 B v3.8.4 — v3.8.2 map choreography + three user-provided finale stills.',
     1
 )
-text = text.replace('// Finale DOM asset: west_sunset_matte_v383.jpg', '// Finale DOM assets: finale_still_01_v384.webp / finale_still_02_v384.webp / finale_still_03_v384.webp', 1)
+text = text.replace('// Finale DOM asset: west_sunset_matte_v383.jpg', '// Finale DOM assets: finale_still_01_v384.avif / finale_still_02_v384.avif / finale_still_03_v384.avif', 1)
 
 out.write_text(text, encoding='utf-8')
 print(out)

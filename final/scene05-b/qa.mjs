@@ -63,7 +63,6 @@ try {
     }
   }
 
-  // Accepted journey regression coverage.
   await cap(1.5, 'b384_015_peninsula');
   await cap(4.5, 'b384_045_east_dawn');
   await cap(7.2, 'b384_072_start_dawn');
@@ -74,7 +73,6 @@ try {
   await cap(22.4, 'b384_224_handoff_start');
   await cap(23.4, 'b384_234_handoff_resolve');
 
-  // Still 01 + fixed centered statement.
   const first = await cap(24.4, 'b384_244_still01_message');
   const a1 = first.authored;
   if (!a1 || a1.matteOpacity < .98 || a1.mapStageOpacity > .001 || a1.sceneMarkOpacity > .001 ||
@@ -85,7 +83,6 @@ try {
   assertRenderedSafety(first, 'still01');
   console.log(`ASSERT_STILL01_OK ${JSON.stringify(first)}`);
 
-  // Exact authored midpoint: still 01 -> 02, 25.16–25.88.
   const cross12 = await cap(25.52, 'b384_255_still01_to_02');
   const a12 = cross12.authored;
   if (!a12 || a12.still1Opacity < .35 || a12.still1Opacity > .65 ||
@@ -96,8 +93,7 @@ try {
   assertRenderedSafety(cross12, 'cross12');
   console.log(`ASSERT_CROSS12_OK ${JSON.stringify(cross12)}`);
 
-  // Settled still 02.
-  const second = await cap(26.30, 'b384_263_still02_hold');
+  const second = await cap(26.30, 'b384_260_still02_hold');
   const a2 = second.authored;
   if (!a2 || a2.still1Opacity > .02 || a2.still2Opacity < .98 || a2.still3Opacity > .02 || a2.statementOpacity < .94) {
     throw new Error(`Bad v3.8.4 second still ${JSON.stringify(a2)}`);
@@ -105,7 +101,6 @@ try {
   assertRenderedSafety(second, 'still02');
   console.log(`ASSERT_STILL02_OK ${JSON.stringify(second)}`);
 
-  // Exact authored midpoint: still 02 -> 03, 27.16–27.88.
   const cross23 = await cap(27.52, 'b384_275_still02_to_03');
   const a23 = cross23.authored;
   if (!a23 || a23.still1Opacity > .02 || a23.still2Opacity < .35 || a23.still2Opacity > .65 ||

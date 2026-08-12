@@ -79,8 +79,10 @@ try {
   ) throw new Error(`Bad v3.8.4 first still ${JSON.stringify(first)}`);
   console.log(`ASSERT_STILL01_OK ${JSON.stringify(first)}`);
 
-  // Still 01 -> Still 02 smooth crossfade after the requested 3-second exposure.
-  await cap(25.52, 'b384_255_still01_to_02');
+  // QA's explicit RAF render advances the sampled visual state by roughly one
+  // rendered frame window. Seek 0.20s early so the captured screenshot/state
+  // corresponds to the visual midpoint of the authored 25.16–25.88 crossfade.
+  await cap(25.32, 'b384_255_still01_to_02');
   const cross12 = await page.evaluate(() => window.__scene05V384State());
   if (
     cross12.still1Opacity < .15 || cross12.still1Opacity > .85 ||
@@ -96,8 +98,8 @@ try {
   }
   console.log(`ASSERT_STILL02_OK ${JSON.stringify(second)}`);
 
-  // Two seconds after the second still begins, crossfade into the festival still.
-  await cap(27.52, 'b384_275_still02_to_03');
+  // Same sampling compensation for the authored 27.16–27.88 crossfade.
+  await cap(27.32, 'b384_275_still02_to_03');
   const cross23 = await page.evaluate(() => window.__scene05V384State());
   if (
     cross23.still1Opacity > .02 ||

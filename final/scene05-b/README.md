@@ -1,57 +1,56 @@
-# SSKR Scene 05 B — Generated Sunset Finale v3.8.2
+# SSKR Scene 05 B — Three-Reference Sunset Finale v3.8.3
 
-This pass keeps the accepted 30-second participant-route choreography and replaces the generic photographic West Sea ending with the SSKR-generated cinematic sunset artwork approved for the Scene 05 visual direction.
+This focused pass keeps the accepted v3.8.2 0–22 second participant-route choreography unchanged and refines only the West Sea finale. Three user-provided images are preserved as normalized project working references; the two storyboard sheets remain reference-only, while the clean West Sea sunset image becomes the visible finale plate.
 
 Scene 05 A v1.8 remains accepted and untouched under `final/scene05/`.
 
-## v3.8.2 scope
+## v3.8.3 scope
 
-1. retain the v3.8.1 high-resolution canonical Korean peninsula coastline
-2. retain single coastline authority from `korean_peninsula_precise.svg`
-3. retain suppression of the legacy shallow-water parallel coast band
-4. keep the existing dawn/map environment for 0–22s
-5. replace the visible 22–30s finale with the generated SSKR sunset artwork
-6. preserve the authored sky, sun, sea, natural reflection, islands and rocky shore as one image
-7. fade the live HTML scene mark before the artwork handoff because the generated artwork already contains its own restrained scene mark
-8. no route choreography change
-9. no Takram, fireworks, canvas-painted clouds, synthetic finale sun or procedural sunset reflection
+1. retain the complete v3.8.2 0–22s dawn/map/route choreography
+2. retain the v3.8.1 high-resolution canonical Korean peninsula coastline
+3. retain `korean_peninsula_precise.svg` as the single coastline authority
+4. preserve the two storyboard sheets as reference-only assets
+5. use the clean user-provided West Sea sunset reference as the visible 22–30s finale plate
+6. keep sky, sun, sea, natural reflection and coastline authored together as one image
+7. keep synthetic sun and procedural sunset reflection disabled
+8. make the map→matte handoff shorter and more decisive
+9. provide a clean sunset appreciation beat before the message enters
+10. strengthen the core message around individual route, shared completion and lasting rider memory
+
+## v3.8.3 reference assets
+
+Repository reference directory:
+
+`assets/scene05/finale_v383_refs/`
+
+- `concept_01.webp` — `05컨셉1.png`, storyboard/timing/lighting reference only
+- `concept_02.webp` — `05컨셉2.png`, storyboard/composition/message-placement reference only
+- `concept_03.webp` — `CC65DB36-D551-40D2-A2B7-8B473AF491C0.jpeg`, selected visible finale plate
+
+The three files are normalized WebP working copies derived from the user-provided attachments. The original attachments remain the source authority. Repository normalization is limited to resize + WebP compression; the build validates all three and upscales only `concept_03.webp` to the 4K runtime matte without repainting or procedural reconstruction.
 
 ## Peninsula / coastline
 
-`assets/vector/korean_peninsula_precise.svg` remains the coastline authority.
+`assets/vector/korean_peninsula_precise.svg` remains the coastline authority. The accepted v3.8.1 coastline build is untouched in this pass:
 
-The retained v3.8.1 coastline build:
+- direct high-resolution rasterization of the canonical SVG
+- anti-aliased edge coverage retained
+- neighboring land RGB extrapolated under transparent edge texels
+- mipmaps disabled for the peninsula texture
+- linear sampling with a low alpha cutoff
+- old shallow-water coastline reduced to a trace
 
-- rasterizes the canonical SVG directly at 2688px width rather than upscaling the previous binary alpha
-- preserves anti-aliased edge coverage
-- extrapolates neighboring land RGB beneath transparent edge texels
-- disables mipmaps for the peninsula texture
-- uses linear sampling with a low alpha cutoff
-- reduces the old shallow-water coastline contribution to a trace so it does not read as a second shore
+No generated map image replaces the canonical coastline or the established WorldCover / South DEM surface pipeline.
 
-The accepted WorldCover / South DEM material treatment remains the base surface; this pass does not replace the Korean peninsula with a downloaded map image.
-
-## Finale artwork source
-
-The visible finale is reconstructed from the project source under:
-
-`assets/scene05/finale_generated_v382/q50-part00.b64` … `q50-part06.b64`
-
-The split base64 files encode one 1280×720 WebP copy of the approved generated artwork. The build script reconstructs the image and performs only a source-preserving Lanczos upscale to the existing 3840×2160 runtime plate path:
-
-`west_sunset_matte_v381.jpg`
-
-No additional sun, horizon glow, cloud layer, wave highlight, shoreline, island or sea reflection is painted by the build script.
-
-## Sunset finale architecture
+## Finale architecture
 
 - `sunSprite` remains disabled
 - procedural sunset reflection strength remains forced to zero
-- the visible final sun is the sun authored in the SSKR artwork
-- the visible sea reflection is the reflection authored in the same artwork
-- sky, clouds, horizon, sea, sun, reflection and foreground coastline therefore remain one art-directed visual system
-- the finale matte remains a DOM/CSS layer outside Three.js `EffectComposer`, preventing UnrealBloom or map tone mapping from altering the artwork
-- the original HTML scene mark fades out just before the finale crossfade, preventing a duplicate label over the artwork's baked scene mark
+- the visible final sun and sea reflection are authored inside `concept_03.webp`
+- the matte stays outside the Three.js `EffectComposer`
+- the live HTML scene mark exits before the authored finale becomes dominant
+- the baked upper-left mark in the selected artwork therefore never doubles with the live mark
+- no additional cloud, horizon glow, wave, shoreline, island or reflection is painted over the finale
 
 ## 30-second one-take
 
@@ -60,17 +59,20 @@ No additional sun, horizon glow, cloud layer, wave highlight, shoreline, island 
 - 6–9s — Start-point cascade
 - 9–19s — participant routes travel westward
 - 19–22s — Finish convergence
-- 21.86–22.38s — live HTML scene mark exits
-- 22–24.3s — map/aerial view hands off to the generated West Sea sunset artwork
-- 24.3–26s — generated sunset settles
-- 26–30s — core message over the sunset artwork
+- 21.72–22.20s — live HTML scene mark exits
+- 22.16–23.80s — decisive map/aerial → West Sea sunset handoff
+- 23.80–25.35s — unobstructed sunset settle / appreciation beat
+- 25.35–26.20s — core message reveal
+- 26.20–30s — readable final hold
 
 ## Core message
 
 ```text
-모두의 라이딩이 한 장소에서 마무리되며,
-현장은 축제가 되고 기억은 영원이 됩니다.
+각자의 길이 하나의 완주로 모이고,
+함께한 하루는 오래 남는 라이더의 기억이 됩니다.
 ```
+
+The copy replaces the more absolute “기억은 영원이 됩니다” wording with a stronger but less advertising-like statement that keeps the Scene 05 completion / shared experience / memory axis.
 
 ## Data / resource authority
 
@@ -78,22 +80,26 @@ No additional sun, horizon glow, cloud layer, wave highlight, shoreline, island 
 - South terrain detail: Copernicus GLO-30 based South Korea Hero Terrain v0.2
 - full-peninsula surface material: ESA WorldCover-informed custom surface pipeline
 - 0–22s dawn environment: Poly Haven CC0 `Umhlanga Sunrise`
-- 22–30s visible finale: SSKR generated project artwork
+- 22–30s visible finale: `assets/scene05/finale_v383_refs/concept_03.webp`
 - route topology: actual-road participant-route data
 
 ## QA
 
 Mandatory captures:
 
-- journey: 1.5 / 4.5 / 7.2 / 12.0 / 16.5 / 18.9 / 21.0 / 24.0 / 27.5 / 29.5 seconds
+- accepted journey regression: 1.5 / 4.5 / 7.2 / 12.0 / 16.5 / 18.9 / 21.0 seconds
+- v3.8.3 finale: 22.4 / 23.4 / 24.5 / 25.25 / 26.2 / 29.5 seconds
 - surface diagnostics: full / South / East / West / land-only / land+ocean / texture-only / canonical mask
 
 Structural finale assertions require:
 
-- generated matte fully visible by final hold
-- WebGL map stage fully faded out by final hold
-- live HTML scene mark faded out before the artwork becomes dominant
+- generated matte fully visible after the handoff
+- WebGL map stage fully faded out by the settled matte frame
+- live HTML scene mark fully absent before the authored plate hold
+- clean sunset hold occurs before statement reveal
+- final statement opacity reaches the readable hold threshold
 - synthetic sun invisible
 - procedural sunset reflection disabled
+- timeline remains 30 seconds
 
 Status before main merge: **feature-branch visual QA required; do not merge on automation alone.**

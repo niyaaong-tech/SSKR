@@ -26,7 +26,7 @@ def main():
       './assets/sky_dawn_v381.jpg':data_uri(DIST/'assets'/'sky_dawn_v381.jpg','image/jpeg'),
       './assets/sky_sunset_env_v381.jpg':data_uri(DIST/'assets'/'sky_sunset_env_v381.jpg','image/jpeg'),
       './assets/cloud_veil_v381.png':data_uri(DIST/'assets'/'cloud_veil_v381.png','image/png'),
-      './assets/west_sunset_matte_v381.jpg':data_uri(DIST/'assets'/'west_sunset_matte_v381.jpg','image/jpeg'),
+      './assets/west_sunset_matte_v383.jpg':data_uri(DIST/'assets'/'west_sunset_matte_v383.jpg','image/jpeg'),
       './assets/peninsula_surface_v34.json':data_uri(DIST/'assets'/'peninsula_surface_v34.json','application/json'),
       './assets/scene05_final_data_v1.json':data_uri(DIST/'assets'/'scene05_final_data_v1.json','application/json')
     }
@@ -38,7 +38,7 @@ def main():
     for ref in ['./assets/','./app.js','./scene05-b.css']:
         if ref in html:
             raise SystemExit(f'Standalone pack left external reference: {ref}')
-    out=DIST/'SSKR_Scene05_B_30s_Journey_v3.8.1_standalone.html'
+    out=DIST/'SSKR_Scene05_B_30s_Journey_v3.8.3_standalone.html'
     out.write_text(html,encoding='utf-8')
     print(out,out.stat().st_size)
 

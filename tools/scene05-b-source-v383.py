@@ -82,6 +82,15 @@ new_timeline = r'''  if (sceneMarkV383) {
 '''
 patch(old_timeline, new_timeline, 'v383 matte handoff timeline')
 
+# The inherited v3.5/v3.8.2 finale tries to bring the live scene mark back to .08 at
+# 25.7s. The selected artwork already contains its own restrained scene mark, so keep
+# the HTML mark at zero throughout the matte hold.
+patch(
+    ".to(sceneMark, { opacity: .08, duration: 1.4 }, 25.7)",
+    ".to(sceneMark, { opacity: 0, duration: .01 }, 25.7)",
+    'v383 prevent live scene mark re-entry'
+)
+
 # v3.8.2's actual statement tween is a multiline block inherited from v3.5:
 # 26.15s start / 2.25s reveal. Replace that exact block, leaving a clean sunset
 # appreciation beat after the matte settles and a ~3.8s readable hold at the end.

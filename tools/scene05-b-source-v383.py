@@ -64,9 +64,9 @@ new_timeline = r'''  if (sceneMarkV383) {
       .to(finaleMatteV383, { opacity: .38, duration: .36, ease: 'sine.inOut' }, 22.44)
       .to(stage, { opacity: .62, duration: .36, ease: 'sine.inOut' }, 22.44)
       .to(finaleMatteV383, { opacity: .78, duration: .46, ease: 'power2.inOut' }, 22.80)
-      .to(stage, { opacity: .22, duration: .46, ease: 'power2.inOut' }, 22.80)
+      .to(stage, { opacity: .22, duration: .26, ease: 'power2.inOut' }, 22.80)
+      .to(stage, { opacity: 0, duration: .32, ease: 'sine.inOut' }, 23.06)
       .to(finaleMatteV383, { opacity: .98, duration: .54, ease: 'sine.inOut' }, 23.26)
-      .to(stage, { opacity: 0, duration: .54, ease: 'sine.inOut' }, 23.26)
       .to(finaleMatteV383, { opacity: 1.0, scale: 1.0, duration: .65, ease: 'sine.out' }, 23.80);
   }
 

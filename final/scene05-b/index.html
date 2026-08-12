@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
   <meta name="color-scheme" content="dark" />
   <link rel="icon" href="data:," />
-  <title>SSKR Scene 05 B — Three-Reference Sunset Finale v3.8.3</title>
+  <title>SSKR Scene 05 B — Three-Still Sunset Finale v3.8.4</title>
   <link rel="stylesheet" href="./scene05-b.css" />
   <script>
     if (new URLSearchParams(location.search).has('qa')) {
@@ -33,12 +33,14 @@
     <div id="three-stage"></div>
 
     <!--
-      v3.8.3 finale remains outside Three.js / EffectComposer. The 0-22s live map
-      is unchanged; the visible 22-30s plate is the selected user-provided West Sea
-      sunset reference, kept as one coherent sky/sun/sea/reflection/coast image.
+      v3.8.4 finale remains outside Three.js / EffectComposer. The accepted 0-22s
+      map/route choreography is unchanged. Three user-provided stills form the
+      visible finale in order: sunset landscape -> riders celebrating -> festival.
     -->
-    <div id="finale-matte-v383" aria-hidden="true">
-      <img src="./assets/west_sunset_matte_v383.jpg" alt="" />
+    <div id="finale-matte-v384" aria-hidden="true">
+      <img id="finale-still-v384-1" class="finale-still-v384" src="./assets/finale_still_01_v384.webp" alt="" />
+      <img id="finale-still-v384-2" class="finale-still-v384" src="./assets/finale_still_02_v384.webp" alt="" />
+      <img id="finale-still-v384-3" class="finale-still-v384" src="./assets/finale_still_03_v384.webp" alt="" />
     </div>
 
     <div id="overview-layer" aria-hidden="true">
@@ -57,12 +59,12 @@
     </header>
 
     <section id="statement" class="statement" aria-live="polite">
-      <p>각자의 길이 하나의 완주로 모이고,</p>
-      <p>함께한 하루는 오래 남는 라이더의 기억이 됩니다.</p>
+      <p>해질무렵 라이딩이 마무리되면,</p>
+      <p>현장은 축제가 되고 기억은 영원이 됩니다.</p>
     </section>
 
-    <div class="data-credit" aria-label="data and artwork credit">© ESA WorldCover project 2021 / Copernicus Sentinel · Dawn environment: Poly Haven CC0 · Finale artwork: SSKR project reference</div>
-    <div id="status" class="status">BUILDING V3.8.3 SUNSET FINALE</div>
+    <div class="data-credit" aria-label="data and artwork credit">© ESA WorldCover project 2021 / Copernicus Sentinel · Dawn environment: Poly Haven CC0 · Finale stills: SSKR project references</div>
+    <div id="status" class="status">BUILDING V3.8.4 THREE-STILL FINALE</div>
   </main>
   <script type="module" src="./app.js"></script>
 </body>

@@ -22,11 +22,11 @@ Repository directory:
 
 `assets/scene05/finale_v384_stills/`
 
-- `finale_still_01_v384.webp` — sunset landscape, first finale still
-- `finale_still_02_v384.webp` — riders celebrating at sunset, second finale still
-- `finale_still_03_v384.webp` — evening rider festival, third finale still
+- `finale_still_01_v384.avif` — sunset landscape, first finale still
+- `finale_still_02_v384.avif` — riders celebrating at sunset, second finale still
+- `finale_still_03_v384.avif` — evening rider festival, third finale still
 
-The files are normalized WebP working copies of the three attachments supplied for this pass. Their sequence and narrative role are fixed by the user request.
+The files are 1024×576 AVIF working copies normalized from the three attachments supplied for this pass. Their sequence and narrative role are fixed by the user request; no generated replacement imagery is used.
 
 ## Peninsula / coastline
 

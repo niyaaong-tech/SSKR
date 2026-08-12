@@ -22,7 +22,9 @@ def patch(old: str, new: str, label: str, count: int = 1) -> None:
 
 
 # Finale-only v3.8.3 pass. Everything before the existing 22s handoff remains untouched.
-patch('./assets/west_sunset_matte_v381.jpg', './assets/west_sunset_matte_v383.jpg', 'v383 finale matte path')
+# The visible matte URL itself lives in index.html; the generated JS only carries the
+# v3.8.2 DOM-asset banner, so update that exact source anchor rather than inventing a URL token.
+patch('// Finale DOM asset: west_sunset_matte_v381.jpg', '// Finale DOM asset: west_sunset_matte_v383.jpg', 'v383 finale matte banner')
 patch("const finaleMatteV381 = $('#finale-matte-v381');", "const finaleMatteV383 = $('#finale-matte-v383');", 'v383 matte DOM reference')
 patch("const sceneMarkV382 = document.querySelector('.scene-mark');", "const sceneMarkV383 = document.querySelector('.scene-mark');", 'v383 scene mark reference')
 

@@ -21,10 +21,18 @@ def main():
   for x in items:
    if key in x:x[key]=[conform(p,lift) for p in x[key]]
  points(data.get('main_routes',[]));points(data.get('participant_routes',[]),lift=BASE+.006);points(data.get('exploration_branches',[]),lift=BASE+.004);points(data.get('start_seeds',[]),lift=BASE+.002)
- for s in data.get('starts',[]):s['position']=conform(s['position'],BASE+.002)
+ # v3.8.5: visible Starts are route origins, not decorative nearby markers. Use the
+ # participant-route graphic lift for the marker, then re-anchor both participant
+ # and structural main-route first vertices to that exact post-conform position.
+ for s in data.get('starts',[]):s['position']=conform(s['position'],BASE+.006)
+ start_positions={s['id']:s['position'] for s in data.get('starts',[])}
+ for group in (data.get('participant_routes',[]),data.get('main_routes',[])):
+  for r in group:
+   pos=start_positions.get(r.get('start_id'))
+   if pos is not None and r.get('points'):r['points'][0]=list(pos)
  if data.get('finish'):data['finish']['position']=conform(data['finish']['position'],BASE+.004)
  for c in data.get('checkpoints',[]):c['position']=conform(c['position'],BASE+.005)
  for m in data.get('merged_segments',[]):m['a']=conform(m['a'],BASE+.003);m['b']=conform(m['b'],BASE+.003)
- data['schema_version']='2.2-v34-surface-conformed';data['surface_conform']={'relief_scale':RELIEF,'base_graphic_lift':BASE,'authority':'same Copernicus GLO-30 shallow relief as canonical peninsula texture mesh'};data.setdefault('policy',[]).append('v3.4 all route/node/checkpoint graphics are conformed to the same shallow DEM relief as the texture-led land surface.')
- DATA.write_text(json.dumps(data,ensure_ascii=False,indent=2));print(json.dumps({'main_routes':len(data.get('main_routes',[])),'participant_routes':len(data.get('participant_routes',[])),'starts':len(data.get('starts',[])),'relief_scale':RELIEF},indent=2))
+ data['schema_version']='2.3-v385-surface-conformed-aligned-starts';data['surface_conform']={'relief_scale':RELIEF,'base_graphic_lift':BASE,'start_route_origin_lock':True,'authority':'same Copernicus GLO-30 shallow relief as canonical peninsula texture mesh'};data.setdefault('policy',[]).append('v3.8.5 post-conform Start markers and the first vertex of every corresponding main/participant route are identical in scene space.')
+ DATA.write_text(json.dumps(data,ensure_ascii=False,indent=2));print(json.dumps({'main_routes':len(data.get('main_routes',[])),'participant_routes':len(data.get('participant_routes',[])),'starts':len(data.get('starts',[])),'relief_scale':RELIEF,'start_route_origin_lock':True},indent=2))
 if __name__=='__main__':main()

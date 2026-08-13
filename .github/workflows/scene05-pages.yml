@@ -1,20 +1,26 @@
-name: Deploy Scene 05 C v0.2 to GitHub Pages
+name: Deploy Scene 05 B v3.8.4 to GitHub Pages
 
 on:
   push:
     branches:
       - main
+      - feature/scene05-v384-three-still-finale
     paths:
       - '.github/workflows/scene05-pages.yml'
-      - 'final/scene05-c/**'
-      - 'tools/scene05-c-source-v02.py'
+      - 'final/scene05-b/index.html'
+      - 'final/scene05-b/scene05-b.css'
+      - 'final/scene05-b/pack_standalone.py'
+      - 'final/scene05-b/README.md'
+      - 'final/scene05-b/src/**'
       - 'tools/scene05-b-source-v*.py'
       - 'tools/scene05-b-matte-assets-v383.py'
-      - 'tools/scene05-b-v35-framing-fix.py'
-      - 'tools/scene05-b-v36-evening-fix.py'
+      - 'tools/scene05-b-matte-assets-v381.py'
+      - 'tools/scene05-b-sky-assets-v37.py'
       - 'tools/scene05-b-v37-prep.py'
       - 'tools/scene05-b-v37-post.py'
       - 'tools/scene05-b-v38-post.py'
+      - 'tools/scene05-b-v35-framing-fix.py'
+      - 'tools/scene05-b-v36-evening-fix.py'
       - 'tools/scene05-b-peninsula-*.py'
       - 'tools/scene05-b-surface-relief-v34.py'
       - 'tools/scene05-b-conform-relief-v34.py'
@@ -23,6 +29,7 @@ on:
       - 'tools/scene05-b-choice-data-v29.py'
       - 'tools/scene05-b-art-textures-v22.py'
       - 'tools/scene05-final-*.py'
+      - 'assets/scene05/finale_v383_refs/**'
       - 'assets/scene05/finale_v384_stills/**'
       - 'assets/scene05/worldcover_v1/**'
       - 'assets/scene05/choice_roads_source_v1.geojson'
@@ -43,7 +50,7 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
-    timeout-minutes: 60
+    timeout-minutes: 55
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -53,13 +60,10 @@ jobs:
         with:
           python-version: '3.12'
 
-      - name: Install Python build dependencies
+      - name: Build Scene 05 B v3.8.4 assets
         run: |
           python -m pip install --upgrade pip
           python -m pip install numpy Pillow pyproj trimesh cairosvg
-
-      - name: Build inherited terrain and route resources
-        run: |
           python tools/scene05-final-terrain-v1.py
           python tools/scene05-b-art-textures-v22.py
           python tools/scene05-final-data-v1.py
@@ -74,28 +78,12 @@ jobs:
           python tools/scene05-b-participant-routes-v32.py
           python tools/scene05-b-conform-relief-v34.py
 
-      - name: Fetch inherited dawn environment and finale support
-        run: |
           mkdir -p output/scene05_final_v1
           curl -fL --retry 3 --retry-delay 2 -A 'SSKR-Scene05/1.0' \
             'https://dl.polyhaven.org/file/ph-assets/HDRIs/extra/Tonemapped%20JPG/umhlanga_sunrise.jpg' \
             -o output/scene05_final_v1/polyhaven_umhlanga_sunrise.jpg
           python tools/scene05-b-matte-assets-v383.py
-          test -s output/scene05_final_v1/sky_dawn_v381.jpg
-          test -s output/scene05_final_v1/sky_sunset_env_v381.jpg
-          test -s output/scene05_final_v1/cloud_veil_v381.png
 
-      - name: Validate restored B finale assets and mobile CSS
-        run: |
-          test "$(git hash-object assets/scene05/finale_v384_stills/finale_still_01_v384.avif)" = "1705d53774d08004bc35c9f925b1b8c7a9d4f56e"
-          test "$(git hash-object assets/scene05/finale_v384_stills/finale_still_02_v384.avif)" = "2d0133d9f0802ee6e59d0220257b7e9f166e6a07"
-          test "$(git hash-object assets/scene05/finale_v384_stills/finale_still_03_v384.avif)" = "072259078ed28b0bbec27201a607997c8e0add82"
-          grep -Fq 'container-type:inline-size' final/scene05-c/scene05-c.css
-          grep -Fq 'white-space:nowrap' final/scene05-c/scene05-c.css
-          grep -Fq '2.08cqw' final/scene05-c/scene05-c.css
-
-      - name: Generate Scene 05 C v0.2 runtime
-        run: |
           python tools/scene05-b-source-v20.py
           python tools/scene05-b-coast-source-v22.py
           python tools/scene05-b-source-v23.py
@@ -124,72 +112,63 @@ jobs:
           python tools/scene05-b-source-v381.py
           python tools/scene05-b-source-v383.py
           python tools/scene05-b-source-v384.py
-          python tools/scene05-c-source-v02.py
-          test -s output/scene05-c-v02.js
-          grep -Fq 'Scene 05 C v0.2' output/scene05-c-v02.js
-          grep -Fq '__scene05COceanState' output/scene05-c-v02.js
-          grep -Fq 'p.z+=0.0' output/scene05-c-v02.js
-          grep -Fq 'uOpacity: { value: 1.0 }' output/scene05-c-v02.js
-          if grep -Fq 'fbm21' output/scene05-c-v02.js; then echo 'legacy v0.1 FBM leaked into v0.2' >&2; exit 1; fi
+
+          test -s output/scene05_final_v1/terrain_final_uv.glb
+          test -s output/scene05_final_v1/peninsula_surface_v381.png
+          test -s output/scene05_final_v1/road_choice_overlay_v31.png
+          test -s output/scene05_final_v1/scene05_final_data_v1.json
+          test -s output/scene05_final_v1/sky_dawn_v381.jpg
+          test -s output/scene05_final_v1/sky_sunset_env_v381.jpg
+          test -s output/scene05_final_v1/cloud_veil_v381.png
+          test -s assets/scene05/finale_v384_stills/finale_still_01_v384.avif
+          test -s assets/scene05/finale_v384_stills/finale_still_02_v384.avif
+          test -s assets/scene05/finale_v384_stills/finale_still_03_v384.avif
+          test -s output/scene05-b-v384.js
+          grep -q 'Scene 05 B v3.8.4' output/scene05-b-v384.js
+          grep -q '__scene05V384State' output/scene05-b-v384.js
+          grep -q 'sunSprite.visible = false' output/scene05-b-v384.js
+          grep -q 'uReflectionStrength.value = 0.0' output/scene05-b-v384.js
 
       - name: Set up Node
         uses: actions/setup-node@v5
         with:
           node-version: '22'
 
-      - name: Build deployable Scene 05 C v0.2
+      - name: Build deployable Scene 05 B v3.8.4
         run: |
-          sudo apt-get update -qq
-          sudo apt-get install -y --no-install-recommends fonts-noto-cjk
-          fc-cache -f
-          npm install --no-save --no-audit --no-fund three@0.185.1 gsap@3.15.0 esbuild puppeteer-core
-          rm -rf final/scene05-c/dist
-          mkdir -p final/scene05-c/dist/assets
-          npx esbuild output/scene05-c-v02.js --bundle --format=esm --target=es2022 --minify --outfile=final/scene05-c/dist/app.js
-          cp final/scene05-c/index.html final/scene05-c/dist/index.html
-          cp final/scene05-c/scene05-c.css final/scene05-c/dist/scene05-c.css
-          cp final/scene05-c/README.md final/scene05-c/dist/README.md
-          cp output/scene05_final_v1/{terrain_final_uv.glb,terrain_dawn_final.png,terrain_day_final.png,terrain_sunset_final.png,coast_shallow.png,peninsula_surface_v381.png,peninsula_mask_debug_v381.png,peninsula_surface_v381_qa.json,peninsula_surface_v34.json,road_choice_overlay_v31.png,scene05_final_data_v1.json,sky_dawn_v381.jpg,sky_sunset_env_v381.jpg,cloud_veil_v381.png} final/scene05-c/dist/assets/
-          cp assets/scene05/finale_v384_stills/finale_still_*_v384.avif final/scene05-c/dist/assets/
-          cp assets/vector/korean_peninsula_precise.svg final/scene05-c/dist/assets/
-          test -s final/scene05-c/dist/index.html
-          test -s final/scene05-c/dist/app.js
-          test -s final/scene05-c/dist/assets/korean_peninsula_precise.svg
-
-      - name: Visual and mobile smoke QA
-        timeout-minutes: 8
-        run: |
-          python -m http.server 4175 --directory final/scene05-c/dist >/tmp/http-c.log 2>&1 &
-          SERVER_PID=$!
-          trap 'kill $SERVER_PID || true' EXIT
-          sleep 2
-          BROWSER=$(command -v google-chrome || command -v chromium || command -v chromium-browser || true)
-          test -n "$BROWSER"
-          timeout 420s xvfb-run -a env BROWSER_PATH="$BROWSER" node final/scene05-c/qa.mjs
-          for f in \
-            c02_015_peninsula_ocean c02_045_east_dawn_ocean c02_120_route_day_ocean \
-            c02_165_late_day_ocean c02_189_finish_evening_ocean c02_210_finish_sunset_ocean \
-            c02_244_finale_regression c02_295_final_hold_regression c02_mobile_finale \
-            c02_diag_surface_full c02_diag_land_ocean c02_diag_canonical_mask; do
-            test -s "final/scene05-c/dist/${f}.png"
-          done
-          rm -f final/scene05-c/dist/c02_*.png
+          npm install --no-save --no-audit --no-fund three@0.185.1 gsap@3.15.0 esbuild
+          rm -rf final/scene05-b/dist
+          mkdir -p final/scene05-b/dist/assets
+          npx esbuild output/scene05-b-v384.js --bundle --format=esm --target=es2022 --minify --outfile=final/scene05-b/dist/app.js
+          cp final/scene05-b/index.html final/scene05-b/dist/index.html
+          cp final/scene05-b/scene05-b.css final/scene05-b/dist/scene05-b.css
+          cp final/scene05-b/README.md final/scene05-b/dist/README.md
+          cp output/scene05_final_v1/{terrain_final_uv.glb,terrain_dawn_final.png,terrain_day_final.png,terrain_sunset_final.png,coast_shallow.png,peninsula_surface_v381.png,peninsula_mask_debug_v381.png,peninsula_surface_v381_qa.json,peninsula_surface_v34.json,road_choice_overlay_v31.png,scene05_final_data_v1.json,sky_dawn_v381.jpg,sky_sunset_env_v381.jpg,cloud_veil_v381.png} final/scene05-b/dist/assets/
+          cp assets/scene05/finale_v384_stills/finale_still_*_v384.avif final/scene05-b/dist/assets/
+          cp assets/vector/korean_peninsula_precise.svg final/scene05-b/dist/assets/
+          python final/scene05-b/pack_standalone.py
+          test -s final/scene05-b/dist/index.html
+          test -s final/scene05-b/dist/app.js
+          test -s final/scene05-b/dist/SSKR_Scene05_B_30s_Journey_v3.8.4_standalone.html
 
       - name: Configure Pages
+        if: github.ref == 'refs/heads/main'
         uses: actions/configure-pages@v5
 
       - name: Upload Pages artifact
+        if: github.ref == 'refs/heads/main'
         uses: actions/upload-pages-artifact@v3
         with:
-          path: final/scene05-c/dist
+          path: final/scene05-b/dist
 
   deploy:
+    if: github.ref == 'refs/heads/main'
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
     needs: build
     steps:
-      - name: Deploy Scene 05 C v0.2 to GitHub Pages
+      - name: Deploy Scene 05 B v3.8.4 to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4

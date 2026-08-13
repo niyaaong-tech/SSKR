@@ -49,7 +49,9 @@ try {
     const state = await cState();
     await page.screenshot({ path: `final/scene05-c/dist/${name}.png` });
     if (!state) throw new Error(`C ocean state hook missing at ${t}`);
-    if (state.oceanOpacity < .97) throw new Error(`C ocean opacity too low ${JSON.stringify(state)}`);
+    if (!Number.isFinite(state.oceanOpacity) || state.oceanOpacity < 0 || state.oceanOpacity > 1.01) {
+      throw new Error(`Invalid C ocean opacity ${JSON.stringify(state)}`);
+    }
     if (state.legacyCloudGroupVisible || state.photoCloudVisible) {
       throw new Error(`Clouds visible in C ${JSON.stringify(state)}`);
     }

@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <meta name="color-scheme" content="dark" />
+  <link rel="icon" href="data:," />
+  <title>SSKR Scene 05 C — 2D Ocean Texture Study v0.1</title>
+  <link rel="stylesheet" href="./scene05-c.css" />
+  <script>
+    if (new URLSearchParams(location.search).has('qa')) {
+      window.__qaRafCallback = null;
+      window.requestAnimationFrame = (callback) => {
+        window.__qaRafCallback = callback;
+        return 1;
+      };
+      window.cancelAnimationFrame = () => {};
+    }
+  </script>
+</head>
+<body>
+  <main id="frame" aria-label="SSKR Scene 05 C 2D ocean texture experiment">
+    <div id="atmosphere" aria-hidden="true">
+      <div id="sky-night" class="sky-layer"></div>
+      <div id="sky-dawn" class="sky-layer"></div>
+      <div id="sky-day" class="sky-layer"></div>
+      <div id="sky-sunset" class="sky-layer"></div>
+      <div id="sky-bluehour" class="sky-layer"></div>
+      <div id="east-glow" class="horizon-glow"></div>
+      <div id="west-glow" class="horizon-glow"></div>
+    </div>
+
+    <div id="three-stage"></div>
+
+    <div id="finale-matte-v384" aria-hidden="true">
+      <img id="finale-still-v384-1" class="finale-still-v384" src="./assets/finale_still_01_v384.avif" alt="" />
+      <img id="finale-still-v384-2" class="finale-still-v384" src="./assets/finale_still_02_v384.avif" alt="" />
+      <img id="finale-still-v384-3" class="finale-still-v384" src="./assets/finale_still_03_v384.avif" alt="" />
+    </div>
+
+    <div id="overview-layer" aria-hidden="true">
+      <img id="korea-overview" src="./assets/korean_peninsula_precise.svg" alt="" />
+      <div id="overview-haze"></div>
+    </div>
+
+    <div id="dawn-grade" aria-hidden="true"></div>
+    <div id="light-wash" aria-hidden="true"></div>
+    <div id="vignette" aria-hidden="true"></div>
+    <div id="grain" aria-hidden="true"></div>
+
+    <header class="scene-mark">
+      <span>SUNRISE SUNSET KOREAN RALLY</span>
+      <strong>05C · OCEAN TEXTURE STUDY</strong>
+    </header>
+
+    <section id="statement" class="statement" aria-live="polite">
+      <p>해질무렵 라이딩이 마무리되면,</p>
+      <p>현장은 축제가 되고 기억은 영원이 됩니다.</p>
+    </section>
+
+    <div class="data-credit" aria-label="data and artwork credit">© ESA WorldCover project 2021 / Copernicus Sentinel · Scene 05 C ocean study · Finale stills: SSKR project references</div>
+    <div id="status" class="status">BUILDING C · 2D OCEAN TEXTURE</div>
+  </main>
+  <script type="module" src="./app.js"></script>
+</body>
+</html>

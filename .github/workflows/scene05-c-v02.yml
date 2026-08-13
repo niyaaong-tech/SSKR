@@ -1,0 +1,163 @@
+name: Scene 05 C Clean 2D Ocean QA v0.2
+
+on:
+  push:
+    branches:
+      - fix/scene05-c-v02-b-sync-ocean-cleanup
+    paths:
+      - '.github/workflows/scene05-c-v02.yml'
+      - 'final/scene05-c/**'
+      - 'tools/scene05-c-source-v02.py'
+      - 'tools/scene05-b-source-v*.py'
+      - 'tools/scene05-b-*.py'
+      - 'tools/scene05-final-*.py'
+      - 'assets/scene05/finale_v384_stills/**'
+      - 'assets/scene05/worldcover_v1/**'
+      - 'assets/scene05/choice_roads_source_v1.geojson'
+      - 'assets/scene05/route_network_v0.1/**'
+      - 'assets/scene05/south_korea_hero_v0.2/**'
+      - 'assets/vector/korean_peninsula_precise.svg'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-scene05-c-v02:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install Python build dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install numpy Pillow pyproj trimesh cairosvg
+
+      - name: Build accepted peninsula and route resources
+        run: |
+          python tools/scene05-final-terrain-v1.py
+          python tools/scene05-b-art-textures-v22.py
+          python tools/scene05-final-data-v1.py
+          python tools/scene05-b-peninsula-texture-v33.py
+          python tools/scene05-b-surface-relief-v34.py
+          python tools/scene05-b-peninsula-texture-v36.py
+          python tools/scene05-b-peninsula-coastfix-v36.py
+          python tools/scene05-b-peninsula-surface-v38.py
+          python tools/scene05-b-peninsula-surface-v381.py
+          python tools/scene05-b-road-overlay-v31.py
+          python tools/scene05-b-choice-data-v29.py
+          python tools/scene05-b-participant-routes-v32.py
+          python tools/scene05-b-conform-relief-v34.py
+
+      - name: Fetch inherited dawn environment and finale support
+        run: |
+          mkdir -p output/scene05_final_v1
+          curl -fL --retry 3 --retry-delay 2 -A 'SSKR-Scene05/1.0' \
+            'https://dl.polyhaven.org/file/ph-assets/HDRIs/extra/Tonemapped%20JPG/umhlanga_sunrise.jpg' \
+            -o output/scene05_final_v1/polyhaven_umhlanga_sunrise.jpg
+          python tools/scene05-b-matte-assets-v383.py
+          test -s output/scene05_final_v1/sky_dawn_v381.jpg
+          test -s output/scene05_final_v1/sky_sunset_env_v381.jpg
+          test -s output/scene05_final_v1/cloud_veil_v381.png
+
+      - name: Validate restored B finale assets and mobile CSS
+        run: |
+          test "$(git hash-object assets/scene05/finale_v384_stills/finale_still_01_v384.avif)" = "1705d53774d08004bc35c9f925b1b8c7a9d4f56e"
+          test "$(git hash-object assets/scene05/finale_v384_stills/finale_still_02_v384.avif)" = "2d0133d9f0802ee6e59d0220257b7e9f166e6a07"
+          test "$(git hash-object assets/scene05/finale_v384_stills/finale_still_03_v384.avif)" = "072259078ed28b0bbec27201a607997c8e0add82"
+          grep -Fq 'container-type:inline-size' final/scene05-c/scene05-c.css
+          grep -Fq 'white-space:nowrap' final/scene05-c/scene05-c.css
+          grep -Fq '2.08cqw' final/scene05-c/scene05-c.css
+
+      - name: Generate accepted B v3.8.4 runtime then apply C v0.2 ocean pass
+        run: |
+          python tools/scene05-b-source-v20.py
+          python tools/scene05-b-coast-source-v22.py
+          python tools/scene05-b-source-v23.py
+          python tools/scene05-b-source-v24.py
+          python tools/scene05-b-source-v25.py
+          python tools/scene05-b-source-v251.py
+          python tools/scene05-b-source-v252.py
+          python tools/scene05-b-source-v26.py
+          python tools/scene05-b-source-v27.py
+          python tools/scene05-b-source-v28.py
+          python tools/scene05-b-source-v29.py
+          python tools/scene05-b-source-v30.py
+          python tools/scene05-b-source-v31.py
+          python tools/scene05-b-source-v32.py
+          python tools/scene05-b-source-v33.py
+          python tools/scene05-b-source-v34.py
+          python tools/scene05-b-source-v35.py
+          python tools/scene05-b-v35-framing-fix.py
+          python tools/scene05-b-source-v36.py
+          python tools/scene05-b-v36-evening-fix.py
+          python tools/scene05-b-v37-prep.py
+          python tools/scene05-b-source-v37.py
+          python tools/scene05-b-v37-post.py
+          python tools/scene05-b-source-v38.py
+          python tools/scene05-b-v38-post.py
+          python tools/scene05-b-source-v381.py
+          python tools/scene05-b-source-v383.py
+          python tools/scene05-b-source-v384.py
+          python tools/scene05-c-source-v02.py
+          test -s output/scene05-c-v02.js
+          grep -Fq 'Scene 05 C v0.2' output/scene05-c-v02.js
+          grep -Fq '__scene05COceanState' output/scene05-c-v02.js
+          grep -Fq 'p.z+=0.0' output/scene05-c-v02.js
+          grep -Fq 'uOpacity: { value: 1.0 }' output/scene05-c-v02.js
+          if grep -Fq 'fbm21' output/scene05-c-v02.js; then echo 'legacy v0.1 FBM leaked into v0.2' >&2; exit 1; fi
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '22'
+
+      - name: Install fonts and JS dependencies
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends fonts-noto-cjk
+          fc-cache -f
+          npm install --no-save --no-audit --no-fund three@0.185.1 gsap@3.15.0 esbuild puppeteer-core
+
+      - name: Bundle Scene 05 C v0.2
+        run: |
+          rm -rf final/scene05-c/dist
+          mkdir -p final/scene05-c/dist/assets
+          npx esbuild output/scene05-c-v02.js --bundle --format=esm --target=es2022 --minify --outfile=final/scene05-c/dist/app.js
+          cp final/scene05-c/index.html final/scene05-c/dist/index.html
+          cp final/scene05-c/scene05-c.css final/scene05-c/dist/scene05-c.css
+          cp final/scene05-c/README.md final/scene05-c/dist/README.md
+          cp output/scene05_final_v1/{terrain_final_uv.glb,terrain_dawn_final.png,terrain_day_final.png,terrain_sunset_final.png,coast_shallow.png,peninsula_surface_v381.png,peninsula_mask_debug_v381.png,peninsula_surface_v381_qa.json,peninsula_surface_v34.json,road_choice_overlay_v31.png,scene05_final_data_v1.json,sky_dawn_v381.jpg,sky_sunset_env_v381.jpg,cloud_veil_v381.png} final/scene05-c/dist/assets/
+          cp assets/scene05/finale_v384_stills/finale_still_*_v384.avif final/scene05-c/dist/assets/
+          cp assets/vector/korean_peninsula_precise.svg final/scene05-c/dist/assets/
+          test -s final/scene05-c/dist/app.js
+          test -s final/scene05-c/dist/assets/korean_peninsula_precise.svg
+
+      - name: Visual and mobile smoke QA
+        timeout-minutes: 8
+        run: |
+          python -m http.server 4175 --directory final/scene05-c/dist >/tmp/http-c.log 2>&1 &
+          SERVER_PID=$!
+          trap 'kill $SERVER_PID || true' EXIT
+          sleep 2
+          BROWSER=$(command -v google-chrome || command -v chromium || command -v chromium-browser || true)
+          test -n "$BROWSER"
+          timeout 420s xvfb-run -a env BROWSER_PATH="$BROWSER" node final/scene05-c/qa.mjs
+          for f in \
+            c02_015_peninsula_ocean c02_045_east_dawn_ocean c02_120_route_day_ocean \
+            c02_165_late_day_ocean c02_189_finish_evening_ocean c02_210_finish_sunset_ocean \
+            c02_244_finale_regression c02_295_final_hold_regression c02_mobile_finale \
+            c02_diag_surface_full c02_diag_land_ocean c02_diag_canonical_mask; do
+            test -s "final/scene05-c/dist/${f}.png"
+          done
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: SSKR-Scene05-C-Clean-Ocean-v0.2
+          path: final/scene05-c/dist/
+          if-no-files-found: error
+          compression-level: 6
+          retention-days: 30

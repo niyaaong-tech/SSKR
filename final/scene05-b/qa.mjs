@@ -12,10 +12,28 @@ const browser = await puppeteer.launch({
 try {
   const page = await browser.newPage();
   await page.setViewport({ width: 1920, height: 1080, deviceScaleFactor: 1 });
-  console.log('QA_NAVIGATE_START');
-  await page.goto('http://127.0.0.1:4174/?qa=1', { waitUntil: 'networkidle0', timeout: 120000 });
-  await page.waitForFunction(() => window.__scene05Ready && window.__scene05Timeline && window.__scene05V384State, { timeout: 120000 });
-  console.log('QA_READY');
+
+  async function initializeScene() {
+    let lastError = null;
+    for (let attempt = 1; attempt <= 2; attempt++) {
+      try {
+        console.log(`QA_NAVIGATE_START attempt=${attempt}`);
+        await page.goto('http://127.0.0.1:4174/?qa=1', { waitUntil: 'domcontentloaded', timeout: 120000 });
+        await page.waitForFunction(() => window.__scene05Ready && window.__scene05Timeline && window.__scene05V384State, { timeout: 120000 });
+        console.log(`QA_READY attempt=${attempt}`);
+        return;
+      } catch (error) {
+        lastError = error;
+        console.log(`QA_INIT_RETRY attempt=${attempt} ${error?.message || error}`);
+        if (attempt < 2) {
+          await page.goto('about:blank', { waitUntil: 'domcontentloaded', timeout: 30000 }).catch(() => {});
+        }
+      }
+    }
+    throw lastError;
+  }
+
+  await initializeScene();
 
   async function renderFrame() {
     await page.evaluate(() => new Promise(resolve => {

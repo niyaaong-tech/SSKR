@@ -1,4 +1,4 @@
-name: Deploy Scene 05 C v0.1 to GitHub Pages
+name: Deploy Scene 05 C v0.2 to GitHub Pages
 
 on:
   push:
@@ -7,7 +7,7 @@ on:
     paths:
       - '.github/workflows/scene05-pages.yml'
       - 'final/scene05-c/**'
-      - 'tools/scene05-c-source-v01.py'
+      - 'tools/scene05-c-source-v02.py'
       - 'tools/scene05-b-source-v*.py'
       - 'tools/scene05-b-matte-assets-v383.py'
       - 'tools/scene05-b-v35-framing-fix.py'
@@ -85,23 +85,16 @@ jobs:
           test -s output/scene05_final_v1/sky_sunset_env_v381.jpg
           test -s output/scene05_final_v1/cloud_veil_v381.png
 
-      - name: Validate inherited finale stills
+      - name: Validate restored B finale assets and mobile CSS
         run: |
-          python - <<'PY'
-          from pathlib import Path
-          from PIL import Image
-          root=Path('assets/scene05/finale_v384_stills')
-          names=['finale_still_01_v384.avif','finale_still_02_v384.avif','finale_still_03_v384.avif']
-          for name in names:
-              p=root/name
-              assert p.stat().st_size > 9000, (name,p.stat().st_size)
-              with Image.open(p) as im:
-                  im.verify()
-              with Image.open(p) as im:
-                  assert im.width == 1024 and im.height == 576, (name,im.size)
-          PY
+          test "$(git hash-object assets/scene05/finale_v384_stills/finale_still_01_v384.avif)" = "1705d53774d08004bc35c9f925b1b8c7a9d4f56e"
+          test "$(git hash-object assets/scene05/finale_v384_stills/finale_still_02_v384.avif)" = "2d0133d9f0802ee6e59d0220257b7e9f166e6a07"
+          test "$(git hash-object assets/scene05/finale_v384_stills/finale_still_03_v384.avif)" = "072259078ed28b0bbec27201a607997c8e0add82"
+          grep -Fq 'container-type:inline-size' final/scene05-c/scene05-c.css
+          grep -Fq 'white-space:nowrap' final/scene05-c/scene05-c.css
+          grep -Fq '2.08cqw' final/scene05-c/scene05-c.css
 
-      - name: Generate Scene 05 C runtime
+      - name: Generate Scene 05 C v0.2 runtime
         run: |
           python tools/scene05-b-source-v20.py
           python tools/scene05-b-coast-source-v22.py
@@ -131,17 +124,20 @@ jobs:
           python tools/scene05-b-source-v381.py
           python tools/scene05-b-source-v383.py
           python tools/scene05-b-source-v384.py
-          python tools/scene05-c-source-v01.py
-          test -s output/scene05-c-v01.js
-          grep -q 'Scene 05 C v0.1' output/scene05-c-v01.js
-          grep -q '__scene05COceanState' output/scene05-c-v01.js
+          python tools/scene05-c-source-v02.py
+          test -s output/scene05-c-v02.js
+          grep -Fq 'Scene 05 C v0.2' output/scene05-c-v02.js
+          grep -Fq '__scene05COceanState' output/scene05-c-v02.js
+          grep -Fq 'p.z+=0.0' output/scene05-c-v02.js
+          grep -Fq 'uOpacity: { value: 1.0 }' output/scene05-c-v02.js
+          if grep -Fq 'fbm21' output/scene05-c-v02.js; then echo 'legacy v0.1 FBM leaked into v0.2' >&2; exit 1; fi
 
       - name: Set up Node
         uses: actions/setup-node@v5
         with:
           node-version: '22'
 
-      - name: Build deployable Scene 05 C v0.1
+      - name: Build deployable Scene 05 C v0.2
         run: |
           sudo apt-get update -qq
           sudo apt-get install -y --no-install-recommends fonts-noto-cjk
@@ -149,7 +145,7 @@ jobs:
           npm install --no-save --no-audit --no-fund three@0.185.1 gsap@3.15.0 esbuild puppeteer-core
           rm -rf final/scene05-c/dist
           mkdir -p final/scene05-c/dist/assets
-          npx esbuild output/scene05-c-v01.js --bundle --format=esm --target=es2022 --minify --outfile=final/scene05-c/dist/app.js
+          npx esbuild output/scene05-c-v02.js --bundle --format=esm --target=es2022 --minify --outfile=final/scene05-c/dist/app.js
           cp final/scene05-c/index.html final/scene05-c/dist/index.html
           cp final/scene05-c/scene05-c.css final/scene05-c/dist/scene05-c.css
           cp final/scene05-c/README.md final/scene05-c/dist/README.md
@@ -160,8 +156,8 @@ jobs:
           test -s final/scene05-c/dist/app.js
           test -s final/scene05-c/dist/assets/korean_peninsula_precise.svg
 
-      - name: Visual smoke QA
-        timeout-minutes: 6
+      - name: Visual and mobile smoke QA
+        timeout-minutes: 8
         run: |
           python -m http.server 4175 --directory final/scene05-c/dist >/tmp/http-c.log 2>&1 &
           SERVER_PID=$!
@@ -169,15 +165,15 @@ jobs:
           sleep 2
           BROWSER=$(command -v google-chrome || command -v chromium || command -v chromium-browser || true)
           test -n "$BROWSER"
-          timeout 320s xvfb-run -a env BROWSER_PATH="$BROWSER" node final/scene05-c/qa.mjs
+          timeout 420s xvfb-run -a env BROWSER_PATH="$BROWSER" node final/scene05-c/qa.mjs
           for f in \
-            c01_015_peninsula_ocean c01_045_east_dawn_ocean c01_120_route_day_ocean \
-            c01_165_late_day_ocean c01_189_finish_evening_ocean c01_210_finish_sunset_ocean \
-            c01_244_finale_regression c01_295_final_hold_regression \
-            c01_diag_surface_full c01_diag_land_ocean c01_diag_canonical_mask; do
+            c02_015_peninsula_ocean c02_045_east_dawn_ocean c02_120_route_day_ocean \
+            c02_165_late_day_ocean c02_189_finish_evening_ocean c02_210_finish_sunset_ocean \
+            c02_244_finale_regression c02_295_final_hold_regression c02_mobile_finale \
+            c02_diag_surface_full c02_diag_land_ocean c02_diag_canonical_mask; do
             test -s "final/scene05-c/dist/${f}.png"
           done
-          rm -f final/scene05-c/dist/c01_*.png
+          rm -f final/scene05-c/dist/c02_*.png
 
       - name: Configure Pages
         uses: actions/configure-pages@v5
@@ -194,6 +190,6 @@ jobs:
     runs-on: ubuntu-latest
     needs: build
     steps:
-      - name: Deploy Scene 05 C v0.1 to GitHub Pages
+      - name: Deploy Scene 05 C v0.2 to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4

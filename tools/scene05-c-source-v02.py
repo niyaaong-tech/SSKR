@@ -52,6 +52,15 @@ patch(
     'opaque 2d ocean plate'
 )
 
+# The inherited B timeline animates uOpacity for its 3D ocean. C owns the sea as
+# an opaque 2D plate, so re-lock opacity every rendered frame after the inherited
+# reflection lock. This prevents later timeline seeks from reopening transparency.
+patch(
+    '  oceanUniforms.uReflectionStrength.value = 0.0;',
+    '''  oceanUniforms.uReflectionStrength.value = 0.0;\n  oceanUniforms.uOpacity.value = 1.0;''',
+    'lock 2d ocean opacity during render'
+)
+
 # Restrained aerial palette. The sea should read as a clean map texture rather than
 # a synthetic cyan effect.
 patch_re(

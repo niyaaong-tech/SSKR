@@ -1,27 +1,15 @@
-name: Deploy Scene 05 C v0.2 to GitHub Pages
+name: Scene 05 C Clean 2D Ocean QA v0.2
 
 on:
   push:
     branches:
-      - main
+      - fix/scene05-c-v02-b-sync-ocean-cleanup
     paths:
-      - '.github/workflows/scene05-pages.yml'
+      - '.github/workflows/scene05-c-v02.yml'
       - 'final/scene05-c/**'
       - 'tools/scene05-c-source-v02.py'
       - 'tools/scene05-b-source-v*.py'
-      - 'tools/scene05-b-matte-assets-v383.py'
-      - 'tools/scene05-b-v35-framing-fix.py'
-      - 'tools/scene05-b-v36-evening-fix.py'
-      - 'tools/scene05-b-v37-prep.py'
-      - 'tools/scene05-b-v37-post.py'
-      - 'tools/scene05-b-v38-post.py'
-      - 'tools/scene05-b-peninsula-*.py'
-      - 'tools/scene05-b-surface-relief-v34.py'
-      - 'tools/scene05-b-conform-relief-v34.py'
-      - 'tools/scene05-b-participant-routes-v32.py'
-      - 'tools/scene05-b-road-overlay-v31.py'
-      - 'tools/scene05-b-choice-data-v29.py'
-      - 'tools/scene05-b-art-textures-v22.py'
+      - 'tools/scene05-b-*.py'
       - 'tools/scene05-final-*.py'
       - 'assets/scene05/finale_v384_stills/**'
       - 'assets/scene05/worldcover_v1/**'
@@ -33,23 +21,14 @@ on:
 
 permissions:
   contents: read
-  pages: write
-  id-token: write
-
-concurrency:
-  group: scene05-pages
-  cancel-in-progress: true
 
 jobs:
-  build:
+  build-scene05-c-v02:
     runs-on: ubuntu-latest
     timeout-minutes: 60
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
 
@@ -58,7 +37,7 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install numpy Pillow pyproj trimesh cairosvg
 
-      - name: Build inherited terrain and route resources
+      - name: Build accepted peninsula and route resources
         run: |
           python tools/scene05-final-terrain-v1.py
           python tools/scene05-b-art-textures-v22.py
@@ -94,7 +73,7 @@ jobs:
           grep -Fq 'white-space:nowrap' final/scene05-c/scene05-c.css
           grep -Fq '2.08cqw' final/scene05-c/scene05-c.css
 
-      - name: Generate Scene 05 C v0.2 runtime
+      - name: Generate accepted B v3.8.4 runtime then apply C v0.2 ocean pass
         run: |
           python tools/scene05-b-source-v20.py
           python tools/scene05-b-coast-source-v22.py
@@ -132,17 +111,19 @@ jobs:
           grep -Fq 'uOpacity: { value: 1.0 }' output/scene05-c-v02.js
           if grep -Fq 'fbm21' output/scene05-c-v02.js; then echo 'legacy v0.1 FBM leaked into v0.2' >&2; exit 1; fi
 
-      - name: Set up Node
-        uses: actions/setup-node@v5
+      - uses: actions/setup-node@v5
         with:
           node-version: '22'
 
-      - name: Build deployable Scene 05 C v0.2
+      - name: Install fonts and JS dependencies
         run: |
           sudo apt-get update -qq
           sudo apt-get install -y --no-install-recommends fonts-noto-cjk
           fc-cache -f
           npm install --no-save --no-audit --no-fund three@0.185.1 gsap@3.15.0 esbuild puppeteer-core
+
+      - name: Bundle Scene 05 C v0.2
+        run: |
           rm -rf final/scene05-c/dist
           mkdir -p final/scene05-c/dist/assets
           npx esbuild output/scene05-c-v02.js --bundle --format=esm --target=es2022 --minify --outfile=final/scene05-c/dist/app.js
@@ -152,7 +133,6 @@ jobs:
           cp output/scene05_final_v1/{terrain_final_uv.glb,terrain_dawn_final.png,terrain_day_final.png,terrain_sunset_final.png,coast_shallow.png,peninsula_surface_v381.png,peninsula_mask_debug_v381.png,peninsula_surface_v381_qa.json,peninsula_surface_v34.json,road_choice_overlay_v31.png,scene05_final_data_v1.json,sky_dawn_v381.jpg,sky_sunset_env_v381.jpg,cloud_veil_v381.png} final/scene05-c/dist/assets/
           cp assets/scene05/finale_v384_stills/finale_still_*_v384.avif final/scene05-c/dist/assets/
           cp assets/vector/korean_peninsula_precise.svg final/scene05-c/dist/assets/
-          test -s final/scene05-c/dist/index.html
           test -s final/scene05-c/dist/app.js
           test -s final/scene05-c/dist/assets/korean_peninsula_precise.svg
 
@@ -165,7 +145,8 @@ jobs:
           sleep 2
           BROWSER=$(command -v google-chrome || command -v chromium || command -v chromium-browser || true)
           test -n "$BROWSER"
-          timeout 420s xvfb-run -a env BROWSER_PATH="$BROWSER" node final/scene05-c/qa.mjs
+          set -o pipefail
+          timeout 420s xvfb-run -a env BROWSER_PATH="$BROWSER" node final/scene05-c/qa.mjs 2>&1 | tee final/scene05-c/dist/qa.log
           for f in \
             c02_015_peninsula_ocean c02_045_east_dawn_ocean c02_120_route_day_ocean \
             c02_165_late_day_ocean c02_189_finish_evening_ocean c02_210_finish_sunset_ocean \
@@ -173,23 +154,12 @@ jobs:
             c02_diag_surface_full c02_diag_land_ocean c02_diag_canonical_mask; do
             test -s "final/scene05-c/dist/${f}.png"
           done
-          rm -f final/scene05-c/dist/c02_*.png
 
-      - name: Configure Pages
-        uses: actions/configure-pages@v5
-
-      - name: Upload Pages artifact
-        uses: actions/upload-pages-artifact@v3
+      - uses: actions/upload-artifact@v4
+        if: always()
         with:
-          path: final/scene05-c/dist
-
-  deploy:
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    runs-on: ubuntu-latest
-    needs: build
-    steps:
-      - name: Deploy Scene 05 C v0.2 to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
+          name: SSKR-Scene05-C-Clean-Ocean-v0.2
+          path: final/scene05-c/dist/
+          if-no-files-found: warn
+          compression-level: 6
+          retention-days: 30

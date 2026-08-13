@@ -20,6 +20,9 @@ RELIEF_SCALE=.09
 SNAP_KM=.12
 CELL_DEG=.01
 
+# Five representative east-coast starts. Each becomes one visible Start marker and
+# exactly two complete participant routes. Marker positions are snapped to the same
+# road-graph node used by the routes so the visuals cannot drift apart.
 STARTS={
  'n01':(128.59,38.20),
  'n02':(129.03,37.69),
@@ -28,8 +31,6 @@ STARTS={
  'n09':(129.05,35.08),
 }
 FINISH=(126.51131,36.31125)
-# Two different geographic choices per representative start. These are visual
-# waypoints only, used to generate diverse actual-road journeys; not event routes.
 WAYPOINTS={
  'n01':[(127.55,37.35),(128.05,36.72)],
  'n02':[(127.82,36.60),(128.18,35.92)],
@@ -55,9 +56,6 @@ def build_graph(geo):
   hw=f['properties']['highway'];coords=[key(p) for p in f['geometry']['coordinates']];m=class_mult.get(hw,1.08)
   for a,b in zip(coords,coords[1:]):
    w=hav(a,b)*m;adj[a].append((b,w));adj[b].append((a,w));segments.append((a,b,w))
- # RDP-compressed source can remove exact intersection points. Reconnect degree<=2
- # graph vertices to a nearby segment within 120m. The visual path still follows
- # actual OSM road geometry; only the tiny junction bridge is inferred.
  grid=collections.defaultdict(list)
  for i,(a,b,w) in enumerate(segments):
   minx,maxx=sorted((a[0],b[0]));miny,maxy=sorted((a[1],b[1]))
@@ -95,7 +93,6 @@ def largest_component(adj):
 
 def nearest(nodes,lon,lat):
  c=math.cos(math.radians(lat));return min(nodes,key=lambda q:(q[0]-lon)**2*c*c+(q[1]-lat)**2)
-
 def shortest(adj,allowed,start,goal):
  q=[(0.,start)];dist={start:0.};prev={}
  while q:
@@ -110,16 +107,16 @@ def shortest(adj,allowed,start,goal):
  path=[goal]
  while path[-1]!=start:path.append(prev[path[-1]])
  return path[::-1],dist[goal]
-
 def dedupe(path):
  out=[]
  for p in path:
   if not out or p!=out[-1]:out.append(p)
  return out
-
 def thin(path,maxn=1250):
  if len(path)<=maxn:return path
  idx=np.linspace(0,len(path)-1,maxn).astype(int);return [path[i] for i in idx]
+def scene_dist(a,b):
+ return math.sqrt(sum((float(x)-float(y))**2 for x,y in zip(a,b)))
 
 
 def main():
@@ -130,14 +127,40 @@ def main():
   x=float(np.clip(x,0,rw-1));y=float(np.clip(y,0,rh-1));x0=int(x);y0=int(y);x1=min(x0+1,rw-1);y1=min(y0+1,rh-1);tx=x-x0;ty=y-y0;return float(height[y0,x0]*(1-tx)*(1-ty)+height[y0,x1]*tx*(1-ty)+height[y1,x0]*(1-tx)*ty+height[y1,x1]*tx*ty)
  def scenept(p):
   lon,lat=p;x,y=tf.transform(lon,lat);px=(x-minx)/(maxx-minx)*(rw-1);py=(maxy-y)/(maxy-miny)*(rh-1);e=max(0,bil(px,py)/65535*maxe);return [x/scene,BASE_LIFT+(e*ve/scene)*RELIEF_SCALE,-y/scene]
- routes=[];snap_meta={}
+
+ routes=[];snap_meta={};canonical={}
  for sid,coord in STARTS.items():
-  s=nearest(nodes,*coord);snap_meta[sid]={'source':coord,'graph_node':s,'snap_km':round(hav(coord,s),2)}
+  s=nearest(nodes,*coord);cid=f'start_{sid}';start_scene=scenept(s);canonical[cid]=start_scene
+  snap_meta[cid]={'source':coord,'graph_node':s,'snap_km':round(hav(coord,s),2)}
   for vi,wpcoord in enumerate(WAYPOINTS[sid],1):
    wp=nearest(nodes,*wpcoord);a,da=shortest(adj,giant,s,wp);b,db=shortest(adj,giant,wp,finish)
    if not a or not b:continue
-   ll=thin(dedupe(a+b[1:]));routes.append({'id':f'participant_{sid}_{vi}','start_id':sid,'visual_waypoint':list(wpcoord),'distance_weighted_km':round(da+db,1),'role':'illustrative_self_directed_actual_road_journey','points':[scenept(p) for p in ll]})
- data['participant_routes']=routes;data['schema_version']='2.1-v32-participant-routes';data['participant_route_design']={'count':len(routes),'source':'OSM trunk/primary/secondary road graph','start_snap':snap_meta,'finish_graph_snap_km':round(hav(FINISH,finish),2),'junction_snap_max_m':int(SNAP_KM*1000),'principle':'same Finish, visibly different actual-road choices through different intermediate regions','navigation_status':'presentation_only'}
- data.setdefault('policy',[]).extend(['v3.2 participant routes are illustrative actual-road graph paths generated for visual storytelling, not official, recommended, or navigation routes.','Small <=120m junction snaps reconstruct connectivity lost by national-scale source simplification.'])
- DATA.write_text(json.dumps(data,ensure_ascii=False,indent=2));print(json.dumps({'participant_routes':len(routes),'graph_nodes':len(adj),'giant_nodes':len(giant),'junction_snaps':snaps,'distance_km':[r['distance_weighted_km'] for r in routes],'start_snap':snap_meta},indent=2))
+   ll=thin(dedupe(a+b[1:]));points=[scenept(p) for p in ll]
+   if points:points[0]=list(start_scene)
+   routes.append({'id':f'participant_{sid}_{vi}','start_id':cid,'visual_waypoint':list(wpcoord),'distance_weighted_km':round(da+db,1),'role':'illustrative_self_directed_actual_road_journey','points':points})
+
+ # Replace the old nine-marker + feeder representation with five canonical markers.
+ # Every visible marker is exactly the first vertex of every route that belongs to it.
+ old_starts={s.get('id'):s for s in data.get('starts',[])}
+ aligned=[]
+ for cid,pos in canonical.items():
+  item=dict(old_starts.get(cid,{'id':cid}));item['position']=list(pos);aligned.append(item)
+ data['starts']=aligned
+ data['start_seeds']=[]
+ for r in data.get('main_routes',[]):
+  if r.get('start_id') in canonical and r.get('points'):
+   r['points'][0]=list(canonical[r['start_id']])
+
+ max_error=0.0
+ for r in routes:
+  err=scene_dist(r['points'][0],canonical[r['start_id']]);max_error=max(max_error,err)
+ if len(aligned)!=5 or len(routes)!=10 or max_error>1e-9:
+  raise SystemExit(f'start/route alignment failed: starts={len(aligned)} routes={len(routes)} max_error={max_error}')
+
+ data['participant_routes']=routes
+ data['schema_version']='2.2-v385-aligned-starts'
+ data['participant_route_design']={'count':len(routes),'visible_start_count':len(aligned),'source':'OSM trunk/primary/secondary road graph','start_snap':snap_meta,'finish_graph_snap_km':round(hav(FINISH,finish),2),'junction_snap_max_m':int(SNAP_KM*1000),'start_route_alignment_max_scene_units':max_error,'principle':'five visible Starts, two visibly different actual-road choices per Start, one Finish','navigation_status':'presentation_only'}
+ data.setdefault('policy',[]).extend(['v3.8.5 shows only the five representative Starts that own complete participant routes; obsolete feeder-only Start markers are removed.','Every visible Start marker is snapped to and shares the exact first scene-space vertex of both participant routes and the corresponding main route.'])
+ DATA.write_text(json.dumps(data,ensure_ascii=False,indent=2))
+ print(json.dumps({'participant_routes':len(routes),'visible_starts':len(aligned),'alignment_max_scene_units':max_error,'graph_nodes':len(adj),'giant_nodes':len(giant),'junction_snaps':snaps,'distance_km':[r['distance_weighted_km'] for r in routes],'start_snap':snap_meta},indent=2))
 if __name__=='__main__':main()

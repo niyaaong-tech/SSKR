@@ -52,13 +52,14 @@ patch(
     'opaque 2d ocean plate'
 )
 
-# The inherited B timeline animates uOpacity for its 3D ocean. C owns the sea as
-# an opaque 2D plate, so re-lock opacity every rendered frame after the inherited
-# reflection lock. This prevents later timeline seeks from reopening transparency.
+# B contains two explicit synthetic-reflection locks in its render/diagnostic paths.
+# C owns the sea as an opaque 2D plate, so both paths re-lock opacity as well. This
+# prevents the inherited timeline from reopening transparency after a seek.
 patch(
     '  oceanUniforms.uReflectionStrength.value = 0.0;',
     '''  oceanUniforms.uReflectionStrength.value = 0.0;\n  oceanUniforms.uOpacity.value = 1.0;''',
-    'lock 2d ocean opacity during render'
+    'lock 2d ocean opacity during render',
+    count=2
 )
 
 # Restrained aerial palette. The sea should read as a clean map texture rather than

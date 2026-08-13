@@ -145,7 +145,8 @@ jobs:
           sleep 2
           BROWSER=$(command -v google-chrome || command -v chromium || command -v chromium-browser || true)
           test -n "$BROWSER"
-          timeout 420s xvfb-run -a env BROWSER_PATH="$BROWSER" node final/scene05-c/qa.mjs
+          set -o pipefail
+          timeout 420s xvfb-run -a env BROWSER_PATH="$BROWSER" node final/scene05-c/qa.mjs 2>&1 | tee final/scene05-c/dist/qa.log
           for f in \
             c02_015_peninsula_ocean c02_045_east_dawn_ocean c02_120_route_day_ocean \
             c02_165_late_day_ocean c02_189_finish_evening_ocean c02_210_finish_sunset_ocean \
@@ -155,9 +156,10 @@ jobs:
           done
 
       - uses: actions/upload-artifact@v4
+        if: always()
         with:
           name: SSKR-Scene05-C-Clean-Ocean-v0.2
           path: final/scene05-c/dist/
-          if-no-files-found: error
+          if-no-files-found: warn
           compression-level: 6
           retention-days: 30

@@ -31,6 +31,7 @@ on:
       - 'tools/scene05-final-*.py'
       - 'assets/scene05/finale_v383_refs/**'
       - 'assets/scene05/finale_v384_stills/**'
+      - 'assets/scene05/finale_v385_fullres/**'
       - 'assets/scene05/worldcover_v1/**'
       - 'assets/scene05/choice_roads_source_v1.geojson'
       - 'assets/scene05/route_network_v0.1/**'
@@ -120,9 +121,26 @@ jobs:
           test -s output/scene05_final_v1/sky_dawn_v381.jpg
           test -s output/scene05_final_v1/sky_sunset_env_v381.jpg
           test -s output/scene05_final_v1/cloud_veil_v381.png
-          test -s assets/scene05/finale_v384_stills/finale_still_01_v384.avif
-          test -s assets/scene05/finale_v384_stills/finale_still_02_v384.avif
-          test -s assets/scene05/finale_v384_stills/finale_still_03_v384.avif
+          test -s assets/scene05/finale_v385_fullres/finale_still_01_v385.jpg
+          test -s assets/scene05/finale_v385_fullres/finale_still_02_v385.jpg
+          test -s assets/scene05/finale_v385_fullres/finale_still_03_v385.jpg
+
+          python - <<'PY'
+          from PIL import Image
+
+          paths = [
+              'assets/scene05/finale_v385_fullres/finale_still_01_v385.jpg',
+              'assets/scene05/finale_v385_fullres/finale_still_02_v385.jpg',
+              'assets/scene05/finale_v385_fullres/finale_still_03_v385.jpg',
+          ]
+
+          for p in paths:
+              with Image.open(p) as im:
+                  assert im.size == (1536, 864), (p, im.size)
+                  assert im.format == 'JPEG', (p, im.format)
+                  print(p, im.size, im.format)
+          PY
+
           test -s output/scene05-b-v384.js
           grep -q 'Scene 05 B v3.8.4' output/scene05-b-v384.js
           grep -q '__scene05V384State' output/scene05-b-v384.js
@@ -144,7 +162,19 @@ jobs:
           cp final/scene05-b/scene05-b.css final/scene05-b/dist/scene05-b.css
           cp final/scene05-b/README.md final/scene05-b/dist/README.md
           cp output/scene05_final_v1/{terrain_final_uv.glb,terrain_dawn_final.png,terrain_day_final.png,terrain_sunset_final.png,coast_shallow.png,peninsula_surface_v381.png,peninsula_mask_debug_v381.png,peninsula_surface_v381_qa.json,peninsula_surface_v34.json,road_choice_overlay_v31.png,scene05_final_data_v1.json,sky_dawn_v381.jpg,sky_sunset_env_v381.jpg,cloud_veil_v381.png} final/scene05-b/dist/assets/
-          cp assets/scene05/finale_v384_stills/finale_still_*_v384.avif final/scene05-b/dist/assets/
+          cp assets/scene05/finale_v385_fullres/finale_still_*_v385.jpg final/scene05-b/dist/assets/
+
+          python - <<'PY'
+          from PIL import Image
+          from pathlib import Path
+
+          for i in (1,2,3):
+              p = Path(f'final/scene05-b/dist/assets/finale_still_0{i}_v385.jpg')
+              with Image.open(p) as im:
+                  assert im.size == (1536, 864), (p, im.size)
+          print('FINALE_FULLRES_QA_PASS')
+          PY
+
           cp assets/vector/korean_peninsula_precise.svg final/scene05-b/dist/assets/
           python final/scene05-b/pack_standalone.py
           test -s final/scene05-b/dist/index.html

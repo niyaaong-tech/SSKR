@@ -16,17 +16,17 @@ Scene 05 A v1.8 remains accepted and untouched under `final/scene05/`.
 8. keep procedural sunset reflection disabled
 9. preserve the 30-second total runtime
 
-## v3.8.4 finale assets
+## Production finale assets
 
 Repository directory:
 
-`assets/scene05/finale_v384_stills/`
+`assets/scene05/finale_v385_fullres/`
 
-- `finale_still_01_v384.avif` — sunset landscape, first finale still
-- `finale_still_02_v384.avif` — riders celebrating at sunset, second finale still
-- `finale_still_03_v384.avif` — evening rider festival, third finale still
+- `finale_still_01_v385.jpg` — 1536×864 original JPEG
+- `finale_still_02_v385.jpg` — 1536×864 original JPEG
+- `finale_still_03_v385.jpg` — 1536×864 original JPEG
 
-The files are 1024×576 AVIF working copies normalized from the three attachments supplied for this pass. Their sequence and narrative role are fixed by the user request; no generated replacement imagery is used.
+The three production finale images are the original 1536×864 JPEG sources supplied by the user. No resize, upscale or lossy re-encoding is performed.
 
 ## Peninsula / coastline
 

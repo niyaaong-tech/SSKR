@@ -6,6 +6,7 @@ on:
       - main
       - feature/scene05-v384-three-still-finale
       - feature/scene05-b-narration-blackout-v386
+      - feature/scene05-b-copy-polish-v386
     paths:
       - '.github/workflows/scene05-pages.yml'
       - 'final/scene05-b/index.html'
@@ -154,11 +155,12 @@ jobs:
           grep -q '23.45' output/scene05-b-v386.js
           grep -q 'sunSprite.visible = false' output/scene05-b-v386.js
           grep -q 'uReflectionStrength.value = 0.0' output/scene05-b-v386.js
-          grep -q 'AM 6:00 동이 터올 무렵, 라이더들은 스타팅 포인트에 모이고' final/scene05-b/index.html
-          grep -q '각자가 선택한 자신만의 길을 달린다.' final/scene05-b/index.html
-          grep -q 'PM 7:00 서해의 낙조를 위해 집결하는 시간' final/scene05-b/index.html
-          grep -q '해질무렵 라이딩이 마무리되면,' final/scene05-b/index.html
-          grep -q '현장은 축제가 되고 기억은 영원이 됩니다.' final/scene05-b/index.html
+          grep -q 'AM 6:00 동해의 일출 앞에 집결한 라이더들은' final/scene05-b/index.html
+          grep -q '각자 선택한 길에서 하루를 온전히 달린다.' final/scene05-b/index.html
+          grep -q 'PM 7:00 서해의 낙조 아래, 다시 모인 그곳에서—' final/scene05-b/index.html
+          grep -q '현장은 축제가 되고, 기억은 영원이 된다.' final/scene05-b/index.html
+          ! grep -q '<header class="scene-mark">' final/scene05-b/index.html
+          grep -q 'clamp(12.75px,1.335cqw,25.5px)' final/scene05-b/scene05-b.css
 
       - name: Set up Node
         uses: actions/setup-node@v5

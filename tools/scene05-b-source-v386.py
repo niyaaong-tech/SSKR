@@ -100,7 +100,7 @@ new_timeline = r'''  const journeyCopiesV386 = [journeyCopyV386_1, journeyCopyV3
     gsap.set(journeyCopiesV386, { opacity: 0, y: 10, filter: 'blur(2px)' });
   }
   if (journeyCopyV386_1) {
-    tl.to(journeyCopyV386_1, { opacity: .97, y: 0, filter: 'blur(0px)', duration: .55, ease: 'power2.out' }, 1.55)
+    tl.to(journeyCopyV386_1, { opacity: .97, y: 0, filter: 'blur(0px)', duration: .55, ease: 'power2.out' }, 3.55)
       .to(journeyCopyV386_1, { opacity: 0, y: -6, filter: 'blur(1.5px)', duration: .45, ease: 'sine.in' }, 7.70);
   }
   if (journeyCopyV386_2) {
@@ -195,7 +195,7 @@ new_statement = r'''    .to(statement, {
       letterSpacing: '-.035em',
       duration: .55,
       ease: 'power2.out'
-    }, 24.20);'''
+    }, 26.65);'''
 patch(old_statement, new_statement, 'v386 closing statement timing')
 
 patch(

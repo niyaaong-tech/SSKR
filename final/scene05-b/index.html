@@ -70,6 +70,26 @@
     <div class="data-credit" aria-label="data and artwork credit">© ESA WorldCover project 2021 / Copernicus Sentinel · Dawn environment: Poly Haven CC0 · Finale stills: SSKR project references</div>
     <div id="status" class="status">BUILDING V3.8.6 NARRATIVE BLACKOUT PASS</div>
   </main>
+
+  <button id="text-toggle" class="copy-toggle" type="button" aria-pressed="true" aria-label="중앙 텍스트 표시 전환">TEXT ON</button>
+
+  <script>
+    (() => {
+      const button = document.getElementById('text-toggle');
+      if (!button) return;
+      let enabled = true;
+      const render = () => {
+        document.body.classList.toggle('copy-off', !enabled);
+        button.textContent = enabled ? 'TEXT ON' : 'TEXT OFF';
+        button.setAttribute('aria-pressed', String(enabled));
+      };
+      button.addEventListener('click', () => {
+        enabled = !enabled;
+        render();
+      });
+      render();
+    })();
+  </script>
   <script type="module" src="./app.js"></script>
 </body>
 </html>

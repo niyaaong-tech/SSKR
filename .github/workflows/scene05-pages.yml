@@ -6,6 +6,7 @@ on:
       - main
       - feature/scene05-v384-three-still-finale
       - feature/scene05-b-narration-blackout-v386
+      - feature/scene05-b-copy-timing-toggle-v386
     paths:
       - '.github/workflows/scene05-pages.yml'
       - 'final/scene05-b/index.html'
@@ -150,6 +151,8 @@ jobs:
           grep -q 'journeyCopyV386_1' output/scene05-b-v386.js
           grep -q 'journeyCopyV386_2' output/scene05-b-v386.js
           grep -q 'journeyCopyV386_3' output/scene05-b-v386.js
+          grep -q '3.55' output/scene05-b-v386.js
+          grep -q '26.65' output/scene05-b-v386.js
           grep -q '20.95' output/scene05-b-v386.js
           grep -q '23.45' output/scene05-b-v386.js
           grep -q 'sunSprite.visible = false' output/scene05-b-v386.js
@@ -160,6 +163,10 @@ jobs:
           grep -q '현장은 축제가 되고, 기억은 영원이 된다.' final/scene05-b/index.html
           ! grep -q '<header class="scene-mark">' final/scene05-b/index.html
           grep -q 'clamp(12.75px,1.335cqw,25.5px)' final/scene05-b/scene05-b.css
+          grep -q 'id="text-toggle"' final/scene05-b/index.html
+          grep -q 'copy-off' final/scene05-b/index.html
+          grep -q '.copy-toggle' final/scene05-b/scene05-b.css
+          grep -q '.copy-off .journey-copy,.copy-off .statement' final/scene05-b/scene05-b.css
 
       - name: Set up Node
         uses: actions/setup-node@v5

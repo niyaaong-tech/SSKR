@@ -6,7 +6,6 @@ on:
       - main
       - feature/scene05-v384-three-still-finale
       - feature/scene05-b-narration-blackout-v386
-      - feature/scene05-b-copy-timing-toggle-v386
     paths:
       - '.github/workflows/scene05-pages.yml'
       - 'final/scene05-b/index.html'

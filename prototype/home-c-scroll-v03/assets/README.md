@@ -21,3 +21,16 @@ Color palette: deep ink navy, blue-gray, dusty mauve, muted apricot, warm amber,
 Materials/textures: fine cloud strata, marine haze, gentle water ripples, soft solar glow and reflection, subtle painterly grain.
 Constraints: background art only; no text, no typography, no logo, no watermark, no interface, no motorcycle, no land or terrain; horizon must read clearly as ocean; preserve generous dark negative space on the left.
 ```
+
+## `west-sea-sunset-horizon-v01.png`
+
+- 제작 방식: Codex built-in `imagegen` (new image generation)
+- 용도: Trace / Memory 장면의 서해 낙조 수평선 배경. 태양은 별도 HTML/CSS 레이어로 스크롤 연출함.
+- 지형 에셋: 사용하지 않음
+- UI / 타이포그래피: 이미지에 포함하지 않음
+
+### Final prompt
+
+```text
+Create a wide 16:9 painterly digital illustration for a premium Korean cycling event website background. Scene: the West Sea at sunset, viewed straight across an open ocean with a long perfectly horizontal horizon line around 64% down the frame. No land, no coastline, no islands, no mountains, no terrain, no boats, no people. Deep plum and navy upper sky transitioning through muted coral and burnt orange near the horizon, with layered atmospheric clouds and subtle sea haze. Warm afterglow is strongest at the far left horizon, leaving a luminous open gap there for a separate animated HTML sun disc to descend into the sea; do not draw the sun itself. Calm dark water below with restrained horizontal reflections and a tactile, slightly grainy editorial illustration finish, elegant and cinematic, consistent with a sophisticated scroll-narrative microsite. Composition should remain quiet behind white typography and polaroid cards. No text, no logos, no watermark, no UI elements.
+```

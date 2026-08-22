@@ -37,7 +37,7 @@
 
   const horizon = [830,370,700,370,600,370,510,370,400,370,280,370,190,370,130,370,80,370,40,370];
   const route = [830,125,780,190,810,260,725,315,650,365,650,445,540,485,435,525,410,590,280,610];
-  const trace = [80,560,260,510,345,470,450,430,570,385,660,340,760,280,850,225,900,180,950,135];
+  const trace = [950,390,880,390,810,390,735,390,660,390,595,390,520,390,410,390,250,390,90,390];
   const pathFrom = (values) => `M${values[0]} ${values[1]} C${values[2]} ${values[3]} ${values[4]} ${values[5]} ${values[6]} ${values[7]} C${values[8]} ${values[9]} ${values[10]} ${values[11]} ${values[12]} ${values[13]} C${values[14]} ${values[15]} ${values[16]} ${values[17]} ${values[18]} ${values[19]}`;
   const interpolatePath = (from, to, amount) => pathFrom(from.map((value, index) => mix(value, to[index], ease(amount))));
   const setOpacity = (element, value) => { if (element) element.style.opacity = clamp(value).toFixed(3); };
@@ -45,7 +45,7 @@
     if (!group) return;
     const nodes = [...group.children];
     nodes.forEach((node, index) => {
-      const nodeProgress = range(amount, index / nodes.length, (index + 1.15) / nodes.length);
+      const nodeProgress = range(amount, index / nodes.length, Math.min(1, (index + 1.15) / nodes.length));
       node.style.opacity = nodeProgress.toFixed(3);
       node.style.transformBox = 'fill-box';
       node.style.transformOrigin = 'center';
@@ -59,7 +59,7 @@
     ['HORIZON LINE', 'SCROLL ↓'],
     ['KOREA ROUTE', 'EAST → WEST'],
     ['PLACES & PEOPLE', 'CHOOSE YOUR ROAD'],
-    ['TIME TRACE', '05:31 → 18:47']
+    ['TIME TRACE', 'EAST → WEST · R → L']
   ];
 
   const update = () => {
@@ -95,8 +95,7 @@
     line?.setAttribute('d', currentPath);
     lineShadow?.setAttribute('d', currentPath);
 
-    let draw = 1;
-    if (p >= .62) draw = range(p, .66, .82);
+    const draw = 1;
     [line, lineShadow].forEach((path) => {
       if (!path) return;
       path.style.strokeDasharray = '1';
@@ -112,11 +111,12 @@
     }
 
     const mapIn = range(p, .13, .26);
-    const mapOut = range(p, .47, .62);
-    const mapOpacity = mapIn * (1 - mapOut);
+    const southZoom = range(p, .3, .47);
+    const mapOut = range(p, .58, .66);
+    const mapOpacity = mapIn * (1 - mapOut) * mix(1, .58, ease(southZoom));
     setOpacity(mapArt, mapOpacity);
     setOpacity(mapGrid, mapOpacity * .8);
-    if (mapArt) mapArt.style.transform = `translate3d(${mix(42, 0, ease(mapIn))}px,0,0) scale(${mix(.92, 1.08, ease(mapOut))})`;
+    if (mapArt) mapArt.style.transform = `translate3d(${mix(42, 0, ease(mapIn))}px,0,0) scale(${mix(.92, 3.4, ease(southZoom))})`;
 
     const routeReveal = range(p, .22, .42) * (1 - range(p, .52, .63));
     setOpacity(routeNodes, routeReveal);
@@ -132,24 +132,24 @@
     });
 
     const traceIn = range(p, .66, .79);
-    const traceOut = range(p, .89, .95);
+    const traceOut = range(p, .94, .985);
     setOpacity(timeNodes, traceIn * (1 - traceOut));
     setNodeReveal(timeNodes, range(p, .7, .84));
 
-    const memoryIn = range(p, .7, .82);
-    const memoryOut = range(p, .89, .95);
+    const memoryIn = range(p, .69, .78);
+    const memoryOut = range(p, .94, .985);
     setOpacity(memoryLayer, memoryIn * (1 - memoryOut));
     document.querySelectorAll('.memory-card').forEach((card, index) => {
-      const reveal = range(p, .72 + index * .035, .79 + index * .04);
+      const reveal = range(p, .7 + index * .038, .76 + index * .04);
       card.style.opacity = (reveal * (1 - memoryOut)).toFixed(3);
-      card.style.transform = `translate3d(0,${mix(35, 0, ease(reveal))}px,0) rotate(var(--r))`;
+      card.style.transform = `translate3d(${mix(32, 0, ease(reveal))}px,${mix(24, 0, ease(reveal))}px,0) rotate(var(--r))`;
     });
 
     const sceneWeights = [
       fadeWindow(p, 0, .035, .19),
       fadeWindow(p, .13, .265, .44),
       fadeWindow(p, .39, .51, .67),
-      fadeWindow(p, .61, .74, .9)
+      fadeWindow(p, .61, .71, .79)
     ];
     sceneCopies.forEach((copy, index) => {
       const opacity = sceneWeights[index];
@@ -167,19 +167,19 @@
 
     setOpacity(day, range(p, .15, .31) * (1 - range(p, .62, .75)));
     setOpacity(dawn, 1 - range(p, .1, .3));
-    const sunsetIn = range(p, .67, .87);
+    const sunsetIn = range(p, .66, .84);
     setOpacity(sunset, sunsetIn);
-    setOpacity(sunOrb, range(p, .77, .91));
-    if (sunOrb) sunOrb.style.transform = `translate3d(0,${mix(-90, 5, range(p, .77, 1))}px,0)`;
+    setOpacity(sunOrb, range(p, .82, .92));
+    if (sunOrb) sunOrb.style.transform = `translate3d(0,${mix(-80, 55, range(p, .82, .98))}px,0)`;
 
-    const hold = range(p, .91, .975);
+    const hold = range(p, .95, .99);
     setOpacity(sunsetHold, hold);
     if (sunsetHold) {
       sunsetHold.style.pointerEvents = hold > .9 ? 'auto' : 'none';
       sunsetHold.style.transform = `translate3d(0,${mix(22, 0, ease(hold))}px,0)`;
     }
-    setOpacity(line, 1 - range(p, .88, .95));
-    setOpacity(lineShadow, 1 - range(p, .86, .94));
+    setOpacity(line, 1 - range(p, .95, .99));
+    setOpacity(lineShadow, 1 - range(p, .945, .985));
   };
 
   const requestUpdate = () => {

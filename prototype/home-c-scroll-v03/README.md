@@ -26,6 +26,8 @@ HOME Intro / Gateway
 
 사진은 레이아웃 및 전환 검증을 위한 Unsplash editorial placeholder이며 실제 SSKR 촬영물로 교체해야 합니다.
 
+HOME hero의 `assets/hero-sunrise-drawing-v01.png`는 바다·일출·하늘·구름을 주제로 제작한 painterly key visual입니다. UI와 타이포그래피는 이미지에 포함하지 않고 HTML 레이어로 유지합니다.
+
 ## 실행
 
 저장소 루트에서 정적 서버를 연 뒤 다음 주소로 접속합니다.

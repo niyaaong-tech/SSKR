@@ -12,11 +12,13 @@
   const pageProgress = document.querySelector('#pageProgress');
   const header = document.querySelector('#siteHeader');
   const intro = document.querySelector('#intro');
+  const introSky = document.querySelector('.intro-sky');
   const introCopy = document.querySelector('#introCopy');
   const gateway = document.querySelector('#gateway');
   const brochure = document.querySelector('#journey');
   const line = document.querySelector('#journeyLine');
   const lineShadow = document.querySelector('#journeyLineShadow');
+  const handoffAnchor = document.querySelector('#handoffAnchor');
   const mapArt = document.querySelector('#mapArt');
   const mapGrid = document.querySelector('.map-grid');
   const routeNodes = document.querySelector('#routeNodes');
@@ -33,7 +35,7 @@
   const sunset = document.querySelector('.sky-sunset');
   const sunOrb = document.querySelector('.sun-orb');
 
-  const horizon = [40,370,280,370,390,370,510,370,650,370,760,370,850,370,900,370,940,370,960,370];
+  const horizon = [830,370,700,370,600,370,510,370,400,370,280,370,190,370,130,370,80,370,40,370];
   const route = [830,125,780,190,810,260,725,315,650,365,650,445,540,485,435,525,410,590,280,610];
   const trace = [80,560,260,510,345,470,450,430,570,385,660,340,760,280,850,225,900,180,950,135];
   const pathFrom = (values) => `M${values[0]} ${values[1]} C${values[2]} ${values[3]} ${values[4]} ${values[5]} ${values[6]} ${values[7]} C${values[8]} ${values[9]} ${values[10]} ${values[11]} ${values[12]} ${values[13]} C${values[14]} ${values[15]} ${values[16]} ${values[17]} ${values[18]} ${values[19]}`;
@@ -74,6 +76,7 @@
         introCopy.style.opacity = (1 - range(introP, .42, .9)).toFixed(3);
         introCopy.style.transform = `translate3d(0,${-introP * 70}px,0)`;
       }
+      if (introSky) introSky.style.transform = `translate3d(0,${introP * -9}px,0) scale(${1.02 + introP * .018})`;
       if (gateway) {
         gateway.style.opacity = (1 - range(introP, .72, 1)).toFixed(3);
         gateway.style.transform = `translate3d(0,${introP * 35}px,0)`;
@@ -93,13 +96,20 @@
     lineShadow?.setAttribute('d', currentPath);
 
     let draw = 1;
-    if (p > .13 && p < .38) draw = range(p, .17, .35);
     if (p >= .62) draw = range(p, .66, .82);
     [line, lineShadow].forEach((path) => {
       if (!path) return;
       path.style.strokeDasharray = '1';
       path.style.strokeDashoffset = String(1 - draw);
     });
+
+    if (handoffAnchor) {
+      const anchorT = ease(horizonToRoute);
+      handoffAnchor.setAttribute('cx', mix(horizon[0], route[0], anchorT));
+      handoffAnchor.setAttribute('cy', mix(horizon[1], route[1], anchorT));
+      handoffAnchor.style.opacity = fadeWindow(p, .06, .14, .37).toFixed(3);
+      handoffAnchor.setAttribute('r', mix(5, 8, range(p, .1, .28)).toFixed(2));
+    }
 
     const mapIn = range(p, .13, .26);
     const mapOut = range(p, .47, .62);

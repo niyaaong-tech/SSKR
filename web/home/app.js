@@ -271,6 +271,11 @@
       const alignedImageTop = targetHorizonLocal - heroImage.horizonY * coverScale;
       const imageTop = mix(centeredImageTop, alignedImageTop, horizonLift);
       const visibleHorizon = imageTop + heroImage.horizonY * coverScale;
+      const visibleSeaHeight = Math.max(1, skyHeight - visibleHorizon);
+      // Keep the original sea continuous below the animated horizon. The
+      // vertical remap expands only the photograph's sea slice; it must never
+      // be substituted with an unrelated color or gradient layer.
+      const seaImageHeight = visibleSeaHeight * heroImage.height / (heroImage.height - heroImage.horizonY);
       if (framePhase) framePhase.textContent = introP < .45 ? 'INTRO' : introP < .7 ? 'HORIZON DRAW' : 'HANDOFF';
       if (introCopy) {
         introCopy.style.opacity = (1 - headlineOut).toFixed(3);
@@ -280,6 +285,9 @@
         introSky.style.opacity = (1 - imageFade).toFixed(3);
         introSky.style.backgroundPosition = `center center, center center, center ${imageTop.toFixed(2)}px`;
         introSky.style.setProperty('--intro-horizon-y', `${visibleHorizon.toFixed(2)}px`);
+        introSky.style.setProperty('--intro-image-width', `${(heroImage.width * coverScale).toFixed(2)}px`);
+        introSky.style.setProperty('--intro-image-height', `${(heroImage.height * coverScale).toFixed(2)}px`);
+        introSky.style.setProperty('--intro-sea-image-height', `${seaImageHeight.toFixed(2)}px`);
       }
       setOpacity(introGrain, mix(.15, .08, imageFade));
       setOpacity(introMeta, 1 - range(introP, .28, .55));

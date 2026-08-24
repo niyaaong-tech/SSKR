@@ -36,6 +36,38 @@
     {
       "source": "/assets/sskr_road3.png",
       "destination": "/web/home/assets/sskr_road3.png"
+    },
+    {
+      "source": "/assets/memory-gangneung-v02.jpg",
+      "destination": "/web/home/assets/memory-gangneung-v02.jpg"
+    },
+    {
+      "source": "/assets/memory-pyeongchang-v02.jpg",
+      "destination": "/web/home/assets/memory-pyeongchang-v02.jpg"
+    },
+    {
+      "source": "/assets/memory-wonju-v02.jpg",
+      "destination": "/web/home/assets/memory-wonju-v02.jpg"
+    },
+    {
+      "source": "/assets/memory-chungju-v02.jpg",
+      "destination": "/web/home/assets/memory-chungju-v02.jpg"
+    },
+    {
+      "source": "/assets/memory-goesan-v02.jpg",
+      "destination": "/web/home/assets/memory-goesan-v02.jpg"
+    },
+    {
+      "source": "/assets/memory-cheongju-v02.jpg",
+      "destination": "/web/home/assets/memory-cheongju-v02.jpg"
+    },
+    {
+      "source": "/assets/memory-iksan-v02.jpg",
+      "destination": "/web/home/assets/memory-iksan-v02.jpg"
+    },
+    {
+      "source": "/assets/memory-gunsan-v02.jpg",
+      "destination": "/web/home/assets/memory-gunsan-v02.jpg"
     }
   ]
 }

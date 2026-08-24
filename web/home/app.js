@@ -57,6 +57,38 @@
   const storyIndex = document.querySelector('#storyIndex');
   const chapterButtons = [...document.querySelectorAll('[data-chapter]')];
   const footer = document.querySelector('#footer');
+  const photoHover = window.matchMedia('(hover: hover) and (pointer: fine)');
+  let expandedCard = null;
+
+  const collapseExpandedPhoto = () => {
+    if (!expandedCard) return;
+    const card = expandedCard;
+    expandedCard = null;
+    card.classList.remove('is-photo-expanded');
+    card.classList.add('is-photo-returning');
+  };
+
+  memoryCards.forEach((card) => {
+    const photo = card.querySelector('div');
+    card.addEventListener('pointerenter', () => {
+      if (!photoHover.matches || Number.parseFloat(getComputedStyle(card).opacity) < .75) return;
+      collapseExpandedPhoto();
+      const rect = card.getBoundingClientRect();
+      const centerX = rect.left + rect.width / 2;
+      const centerY = rect.top + rect.height / 2;
+      card.style.setProperty('--photo-origin-x', centerX < innerWidth * .34 ? '0%' : centerX > innerWidth * .66 ? '100%' : '50%');
+      card.style.setProperty('--photo-origin-y', centerY < innerHeight * .5 ? '0%' : '100%');
+      card.classList.remove('is-photo-returning');
+      card.classList.add('is-photo-expanded');
+      expandedCard = card;
+    });
+    card.addEventListener('pointerleave', collapseExpandedPhoto);
+    photo?.addEventListener('transitionend', (event) => {
+      if (event.propertyName === 'transform' && !card.classList.contains('is-photo-expanded')) {
+        card.classList.remove('is-photo-returning');
+      }
+    });
+  });
 
   const horizon = [830,370,700,370,570,370,440,370,310,370,180,370,90,370,40,370];
   const horizonStops = [1,.84,.7,.56,.42,.28,.14,0];
@@ -490,7 +522,11 @@
     ticking = true;
     requestAnimationFrame(update);
   };
-  window.addEventListener('scroll', requestUpdate, { passive: true });
+  window.addEventListener('scroll', () => {
+    collapseExpandedPhoto();
+    requestUpdate();
+  }, { passive: true });
+  window.addEventListener('wheel', collapseExpandedPhoto, { passive: true });
   window.addEventListener('resize', requestUpdate, { passive: true });
   window.addEventListener('load', requestUpdate, { once: true });
   update();

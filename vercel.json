@@ -3,15 +3,27 @@
   "rewrites": [
     {
       "source": "/",
-      "destination": "/web/home-v02/index.html"
+      "destination": "/web/home/index.html"
     },
     {
       "source": "/styles.css",
-      "destination": "/web/home-v02/styles.css"
+      "destination": "/web/home/styles.css"
     },
     {
       "source": "/app.js",
-      "destination": "/web/home-v02/app.js"
+      "destination": "/web/home/app.js"
+    },
+    {
+      "source": "/assets/hero-sunrise-drawing-v01.png",
+      "destination": "/web/home/assets/hero-sunrise-drawing-v01.png"
+    },
+    {
+      "source": "/assets/west-sea-sunset-horizon-v01.png",
+      "destination": "/web/home/assets/west-sea-sunset-horizon-v01.png"
+    },
+    {
+      "source": "/assets/korean_peninsula_precise.svg",
+      "destination": "/web/home/assets/korean_peninsula_precise.svg"
     }
   ]
 }

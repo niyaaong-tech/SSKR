@@ -24,6 +24,18 @@
     {
       "source": "/assets/korean_peninsula_precise.svg",
       "destination": "/web/home/assets/korean_peninsula_precise.svg"
+    },
+    {
+      "source": "/assets/sskr_road1.png",
+      "destination": "/web/home/assets/sskr_road1.png"
+    },
+    {
+      "source": "/assets/sskr_road2.png",
+      "destination": "/web/home/assets/sskr_road2.png"
+    },
+    {
+      "source": "/assets/sskr_road3.png",
+      "destination": "/web/home/assets/sskr_road3.png"
     }
   ]
 }

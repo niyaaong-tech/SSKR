@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="theme-color" content="#0c1110" />
-  <meta name="description" content="SSKR HOME v0.3 C안 — 동쪽의 수평선에서 서쪽의 기억까지 이어지는 스크롤 프로토타입" />
+  <meta name="description" content="SSKR — 동해에서 출발해 서해의 낙조에 닿는 한반도 횡단 랠리" />
   <title>SSKR — From First Light to Last Light</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230c1110'/%3E%3Cpath d='M12 37h40' stroke='%23e8b65c' stroke-width='3'/%3E%3Ccircle cx='44' cy='25' r='9' fill='%23f06a32'/%3E%3C/svg%3E" />
   <link rel="preconnect" href="https://images.unsplash.com" />
@@ -12,6 +12,9 @@
 </head>
 <body>
   <div class="page-progress" aria-hidden="true"><i id="pageProgress"></i></div>
+  <div class="frame-debug" id="frameDebug" aria-hidden="true">
+    <span>SCROLL FRAME</span><b id="frameNumber">000</b><small id="framePhase">INTRO</small>
+  </div>
 
   <header class="site-header" id="siteHeader">
     <a class="brand" href="#top" aria-label="SSKR Home">
@@ -25,25 +28,42 @@
     </nav>
   </header>
 
+  <nav class="story-index" id="storyIndex" aria-label="스크롤 장면 목차">
+    <button type="button" data-chapter="home"><strong>홈</strong></button>
+    <button type="button" data-chapter="sunrise"><strong>일출로부터</strong></button>
+    <button type="button" data-chapter="crossing"><strong>한반도 횡단</strong></button>
+    <button type="button" data-chapter="route"><strong>내가 설계한 루트</strong></button>
+    <button type="button" data-chapter="checkin"><strong>스팟 체크인</strong></button>
+    <button type="button" data-chapter="complete"><strong>여정의 완성</strong></button>
+  </nav>
+
   <main id="top">
     <section class="intro-scroll" id="intro" aria-labelledby="introTitle">
       <div class="intro-sticky">
         <div class="intro-sky" aria-hidden="true"></div>
         <div class="intro-sun" aria-hidden="true"></div>
         <div class="intro-grain" aria-hidden="true"></div>
-        <div class="intro-horizon" aria-hidden="true"></div>
+
+        <div class="intro-handoff" aria-hidden="true">
+          <div class="intro-handoff-copy" id="introHandoffCopy">
+            <span class="scene-no">01 — HORIZON</span>
+            <h2>동틀 무렵 시작되는 하루</h2>
+            <p>동해안에 흩어진 스타트 포인트에서,<br />참가자들은 일출을 기다립니다.</p>
+          </div>
+          <div class="intro-handoff-sun-mask"><i id="introHandoffSun"></i></div>
+          <div class="intro-handoff-line"><i id="introHandoffLine"></i></div>
+        </div>
 
         <div class="intro-meta">
           <span>37°34′N — EAST COAST</span>
-          <span>05:24:18 — FIRST LIGHT</span>
         </div>
 
         <div class="intro-copy" id="introCopy">
-          <p>ONE DAY · ONE DIRECTION · MANY ROADS</p>
-          <h1 id="introTitle">각자의 해돋이에서<br /><em>하나의 해넘이로.</em></h1>
+          <p>SUNRISE TO SUNSET · ACROSS KOREA</p>
+          <h1 id="introTitle">동해의 일출에서 출발하여<br /><span>서해의 낙조에 이르는 여정</span></h1>
           <div class="intro-deck">
-            <span>2027 MAY · KOREA</span>
-            <p>동해의 서로 다른 출발점에서 일출과 함께 시작해,<br />각자의 길로 한반도를 건너 서해의 한 피니시로 향한다.</p>
+            <span>2027 가을</span>
+            <p>동해안 곳곳의 스타트 포인트에서 출발해,<br />각자의 루트로 한반도를 횡단합니다.</p>
           </div>
         </div>
 
@@ -53,7 +73,7 @@
           <a class="gateway-primary" href="#footer"><small>03 / PARTICIPATE</small><strong>2027 참가하기</strong><span>Application guide ↗</span></a>
         </nav>
 
-        <div class="intro-scroll-cue"><span></span> SCROLL TO CROSS KOREA</div>
+        <div class="intro-scroll-cue" aria-hidden="true"><span>SCROLL TO EXPLORE</span><b>▼</b></div>
       </div>
     </section>
 
@@ -70,28 +90,36 @@
 
         <div class="places-layer" id="placesLayer" aria-hidden="true">
           <figure class="place place-1">
-            <div class="place-photo"></div><figcaption><b>07:42</b><span>고성 · 첫 정차</span></figcaption>
+            <div class="place-photo"></div><figcaption><b>07:08</b><span>평창 · 고갯길</span></figcaption>
           </figure>
           <figure class="place place-2">
-            <div class="place-photo"></div><figcaption><b>11:18</b><span>단양 · 굽이진 길</span></figcaption>
+            <div class="place-photo"></div><figcaption><b>10:16</b><span>충주 · 물가</span></figcaption>
           </figure>
           <figure class="place place-3">
-            <div class="place-photo"></div><figcaption><b>15:36</b><span>예산 · 느린 오후</span></figcaption>
+            <div class="place-photo"></div><figcaption><b>16:02</b><span>익산 · 들판</span></figcaption>
           </figure>
-          <p class="photo-credit">EDITORIAL PLACEHOLDER · UNSPLASH</p>
+          <p class="photo-credit">SSKR ROUTE ARCHIVE</p>
         </div>
 
+        <svg class="card-connectors" id="cardConnectors" viewBox="0 0 1000 700" preserveAspectRatio="none" aria-hidden="true">
+          <line data-connector="0"/><line data-connector="1"/><line data-connector="2"/><line data-connector="3"/>
+          <line data-connector="4"/><line data-connector="5"/><line data-connector="6"/><line data-connector="7"/>
+        </svg>
+
         <div class="memory-layer" id="memoryLayer" aria-hidden="true">
-          <article class="memory-card memory-card-1"><div></div><span>05:31</span><b>첫 빛을 기록하다</b><small>EAST COAST / START</small></article>
-          <article class="memory-card memory-card-2"><div></div><span>09:18</span><b>산길의 호흡을 고르다</b><small>INJE / SPOT 04</small></article>
-          <article class="memory-card memory-card-3"><div></div><span>13:34</span><b>낯선 길에 머물다</b><small>DANYANG / SPOT 17</small></article>
-          <article class="memory-card memory-card-4"><div></div><span>16:12</span><b>같은 방향에서 만나다</b><small>YESAN / SPOT 24</small></article>
-          <article class="memory-card memory-card-5"><div></div><span>18:47</span><b>서쪽에서 다시 만나다</b><small>WEST COAST / FINISH</small></article>
+          <article class="memory-card memory-card-1" data-card="0"><div></div><span>05:31</span><b>강릉 · 안목 라이더 카페</b><small>BIKE CAFE / EAST START</small></article>
+          <article class="memory-card memory-card-2" data-card="1"><div></div><span>07:08</span><b>평창 · 대관령 집결 쉼터</b><small>MOUNTAIN MEETING POINT</small></article>
+          <article class="memory-card memory-card-3" data-card="2"><div></div><span>08:42</span><b>원주 · 치악 모토 카페</b><small>BIKE CAFE / MID ROUTE</small></article>
+          <article class="memory-card memory-card-4" data-card="3"><div></div><span>10:16</span><b>충주 · 탄금호 라이더 광장</b><small>LAKESIDE RENDEZVOUS</small></article>
+          <article class="memory-card memory-card-5" data-card="4"><div></div><span>11:54</span><b>괴산 · 산막이 주차 마당</b><small>FOREST GATHERING YARD</small></article>
+          <article class="memory-card memory-card-6" data-card="5"><div></div><span>13:27</span><b>청주 · 상당산성 집결점</b><small>MIDDAY MEETING POINT</small></article>
+          <article class="memory-card memory-card-7" data-card="6"><div></div><span>16:02</span><b>익산 · 웅포 금강 쉼터</b><small>WESTERN RIVER STOP</small></article>
+          <article class="memory-card memory-card-8" data-card="7"><div></div><span>18:47</span><b>군산 · 비응항 바이크 카페</b><small>BIKE CAFE / WEST FINISH</small></article>
         </div>
 
         <svg class="journey-svg" id="journeySvg" viewBox="0 0 1000 700" role="img" aria-labelledby="svgTitle svgDesc" preserveAspectRatio="xMidYMid meet">
-          <title id="svgTitle">SSKR의 하루를 잇는 선</title>
-          <desc id="svgDesc">동해 수평선이 한반도 횡단 경로가 되고, 다시 하루의 시간 기록으로 전환됩니다.</desc>
+          <title id="svgTitle">동해에서 서해로 이어지는 SSKR의 선</title>
+          <desc id="svgDesc">동해 수평선이 한반도 횡단 경로가 되고, 다시 라이더의 시간 기록으로 전환됩니다.</desc>
           <defs>
             <filter id="lineGlow" x="-40%" y="-40%" width="180%" height="180%">
               <feGaussianBlur stdDeviation="4" result="blur" />
@@ -100,65 +128,58 @@
           </defs>
           <g class="map-art" id="mapArt">
             <image class="peninsula-art" href="./assets/korean_peninsula_precise.svg" x="575" y="42" width="335" height="618" />
-            <text class="sea-label sea-label-east" x="920" y="252">EAST SEA</text>
+            <text class="sea-label sea-label-east" x="825" y="410">EAST SEA</text>
             <text class="sea-label sea-label-west" x="505" y="480">WEST SEA</text>
           </g>
           <path class="journey-line-shadow" id="journeyLineShadow" pathLength="1" />
           <path class="journey-line" id="journeyLine" pathLength="1" />
           <circle class="handoff-anchor" id="handoffAnchor" cx="830" cy="370" r="7" />
           <g class="route-nodes" id="routeNodes">
-            <g class="route-node node-start" transform="translate(830 125)"><circle r="8"/><circle class="node-ring" r="16"/><text x="-14" y="-28" text-anchor="end">05:31 · EAST START</text></g>
-            <g class="route-node node-a" transform="translate(725 315)"><circle r="6"/><text x="-16" y="-14" text-anchor="end">SPOT 04</text></g>
-            <g class="route-node node-b" transform="translate(540 485)"><circle r="6"/><text x="-16" y="-14" text-anchor="end">SPOT 17</text></g>
-            <g class="route-node node-finish" transform="translate(280 610)"><circle r="9"/><circle class="node-ring" r="18"/><text x="18" y="6">18:47 · WEST FINISH</text></g>
-          </g>
-          <g class="time-nodes" id="timeNodes">
-            <g transform="translate(950 390)"><circle r="8"/><text x="-4" y="30" text-anchor="end">05:31</text></g>
-            <g transform="translate(735 390)"><circle r="5"/><text y="30">09:18</text></g>
-            <g transform="translate(520 390)"><circle r="5"/><text y="30">13:34</text></g>
-            <g transform="translate(305 390)"><circle r="5"/><text y="30">16:12</text></g>
-            <g transform="translate(90 390)"><circle r="8"/><text y="30">18:47</text></g>
+            <g class="route-node" data-node="0"><circle class="spot-core" r="5"/><circle class="node-ring" r="10"/><text class="route-place" x="-12" y="-14" text-anchor="end">강릉</text><text class="trace-place" x="0" y="28" text-anchor="middle"><tspan>강릉</tspan><tspan class="arrival" x="0" dy="15">05:31 도착</tspan></text><text class="memory-label" x="0" y="-26" text-anchor="middle">MEMORY 01</text></g>
+            <g class="route-node" data-node="1"><circle class="spot-core" r="5"/><circle class="node-ring" r="10"/><text class="route-place" x="-12" y="-14" text-anchor="end">평창</text><text class="trace-place" x="0" y="28" text-anchor="middle"><tspan>평창</tspan><tspan class="arrival" x="0" dy="15">07:08 도착</tspan></text><text class="memory-label" x="0" y="-26" text-anchor="middle">MEMORY 02</text></g>
+            <g class="route-node" data-node="2"><circle class="spot-core" r="5"/><circle class="node-ring" r="10"/><text class="route-place" x="-12" y="-14" text-anchor="end">원주</text><text class="trace-place" x="0" y="28" text-anchor="middle"><tspan>원주</tspan><tspan class="arrival" x="0" dy="15">08:42 도착</tspan></text><text class="memory-label" x="0" y="-26" text-anchor="middle">MEMORY 03</text></g>
+            <g class="route-node" data-node="3"><circle class="spot-core" r="5"/><circle class="node-ring" r="10"/><text class="route-place" x="-12" y="-14" text-anchor="end">충주</text><text class="trace-place" x="0" y="28" text-anchor="middle"><tspan>충주</tspan><tspan class="arrival" x="0" dy="15">10:16 도착</tspan></text><text class="memory-label" x="0" y="-26" text-anchor="middle">MEMORY 04</text></g>
+            <g class="route-node" data-node="4"><circle class="spot-core" r="5"/><circle class="node-ring" r="10"/><text class="route-place" x="-12" y="-14" text-anchor="end">괴산</text><text class="trace-place" x="0" y="28" text-anchor="middle"><tspan>괴산</tspan><tspan class="arrival" x="0" dy="15">11:54 도착</tspan></text><text class="memory-label" x="0" y="-26" text-anchor="middle">MEMORY 05</text></g>
+            <g class="route-node" data-node="5"><circle class="spot-core" r="5"/><circle class="node-ring" r="10"/><text class="route-place" x="-12" y="-14" text-anchor="end">청주</text><text class="trace-place" x="0" y="28" text-anchor="middle"><tspan>청주</tspan><tspan class="arrival" x="0" dy="15">13:27 도착</tspan></text><text class="memory-label" x="0" y="-26" text-anchor="middle">MEMORY 06</text></g>
+            <g class="route-node" data-node="6"><circle class="spot-core" r="5"/><circle class="node-ring" r="10"/><text class="route-place" x="-12" y="-14" text-anchor="end">익산</text><text class="trace-place" x="0" y="28" text-anchor="middle"><tspan>익산</tspan><tspan class="arrival" x="0" dy="15">16:02 도착</tspan></text><text class="memory-label" x="0" y="-26" text-anchor="middle">MEMORY 07</text></g>
+            <g class="route-node" data-node="7"><circle class="spot-core" r="5"/><circle class="node-ring" r="10"/><text class="route-place" x="-12" y="-14" text-anchor="end">군산</text><text class="trace-place" x="0" y="28" text-anchor="middle"><tspan>군산</tspan><tspan class="arrival" x="0" dy="15">18:47 도착</tspan></text><text class="memory-label" x="0" y="-26" text-anchor="middle">MEMORY 08</text></g>
           </g>
         </svg>
 
         <div class="scene-copy scene-copy-horizon" data-scene="0">
           <span class="scene-no">01 — HORIZON</span>
-          <h2>하루는 하나의<br /><em>선에서 시작된다.</em></h2>
-          <p>아직 길이 되지 않은 동해의 수평선.<br />서로 다른 출발은 같은 첫 빛을 바라본다.</p>
+          <h2>동틀 무렵 시작되는 하루</h2>
+          <p>동해안에 흩어진 스타트 포인트에서,<br />참가자들은 일출을 기다립니다.</p>
         </div>
 
         <div class="scene-copy scene-copy-geography" data-scene="1">
           <span class="scene-no">02 — GEOGRAPHY</span>
-          <h2>정해진 코스보다<br /><em>분명한 방향.</em></h2>
-          <p>동쪽에서 서쪽으로. 정밀한 한반도 해안선 위에서<br />하나의 선은 각자의 횡단 경로가 된다.</p>
-          <dl><div><dt>STARTS</dt><dd>10+</dd></div><div><dt>SPOTS</dt><dd>30+</dd></div><div><dt>FINISH</dt><dd>01</dd></div></dl>
+          <h2>일출부터 일몰까지<br /><span>동해에서 서해로—</span></h2>
+          <p>하나의 피니시를 향해<br />각자의 국토 횡단 라이딩이 펼쳐집니다.</p>
+          <dl><div><dt>STARTS</dt><dd>5+</dd></div><div><dt>SPOTS</dt><dd>50+</dd></div><div><dt>FINISH</dt><dd>01</dd></div></dl>
         </div>
 
         <div class="scene-copy scene-copy-places" data-scene="2">
           <span class="scene-no">03 — PLACES &amp; PEOPLE</span>
-          <h2>길 위의 선택이<br /><em>하루의 표정이 된다.</em></h2>
-          <p>누군가는 산을 넘고, 누군가는 작은 도시에서 멈춘다.<br />장소와 사람은 경로 위의 점이 아니라 여행의 이유다.</p>
+          <h2>한반도의 풍경을 따라<br /><span>각자의 길을 따라</span></h2>
+          <p>산길을 넘고, 평원을 가르며, 작은 도시를 지나<br />같은 목적지를 향해도 저마다 다른 여정이 펼쳐집니다.</p>
         </div>
 
         <div class="scene-copy scene-copy-memory" data-scene="3">
           <span class="scene-no">04 — TRACE / MEMORY</span>
-          <h2>지나온 길은<br /><em>당신의 시간이 된다.</em></h2>
-          <p>출발, 정차, 만남과 피니시. 공간의 경로는<br />한 사람의 시간축이 되어 오래 남는다.</p>
+          <h2>머무는 스팟마다<br /><span>영원히 남는 기억</span></h2>
+          <p>스팟에 멈춰 체크인한 시간과 장면은<br />나만의 여정을 이루는 기록으로 남습니다.</p>
         </div>
 
         <div class="scene-rail" aria-hidden="true">
           <span id="sceneCurrent">01</span>
           <i><b id="sceneProgress"></b></i>
-          <span>04</span>
-        </div>
-
-        <div class="brochure-caption" id="brochureCaption" aria-live="polite">
-          <span>HORIZON LINE</span><b>SCROLL ↓</b>
+          <span>05</span>
         </div>
 
         <div class="sunset-hold" id="sunsetHold">
           <small>18:47:32 · LAST LIGHT</small>
-          <p>서로 다른 하루가<br /><strong>하나의 해넘이에 닿는다.</strong></p>
+          <p>서해의 낙조 아래<br /><strong>당신의 여정이 완성됩니다.</strong></p>
           <a href="#footer">MY SSKR를 시작하기 <span>↗</span></a>
         </div>
       </div>
@@ -175,6 +196,10 @@
       <div class="footer-brand"><strong>SSKR</strong><span>SUNRISE SUNSET<br />KOREAN RALLY</span></div>
       <nav aria-label="Footer navigation"><a href="#journey">ABOUT</a><a href="#journey">STARTS</a><a href="#journey">SPOTS</a><a href="#journey">MEMORY</a></nav>
       <div><a href="#top">INSTAGRAM ↗</a><span>© 2026 SSKR</span></div>
+    </div>
+    <div class="business-info" aria-label="사업자 정보 예시">
+      <span>사업자 정보 예시 · 정식 운영 전 실제 등록 정보로 교체됩니다.</span>
+      <p>상호 SSKR 프로젝트(예시) · 사업자등록번호 000-00-00000 · 대표자 홍길동 · 사업장 주소 서울특별시 중구 세종대로 00 · 대표전화 02-0000-0000 · 이메일 hello@sskr.example</p>
     </div>
   </footer>
 

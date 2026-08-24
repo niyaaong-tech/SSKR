@@ -2,6 +2,11 @@
   const clamp = (value, min = 0, max = 1) => Math.min(max, Math.max(min, value));
   const mix = (a, b, t) => a + (b - a) * t;
   const ease = (t) => 1 - Math.pow(1 - clamp(t), 3);
+  const easeOutBack = (t) => {
+    const c1 = 1.70158;
+    const c3 = c1 + 1;
+    return 1 + c3 * Math.pow(clamp(t) - 1, 3) + c1 * Math.pow(clamp(t) - 1, 2);
+  };
   const range = (value, start, end) => clamp((value - start) / (end - start));
   const fadeWindow = (value, start, peak, end) => {
     if (value <= peak) return range(value, start, peak);
@@ -10,36 +15,71 @@
 
   const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   const pageProgress = document.querySelector('#pageProgress');
+  const frameNumber = document.querySelector('#frameNumber');
+  const framePhase = document.querySelector('#framePhase');
   const header = document.querySelector('#siteHeader');
   const intro = document.querySelector('#intro');
   const introSky = document.querySelector('.intro-sky');
+  const introGrain = document.querySelector('.intro-grain');
+  const introMeta = document.querySelector('.intro-meta');
   const introCopy = document.querySelector('#introCopy');
+  const introHandoffCopy = document.querySelector('#introHandoffCopy');
+  const introHandoffTrack = document.querySelector('.intro-handoff-line');
+  const introHandoffLine = document.querySelector('#introHandoffLine');
+  const introHandoffSun = document.querySelector('#introHandoffSun');
   const gateway = document.querySelector('#gateway');
+  const introCue = document.querySelector('.intro-scroll-cue');
   const brochure = document.querySelector('#journey');
+  const brochureStage = document.querySelector('#brochureStage');
+  const journeySvg = document.querySelector('#journeySvg');
   const line = document.querySelector('#journeyLine');
   const lineShadow = document.querySelector('#journeyLineShadow');
   const handoffAnchor = document.querySelector('#handoffAnchor');
   const mapArt = document.querySelector('#mapArt');
   const mapGrid = document.querySelector('.map-grid');
+  const seaLabels = [...document.querySelectorAll('.sea-label')];
   const routeNodes = document.querySelector('#routeNodes');
-  const timeNodes = document.querySelector('#timeNodes');
   const placesLayer = document.querySelector('#placesLayer');
   const memoryLayer = document.querySelector('#memoryLayer');
+  const memoryCards = [...document.querySelectorAll('.memory-card')];
+  const cardConnectors = document.querySelector('#cardConnectors');
+  const connectorLines = [...document.querySelectorAll('[data-connector]')];
   const sceneCopies = [...document.querySelectorAll('.scene-copy')];
   const sceneCurrent = document.querySelector('#sceneCurrent');
   const sceneProgress = document.querySelector('#sceneProgress');
-  const caption = document.querySelector('#brochureCaption');
   const sunsetHold = document.querySelector('#sunsetHold');
   const dawn = document.querySelector('.sky-dawn');
   const day = document.querySelector('.sky-day');
   const sunset = document.querySelector('.sky-sunset');
   const sunOrb = document.querySelector('.sun-orb');
+  const storyIndex = document.querySelector('#storyIndex');
+  const chapterButtons = [...document.querySelectorAll('[data-chapter]')];
+  const footer = document.querySelector('#footer');
 
-  const horizon = [830,370,700,370,600,370,510,370,400,370,280,370,190,370,130,370,80,370,40,370];
-  const route = [830,125,780,190,810,260,725,315,650,365,650,445,540,485,435,525,410,590,280,610];
-  const trace = [950,390,880,390,810,390,735,390,660,390,595,390,520,390,410,390,250,390,90,390];
-  const pathFrom = (values) => `M${values[0]} ${values[1]} C${values[2]} ${values[3]} ${values[4]} ${values[5]} ${values[6]} ${values[7]} C${values[8]} ${values[9]} ${values[10]} ${values[11]} ${values[12]} ${values[13]} C${values[14]} ${values[15]} ${values[16]} ${values[17]} ${values[18]} ${values[19]}`;
+  const horizon = [830,370,700,370,570,370,440,370,310,370,180,370,90,370,40,370];
+  const horizonStops = [1,.84,.7,.56,.42,.28,.14,0];
+  // CSV canonical coordinates projected through the page's final south-Korea map zoom.
+  const routeSpots = [[899.442,182.284],[804.099,253.671],[730.334,257.588],[731.33,325.075],[709.74,358.421],[663.859,390.734],[583.752,522.783],[550.248,518.552]];
+  const traceSpots = [[870,330],[760,330],[650,330],[540,330],[430,330],[320,330],[210,330],[100,330]];
+  const route = routeSpots.flat();
+  const trace = traceSpots.flat();
+  const heroImage = { width: 1672, height: 941, horizonY: 760 };
+  const pathFrom = (values) => values.reduce((path, value, index) => {
+    if (index % 2) return path;
+    return `${path}${index === 0 ? 'M' : ' L'}${value} ${values[index + 1]}`;
+  }, '');
   const interpolatePath = (from, to, amount) => pathFrom(from.map((value, index) => mix(value, to[index], ease(amount))));
+  const getViewportHorizon = () => {
+    if (!journeySvg) return horizon;
+    const svgRect = journeySvg.getBoundingClientRect();
+    const viewBox = journeySvg.viewBox.baseVal;
+    const svgScale = Math.min(svgRect.width / viewBox.width, svgRect.height / viewBox.height);
+    if (!svgScale) return horizon;
+    const contentLeft = svgRect.left + (svgRect.width - viewBox.width * svgScale) / 2;
+    const viewLeft = -contentLeft / svgScale;
+    const viewRight = (window.innerWidth - contentLeft) / svgScale;
+    return horizonStops.flatMap((stop) => [mix(viewLeft, viewRight, stop), 370]);
+  };
   const setOpacity = (element, value) => { if (element) element.style.opacity = clamp(value).toFixed(3); };
   const setNodeReveal = (group, amount) => {
     if (!group) return;
@@ -47,53 +87,211 @@
     nodes.forEach((node, index) => {
       const nodeProgress = range(amount, index / nodes.length, Math.min(1, (index + 1.15) / nodes.length));
       node.style.opacity = nodeProgress.toFixed(3);
-      node.style.transformBox = 'fill-box';
-      node.style.transformOrigin = 'center';
-      node.style.scale = mix(.65, 1, ease(nodeProgress)).toFixed(3);
     });
   };
 
+  // Keep the editorial frame numbers stable while giving the finale more
+  // physical scroll distance. The last 4% of the motion timeline occupies
+  // 12.3% of the brochure scroll, roughly tripling the sunset hold.
+  const timelineFinalStart = .96;
+  const physicalFinalStart = .877;
+  const timelineFromPhysical = (physicalProgress) => {
+    const progress = clamp(physicalProgress);
+    return progress <= physicalFinalStart
+      ? progress * (timelineFinalStart / physicalFinalStart)
+      : timelineFinalStart + (progress - physicalFinalStart) * ((1 - timelineFinalStart) / (1 - physicalFinalStart));
+  };
+  const physicalFromTimeline = (timelineProgress) => {
+    const progress = clamp(timelineProgress);
+    return progress <= timelineFinalStart
+      ? progress * (physicalFinalStart / timelineFinalStart)
+      : physicalFinalStart + (progress - timelineFinalStart) * ((1 - physicalFinalStart) / (1 - timelineFinalStart));
+  };
+  const getFrameLayout = () => {
+    const scrollable = Math.max(1, document.documentElement.scrollHeight - window.innerHeight);
+    const brochureStart = brochure?.offsetTop ?? 0;
+    const brochureMax = brochure ? Math.max(1, brochure.offsetHeight - window.innerHeight) : 1;
+    const brochureEnd = brochureStart + brochureMax;
+    return { scrollable, brochureStart, brochureMax, brochureEnd };
+  };
+  const frameFromScroll = (scrollY) => {
+    const { scrollable, brochureStart, brochureMax, brochureEnd } = getFrameLayout();
+    if (scrollY <= brochureStart) return mix(0, 150, clamp(scrollY / Math.max(1, brochureStart)));
+    if (scrollY <= brochureEnd) return mix(150, 850, clamp((scrollY - brochureStart) / brochureMax));
+    return mix(850, 900, clamp((scrollY - brochureEnd) / Math.max(1, scrollable - brochureEnd)));
+  };
+  const scrollFromFrame = (frame) => {
+    const { scrollable, brochureStart, brochureMax, brochureEnd } = getFrameLayout();
+    const targetFrame = clamp(frame, 0, 900);
+    if (targetFrame <= 150) return brochureStart * (targetFrame / 150);
+    if (targetFrame <= 850) return brochureStart + brochureMax * ((targetFrame - 150) / 700);
+    return brochureEnd + (scrollable - brochureEnd) * ((targetFrame - 850) / 50);
+  };
+
+  const chapterDefinitions = [
+    { key: 'home', frame: 0 },
+    { key: 'sunrise', frame: 140 },
+    { key: 'crossing', progress: .16 },
+    { key: 'route', frame: 410 },
+    { key: 'checkin', progress: .625 },
+    { key: 'complete', frame: 805 }
+  ];
+  const getChapterTargets = () => {
+    const { brochureStart, brochureMax } = getFrameLayout();
+    return chapterDefinitions.map((chapter) => ({
+      ...chapter,
+      target: chapter.frame !== undefined
+        ? scrollFromFrame(chapter.frame)
+        : brochureStart + brochureMax * physicalFromTimeline(chapter.progress)
+    }));
+  };
+  const syncStoryIndex = (scrollY) => {
+    if (!storyIndex) return;
+    const targets = getChapterTargets();
+    const scrollable = Math.max(1, document.documentElement.scrollHeight - window.innerHeight);
+    let activeIndex = 0;
+    targets.forEach((chapter, index) => {
+      if (scrollY >= chapter.target - 2) activeIndex = index;
+    });
+    chapterButtons.forEach((button, index) => {
+      const active = index === activeIndex;
+      button.classList.toggle('is-active', active);
+      if (active) button.setAttribute('aria-current', 'step');
+      else button.removeAttribute('aria-current');
+    });
+    storyIndex.classList.toggle('is-outside', footer ? scrollY >= footer.offsetTop - window.innerHeight * .2 : false);
+  };
+
+  let indexTravelling = false;
+  let indexAnimation = 0;
+  const travelTo = (target) => {
+    if (indexTravelling) return;
+    const start = window.scrollY || document.documentElement.scrollTop;
+    const distance = target - start;
+    const duration = reduced ? 0 : clamp(Math.abs(distance) * .24, 760, 1500) * 3;
+    const startedAt = performance.now();
+    indexTravelling = true;
+    storyIndex?.classList.add('is-travelling');
+    storyIndex?.setAttribute('aria-busy', 'true');
+    document.documentElement.classList.add('is-story-travelling');
+    chapterButtons.forEach((button) => { button.disabled = true; });
+    const finish = () => {
+      indexTravelling = false;
+      storyIndex?.classList.remove('is-travelling');
+      storyIndex?.removeAttribute('aria-busy');
+      document.documentElement.classList.remove('is-story-travelling');
+      chapterButtons.forEach((button) => { button.disabled = false; });
+      syncStoryIndex(window.scrollY || document.documentElement.scrollTop);
+    };
+    if (!duration) {
+      window.scrollTo(0, target);
+      finish();
+      return;
+    }
+    cancelAnimationFrame(indexAnimation);
+    const animate = (now) => {
+      const t = clamp((now - startedAt) / duration);
+      const eased = t < .5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+      window.scrollTo(0, start + distance * eased);
+      if (t < 1) indexAnimation = requestAnimationFrame(animate);
+      else finish();
+    };
+    indexAnimation = requestAnimationFrame(animate);
+  };
+  chapterButtons.forEach((button) => {
+    button.addEventListener('click', () => {
+      if (indexTravelling) return;
+      const chapter = getChapterTargets().find((item) => item.key === button.dataset.chapter);
+      if (chapter) travelTo(chapter.target);
+    });
+  });
+
   let ticking = false;
   let lastScene = -1;
-  const sceneNames = [
-    ['HORIZON LINE', 'SCROLL ↓'],
-    ['KOREA ROUTE', 'EAST → WEST'],
-    ['PLACES & PEOPLE', 'CHOOSE YOUR ROAD'],
-    ['TIME TRACE', 'EAST → WEST · R → L']
-  ];
-
   const update = () => {
     ticking = false;
     const scrollY = window.scrollY || document.documentElement.scrollTop;
     const scrollable = Math.max(1, document.documentElement.scrollHeight - window.innerHeight);
+    const currentFrame = frameFromScroll(scrollY);
     if (pageProgress) pageProgress.style.transform = `scaleX(${scrollY / scrollable})`;
+    if (frameNumber) frameNumber.textContent = String(Math.round(currentFrame)).padStart(3, '0');
     header?.classList.toggle('is-scrolled', scrollY > 20);
+    syncStoryIndex(scrollY);
 
     if (intro && !reduced) {
       const introMax = Math.max(1, intro.offsetHeight - window.innerHeight);
       const introP = clamp((scrollY - intro.offsetTop) / introMax);
+      const headlineOut = range(introP, .18, .43);
+      const horizonLift = ease(range(introP, .3, .56));
+      const lineReveal = ease(range(introP, .48, .68));
+      const handoffCopyIn = ease(range(introP, .7, .84));
+      const imageFade = ease(range(introP, .68, .94));
+      const skyScale = mix(1.02, 1.035, horizonLift);
+      const coverScale = Math.max(window.innerWidth / heroImage.width, window.innerHeight / heroImage.height);
+      const renderedHeight = heroImage.height * coverScale;
+      const backgroundTop = (window.innerHeight - renderedHeight) / 2;
+      const sourceHorizon = backgroundTop + heroImage.horizonY * coverScale;
+      const fullScaleHorizon = window.innerHeight / 2 + (sourceHorizon - window.innerHeight / 2) * 1.035;
+      const targetHorizon = introHandoffTrack?.getBoundingClientRect().top ?? window.innerHeight * .5416;
+      const horizonShift = Math.max(0, fullScaleHorizon - targetHorizon);
+      if (framePhase) framePhase.textContent = introP < .45 ? 'INTRO' : introP < .7 ? 'HORIZON DRAW' : 'HANDOFF';
       if (introCopy) {
-        introCopy.style.opacity = (1 - range(introP, .42, .9)).toFixed(3);
-        introCopy.style.transform = `translate3d(0,${-introP * 70}px,0)`;
+        introCopy.style.opacity = (1 - headlineOut).toFixed(3);
+        introCopy.style.transform = `translate3d(0,${mix(0, -28, ease(headlineOut))}px,0)`;
       }
-      if (introSky) introSky.style.transform = `translate3d(0,${introP * -9}px,0) scale(${1.02 + introP * .018})`;
+      if (introSky) {
+        introSky.style.opacity = (1 - imageFade).toFixed(3);
+        introSky.style.transform = `translate3d(0,${(-horizonShift * horizonLift).toFixed(2)}px,0) scale(${skyScale})`;
+      }
+      setOpacity(introGrain, mix(.15, .08, imageFade));
+      setOpacity(introMeta, 1 - range(introP, .28, .55));
+      if (introHandoffLine) {
+        introHandoffLine.style.opacity = lineReveal.toFixed(3);
+        introHandoffLine.style.transform = `scaleX(${lineReveal})`;
+      }
+      if (introHandoffSun) {
+        const sunRise = ease(range(currentFrame, 110, 132));
+        const sunFade = range(currentFrame, 140, 160);
+        introHandoffSun.style.opacity = (sunRise * (1 - sunFade)).toFixed(3);
+        introHandoffSun.style.transform = `translate3d(0,${mix(100, 30, sunRise).toFixed(2)}%,0)`;
+      }
+      if (introHandoffCopy) {
+        introHandoffCopy.style.opacity = handoffCopyIn.toFixed(3);
+        introHandoffCopy.style.transform = `translate3d(0,${mix(38, 0, handoffCopyIn)}px,0)`;
+      }
       if (gateway) {
-        gateway.style.opacity = (1 - range(introP, .72, 1)).toFixed(3);
-        gateway.style.transform = `translate3d(0,${introP * 35}px,0)`;
+        const gatewayOut = range(introP, .24, .5);
+        gateway.style.opacity = (1 - gatewayOut).toFixed(3);
+        gateway.style.transform = `translate3d(0,${mix(0, 28, gatewayOut)}px,0)`;
       }
+      setOpacity(introCue, 1 - range(introP, .03, .24));
     }
 
     if (!brochure || reduced) return;
     const brochureStart = brochure.offsetTop;
     const brochureMax = Math.max(1, brochure.offsetHeight - window.innerHeight);
-    const p = clamp((scrollY - brochureStart) / brochureMax);
+    const physicalP = clamp((scrollY - brochureStart) / brochureMax);
+    const p = timelineFromPhysical(physicalP);
+    if (brochureStage) brochureStage.style.opacity = scrollY >= brochureStart ? '1' : '0';
 
-    const horizonToRoute = range(p, .12, .32);
-    const routeToTrace = range(p, .62, .78);
-    let currentPath = interpolatePath(horizon, route, horizonToRoute);
+    const horizonToRoute = range(p, 0, .14);
+    const routeToTrace = range(p, .52, .64);
+    const viewportHorizon = getViewportHorizon();
+    let currentPath = interpolatePath(viewportHorizon, route, horizonToRoute);
     if (routeToTrace > 0) currentPath = interpolatePath(route, trace, routeToTrace);
     line?.setAttribute('d', currentPath);
     lineShadow?.setAttribute('d', currentPath);
+
+    if (introHandoffTrack && journeySvg && line) {
+      const svgRect = journeySvg.getBoundingClientRect();
+      const viewBox = journeySvg.viewBox.baseVal;
+      const pathBox = line.getBBox();
+      const svgScale = Math.min(svgRect.width / viewBox.width, svgRect.height / viewBox.height);
+      const contentLeft = svgRect.left + (svgRect.width - viewBox.width * svgScale) / 2;
+      introHandoffTrack.style.left = `${contentLeft + pathBox.x * svgScale}px`;
+      introHandoffTrack.style.right = 'auto';
+      introHandoffTrack.style.width = `${pathBox.width * svgScale}px`;
+    }
 
     const draw = 1;
     [line, lineShadow].forEach((path) => {
@@ -104,52 +302,119 @@
 
     if (handoffAnchor) {
       const anchorT = ease(horizonToRoute);
-      handoffAnchor.setAttribute('cx', mix(horizon[0], route[0], anchorT));
-      handoffAnchor.setAttribute('cy', mix(horizon[1], route[1], anchorT));
-      handoffAnchor.style.opacity = fadeWindow(p, .06, .14, .37).toFixed(3);
-      handoffAnchor.setAttribute('r', mix(5, 8, range(p, .1, .28)).toFixed(2));
+      handoffAnchor.setAttribute('cx', mix(viewportHorizon[0], route[0], anchorT));
+      handoffAnchor.setAttribute('cy', mix(viewportHorizon[1], route[1], anchorT));
+      handoffAnchor.style.opacity = fadeWindow(p, .03, .1, .22).toFixed(3);
+      handoffAnchor.setAttribute('r', mix(5, 8, range(p, .06, .18)).toFixed(2));
     }
 
-    const mapIn = range(p, .13, .26);
-    const southZoom = range(p, .3, .47);
-    const mapOut = range(p, .58, .66);
-    const mapOpacity = mapIn * (1 - mapOut) * mix(1, .58, ease(southZoom));
+    const mapIn = range(p, .015, .085);
+    const southZoom = range(p, .045, .18);
+    const mapOut = range(p, .5, .64);
+    const mapOpacity = mapIn * (1 - mapOut) * mix(1, .62, ease(southZoom));
     setOpacity(mapArt, mapOpacity);
     setOpacity(mapGrid, mapOpacity * .8);
-    if (mapArt) mapArt.style.transform = `translate3d(${mix(42, 0, ease(mapIn))}px,0,0) scale(${mix(.92, 3.4, ease(southZoom))})`;
+    const seaLabelFade = range(p, .36, .4);
+    seaLabels.forEach((label) => setOpacity(label, 1 - seaLabelFade));
+    if (mapArt) mapArt.style.transform = `translate3d(${mix(42, -70, ease(southZoom))}px,0,0) scale(${mix(.92, 3.15, ease(southZoom))})`;
 
-    const routeReveal = range(p, .22, .42) * (1 - range(p, .52, .63));
-    setOpacity(routeNodes, routeReveal);
-    setNodeReveal(routeNodes, range(p, .23, .42));
-
-    const placesIn = range(p, .43, .54);
-    const placesOut = range(p, .6, .68);
+    const routeReveal = range(p, .2, .34);
+    const nodeOut = range(currentFrame, 770, 805);
+    setOpacity(routeNodes, routeReveal * (1 - nodeOut));
+    const placesIn = range(p, .36, .43);
+    const placesOut = range(p, .51, .58);
     setOpacity(placesLayer, placesIn * (1 - placesOut));
     document.querySelectorAll('.place').forEach((place, index) => {
-      const reveal = range(p, .44 + index * .025, .535 + index * .035);
-      place.style.clipPath = `circle(${reveal * 74}% at ${index === 1 ? 35 : 58}% ${index === 2 ? 64 : 48}%)`;
-      place.style.transform = `translate3d(0,${mix(35, 0, ease(reveal))}px,0)`;
+      const reveal = range(p, .37 + index * .014, .43 + index * .014);
+      place.style.clipPath = `circle(${(ease(reveal) * 50).toFixed(2)}% at 50% 50%)`;
+      place.style.transform = `translate3d(0,${mix(24, 0, ease(reveal))}px,0)`;
+    });
+    const routeNodeElements = routeNodes ? [...routeNodes.children] : [];
+    routeNodeElements.forEach((node, index) => {
+      const nodeReveal = range(p, .2 + index * .012, .27 + index * .012);
+      const eventReveal = range(p, .61 + index * .012, .655 + index * .012);
+      const memoryRecall = range(p, .8 + index * .012, .84 + index * .012);
+      const elastic = easeOutBack(eventReveal);
+      const x = mix(routeSpots[index][0], traceSpots[index][0], ease(routeToTrace));
+      const y = mix(routeSpots[index][1], traceSpots[index][1], ease(routeToTrace)) - mix(0, 72, ease(nodeOut));
+      node.setAttribute('transform', `translate(${x.toFixed(2)} ${y.toFixed(2)})`);
+      node.style.opacity = (nodeReveal * (1 - nodeOut)).toFixed(3);
+      node.querySelectorAll('circle').forEach((circle) => {
+        const eventScale = mix(1, 2, elastic);
+        circle.style.transform = `scale(${mix(eventScale, 1.25, ease(memoryRecall)).toFixed(3)})`;
+      });
+      const routePlace = node.querySelector('.route-place');
+      const tracePlace = node.querySelector('.trace-place');
+      const arrival = node.querySelector('.arrival');
+      const memoryLabel = node.querySelector('.memory-label');
+      if (routePlace) {
+        const labelMove = ease(routeToTrace);
+        routePlace.setAttribute('x', mix(-24, 0, labelMove).toFixed(2));
+        routePlace.setAttribute('y', mix(-14, 28, labelMove).toFixed(2));
+        routePlace.setAttribute('text-anchor', 'middle');
+        routePlace.style.opacity = ((1 - memoryRecall) * (1 - nodeOut)).toFixed(3);
+      }
+      if (tracePlace) {
+        tracePlace.style.opacity = '1';
+        const duplicatePlace = tracePlace.querySelector('tspan:not(.arrival)');
+        if (duplicatePlace) duplicatePlace.style.opacity = '0';
+      }
+      if (arrival) arrival.style.opacity = (eventReveal * (1 - memoryRecall)).toFixed(3);
+      if (memoryLabel) memoryLabel.style.opacity = (memoryRecall * (1 - nodeOut)).toFixed(3);
     });
 
-    const traceIn = range(p, .66, .79);
-    const traceOut = range(p, .94, .985);
-    setOpacity(timeNodes, traceIn * (1 - traceOut));
-    setNodeReveal(timeNodes, range(p, .7, .84));
-
-    const memoryIn = range(p, .69, .78);
-    const memoryOut = range(p, .94, .985);
-    setOpacity(memoryLayer, memoryIn * (1 - memoryOut));
-    document.querySelectorAll('.memory-card').forEach((card, index) => {
-      const reveal = range(p, .7 + index * .038, .76 + index * .04);
-      card.style.opacity = (reveal * (1 - memoryOut)).toFixed(3);
-      card.style.transform = `translate3d(${mix(32, 0, ease(reveal))}px,${mix(24, 0, ease(reveal))}px,0) rotate(var(--r))`;
+    const memoryIn = range(p, .61, .66);
+    setOpacity(memoryLayer, memoryIn);
+    setOpacity(cardConnectors, memoryIn);
+    const svgMatrix = journeySvg?.getScreenCTM();
+    memoryCards.forEach((card, index) => {
+      const reveal = range(p, .625 + index * .012, .67 + index * .012);
+      const memoryRecall = range(p, .8 + index * .012, .84 + index * .012);
+      let recallX = 0;
+      let recallY = 0;
+      if (journeySvg && svgMatrix) {
+        const point = journeySvg.createSVGPoint();
+        point.x = traceSpots[index][0];
+        point.y = traceSpots[index][1];
+        const nodePoint = point.matrixTransform(svgMatrix);
+        recallX = nodePoint.x - (card.offsetLeft + card.offsetWidth / 2);
+        recallY = nodePoint.y - (card.offsetTop + card.offsetHeight / 2);
+      }
+      const recallEase = ease(memoryRecall);
+      const revealX = mix(24, 0, ease(reveal));
+      const revealY = mix(18, 0, ease(reveal));
+      card.style.opacity = (reveal * (1 - recallEase)).toFixed(3);
+      card.style.transform = `translate3d(${(revealX + recallX * recallEase).toFixed(2)}px,${(revealY + recallY * recallEase).toFixed(2)}px,0) rotate(var(--r)) scale(${mix(mix(.88, 1, easeOutBack(reveal)), .16, recallEase).toFixed(3)})`;
     });
+
+    if (journeySvg && connectorLines.length) {
+      const svgPoint = journeySvg.createSVGPoint();
+      connectorLines.forEach((connector, index) => {
+        const card = memoryCards[index];
+        if (!card || !svgMatrix) return;
+        const x = mix(routeSpots[index][0], traceSpots[index][0], ease(routeToTrace));
+        const y = mix(routeSpots[index][1], traceSpots[index][1], ease(routeToTrace));
+        svgPoint.x = x;
+        svgPoint.y = y;
+        const nodePoint = svgPoint.matrixTransform(svgMatrix);
+        const cardRect = card.getBoundingClientRect();
+        const cardAbove = cardRect.bottom < nodePoint.y;
+        connector.setAttribute('x1', ((nodePoint.x / window.innerWidth) * 1000).toFixed(2));
+        connector.setAttribute('y1', ((nodePoint.y / window.innerHeight) * 700).toFixed(2));
+        connector.setAttribute('x2', (((cardRect.left + cardRect.width / 2) / window.innerWidth) * 1000).toFixed(2));
+        connector.setAttribute('y2', ((((cardAbove ? cardRect.bottom : cardRect.top)) / window.innerHeight) * 700).toFixed(2));
+        const reveal = range(p, .625 + index * .012, .67 + index * .012);
+        const memoryRecall = range(p, .8 + index * .012, .84 + index * .012);
+        connector.style.opacity = (reveal * (1 - ease(memoryRecall))).toFixed(3);
+        connector.style.strokeDashoffset = (1 - ease(reveal)).toFixed(3);
+      });
+    }
 
     const sceneWeights = [
-      fadeWindow(p, 0, .035, .19),
-      fadeWindow(p, .13, .265, .44),
-      fadeWindow(p, .39, .51, .67),
-      fadeWindow(p, .61, .71, .79)
+      1 - range(p, .06, .14),
+      fadeWindow(p, .08, .16, .36),
+      fadeWindow(p, .36, .405, .56),
+      fadeWindow(p, .54, .61, .73)
     ];
     sceneCopies.forEach((copy, index) => {
       const opacity = sceneWeights[index];
@@ -157,29 +422,39 @@
       copy.style.transform = `translate3d(0,${mix(28, 0, ease(opacity))}px,0)`;
     });
 
-    const scene = p < .19 ? 0 : p < .43 ? 1 : p < .66 ? 2 : 3;
+    const scene = p < .12 ? 0 : p < .36 ? 1 : p < .54 ? 2 : currentFrame < 805 ? 3 : 4;
     if (scene !== lastScene) {
       lastScene = scene;
       if (sceneCurrent) sceneCurrent.textContent = String(scene + 1).padStart(2, '0');
-      if (caption) caption.innerHTML = `<span>${sceneNames[scene][0]}</span><b>${sceneNames[scene][1]}</b>`;
     }
     if (sceneProgress) sceneProgress.style.transform = `scaleY(${p})`;
+    if (framePhase) {
+      framePhase.textContent = currentFrame >= 805 ? 'SUNSET HOLD' : currentFrame >= 770 ? 'MEMORY EXIT' : p < .01 ? 'HORIZON' : p < .18 ? 'MAP + ROUTE' : p < .52 ? 'MY ROUTE' : p < .6 ? 'STRAIGHTEN' : p < .8 ? 'SPOT CHECK-IN' : 'MEMORY RECALL';
+    }
 
-    setOpacity(day, range(p, .15, .31) * (1 - range(p, .62, .75)));
-    setOpacity(dawn, 1 - range(p, .1, .3));
-    const sunsetIn = range(p, .66, .84);
+    setOpacity(day, range(p, .08, .2) * (1 - range(p, .54, .68)));
+    setOpacity(dawn, 1 - range(p, .06, .2));
+    const sunsetIn = range(p, .56, .72);
     setOpacity(sunset, sunsetIn);
-    setOpacity(sunOrb, range(p, .82, .92));
-    if (sunOrb) sunOrb.style.transform = `translate3d(0,${mix(-80, 55, range(p, .82, .98))}px,0)`;
+    const sunIn = range(p, .69, .75);
+    const sunDrop = range(p, .72, .995);
+    setOpacity(sunOrb, sunIn * (1 - range(p, .995, 1)));
+    if (sunOrb) {
+      sunOrb.style.transform = `translate3d(0,${mix(-55, 310, ease(sunDrop))}px,0)`;
+      const sunRect = sunOrb.getBoundingClientRect();
+      const horizonY = window.innerHeight * .7;
+      const visibleHeight = clamp((horizonY - sunRect.top) / Math.max(1, sunRect.height));
+      sunOrb.style.clipPath = `inset(0 0 ${(1 - visibleHeight) * 100}% 0)`;
+    }
 
-    const hold = range(p, .95, .99);
+    const hold = range(currentFrame, 805, 845);
     setOpacity(sunsetHold, hold);
     if (sunsetHold) {
       sunsetHold.style.pointerEvents = hold > .9 ? 'auto' : 'none';
       sunsetHold.style.transform = `translate3d(0,${mix(22, 0, ease(hold))}px,0)`;
     }
-    setOpacity(line, 1 - range(p, .95, .99));
-    setOpacity(lineShadow, 1 - range(p, .945, .985));
+    setOpacity(line, 1);
+    setOpacity(lineShadow, 0);
   };
 
   const requestUpdate = () => {

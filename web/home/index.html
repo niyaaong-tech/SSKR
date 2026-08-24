@@ -8,7 +8,7 @@
   <title>SSKR — From First Light to Last Light</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230c1110'/%3E%3Cpath d='M12 37h40' stroke='%23e8b65c' stroke-width='3'/%3E%3Ccircle cx='44' cy='25' r='9' fill='%23f06a32'/%3E%3C/svg%3E" />
   <link rel="preconnect" href="https://images.unsplash.com" />
-  <link rel="stylesheet" href="./styles.css" />
+  <link rel="stylesheet" href="./styles.css?rev=trace-baseline-persist" />
 </head>
 <body>
   <div class="page-progress" aria-hidden="true"><i id="pageProgress"></i></div>
@@ -46,9 +46,9 @@
 
         <div class="intro-handoff" aria-hidden="true">
           <div class="intro-handoff-copy" id="introHandoffCopy">
-            <span class="scene-no">01 — HORIZON</span>
+            <span class="scene-no">01 — FIRST LIGHT</span>
             <h2>동틀 무렵 시작되는 하루</h2>
-            <p>동해안에 흩어진 스타트 포인트에서,<br />참가자들은 일출을 기다립니다.</p>
+            <p>동해안 곳곳의 스타트 포인트에서,<br />참가자들은 일출을 기다립니다.</p>
           </div>
           <div class="intro-handoff-sun-mask"><i id="introHandoffSun"></i></div>
           <div class="intro-handoff-line"><i id="introHandoffLine"></i></div>
@@ -90,16 +90,18 @@
 
         <div class="places-layer" id="placesLayer" aria-hidden="true">
           <figure class="place place-1">
-            <div class="place-photo"></div><figcaption><b>07:08</b><span>평창 · 고갯길</span></figcaption>
+            <div class="place-photo"></div>
           </figure>
           <figure class="place place-2">
-            <div class="place-photo"></div><figcaption><b>10:16</b><span>충주 · 물가</span></figcaption>
+            <div class="place-photo"></div>
           </figure>
           <figure class="place place-3">
-            <div class="place-photo"></div><figcaption><b>16:02</b><span>익산 · 들판</span></figcaption>
+            <div class="place-photo"></div>
           </figure>
           <p class="photo-credit">SSKR ROUTE ARCHIVE</p>
         </div>
+
+        <small class="first-light-stamp" id="firstLightStamp" aria-hidden="true">05:24:18 · FIRST LIGHT</small>
 
         <svg class="card-connectors" id="cardConnectors" viewBox="0 0 1000 700" preserveAspectRatio="none" aria-hidden="true">
           <line data-connector="0"/><line data-connector="1"/><line data-connector="2"/><line data-connector="3"/>
@@ -133,6 +135,7 @@
           </g>
           <path class="journey-line-shadow" id="journeyLineShadow" pathLength="1" />
           <path class="journey-line" id="journeyLine" pathLength="1" />
+          <path class="trace-baseline" id="traceBaseline" d="M870 330 L100 330" />
           <circle class="handoff-anchor" id="handoffAnchor" cx="830" cy="370" r="7" />
           <g class="route-nodes" id="routeNodes">
             <g class="route-node" data-node="0"><circle class="spot-core" r="5"/><circle class="node-ring" r="10"/><text class="route-place" x="-12" y="-14" text-anchor="end">강릉</text><text class="trace-place" x="0" y="28" text-anchor="middle"><tspan>강릉</tspan><tspan class="arrival" x="0" dy="15">05:31 도착</tspan></text><text class="memory-label" x="0" y="-26" text-anchor="middle">MEMORY 01</text></g>
@@ -147,26 +150,26 @@
         </svg>
 
         <div class="scene-copy scene-copy-horizon" data-scene="0">
-          <span class="scene-no">01 — HORIZON</span>
+          <span class="scene-no">01 — FIRST LIGHT</span>
           <h2>동틀 무렵 시작되는 하루</h2>
-          <p>동해안에 흩어진 스타트 포인트에서,<br />참가자들은 일출을 기다립니다.</p>
+          <p>동해안 곳곳의 스타트 포인트에서,<br />참가자들은 일출을 기다립니다.</p>
         </div>
 
         <div class="scene-copy scene-copy-geography" data-scene="1">
-          <span class="scene-no">02 — GEOGRAPHY</span>
+          <span class="scene-no">02 — COAST TO COAST</span>
           <h2>일출부터 일몰까지<br /><span>동해에서 서해로—</span></h2>
           <p>하나의 피니시를 향해<br />각자의 국토 횡단 라이딩이 펼쳐집니다.</p>
           <dl><div><dt>STARTS</dt><dd>5+</dd></div><div><dt>SPOTS</dt><dd>50+</dd></div><div><dt>FINISH</dt><dd>01</dd></div></dl>
         </div>
 
         <div class="scene-copy scene-copy-places" data-scene="2">
-          <span class="scene-no">03 — PLACES &amp; PEOPLE</span>
+          <span class="scene-no">03 — ALONG THE WAY</span>
           <h2>한반도의 풍경을 따라<br /><span>각자의 길을 따라</span></h2>
           <p>산길을 넘고, 평원을 가르며, 작은 도시를 지나<br />같은 목적지를 향해도 저마다 다른 여정이 펼쳐집니다.</p>
         </div>
 
         <div class="scene-copy scene-copy-memory" data-scene="3">
-          <span class="scene-no">04 — TRACE / MEMORY</span>
+          <span class="scene-no">04 — JOURNEY TRACE</span>
           <h2>머무는 스팟마다<br /><span>영원히 남는 기억</span></h2>
           <p>스팟에 멈춰 체크인한 시간과 장면은<br />나만의 여정을 이루는 기록으로 남습니다.</p>
         </div>
@@ -178,8 +181,9 @@
         </div>
 
         <div class="sunset-hold" id="sunsetHold">
+          <span class="finale-scene-no">05 — SUNSET FINISH</span>
           <small>18:47:32 · LAST LIGHT</small>
-          <p>서해의 낙조 아래<br /><strong>당신의 여정이 완성됩니다.</strong></p>
+          <p><span>서해의 낙조 아래</span><strong>당신의 여정이 완성됩니다.</strong></p>
           <a href="#footer">MY SSKR를 시작하기 <span>↗</span></a>
         </div>
       </div>
@@ -203,6 +207,6 @@
     </div>
   </footer>
 
-  <script src="./app.js"></script>
+  <script src="./app.js?rev=trace-baseline-persist"></script>
 </body>
 </html>

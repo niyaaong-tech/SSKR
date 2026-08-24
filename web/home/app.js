@@ -34,6 +34,7 @@
   const journeySvg = document.querySelector('#journeySvg');
   const line = document.querySelector('#journeyLine');
   const lineShadow = document.querySelector('#journeyLineShadow');
+  const traceBaseline = document.querySelector('#traceBaseline');
   const handoffAnchor = document.querySelector('#handoffAnchor');
   const mapArt = document.querySelector('#mapArt');
   const mapGrid = document.querySelector('.map-grid');
@@ -45,6 +46,7 @@
   const cardConnectors = document.querySelector('#cardConnectors');
   const connectorLines = [...document.querySelectorAll('[data-connector]')];
   const sceneCopies = [...document.querySelectorAll('.scene-copy')];
+  const firstLightStamp = document.querySelector('#firstLightStamp');
   const sceneCurrent = document.querySelector('#sceneCurrent');
   const sceneProgress = document.querySelector('#sceneProgress');
   const sunsetHold = document.querySelector('#sunsetHold');
@@ -63,7 +65,8 @@
   const traceSpots = [[870,330],[760,330],[650,330],[540,330],[430,330],[320,330],[210,330],[100,330]];
   const route = routeSpots.flat();
   const trace = traceSpots.flat();
-  const heroImage = { width: 1672, height: 941, horizonY: 760 };
+  const heroImage = { width: 1672, height: 941, horizonY: 761 };
+  const sunsetImage = { width: 1672, height: 941, horizonY: 666 };
   const pathFrom = (values) => values.reduce((path, value, index) => {
     if (index % 2) return path;
     return `${path}${index === 0 ? 'M' : ' L'}${value} ${values[index + 1]}`;
@@ -134,7 +137,7 @@
     { key: 'crossing', progress: .16 },
     { key: 'route', frame: 410 },
     { key: 'checkin', progress: .625 },
-    { key: 'complete', frame: 805 }
+    { key: 'complete', frame: 840 }
   ];
   const getChapterTargets = () => {
     const { brochureStart, brochureMax } = getFrameLayout();
@@ -222,18 +225,20 @@
       const introMax = Math.max(1, intro.offsetHeight - window.innerHeight);
       const introP = clamp((scrollY - intro.offsetTop) / introMax);
       const headlineOut = range(introP, .18, .43);
-      const horizonLift = ease(range(introP, .3, .56));
+      const horizonLift = ease(range(introP, .3, .48));
       const lineReveal = ease(range(introP, .48, .68));
       const handoffCopyIn = ease(range(introP, .7, .84));
       const imageFade = ease(range(introP, .68, .94));
-      const skyScale = mix(1.02, 1.035, horizonLift);
-      const coverScale = Math.max(window.innerWidth / heroImage.width, window.innerHeight / heroImage.height);
-      const renderedHeight = heroImage.height * coverScale;
-      const backgroundTop = (window.innerHeight - renderedHeight) / 2;
-      const sourceHorizon = backgroundTop + heroImage.horizonY * coverScale;
-      const fullScaleHorizon = window.innerHeight / 2 + (sourceHorizon - window.innerHeight / 2) * 1.035;
-      const targetHorizon = introHandoffTrack?.getBoundingClientRect().top ?? window.innerHeight * .5416;
-      const horizonShift = Math.max(0, fullScaleHorizon - targetHorizon);
+      const skyWidth = introSky?.offsetWidth || window.innerWidth;
+      const skyHeight = introSky?.offsetHeight || window.innerHeight;
+      const skyTop = introSky?.getBoundingClientRect().top || 0;
+      const coverScale = Math.max(skyWidth / heroImage.width, skyHeight / heroImage.height);
+      const centeredImageTop = (skyHeight - heroImage.height * coverScale) / 2;
+      const targetHorizon = introHandoffTrack?.getBoundingClientRect().top ?? skyTop + skyHeight * .5416;
+      const targetHorizonLocal = targetHorizon - skyTop;
+      const alignedImageTop = targetHorizonLocal - heroImage.horizonY * coverScale;
+      const imageTop = mix(centeredImageTop, alignedImageTop, horizonLift);
+      const visibleHorizon = imageTop + heroImage.horizonY * coverScale;
       if (framePhase) framePhase.textContent = introP < .45 ? 'INTRO' : introP < .7 ? 'HORIZON DRAW' : 'HANDOFF';
       if (introCopy) {
         introCopy.style.opacity = (1 - headlineOut).toFixed(3);
@@ -241,7 +246,8 @@
       }
       if (introSky) {
         introSky.style.opacity = (1 - imageFade).toFixed(3);
-        introSky.style.transform = `translate3d(0,${(-horizonShift * horizonLift).toFixed(2)}px,0) scale(${skyScale})`;
+        introSky.style.backgroundPosition = `center center, center center, center ${imageTop.toFixed(2)}px`;
+        introSky.style.setProperty('--intro-horizon-y', `${visibleHorizon.toFixed(2)}px`);
       }
       setOpacity(introGrain, mix(.15, .08, imageFade));
       setOpacity(introMeta, 1 - range(introP, .28, .55));
@@ -274,8 +280,16 @@
     const p = timelineFromPhysical(physicalP);
     if (brochureStage) brochureStage.style.opacity = scrollY >= brochureStart ? '1' : '0';
 
+    const mobileCompositionShift = window.innerWidth <= 900
+      ? -window.innerWidth * .18
+        * ease(range(p, .32, .36))
+        * (1 - ease(range(p, .5, .58)))
+      : 0;
+    if (journeySvg) journeySvg.style.transform = `translate3d(${mobileCompositionShift.toFixed(2)}px,0,0)`;
+
     const horizonToRoute = range(p, 0, .14);
     const routeToTrace = range(p, .52, .64);
+    const traceBaselineIn = range(currentFrame, 545, 559);
     const viewportHorizon = getViewportHorizon();
     let currentPath = interpolatePath(viewportHorizon, route, horizonToRoute);
     if (routeToTrace > 0) currentPath = interpolatePath(route, trace, routeToTrace);
@@ -320,6 +334,7 @@
 
     const routeReveal = range(p, .2, .34);
     const nodeOut = range(currentFrame, 770, 805);
+    setOpacity(traceBaseline, traceBaselineIn * (1 - nodeOut));
     setOpacity(routeNodes, routeReveal * (1 - nodeOut));
     const placesIn = range(p, .36, .43);
     const placesOut = range(p, .51, .58);
@@ -363,12 +378,16 @@
       if (memoryLabel) memoryLabel.style.opacity = (memoryRecall * (1 - nodeOut)).toFixed(3);
     });
 
+    const cardRevealStart = .625;
+    const cardRevealStep = .012;
+    const cardRevealDuration = .045;
     const memoryIn = range(p, .61, .66);
     setOpacity(memoryLayer, memoryIn);
     setOpacity(cardConnectors, memoryIn);
     const svgMatrix = journeySvg?.getScreenCTM();
     memoryCards.forEach((card, index) => {
-      const reveal = range(p, .625 + index * .012, .67 + index * .012);
+      const revealStart = cardRevealStart + index * cardRevealStep;
+      const reveal = range(p, revealStart, revealStart + cardRevealDuration);
       const memoryRecall = range(p, .8 + index * .012, .84 + index * .012);
       let recallX = 0;
       let recallY = 0;
@@ -403,7 +422,8 @@
         connector.setAttribute('y1', ((nodePoint.y / window.innerHeight) * 700).toFixed(2));
         connector.setAttribute('x2', (((cardRect.left + cardRect.width / 2) / window.innerWidth) * 1000).toFixed(2));
         connector.setAttribute('y2', ((((cardAbove ? cardRect.bottom : cardRect.top)) / window.innerHeight) * 700).toFixed(2));
-        const reveal = range(p, .625 + index * .012, .67 + index * .012);
+        const revealStart = cardRevealStart + index * cardRevealStep;
+        const reveal = range(p, revealStart, revealStart + cardRevealDuration);
         const memoryRecall = range(p, .8 + index * .012, .84 + index * .012);
         connector.style.opacity = (reveal * (1 - ease(memoryRecall))).toFixed(3);
         connector.style.strokeDashoffset = (1 - ease(reveal)).toFixed(3);
@@ -421,6 +441,7 @@
       copy.style.opacity = opacity.toFixed(3);
       copy.style.transform = `translate3d(0,${mix(28, 0, ease(opacity))}px,0)`;
     });
+    if (firstLightStamp) firstLightStamp.style.opacity = sceneWeights[0].toFixed(3);
 
     const scene = p < .12 ? 0 : p < .36 ? 1 : p < .54 ? 2 : currentFrame < 805 ? 3 : 4;
     if (scene !== lastScene) {
@@ -442,7 +463,14 @@
     if (sunOrb) {
       sunOrb.style.transform = `translate3d(0,${mix(-55, 310, ease(sunDrop))}px,0)`;
       const sunRect = sunOrb.getBoundingClientRect();
-      const horizonY = window.innerHeight * .7;
+      const sunsetRect = sunset?.getBoundingClientRect();
+      const sunsetWidth = sunsetRect?.width || window.innerWidth;
+      const sunsetHeight = sunsetRect?.height || window.innerHeight;
+      const sunsetScale = Math.max(sunsetWidth / sunsetImage.width, sunsetHeight / sunsetImage.height);
+      const sunsetTop = sunsetRect?.top || 0;
+      const horizonY = sunsetTop
+        + (sunsetHeight - sunsetImage.height * sunsetScale) / 2
+        + sunsetImage.horizonY * sunsetScale;
       const visibleHeight = clamp((horizonY - sunRect.top) / Math.max(1, sunRect.height));
       sunOrb.style.clipPath = `inset(0 0 ${(1 - visibleHeight) * 100}% 0)`;
     }
@@ -453,7 +481,7 @@
       sunsetHold.style.pointerEvents = hold > .9 ? 'auto' : 'none';
       sunsetHold.style.transform = `translate3d(0,${mix(22, 0, ease(hold))}px,0)`;
     }
-    setOpacity(line, 1);
+    setOpacity(line, 1 - ease(traceBaselineIn));
     setOpacity(lineShadow, 0);
   };
 

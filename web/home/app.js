@@ -26,6 +26,7 @@
   const introHandoffCopy = document.querySelector('#introHandoffCopy');
   const introHandoffTrack = document.querySelector('.intro-handoff-line');
   const introHandoffLine = document.querySelector('#introHandoffLine');
+  const introHandoffSunMask = document.querySelector('.intro-handoff-sun-mask');
   const introHandoffSun = document.querySelector('#introHandoffSun');
   const gateway = document.querySelector('#gateway');
   const introCue = document.querySelector('.intro-scroll-cue');
@@ -97,7 +98,9 @@
   const traceSpots = [[870,330],[760,330],[650,330],[540,330],[430,330],[320,330],[210,330],[100,330]];
   const route = routeSpots.flat();
   const trace = traceSpots.flat();
-  const heroImage = { width: 1672, height: 941, horizonY: 761 };
+  // Pixel anchors measured from hero-sunrise-drawing-v01.png. Desktop
+  // overlays must be projected through the same cover transform as the image.
+  const heroImage = { width: 1672, height: 941, horizonY: 761, sunX: 1297, sunY: 718 };
   const sunsetImage = { width: 1672, height: 941, horizonY: 666 };
   const pathFrom = (values) => values.reduce((path, value, index) => {
     if (index % 2) return path;
@@ -265,12 +268,17 @@
       const skyHeight = introSky?.offsetHeight || window.innerHeight;
       const skyTop = introSky?.getBoundingClientRect().top || 0;
       const coverScale = Math.max(skyWidth / heroImage.width, skyHeight / heroImage.height);
-      const centeredImageTop = (skyHeight - heroImage.height * coverScale) / 2;
+      const imageWidth = heroImage.width * coverScale;
+      const imageHeight = heroImage.height * coverScale;
+      const imageLeft = (skyWidth - imageWidth) / 2;
+      const centeredImageTop = (skyHeight - imageHeight) / 2;
       const targetHorizon = introHandoffTrack?.getBoundingClientRect().top ?? skyTop + skyHeight * .5416;
       const targetHorizonLocal = targetHorizon - skyTop;
       const alignedImageTop = targetHorizonLocal - heroImage.horizonY * coverScale;
       const imageTop = mix(centeredImageTop, alignedImageTop, horizonLift);
       const visibleHorizon = imageTop + heroImage.horizonY * coverScale;
+      const projectedSunX = imageLeft + heroImage.sunX * coverScale;
+      const projectedSunY = imageTop + heroImage.sunY * coverScale;
       const visibleSeaHeight = Math.max(1, skyHeight - visibleHorizon);
       // Keep the original sea continuous below the animated horizon. The
       // vertical remap expands only the photograph's sea slice; it must never
@@ -285,8 +293,8 @@
         introSky.style.opacity = (1 - imageFade).toFixed(3);
         introSky.style.backgroundPosition = `center center, center center, center ${imageTop.toFixed(2)}px`;
         introSky.style.setProperty('--intro-horizon-y', `${visibleHorizon.toFixed(2)}px`);
-        introSky.style.setProperty('--intro-image-width', `${(heroImage.width * coverScale).toFixed(2)}px`);
-        introSky.style.setProperty('--intro-image-height', `${(heroImage.height * coverScale).toFixed(2)}px`);
+        introSky.style.setProperty('--intro-image-width', `${imageWidth.toFixed(2)}px`);
+        introSky.style.setProperty('--intro-image-height', `${imageHeight.toFixed(2)}px`);
         introSky.style.setProperty('--intro-sea-image-height', `${seaImageHeight.toFixed(2)}px`);
       }
       setOpacity(introGrain, mix(.15, .08, imageFade));
@@ -299,7 +307,18 @@
         const sunRise = ease(range(currentFrame, 110, 132));
         const sunFade = range(currentFrame, 140, 160);
         introHandoffSun.style.opacity = (sunRise * (1 - sunFade)).toFixed(3);
-        introHandoffSun.style.transform = `translate3d(0,${mix(100, 30, sunRise).toFixed(2)}%,0)`;
+        if (introHandoffSunMask && window.innerWidth > 900) {
+          // Keep the synthetic sunrise centered on the photograph's sun at
+          // every desktop aspect ratio instead of using a viewport percentage.
+          const maskHeight = introHandoffSunMask.offsetHeight;
+          const sunSize = introHandoffSun.offsetWidth;
+          const finalTranslateY = projectedSunY - visibleHorizon + sunSize / 2;
+          introHandoffSunMask.style.left = `${projectedSunX.toFixed(2)}px`;
+          introHandoffSunMask.style.top = `${(visibleHorizon - maskHeight).toFixed(2)}px`;
+          introHandoffSun.style.transform = `translate3d(0,${mix(sunSize, finalTranslateY, sunRise).toFixed(2)}px,0)`;
+        } else {
+          introHandoffSun.style.transform = `translate3d(0,${mix(100, 30, sunRise).toFixed(2)}%,0)`;
+        }
       }
       if (introHandoffCopy) {
         introHandoffCopy.style.opacity = handoffCopyIn.toFixed(3);

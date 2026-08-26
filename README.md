@@ -1,78 +1,26 @@
 # SSKR — SUNRISE SUNSET KOREAN RALLY
 
-SSKR 기획·비주얼·HTML 프레젠테이션 개발 자료 저장소입니다.
+SSKR 웹과 여정 프레젠테이션의 실행 자산을 관리하는 저장소입니다.
 
-2026-08-08 기준으로 **기존 GitHub Pages 실험 프로젝트는 제거**하고, 현재 확보된 SSKR 작업 자료를 로컬에서 다시 이어갈 수 있도록 저장소를 작업 스냅샷 중심으로 재구성했습니다.
+## 현재 공개 구조
 
-## 현재 작업 초점
+- `/` — `web/home/`: SSKR HOME
+- `/journey` — `web/journey/`: 30초 여정 프레젠테이션 임시 서브페이지
 
-현재 우선 제작 대상은 HTML 프레젠테이션의 **Scene 05 — Journey Map / 하루의 횡단**입니다.
+HOME 헤더의 `THE JOURNEY`만 `/journey`로 연결됩니다. 프레젠테이션을 정식 웹 콘텐츠로 사용할지는 아직 결정되지 않았으므로 `/journey`에는 검색엔진 비노출 설정을 적용했습니다.
 
-```text
-한반도 Overview
-→ 남한 Zoom
-→ 동해·남동해안 Dawn Start
-→ Daylight Route Network
-→ 서해 Sunset Finish
-→ Personal Route
-```
+## 작업 기준
 
-Scene 05의 지도는 생성형 이미지로 지형을 결정하지 않습니다.
+- HOME의 안정 소스는 `web/home/`입니다.
+- 프레젠테이션의 현재 배포본은 `web/journey/`입니다.
+- 편집 가능한 프레젠테이션 원본은 `final/scene05-b/`의 v3.8.6입니다.
+- 지도 해안선 기준 자산은 `assets/vector/korean_peninsula_precise.svg`입니다.
+- 과거 프레젠테이션 캡처와 구버전 배포 워크플로는 Git 이력에서만 보존합니다.
 
-- 해안선/국토 Shape: 프로젝트 정밀 한반도 SVG
-- 산악 relief: 실제 DEM/DSM
-- Start / Checkpoint / Finish / Route: WGS84 좌표 기반
-- 생성 이미지: camera / lighting / atmosphere / route-language 컨셉 레퍼런스
+## 로컬 실행
 
-## 저장 방식
+저장소 루트에서 정적 파일 서버를 실행한 뒤 `/`와 `/journey`를 확인합니다. Vercel 경로 연결은 `vercel.json`에 정의되어 있습니다.
 
-GitHub 커넥터 환경에서 바이너리·대용량 작업물을 안전하게 보존하기 위해 현재 작업공간을 **clone-safe snapshot archive**로 저장했습니다.
+## 보존 기준
 
-```text
-snapshot/
-├─ SNAPSHOT_INFO.md
-├─ unpack_snapshot.py
-└─ parts/
-   ├─ part_00.b64
-   ├─ ...
-   └─ part_06.b64
-```
-
-스냅샷에는 다음 범주가 포함됩니다.
-
-- SSKR 서비스/사업/비주얼/PT 기획 자료
-- 정밀 한반도 벡터 및 지도 제작 소스
-- 현재 확보된 컨셉 비주얼의 압축 개발 레퍼런스
-- Scene 05 Real Terrain Asset Kit
-- Copernicus DEM / Mapzen Skadi 재확보 manifest 및 downloader
-- Dawn → Daylight → Sunset 라이팅 preset과 Three.js용 helper
-
-Raw Copernicus DEM GeoTIFF 자체는 용량과 재생성 가능성을 이유로 포함하지 않았습니다. 스냅샷 안의 downloader와 manifest로 로컬에서 다시 확보합니다.
-
-## 로컬 작업 재개
-
-```bash
-git clone https://github.com/niyaaong-tech/SSKR.git
-cd SSKR
-python snapshot/unpack_snapshot.py
-```
-
-정상 복원되면 저장소 루트의 `workspace/` 아래에 현재 작업공간이 생성됩니다.
-
-스냅샷은 SHA256을 검증한 뒤에만 풀리도록 되어 있습니다. 기준 해시는 `snapshot/SNAPSHOT_INFO.md`와 `snapshot/unpack_snapshot.py`에 기록되어 있습니다.
-
-## 현재 직접 확인 가능한 문서
-
-- `docs/scene05/Scene05_한반도_리얼지형_시간라이팅_제작전략_v0.1.md`
-- `snapshot/SNAPSHOT_INFO.md`
-
-## Notion 정본
-
-최신 서비스·PT 기획 의사결정은 Notion SSKR 작업공간을 우선합니다.
-
-- SSKR HTML 웹 프레젠테이션 개발 계획 v0.1  
-  https://app.notion.com/p/3b54b875815381ff9de6d15112818607
-- Scene 05 — 한반도 리얼 지형·시간 라이팅 제작 전략 v0.1  
-  https://app.notion.com/p/3b54b8758153817bb555f572653528e8
-
-Git 저장소는 **실행 가능한 작업 자료와 보존용 스냅샷**, Notion은 **최신 기획 정본과 의사결정 기록**으로 역할을 분리합니다.
+2026-08-26 정리 이전 `main`은 `backup/main-before-journey-merge-20260826` 브랜치에 보존합니다. 삭제한 과거 원격 브랜치의 마지막 커밋은 `docs/BRANCH_CLEANUP_2026-08-26.md`에 기록했습니다.

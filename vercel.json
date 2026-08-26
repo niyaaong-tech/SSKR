@@ -6,6 +6,10 @@
       "destination": "/web/journey/index.html"
     },
     {
+      "source": "/journey/",
+      "destination": "/web/journey/index.html"
+    },
+    {
       "source": "/journey/:path*",
       "destination": "/web/journey/:path*"
     },

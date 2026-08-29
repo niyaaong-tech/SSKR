@@ -16,19 +16,10 @@ window.SSKR_PARTICIPATE_DATA = {
     capacity: "300팀",
     capacityNote: "1팀 1–2인 · 차량 1대"
   },
-  account: {
-    status: "guest"
-  },
   eventStates: {
-    open: { label: "모집 중", action: "참가 신청하기", href: "?account=draft" },
-    closing: { label: "마감 임박", action: "참가 신청하기", href: "?account=draft" },
-    closed: { label: "모집 마감", action: "다음 시즌 알림 받기", href: "#" }
-  },
-  accountStates: {
-    guest: { action: null, href: null },
-    draft: { action: "신청 계속하기", href: "?account=draft" },
-    payment: { action: "결제 상태 확인", href: "?account=payment" },
-    confirmed: { action: "내 랠리 준비하기", href: "?account=confirmed" }
+    open: { label: "모집 중" },
+    closing: { label: "마감 임박" },
+    closed: { label: "모집 마감" }
   },
   benefits: [
     {

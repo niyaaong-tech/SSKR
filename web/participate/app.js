@@ -1,19 +1,25 @@
 (() => {
   const data = window.SSKR_PARTICIPATE_DATA;
-  if (!data) return;
+  const accountLink = window.SSKR_ACCOUNT_LINK;
+  if (!data || !accountLink) return;
 
-  const params = new URLSearchParams(window.location.search);
-  const eventStateKey = data.eventStates[params.get("event")] ? params.get("event") : data.event.status;
-  const accountStateKey = data.accountStates[params.get("account")] ? params.get("account") : data.account.status;
-  const eventState = data.eventStates[eventStateKey] || data.eventStates.open;
-  const accountState = data.accountStates[accountStateKey] || data.accountStates.guest;
-  const action = {
-    label: accountState.action || eventState.action,
-    href: accountState.href || eventState.href
+  const SURFACE_MODES = Object.freeze({
+    REVIEW: "MODE_A",
+    AUTH_GATE: "MODE_AUTH",
+    APPLICATION: "MODE_B"
+  });
+
+  const relationState = {
+    application: "NONE",
+    participation: "NONE"
   };
 
+  let surfaceMode = SURFACE_MODES.REVIEW;
+  const params = new URLSearchParams(window.location.search);
+  const eventStateKey = data.eventStates[params.get("event")] ? params.get("event") : data.event.status;
+  const eventState = data.eventStates[eventStateKey] || data.eventStates.open;
+
   document.documentElement.dataset.eventState = eventStateKey;
-  document.documentElement.dataset.accountState = accountStateKey;
   document.querySelector("#event-season").textContent = data.event.edition;
   document.querySelector("#event-status").textContent = eventState.label;
   document.querySelector("#event-category").textContent = data.event.category;
@@ -34,9 +40,55 @@
     </div>
   `).join("");
 
+  const surfaceViews = [...document.querySelectorAll("[data-surface-mode]")];
   const primaryAction = document.querySelector("#primary-action");
-  primaryAction.href = action.href;
-  primaryAction.querySelector("span").textContent = action.label;
+
+  const renderSurfaceMode = (nextMode, { focus = true } = {}) => {
+    surfaceMode = nextMode;
+    document.documentElement.dataset.surfaceMode = surfaceMode;
+
+    surfaceViews.forEach((view) => {
+      const active = view.dataset.surfaceMode === surfaceMode;
+      view.hidden = !active;
+      view.classList.toggle("is-active", active);
+      view.setAttribute("aria-hidden", String(!active));
+    });
+
+    primaryAction.querySelector("span").textContent = "신청 계속하기";
+
+    if (!focus) return;
+    const activeView = surfaceViews.find((view) => view.dataset.surfaceMode === surfaceMode);
+    const heading = activeView?.querySelector("h2");
+    if (!activeView || !heading) return;
+    window.requestAnimationFrame(() => {
+      if (window.matchMedia("(max-width: 760px)").matches && surfaceMode !== SURFACE_MODES.REVIEW) {
+        const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+        activeView.scrollIntoView({ behavior: reducedMotion ? "auto" : "smooth", block: "start" });
+      }
+      heading.focus({ preventScroll: true });
+    });
+  };
+
+  const startApplication = () => {
+    if (!accountLink.isAccountLinked()) {
+      renderSurfaceMode(SURFACE_MODES.AUTH_GATE);
+      return;
+    }
+
+    relationState.application = "DRAFT";
+    renderSurfaceMode(SURFACE_MODES.APPLICATION);
+  };
+
+  const completeMockAccountLink = (provider) => {
+    accountLink.linkAccount(provider);
+    relationState.application = "DRAFT";
+    renderSurfaceMode(SURFACE_MODES.APPLICATION);
+  };
+
+  primaryAction.addEventListener("click", startApplication);
+  document.querySelectorAll("[data-provider]").forEach((button) => {
+    button.addEventListener("click", () => completeMockAccountLink(button.dataset.provider));
+  });
 
   const benefitGrid = document.querySelector("#benefit-grid");
   benefitGrid.innerHTML = data.benefits.map((benefit) => `
@@ -86,4 +138,18 @@
   document.querySelector("#manager-promises").innerHTML = data.manager.promises.map((item) => `
     <li class="manager-promise"><b aria-hidden="true">${item.icon}</b><span><strong>${item.title}</strong>${item.note}</span></li>
   `).join("");
+
+  renderSurfaceMode(SURFACE_MODES.REVIEW, { focus: false });
+
+  window.SSKR_PARTICIPATE = Object.freeze({
+    modes: SURFACE_MODES,
+    getSurfaceMode: () => surfaceMode,
+    getRelationState: () => ({ ...relationState }),
+    startApplication,
+    resetMockAccount() {
+      accountLink.reset();
+      relationState.application = "NONE";
+      renderSurfaceMode(SURFACE_MODES.REVIEW, { focus: false });
+    }
+  });
 })();

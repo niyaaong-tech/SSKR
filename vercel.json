@@ -2,16 +2,28 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "rewrites": [
     {
+      "source": "/participate",
+      "destination": "/web/participate/index.html"
+    },
+    {
+      "source": "/participate/",
+      "destination": "/web/participate/index.html"
+    },
+    {
+      "source": "/participate/:path*",
+      "destination": "/web/participate/:path*"
+    },
+    {
       "source": "/journey",
-      "destination": "/web/journey/index.html"
+      "destination": "/web/journey-presentation/index.html"
     },
     {
       "source": "/journey/",
-      "destination": "/web/journey/index.html"
+      "destination": "/web/journey-presentation/index.html"
     },
     {
       "source": "/journey/:path*",
-      "destination": "/web/journey/:path*"
+      "destination": "/web/journey-presentation/:path*"
     },
     {
       "source": "/",

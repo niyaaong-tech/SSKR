@@ -6,4 +6,12 @@
 **/output/**/*.tif
 **/output/**/*.glb
 **/output/**/*.png
+**/dist/
+**/.cache/
+**/screenshots/
+**/captures/
+*.b64
+*.part*
+*.tar.gz
+Thumbs.db
 .DS_Store

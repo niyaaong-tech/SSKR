@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#0a0f10" />
+  <meta name="description" content="SSKR 2027 참가 안내와 참가자 전용 서비스를 확인하세요." />
+  <base href="/participate/" />
+  <title>SSKR 2027 참가</title>
+  <link rel="icon" href="data:," />
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+  <a class="skip-link" href="#benefits">참가 혜택으로 바로가기</a>
+
+  <main class="participate-page">
+    <section class="event-panel" aria-labelledby="event-title">
+      <div class="event-photo" aria-hidden="true"></div>
+      <div class="event-shade" aria-hidden="true"></div>
+
+      <header class="event-header">
+        <a class="brand" href="/" aria-label="SSKR 홈으로 이동">
+          <strong>SSKR</strong>
+          <span>SUNRISE SUNSET<br />KOREAN RALLY</span>
+        </a>
+        <span class="season" id="event-season"></span>
+      </header>
+
+      <div class="event-copy">
+        <div class="event-kicker">
+          <span class="event-status" id="event-status"></span>
+          <span id="event-category"></span>
+        </div>
+
+        <h1 id="event-title"><span id="event-title-line"></span><strong id="event-subtitle"></strong></h1>
+        <p class="event-description" id="event-description"></p>
+
+        <dl class="event-facts" id="event-facts"></dl>
+
+        <div class="event-actions">
+          <a class="primary-action" id="primary-action" href="#"><span></span><b aria-hidden="true">→</b></a>
+          <a class="secondary-action" href="#manager">신청 전 확인사항 보기 <span aria-hidden="true">›</span></a>
+        </div>
+      </div>
+
+      <p class="event-note">상세 일정과 제공 품목은 운영 상황에 따라 변경될 수 있습니다.</p>
+    </section>
+
+    <section class="service-panel" id="benefits" aria-labelledby="benefit-title">
+      <div class="benefit-area">
+        <header class="benefit-heading">
+          <h2 id="benefit-title">참가 혜택 &amp; 전용 서비스 <i aria-hidden="true"></i></h2>
+          <p>참가하면 누릴 수 있는 특별한 경험 <span aria-hidden="true">✧</span></p>
+        </header>
+
+        <div class="benefit-grid" id="benefit-grid" aria-live="polite"></div>
+      </div>
+
+      <section class="manager-area" id="manager" aria-labelledby="manager-title">
+        <header class="manager-heading">
+          <div>
+            <h2 id="manager-title"></h2>
+            <p id="manager-description"></p>
+          </div>
+          <span>참가 확정 후 이용 가능</span>
+        </header>
+
+        <ol class="manager-flow" id="manager-flow"></ol>
+        <ul class="manager-promises" id="manager-promises"></ul>
+      </section>
+    </section>
+  </main>
+
+  <script src="./data.js"></script>
+  <script src="./app.js"></script>
+</body>
+</html>

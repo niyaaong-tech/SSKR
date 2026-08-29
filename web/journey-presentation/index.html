@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <meta name="color-scheme" content="dark" />
+  <meta name="robots" content="noindex,nofollow" />
+  <meta name="description" content="SSKR의 일출부터 일몰까지 이어지는 30초 여정 프레젠테이션" />
+  <base href="/journey/" />
+  <link rel="icon" href="data:," />
+  <title>SSKR — THE JOURNEY</title>
+  <link rel="stylesheet" href="./styles.css" />
+  <script>
+    if (new URLSearchParams(location.search).has('qa')) {
+      window.__qaRafCallback = null;
+      window.requestAnimationFrame = (callback) => {
+        window.__qaRafCallback = callback;
+        return 1;
+      };
+      window.cancelAnimationFrame = () => {};
+    }
+  </script>
+</head>
+<body data-page-state="temporary-presentation">
+  <header class="journey-shell" aria-label="SSKR 페이지 이동">
+    <a class="journey-home" href="/" aria-label="SSKR 홈으로 이동"><strong>SSKR</strong><span>HOME</span></a>
+    <button id="journey-replay" class="journey-replay" type="button">REPLAY</button>
+  </header>
+
+  <main id="frame" aria-label="SSKR 일출부터 일몰까지 30초 여정 프레젠테이션">
+    <div id="atmosphere" aria-hidden="true">
+      <div id="sky-night" class="sky-layer"></div>
+      <div id="sky-dawn" class="sky-layer"></div>
+      <div id="sky-day" class="sky-layer"></div>
+      <div id="sky-sunset" class="sky-layer"></div>
+      <div id="sky-bluehour" class="sky-layer"></div>
+      <div id="east-glow" class="horizon-glow"></div>
+      <div id="west-glow" class="horizon-glow"></div>
+    </div>
+
+    <div id="three-stage"></div>
+
+    <div id="closing-montage" aria-hidden="true">
+      <img id="closing-still-1" class="closing-still" src="./assets/closing-sunset-01.jpg" alt="" />
+      <img id="closing-still-2" class="closing-still" src="./assets/closing-sunset-02.jpg" alt="" />
+      <img id="closing-still-3" class="closing-still" src="./assets/closing-sunset-03.jpg" alt="" />
+    </div>
+
+    <div id="overview-layer" aria-hidden="true">
+      <img id="korea-overview" src="./assets/korea-map.svg" alt="" />
+      <div id="overview-haze"></div>
+    </div>
+
+    <div id="dawn-grade" aria-hidden="true"></div>
+    <div id="light-wash" aria-hidden="true"></div>
+    <div id="vignette" aria-hidden="true"></div>
+    <div id="grain" aria-hidden="true"></div>
+    <div id="closing-blackout" aria-hidden="true"></div>
+
+    <section id="journey-copy-1" class="journey-copy" aria-hidden="true">
+      <p>AM 6:00 동해의 일출 앞에 집결한 라이더들은</p>
+    </section>
+    <section id="journey-copy-2" class="journey-copy" aria-hidden="true">
+      <p>각자 선택한 길에서 하루를 온전히 달린다.</p>
+    </section>
+    <section id="journey-copy-3" class="journey-copy" aria-hidden="true">
+      <p>PM 7:00 서해의 낙조 아래, 다시 모인 그곳에서—</p>
+    </section>
+
+    <section id="statement" class="statement" aria-live="polite">
+      <p>현장은 축제가 되고, 기억은 영원이 된다.</p>
+    </section>
+
+    <div class="data-credit" aria-label="data and artwork credit">© ESA WorldCover project 2021 / Copernicus Sentinel · Dawn environment: Poly Haven CC0 · Finale stills: SSKR project references</div>
+    <div id="status" class="status">LOADING THE JOURNEY</div>
+  </main>
+
+  <button id="text-toggle" class="copy-toggle" type="button" aria-pressed="true" aria-label="중앙 텍스트 표시 전환">TEXT ON</button>
+
+  <script>
+    (() => {
+      const button = document.getElementById('text-toggle');
+      if (!button) return;
+      let enabled = true;
+      const render = () => {
+        document.body.classList.toggle('copy-off', !enabled);
+        button.textContent = enabled ? 'TEXT ON' : 'TEXT OFF';
+        button.setAttribute('aria-pressed', String(enabled));
+      };
+      button.addEventListener('click', () => {
+        enabled = !enabled;
+        render();
+      });
+      render();
+    })();
+
+    (() => {
+      const button = document.getElementById('journey-replay');
+      if (!button) return;
+      button.addEventListener('click', () => {
+        window.location.reload();
+      });
+    })();
+  </script>
+  <script type="module" src="./app.js"></script>
+</body>
+</html>

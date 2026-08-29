@@ -1,0 +1,8 @@
+{
+  "name": "sskr-web",
+  "private": true,
+  "scripts": {
+    "test": "node --test tests/participate/*.test.js",
+    "dev": "node server/dev-server.js"
+  }
+}

@@ -8,7 +8,7 @@
   <base href="/participate/" />
   <title>SSKR 2027 참가</title>
   <link rel="icon" href="data:," />
-  <link rel="stylesheet" href="./styles.css" />
+  <link rel="stylesheet" href="./styles.css?v=mode-bc3" />
 </head>
 <body>
   <a class="skip-link" href="#context-surface">참가 화면으로 바로가기</a>
@@ -46,7 +46,11 @@
     </section>
 
     <section class="service-panel" id="context-surface" aria-live="polite">
-      <div class="surface-view surface-view--review is-active" id="mode-a" data-surface-mode="MODE_A">
+      <section class="surface-view surface-view--loading is-active" id="mode-loading" data-surface-mode="MODE_LOADING" aria-label="참가 정보 불러오는 중">
+        <div class="loading-column"><i aria-hidden="true"></i><p>참가 정보를 불러오고 있습니다.</p></div>
+      </section>
+
+      <div class="surface-view surface-view--review" id="mode-a" data-surface-mode="MODE_A" hidden>
         <div class="benefit-area">
           <header class="benefit-heading">
             <h2 id="benefit-title">참가 혜택 &amp; 전용 서비스 <i aria-hidden="true"></i></h2>
@@ -105,24 +109,20 @@
         </div>
       </section>
 
-      <section class="surface-view surface-view--application" id="mode-b" data-surface-mode="MODE_B" aria-labelledby="application-title" hidden>
-        <div class="application-column">
-          <p class="application-label">SSKR 2027 APPLICATION</p>
-          <p class="application-status"><span aria-hidden="true">✓</span> 계정 연동 완료</p>
-          <h2 id="application-title" tabindex="-1">신청을 시작할<br />준비가 되었습니다.</h2>
-          <p class="application-description">신청자 정보와 참가 바이크를 등록하는 단계로 이어집니다.</p>
-          <dl class="application-summary">
-            <div><dt>현재 단계</dt><dd>신청 진행</dd></div>
-            <div><dt>참가 이벤트</dt><dd>SSKR 2027</dd></div>
-            <div><dt>참가비</dt><dd>120,000원</dd></div>
-          </dl>
-        </div>
+      <section class="surface-view surface-view--application" id="mode-b" data-surface-mode="MODE_B" hidden></section>
+      <section class="surface-view surface-view--lobby" id="mode-c" data-surface-mode="MODE_C" hidden></section>
+      <section class="surface-view surface-view--error" id="mode-error" data-surface-mode="MODE_ERROR" aria-labelledby="surface-error-title" hidden>
+        <div class="error-column"><span aria-hidden="true">!</span><h2 id="surface-error-title" tabindex="-1">참가 정보를 불러오지 못했습니다.</h2><p id="surface-error-message">현재 상태를 다시 확인해 주세요.</p><button type="button" id="surface-retry">다시 시도</button></div>
       </section>
     </section>
   </main>
 
-  <script src="./data.js"></script>
-  <script src="./mock-auth.js"></script>
-  <script src="./app.js"></script>
+  <script src="./data.js?v=mode-bc3"></script>
+  <script src="./mock-auth.js?v=mode-bc3"></script>
+  <script src="./mock-session.js?v=mode-bc3"></script>
+  <script src="./api-client.js?v=mode-bc3"></script>
+  <script src="./mode-b.js?v=mode-bc3"></script>
+  <script src="./mode-c.js?v=mode-bc3"></script>
+  <script src="./app.js?v=mode-bc3"></script>
 </body>
 </html>

@@ -1,7 +1,7 @@
 (() => {
   const STORAGE_KEY = "sskr.mock.accountLinked";
   const PROVIDER_KEY = "sskr.mock.accountProvider";
-  const accountOverride = new URLSearchParams(window.location.search).get("mockAccount");
+  let accountOverride = new URLSearchParams(window.location.search).get("mockAccount");
 
   const read = (key) => {
     try {
@@ -39,6 +39,7 @@
     },
 
     linkAccount(provider) {
+      accountOverride = "linked";
       write(STORAGE_KEY, "true");
       write(PROVIDER_KEY, provider);
     },

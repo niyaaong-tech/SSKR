@@ -1,26 +1,4 @@
 window.SSKR_PARTICIPATE_DATA = {
-  event: {
-    id: "sskr-2027",
-    edition: "2027 SEASON",
-    title: "SSKR 2027",
-    subtitle: "참가 신청",
-    category: "대한민국 대표 로드 랠리",
-    description: "아름다운 드라이빙 코스와 스팟을 연결하며\n다양한 미션을 수행하는 로드 랠리 이벤트",
-    status: "open",
-    fee: "120,000원",
-    feeNote: "1인 기준 · 부가세 포함",
-    applicationPeriod: "2027.04.21 (월) – 05.30 (금)",
-    applicationNote: "선착순 마감",
-    eventDate: "2027.06.14 (토) – 06.15 (일)",
-    eventDateNote: "1박 2일",
-    capacity: "300팀",
-    capacityNote: "1팀 1–2인 · 차량 1대"
-  },
-  eventStates: {
-    open: { label: "모집 중" },
-    closing: { label: "마감 임박" },
-    closed: { label: "모집 마감" }
-  },
   benefits: [
     {
       key: "kit",
@@ -28,7 +6,7 @@ window.SSKR_PARTICIPATE_DATA = {
       title: "사전 굿즈\n패키지",
       summary: "참가를 기념하는\n프리미엄 굿즈 패키지",
       description: "출발 전에 SSKR의 한 시즌을 손에 넣습니다.",
-      details: "차량 플레이트 · 시즌 데칼 · 참가 배지 · Rally Guide"
+      details: "바이크 플레이트 · 시즌 데칼 · 참가 배지 · Rally Guide"
     },
     {
       key: "navigation",
@@ -57,11 +35,11 @@ window.SSKR_PARTICIPATE_DATA = {
   ],
   manager: {
     title: "SSKR 매니저",
-    description: "신청부터 완주까지, 필요한 순간에 필요한 것만 안내해드립니다.",
+    description: "참가 확정 후 준비와 운영 안내를 한곳에서 이어갑니다.",
     steps: [
-      { phase: "지금 할 일", title: "출발지 선택", note: "5월 12일까지", visual: "pin" },
-      { phase: "다음 일정", title: "참가 키트 발송", note: "5월 중순, 등록하신 주소로 발송", visual: "box" },
-      { phase: "이후 안내", title: "필수 일정 & 공지", note: "변경사항과 주의사항을 필요한 시점에 안내", visual: "bell" }
+      { phase: "참가 준비", title: "내 정보와 바이크", note: "필요한 항목을 순서대로 확인", visual: "pin" },
+      { phase: "운영 일정", title: "참가 키트와 출발", note: "확정된 시점에 맞춰 안내", visual: "box" },
+      { phase: "시즌 기록", title: "공지와 메모리얼", note: "중요한 변화와 여정을 한곳에", visual: "bell" }
     ],
     promises: [
       { icon: "+", title: "내 참가 상태", note: "현재 상태를 한눈에 확인" },

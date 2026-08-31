@@ -26,7 +26,18 @@ function resolveModeAAction(event) {
 }
 
 function resolveSurface(context) {
-  const { application, event, payment, participation } = context;
+  const { account, application, event, payment, participation } = context;
+  if (account?.linked === false) {
+    return {
+      mode: SURFACE_MODE.MODE_A,
+      gate: null,
+      step: null,
+      variant: event.registrationState === REGISTRATION.OPEN ? "OPEN" : event.registrationState,
+      statusCode: event.registrationState,
+      primaryAction: resolveModeAAction(event),
+      blockedReason: null
+    };
+  }
   if (participation?.state === PARTICIPATION.ACTIVE) {
     const variant = participation.slotAllocation === SLOT_ALLOCATION.WAITLISTED ? "WAITLISTED" : "CONFIRMED";
     return {
@@ -55,7 +66,7 @@ function resolveSurface(context) {
     return {
       mode: SURFACE_MODE.MODE_B,
       gate: null,
-      step: "STEP_3",
+      step: "STEP_4",
       variant: "CLOSED",
       statusCode: application.closeReasonCode || "APPLICATION_CLOSED",
       primaryAction: { code: "NONE", label: "결제 불가", enabled: false },
@@ -68,9 +79,10 @@ function resolveSurface(context) {
   if (activeApplication || activePayment) {
     const stepState = resolveApplicationStep(context);
     const actions = {
-      STEP_1: { code: "SAVE_AGREEMENTS", label: "다음", enabled: true },
-      STEP_2: { code: "SAVE_PARTICIPANT_INFO", label: "다음", enabled: true },
-      STEP_3: { code: payment?.state === PAYMENT.FAILED ? "RETRY_PAYMENT" : "PREPARE_CHECKOUT", label: payment?.state === PAYMENT.FAILED ? "다시 결제하기" : "결제 진행하기", enabled: payment?.state !== PAYMENT.PROCESSING }
+      STEP_1: { code: "SAVE_ACKNOWLEDGEMENT", label: "다음", enabled: true },
+      STEP_2: { code: "SAVE_AGREEMENTS", label: "다음", enabled: true },
+      STEP_3: { code: "SAVE_PARTICIPANT_INFO", label: "다음", enabled: true },
+      STEP_4: { code: payment?.state === PAYMENT.FAILED ? "RETRY_PAYMENT" : "PREPARE_CHECKOUT", label: payment?.state === PAYMENT.FAILED ? "다시 결제하기" : "결제 진행하기", enabled: payment?.state !== PAYMENT.PROCESSING }
     };
     return {
       mode: SURFACE_MODE.MODE_B,

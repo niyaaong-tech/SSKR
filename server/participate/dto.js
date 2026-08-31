@@ -4,6 +4,8 @@ const { resolveCurrentEvent } = require("./current-event-resolver");
 const { resolvePermissions } = require("./permission-resolver");
 const { resolveSurface } = require("./surface-resolver");
 const { validateState } = require("./validation");
+const { getAgreementDefinitions } = require("./agreement-policy");
+const { resolveRegistrationTiers } = require("./tier-policy");
 
 const registrationLabels = { OPEN: "모집 중", NOT_OPEN: "모집 예정", CLOSED: "모집 마감", SUSPENDED: "접수 중단" };
 const stageLabels = { PREPARING: "시즌 준비", CORE_CONFIRMED: "핵심 일정 확정", SPOTS_CONFIRMED: "스팟 공개", RIDE_PREPARATION: "참가 준비", RIDE_CHECK: "최종 점검", COUNTDOWN: "출발 임박", LIVE: "행사 진행 중", SEASON_CLEAR: "시즌 정리" };
@@ -54,24 +56,29 @@ function buildServices(permissions) {
 }
 
 function buildContextDto(repository, options = {}) {
-  const resolvedCurrent = resolveCurrentEvent(repository.getEvents(), options.now || new Date());
+  const snapshot = repository.exportSnapshot();
+  const effectiveNow = options.now || snapshot.mock?.now || new Date();
+  const resolvedCurrent = resolveCurrentEvent(repository.getEvents(), effectiveNow);
   const rawEvent = resolvedCurrent?.event || repository.getCurrentEvent();
-  const stage = resolvedCurrent || resolveEventStage(rawEvent, options.now || new Date());
+  const stage = resolvedCurrent || resolveEventStage(rawEvent, effectiveNow);
   const event = { ...rawEvent, resolvedStage: stage.stage };
   const prices = repository.getPriceTiers();
-  const price = prices.filter((item) => item.isActive).sort((a, b) => b.priority - a.priority)[0] || null;
   const application = repository.getApplication();
+  const resolvedTiers = resolveRegistrationTiers({ event, priceTiers: prices, now: effectiveNow });
+  const selectedTier = resolvedTiers.tiers.find((item) => item.id === application?.priceTierId) || resolvedTiers.tiers.find((item) => item.code === "STANDARD") || resolvedTiers.tiers[0] || null;
   const checkoutHold = repository.getCheckoutHold();
   const paymentAttempts = repository.getPaymentAttempts();
   const payment = latestPayment(paymentAttempts);
   const participation = repository.getParticipation();
-  const state = { event, application, checkoutHold, payment, participation };
+  const account = repository.getUserContext().account || { linked: false, provider: null };
+  const state = { account, event, application, checkoutHold, payment, participation, now: effectiveNow };
   const surface = resolveSurface(state);
   const surfaceTitles = {
     MODE_A: "참가 혜택 & 전용 서비스",
-    STEP_1: "참가 조건 확인 & 동의",
-    STEP_2: "참가자 정보",
-    STEP_3: "결제",
+    STEP_1: "참가 전에 꼭 확인해 주세요",
+    STEP_2: "참가 약관 및 필수 동의",
+    STEP_3: "참가 유형 및 참가자 정보",
+    STEP_4: "결제",
     WAITLISTED: "참가 대기",
     CONFIRMED: "참가 확정"
   };
@@ -79,7 +86,6 @@ function buildContextDto(repository, options = {}) {
   const permissions = resolvePermissions({ ...state, surface });
   const invalid = validateState({ ...state, slotAllocation: repository.exportSnapshot().slotAllocation });
   if (!invalid.valid) permissions.canOpenRideDay = false;
-  const account = repository.getUserContext().account || { linked: false, provider: null };
 
   return {
     ok: true,
@@ -102,7 +108,10 @@ function buildContextDto(repository, options = {}) {
       capacityDisplay: event.capacityDisplay,
       capacityNote: event.capacityNote
     },
-    price: price ? { id: price.id, code: price.code, displayName: price.displayName, amount: price.amount, currency: price.currency, displayAmount: new Intl.NumberFormat("ko-KR").format(price.amount) + "원" } : null,
+    price: selectedTier,
+    tiers: resolvedTiers.tiers,
+    capacity: resolvedTiers.capacity,
+    agreementDocuments: getAgreementDefinitions(event),
     account,
     application,
     payment,

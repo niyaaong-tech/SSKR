@@ -7,6 +7,7 @@
     const waiting = context.surface.variant === "WAITLISTED";
     const participation = context.participation;
     const task = context.manager.primaryTask;
+    const bike = participation.bikeInfo || context.application?.bike || {};
     root.innerHTML = `
       <div class="lobby-shell">
         <header class="participant-header">
@@ -27,14 +28,21 @@
         <section class="lobby-manager" aria-labelledby="lobby-manager-title">
           <div><p>SSKR 매니저</p><h3 id="lobby-manager-title">${escapeHtml(task.title)}</h3><span>${escapeHtml(task.description)}</span></div>
           <dl>
-            <div><dt>바이크 정보</dt><dd>${context.statuses.bikeInfoComplete ? "등록 완료" : "등록 필요"}</dd></div>
+            <div><dt>바이크 정보</dt><dd>${context.statuses.bikeInfoComplete ? "등록 완료" : "등록 필요"}${context.permissions.canEditBikeInfo ? ` <button type="button" class="inline-edit" id="edit-bike-info">수정</button>` : ""}</dd></div>
             <div><dt>키트</dt><dd>${escapeHtml(fulfillmentLabels[context.statuses.fulfillmentState])}</dd></div>
             <div><dt>시즌 결과</dt><dd>${escapeHtml(resultLabels[context.statuses.runResult])}</dd></div>
           </dl>
         </section>
+        ${context.permissions.canEditBikeInfo ? `<form class="lobby-bike-form" id="lobby-bike-form" hidden><p>바이크 정보</p><div><label>제조사<input name="maker" value="${escapeHtml(bike.maker)}" /></label><label>모델명<input name="model" value="${escapeHtml(bike.model)}" /></label><label>배기량 / 클래스<input name="className" value="${escapeHtml(bike.className)}" /></label></div><button type="submit">저장</button></form>` : ""}
         ${window.SSKR_MOCK_SESSION.isDebug() && waiting ? `<button class="mock-promote" id="mock-promote" type="button">QA · 참가 확정으로 승격</button>` : ""}
       </div>`;
     root.querySelector("#mock-promote")?.addEventListener("click", handlers.promoteWaitlist);
+    root.querySelector("#edit-bike-info")?.addEventListener("click", () => { const form = root.querySelector("#lobby-bike-form"); form.hidden = !form.hidden; });
+    root.querySelector("#lobby-bike-form")?.addEventListener("submit", (event) => {
+      event.preventDefault();
+      const values = new FormData(event.currentTarget);
+      handlers.saveBikeInfo({ maker: values.get("maker"), model: values.get("model"), className: values.get("className") });
+    });
   }
 
   window.SSKR_MODE_C = Object.freeze({ render });

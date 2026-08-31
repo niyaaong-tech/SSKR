@@ -38,6 +38,10 @@
       return read(PROVIDER_KEY);
     },
 
+    getSession() {
+      return { linked: this.isAccountLinked(), provider: this.getLinkedProvider() };
+    },
+
     linkAccount(provider) {
       accountOverride = "linked";
       write(STORAGE_KEY, "true");
@@ -45,8 +49,13 @@
     },
 
     reset() {
+      accountOverride = "unlinked";
       remove(STORAGE_KEY);
       remove(PROVIDER_KEY);
+    },
+
+    logout() {
+      this.reset();
     }
   });
 })();

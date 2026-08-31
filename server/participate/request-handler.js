@@ -4,18 +4,28 @@ const { createScenario } = require("./mock-scenarios");
 const { DomainError, createTransactionService } = require("./transaction-service");
 
 const allowedScenarios = new Set([
-  "a-open-unlinked", "a-open-linked", "b-step1", "b-step2", "b-step3", "b-processing",
+  "a-open-unlinked", "a-open-linked", "b-step1", "b-step2", "b-step2-partial-required", "b-step3", "b-step3-optional-unchecked", "b-step4", "b-processing",
   "b-failed-open", "b-failed-closed", "b-finalizing", "c-waitlisted", "c-confirmed-spots",
   "c-preparation", "c-ride-check", "c-countdown", "c-live-confirmed", "c-live-waitlisted",
-  "c-season-completed", "c-season-no-show", "c-season-retired"
+  "c-season-completed", "c-season-no-show", "c-season-retired", "tier-early-ended", "tier-early-limit", "tier-standard-ended", "tier-platinum-extra"
 ]);
 
 function respond(repository, options = {}) {
   return { ...buildContextDto(repository, options), mockSnapshot: repository.exportSnapshot() };
 }
 
-function normalizeAccount(input = {}) {
-  return { linked: input.linked === true, provider: input.linked ? input.provider || null : null };
+function normalizeAccount(input = {}, current = {}) {
+  const account = {
+    id: current.id || "mock-rider-0271",
+    profile: current.profile || { name: "김라이더", email: "rider0271@example.com", phone: "01012345678", thumbnailUrl: null },
+    socialIdentities: current.socialIdentities || [],
+    linked: input.linked === true,
+    provider: input.linked ? input.provider || current.provider || null : null
+  };
+  if (account.linked && account.provider && !account.socialIdentities.some((identity) => identity.provider === account.provider)) {
+    account.socialIdentities.push({ provider: account.provider, providerUserId: `${account.provider}-mock-0271`, email: account.profile.email, profileImageUrl: null });
+  }
+  return account;
 }
 
 async function handleParticipateRequest(endpoint, body = {}, options = {}) {
@@ -26,13 +36,16 @@ async function handleParticipateRequest(endpoint, body = {}, options = {}) {
     snapshot = body.snapshot && body.snapshot.schemaVersion === 1 ? body.snapshot : createScenario(scenario);
     snapshot.mockSessionId = body.mockSessionId || snapshot.mockSessionId || "default";
     repository = new MockParticipateRepository(snapshot);
-    repository.setAccount(normalizeAccount(body.account));
+    repository.setAccount(normalizeAccount(body.account, repository.getUserContext().account));
     const service = createTransactionService(repository, options);
 
     if (endpoint === "application") {
       if (body.action === "START") service.startApplication();
+      else if (body.action === "SAVE_ACKNOWLEDGEMENT") service.saveAcknowledgement(body.acknowledgement);
       else if (body.action === "SAVE_AGREEMENTS") service.saveAgreements(body.agreements);
       else if (body.action === "SAVE_PARTICIPANT_INFO") service.saveParticipantInfo(body.participant);
+      else if (body.action === "EDIT_PARTICIPANT_INFO") service.editParticipantInfo();
+      else if (body.action === "SAVE_BIKE_INFO") service.saveBikeInfo(body.bike);
       else throw new DomainError("ACTION_NOT_SUPPORTED", "지원하지 않는 신청 동작입니다.");
     } else if (endpoint === "checkout") {
       if (body.action !== "PREPARE") throw new DomainError("ACTION_NOT_SUPPORTED", "지원하지 않는 결제 준비 동작입니다.");
@@ -46,10 +59,11 @@ async function handleParticipateRequest(endpoint, body = {}, options = {}) {
       if (body.action === "RESET" || body.action === "SET_SCENARIO") {
         const nextScenario = allowedScenarios.has(body.scenario) ? body.scenario : "a-open-unlinked";
         const resetRepository = new MockParticipateRepository(createScenario(nextScenario));
-        resetRepository.setAccount(normalizeAccount(body.account));
+        resetRepository.setAccount(normalizeAccount(body.account, resetRepository.getUserContext().account));
         return respond(resetRepository, options);
       }
       if (body.action === "PROMOTE_WAITLIST") service.promoteWaitlist();
+      else if (body.action === "UPDATE_ACCOUNT_PROFILE") service.updateAccountProfile(body.profile);
       else if (body.action === "ADVANCE_EVENT_STAGE") {
         const event = repository.getCurrentEvent();
         event.stageOverride = body.stage;
@@ -61,8 +75,33 @@ async function handleParticipateRequest(endpoint, body = {}, options = {}) {
       } else if (body.action === "SET_CAPACITY") {
         const event = repository.getCurrentEvent();
         event.capacityState = body.state;
+        if (event.capacityPolicy) {
+          if (body.state === "FULL") event.capacityPolicy.baseUsed = event.capacityPolicy.baseCapacity;
+          else if (body.state === "AVAILABLE" && event.capacityPolicy.baseUsed >= event.capacityPolicy.baseCapacity) event.capacityPolicy.baseUsed = Math.max(0, event.capacityPolicy.baseCapacity - 1);
+        }
         if (typeof body.waitlistEnabled === "boolean") event.waitlistEnabled = body.waitlistEnabled;
         repository.saveEvent(event);
+      } else if (body.action === "SET_CAPACITY_POLICY") {
+        const event = repository.getCurrentEvent();
+        event.capacityPolicy = { ...event.capacityPolicy, ...body.capacityPolicy };
+        repository.saveEvent(event);
+      } else if (body.action === "SET_PRICE_AMOUNT") {
+        const tier = repository.getPriceTiers().find((item) => item.code === body.tierCode);
+        if (!tier) throw new DomainError("TIER_NOT_FOUND", "참가 유형을 찾을 수 없습니다.");
+        tier.amount = Number(body.amount);
+        repository.savePriceTier(tier);
+      } else if (body.action === "SET_TIER_STATE") {
+        const tier = repository.getPriceTiers().find((item) => item.code === body.tierCode);
+        if (!tier) throw new DomainError("TIER_NOT_FOUND", "참가 유형을 찾을 수 없습니다.");
+        if (typeof body.isActive === "boolean") tier.isActive = body.isActive;
+        if (body.salesStartAt) tier.salesStartAt = body.salesStartAt;
+        if (body.salesEndAt) tier.salesEndAt = body.salesEndAt;
+        if (Number.isFinite(Number(body.entryCount))) tier.entryCount = Number(body.entryCount);
+        repository.savePriceTier(tier);
+      } else if (body.action === "SET_MOCK_NOW") {
+        const mock = repository.exportSnapshot().mock || {};
+        mock.now = body.now;
+        repository.saveMock(mock);
       } else if (body.action === "SET_PAYMENT_PROCESSING_RESULT") {
         const attempts = repository.getPaymentAttempts();
         const current = attempts[attempts.length - 1];
@@ -79,7 +118,7 @@ async function handleParticipateRequest(endpoint, body = {}, options = {}) {
     return respond(repository, options);
   } catch (error) {
     repository ||= new MockParticipateRepository(snapshot || createScenario("a-open-unlinked"));
-    repository.setAccount(normalizeAccount(body.account));
+    repository.setAccount(normalizeAccount(body.account, repository.getUserContext().account));
     const context = respond(repository, options);
     return {
       ok: false,

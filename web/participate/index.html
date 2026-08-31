@@ -8,7 +8,7 @@
   <base href="/participate/" />
   <title>SSKR 2027 참가</title>
   <link rel="icon" href="data:," />
-  <link rel="stylesheet" href="./styles.css?v=mode-bc3" />
+  <link rel="stylesheet" href="./styles.css?v=patch-031" />
 </head>
 <body>
   <a class="skip-link" href="#context-surface">참가 화면으로 바로가기</a>
@@ -46,6 +46,7 @@
     </section>
 
     <section class="service-panel" id="context-surface" aria-live="polite">
+      <div class="account-shell" id="account-shell" hidden></div>
       <section class="surface-view surface-view--loading is-active" id="mode-loading" data-surface-mode="MODE_LOADING" aria-label="참가 정보 불러오는 중">
         <div class="loading-column"><i aria-hidden="true"></i><p>참가 정보를 불러오고 있습니다.</p></div>
       </section>
@@ -111,18 +112,21 @@
 
       <section class="surface-view surface-view--application" id="mode-b" data-surface-mode="MODE_B" hidden></section>
       <section class="surface-view surface-view--lobby" id="mode-c" data-surface-mode="MODE_C" hidden></section>
+      <section class="surface-view surface-view--account" id="mode-account" data-surface-mode="MODE_ACCOUNT" hidden></section>
       <section class="surface-view surface-view--error" id="mode-error" data-surface-mode="MODE_ERROR" aria-labelledby="surface-error-title" hidden>
         <div class="error-column"><span aria-hidden="true">!</span><h2 id="surface-error-title" tabindex="-1">참가 정보를 불러오지 못했습니다.</h2><p id="surface-error-message">현재 상태를 다시 확인해 주세요.</p><button type="button" id="surface-retry">다시 시도</button></div>
       </section>
     </section>
   </main>
 
-  <script src="./data.js?v=mode-bc3"></script>
-  <script src="./mock-auth.js?v=mode-bc3"></script>
-  <script src="./mock-session.js?v=mode-bc3"></script>
-  <script src="./api-client.js?v=mode-bc3"></script>
-  <script src="./mode-b.js?v=mode-bc3"></script>
-  <script src="./mode-c.js?v=mode-bc3"></script>
-  <script src="./app.js?v=mode-bc3"></script>
+  <script src="./data.js?v=patch-031"></script>
+  <script src="./mock-auth.js?v=patch-031"></script>
+  <script src="./mock-session.js?v=patch-031"></script>
+  <script src="./api-client.js?v=patch-031"></script>
+  <script src="./step1-content.js?v=patch-031"></script>
+  <script src="./mode-b.js?v=patch-031"></script>
+  <script src="./mode-c.js?v=patch-031"></script>
+  <script src="./account.js?v=patch-031"></script>
+  <script src="./app.js?v=patch-031"></script>
 </body>
 </html>

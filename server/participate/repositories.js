@@ -2,7 +2,9 @@ class ParticipateRepository {
   getCurrentEvent() { throw new Error("Not implemented"); }
   getEvents() { throw new Error("Not implemented"); }
   getPriceTiers() { throw new Error("Not implemented"); }
+  savePriceTier() { throw new Error("Not implemented"); }
   getUserContext() { throw new Error("Not implemented"); }
+  saveAccount() { throw new Error("Not implemented"); }
   getApplication() { throw new Error("Not implemented"); }
   saveApplication() { throw new Error("Not implemented"); }
   getCheckoutHold() { throw new Error("Not implemented"); }

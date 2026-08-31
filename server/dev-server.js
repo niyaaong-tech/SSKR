@@ -46,7 +46,13 @@ function staticFileFor(pathname) {
 
 const server = http.createServer(async (request, response) => {
   const url = new URL(request.url, `http://${request.headers.host || "127.0.0.1"}`);
-  const apiMatch = url.pathname.match(/^\/api\/participate\/(context|application|checkout|payment|mock)$/);
+  let pathname;
+  try { pathname = decodeURIComponent(url.pathname); }
+  catch {
+    response.writeHead(400, { "Content-Type": "text/plain; charset=utf-8" });
+    return response.end("Invalid URL");
+  }
+  const apiMatch = pathname.match(/^\/api\/participate\/(context|application|checkout|payment|mock)$/);
   if (apiMatch) {
     if (request.method !== "POST") return sendJson(response, 405, { ok: false, error: { code: "METHOD_NOT_ALLOWED", userMessage: "POST 요청만 지원합니다." } });
     try {
@@ -57,7 +63,7 @@ const server = http.createServer(async (request, response) => {
     }
   }
 
-  const file = staticFileFor(url.pathname);
+  const file = staticFileFor(pathname);
   if (!file || !path.resolve(file).startsWith(root) || !fs.existsSync(file) || !fs.statSync(file).isFile()) {
     response.writeHead(404, { "Content-Type": "text/plain; charset=utf-8" });
     return response.end("Not found");

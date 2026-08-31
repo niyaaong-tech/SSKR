@@ -4,14 +4,17 @@
   const api = window.SSKR_PARTICIPATE_API;
   const modeB = window.SSKR_MODE_B;
   const modeC = window.SSKR_MODE_C;
-  if (!data || !accountLink || !api || !modeB || !modeC) return;
+  const accountUI = window.SSKR_ACCOUNT_UI;
+  if (!data || !accountLink || !api || !modeB || !modeC || !accountUI) return;
 
-  const SURFACE_MODES = Object.freeze({ LOADING: "MODE_LOADING", REVIEW: "MODE_A", AUTH_GATE: "MODE_AUTH", APPLICATION: "MODE_B", LOBBY: "MODE_C", ERROR: "MODE_ERROR" });
+  const SURFACE_MODES = Object.freeze({ LOADING: "MODE_LOADING", REVIEW: "MODE_A", AUTH_GATE: "MODE_AUTH", APPLICATION: "MODE_B", LOBBY: "MODE_C", ACCOUNT: "MODE_ACCOUNT", ERROR: "MODE_ERROR" });
   const views = [...document.querySelectorAll("[data-surface-mode]")];
   const primaryAction = document.querySelector("#primary-action");
   const primaryLabel = primaryAction.querySelector("span");
   const applicationRoot = document.querySelector("#mode-b");
   const lobbyRoot = document.querySelector("#mode-c");
+  const accountRoot = document.querySelector("#mode-account");
+  const accountShell = document.querySelector("#account-shell");
   let context = null;
   let surfaceMode = SURFACE_MODES.LOADING;
   let pending = false;
@@ -84,12 +87,16 @@
     pending = value;
     document.documentElement.dataset.requestPending = String(value);
     primaryAction.disabled = value || context?.surface?.primaryAction?.enabled === false;
-    document.querySelectorAll(".transaction-primary, .transaction-secondary, .mock-promote").forEach((button) => { if (value) button.disabled = true; });
+    document.querySelectorAll(".transaction-primary, .transaction-secondary, .mock-promote, .account-menu button").forEach((button) => {
+      if (value && !button.disabled) { button.dataset.pendingDisabled = "true"; button.disabled = true; }
+      else if (!value && button.dataset.pendingDisabled === "true") { button.disabled = false; delete button.dataset.pendingDisabled; }
+    });
   }
 
   function renderContext(nextContext, options = {}) {
     context = nextContext;
     renderEvent(context);
+    accountUI.update(context);
     primaryLabel.textContent = context.surface.primaryAction?.label || "신청 상태 확인";
     primaryAction.disabled = context.surface.primaryAction?.enabled === false;
     if (context.surface.mode === SURFACE_MODES.REVIEW) showMode(SURFACE_MODES.REVIEW, options);
@@ -115,6 +122,17 @@
     } finally { setPending(false); }
   }
 
+  async function requestWithoutSurfaceChange(action) {
+    if (pending) throw new Error("요청을 처리하고 있습니다.");
+    setPending(true);
+    try {
+      context = await action();
+      renderEvent(context);
+      accountUI.update(context);
+      return context;
+    } finally { setPending(false); }
+  }
+
   async function startApplication() {
     if (!context?.surface?.primaryAction?.enabled || pending) return;
     if (!accountLink.isAccountLinked()) { showMode(SURFACE_MODES.AUTH_GATE); return; }
@@ -130,15 +148,31 @@
   }
 
   const handlers = {
+    saveAcknowledgement: (acknowledgement) => run(() => api.application("SAVE_ACKNOWLEDGEMENT", { acknowledgement })),
     saveAgreements: (agreements) => run(() => api.application("SAVE_AGREEMENTS", { agreements })),
     saveParticipant: (participant) => run(() => api.application("SAVE_PARTICIPANT_INFO", { participant })),
+    editParticipant: () => run(() => api.application("EDIT_PARTICIPANT_INFO")),
     startPayment: (mockOutcome, retry) => run(async () => {
       if (!retry) await api.checkout();
       return api.payment(retry ? "RETRY" : "START", { idempotencyKey: `${Date.now()}-${Math.random().toString(16).slice(2)}`, mockOutcome });
     }),
     refreshPayment: () => run(() => api.payment("REFRESH")),
-    promoteWaitlist: () => run(() => api.mock("PROMOTE_WAITLIST"))
+    promoteWaitlist: () => run(() => api.mock("PROMOTE_WAITLIST")),
+    saveBikeInfo: (bike) => run(() => api.application("SAVE_BIKE_INFO", { bike }))
   };
+
+  accountUI.setup({
+    shell: accountShell,
+    root: accountRoot,
+    callbacks: {
+      getSurface: () => surfaceMode,
+      showAccount: () => showMode(SURFACE_MODES.ACCOUNT),
+      restore: (mode) => showMode(mode || context?.surface?.mode || SURFACE_MODES.REVIEW, { focus: false }),
+      updateProfile: (profile) => requestWithoutSurfaceChange(() => api.mock("UPDATE_ACCOUNT_PROFILE", { profile })),
+      logout: async () => { accountLink.logout(); await run(() => api.context()); },
+      resolve: () => run(() => api.context())
+    }
+  });
 
   primaryAction.addEventListener("click", startApplication);
   document.querySelectorAll("[data-provider]").forEach((button) => button.addEventListener("click", () => completeMockAccountLink(button.dataset.provider)));

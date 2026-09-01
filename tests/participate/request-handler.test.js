@@ -67,3 +67,17 @@ test("logout hides but preserves the application snapshot", async () => {
   const restored = await handleParticipateRequest("context", { snapshot: loggedOut.mockSnapshot, account: { linked: true, provider: "kakao" } });
   assert.equal(restored.surface.step, "STEP_4");
 });
+
+test("participation reset preserves the linked account and clears the application", async () => {
+  const result = await handleParticipateRequest("mock", {
+    action: "RESET",
+    scenario: "a-open-linked",
+    snapshot: null,
+    account: { linked: true, provider: "kakao" }
+  });
+
+  assert.equal(result.account.linked, true);
+  assert.equal(result.surface.mode, "MODE_A");
+  assert.equal(result.application, null);
+  assert.equal(result.participation, null);
+});

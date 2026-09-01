@@ -21,13 +21,9 @@
     const acknowledged = (context.application?.acknowledgements || []).some((item) => item.code === "PARTICIPATION_GUIDE");
     const groups = noticeGroups.map((group, groupIndex) => `
       <section class="notice-group" data-notice-group="${escapeHtml(group.key)}">
-        <header><span>0${groupIndex + 1}</span><h3>${escapeHtml(group.title)}</h3></header>
+        <header><span class="notice-bullet" aria-hidden="true"></span><h3>${escapeHtml(group.title)}</h3></header>
         <div class="notice-grid">
-          ${group.items.map((item, index) => {
-            const x = index % 2 === 0 ? "0%" : "100%";
-            const y = index < 2 ? "0%" : "100%";
-            return `<figure class="notice-item" data-asset-key="${item.key}"><span class="notice-visual" role="img" aria-label="${escapeHtml(item.caption)} 삽화" style="--notice-asset:url('${group.asset}');--notice-x:${x};--notice-y:${y}"></span><figcaption>${escapeHtml(item.caption)}</figcaption></figure>`;
-          }).join("")}
+          ${group.items.map((item) => `<figure class="notice-item" data-asset-key="${item.key}"><span class="notice-visual-frame"><img class="notice-visual" src="${escapeHtml(item.asset)}" alt="${escapeHtml(item.caption)} 삽화" loading="${groupIndex === 0 ? "eager" : "lazy"}" decoding="async" /></span><figcaption>${escapeHtml(item.caption)}</figcaption></figure>`).join("")}
         </div>
       </section>`).join("");
 
@@ -43,11 +39,7 @@
         </form>
       </section>`);
 
-    noticeGroups.forEach((group) => {
-      const image = new Image();
-      image.onerror = () => root.querySelector(`[data-notice-group="${group.key}"]`)?.classList.add("is-image-missing");
-      image.src = group.asset;
-    });
+    root.querySelectorAll(".notice-visual").forEach((image) => image.addEventListener("error", () => image.closest(".notice-item")?.classList.add("is-image-missing")));
     const form = root.querySelector("#acknowledgement-form");
     const checkbox = root.querySelector("#guide-acknowledgement");
     const submit = form.querySelector("button[type='submit']");
@@ -78,7 +70,7 @@
         <form class="agreement-form" id="agreement-form">
           <label class="agreement-all"><input type="checkbox" id="required-agreement-all" /><span><strong>필수 항목 전체 동의</strong><small>현재 행사에서 필요한 필수 동의를 한 번에 선택합니다.</small></span></label>
           <div class="agreement-list">${required.map(agreementRow).join("")}</div>
-          ${optional.length ? `<section class="optional-agreements"><button class="optional-toggle" type="button" aria-expanded="false" aria-controls="optional-agreement-panel"><span>선택 항목 보기</span><b aria-hidden="true">＋</b></button><div id="optional-agreement-panel" hidden><label class="agreement-all agreement-all--optional"><input type="checkbox" id="optional-agreement-all" /><span><strong>선택 항목 전체 동의</strong><small>선택하지 않아도 다음 단계로 진행할 수 있습니다.</small></span></label><div class="agreement-list">${optional.map(agreementRow).join("")}</div></div></section>` : ""}
+          ${optional.length ? `<section class="optional-agreements" aria-label="선택 동의"><label class="agreement-all"><input type="checkbox" id="optional-agreement-all" /><span><strong>선택 항목 전체 동의</strong><small>선택하지 않아도 다음 단계로 진행할 수 있습니다.</small></span></label><div class="agreement-list">${optional.map(agreementRow).join("")}</div></section>` : ""}
           <button class="transaction-primary" type="submit" disabled>다음 <span aria-hidden="true">→</span></button>
         </form>
         <dialog class="agreement-dialog" id="agreement-dialog" aria-labelledby="agreement-dialog-title"><div><p>AGREEMENT DOCUMENT</p><h3 id="agreement-dialog-title"></h3><span id="agreement-dialog-version"></span><p id="agreement-dialog-summary"></p><div class="agreement-placeholder">현재 개발 단계의 문서 영역입니다. 실제 전문은 운영 확정본으로 교체됩니다.</div><button type="button" id="agreement-dialog-close">닫기</button></div></dialog>
@@ -103,13 +95,6 @@
     requiredAll.addEventListener("change", () => { requiredChecks.forEach((input) => { input.checked = requiredAll.checked; }); sync(); });
     optionalAll?.addEventListener("change", () => { optionalChecks.forEach((input) => { input.checked = optionalAll.checked; }); sync(); });
     checks.forEach((input) => input.addEventListener("change", sync));
-    const toggle = root.querySelector(".optional-toggle");
-    toggle?.addEventListener("click", () => {
-      const panel = root.querySelector("#optional-agreement-panel");
-      panel.hidden = !panel.hidden;
-      toggle.setAttribute("aria-expanded", String(!panel.hidden));
-      toggle.querySelector("b").textContent = panel.hidden ? "＋" : "−";
-    });
     const dialog = root.querySelector("#agreement-dialog");
     root.querySelectorAll("[data-agreement-view]").forEach((button) => button.addEventListener("click", () => {
       const item = agreements.find((agreement) => agreement.code === button.dataset.agreementView);

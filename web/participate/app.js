@@ -169,6 +169,13 @@
       showAccount: () => showMode(SURFACE_MODES.ACCOUNT),
       restore: (mode) => showMode(mode || context?.surface?.mode || SURFACE_MODES.REVIEW, { focus: false }),
       updateProfile: (profile) => requestWithoutSurfaceChange(() => api.mock("UPDATE_ACCOUNT_PROFILE", { profile })),
+      resetParticipation: async () => {
+        await run(async () => {
+          const nextContext = await api.mock("RESET", { scenario: "a-open-linked", snapshot: null });
+          window.SSKR_MOCK_SESSION.replaceScenario("a-open-linked");
+          return nextContext;
+        });
+      },
       logout: async () => { accountLink.logout(); await run(() => api.context()); },
       resolve: () => run(() => api.context())
     }

@@ -116,6 +116,10 @@
     wrapper.addEventListener("focusin", openMenu);
     wrapper.addEventListener("focusout", (event) => { if (!wrapper.contains(event.relatedTarget)) closeTimer = setTimeout(closeMenu, 0); });
     shell.querySelectorAll("[data-account-view]").forEach((button) => button.addEventListener("click", () => openView(button.dataset.accountView)));
+    shell.querySelector("#account-reset-participation")?.addEventListener("click", async () => {
+      closeMenu();
+      if (window.confirm("참가 신청, 결제 및 참가 확정 상태를 초기화하시겠습니까? 로그인 상태와 프로필은 유지됩니다.")) await callbacks.resetParticipation();
+    });
     shell.querySelector("#account-logout").addEventListener("click", async () => { closeMenu(); if (window.confirm("로그아웃하시겠습니까? 참가 신청과 결제 정보는 삭제되지 않습니다.")) await callbacks.logout(); });
   }
 
@@ -125,7 +129,10 @@
     shell.hidden = !linked;
     if (!linked) { shell.innerHTML = ""; return; }
     const profile = context.account.profile || {};
-    shell.innerHTML = `<div class="account-control"><button type="button" class="account-trigger" id="account-trigger" aria-haspopup="menu" aria-expanded="false" aria-controls="account-menu" aria-label="계정 메뉴 열기">${profile.thumbnailUrl ? `<img src="${escapeHtml(profile.thumbnailUrl)}" alt="" />` : `<span>${initials(profile)}</span>`}</button><div class="account-menu" id="account-menu" role="menu" hidden><header><strong>${escapeHtml(profile.name)}</strong><small>${escapeHtml(profile.email)}</small></header><button type="button" role="menuitem" data-account-view="profile">프로필</button><button type="button" role="menuitem" data-account-view="settings">페이지세팅</button><button type="button" role="menuitem" data-account-view="mypage">마이페이지</button><hr /><button type="button" role="menuitem" id="account-logout">로그아웃</button></div></div>`;
+    const resetControl = window.SSKR_MOCK_SESSION?.isDebug()
+      ? `<button type="button" role="menuitem" id="account-reset-participation" class="account-test-action"><span>참가 설정 초기화</span><small>개발 테스트용</small></button>`
+      : "";
+    shell.innerHTML = `<div class="account-control"><button type="button" class="account-trigger" id="account-trigger" aria-haspopup="menu" aria-expanded="false" aria-controls="account-menu" aria-label="계정 메뉴 열기">${profile.thumbnailUrl ? `<img src="${escapeHtml(profile.thumbnailUrl)}" alt="" />` : `<span>${initials(profile)}</span>`}</button><div class="account-menu" id="account-menu" role="menu" hidden><header><strong>${escapeHtml(profile.name)}</strong><small>${escapeHtml(profile.email)}</small></header><button type="button" role="menuitem" data-account-view="profile">프로필</button><button type="button" role="menuitem" data-account-view="settings">페이지세팅</button><button type="button" role="menuitem" data-account-view="mypage">마이페이지</button><hr />${resetControl}<button type="button" role="menuitem" id="account-logout">로그아웃</button></div></div>`;
     bindShell();
   }
 

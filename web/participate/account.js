@@ -129,9 +129,7 @@
     shell.hidden = !linked;
     if (!linked) { shell.innerHTML = ""; return; }
     const profile = context.account.profile || {};
-    const resetControl = window.SSKR_MOCK_SESSION?.isDebug()
-      ? `<button type="button" role="menuitem" id="account-reset-participation" class="account-test-action"><span>참가 설정 초기화</span><small>개발 테스트용</small></button>`
-      : "";
+    const resetControl = `<button type="button" role="menuitem" id="account-reset-participation" class="account-test-action"><span>참가 설정 초기화</span><small>개발 테스트용</small></button>`;
     shell.innerHTML = `<div class="account-control"><button type="button" class="account-trigger" id="account-trigger" aria-haspopup="menu" aria-expanded="false" aria-controls="account-menu" aria-label="계정 메뉴 열기">${profile.thumbnailUrl ? `<img src="${escapeHtml(profile.thumbnailUrl)}" alt="" />` : `<span>${initials(profile)}</span>`}</button><div class="account-menu" id="account-menu" role="menu" hidden><header><strong>${escapeHtml(profile.name)}</strong><small>${escapeHtml(profile.email)}</small></header><button type="button" role="menuitem" data-account-view="profile">프로필</button><button type="button" role="menuitem" data-account-view="settings">페이지세팅</button><button type="button" role="menuitem" data-account-view="mypage">마이페이지</button><hr />${resetControl}<button type="button" role="menuitem" id="account-logout">로그아웃</button></div></div>`;
     bindShell();
   }

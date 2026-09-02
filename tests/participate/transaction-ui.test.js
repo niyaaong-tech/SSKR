@@ -20,9 +20,9 @@ test("tier selection renders a live server-backed summary", () => {
   assert.match(source, /addEventListener\("change", updateTierSummary\)/);
 });
 
-test("completion screen links to APP and omits legacy participant lobby", () => {
+test("completion screen links to SSKR manager and omits legacy participant lobby", () => {
   const source = read("mode-c.js");
-  assert.match(source, /SSKR APP으로 이동/);
+  assert.match(source, /SSKR 매니저로 이동/);
   assert.match(source, /참가 신청 정보 확인/);
   assert.doesNotMatch(source, /service-entrances|lobby-manager|edit-bike-info/);
 });

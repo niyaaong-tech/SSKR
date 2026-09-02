@@ -26,14 +26,25 @@ test("returnTo accepts only safe internal APP paths", () => {
   assert.equal(safeReturnTo("https://evil.example/app"), "/app");
   assert.equal(safeReturnTo("//evil.example/app"), "/app");
   assert.equal(safeReturnTo("/participate"), "/app");
+  assert.equal(safeReturnTo("/application"), "/app");
 });
 
 test("memorial visibility is independent of the current event", () => {
   const publicItem = { publishStatus: "PUBLISHED", visibility: "PUBLIC", eventId: "sskr-2025", ownerUserId: "other" };
   const privateItem = { publishStatus: "PUBLISHED", visibility: "PRIVATE", eventId: "sskr-2024", ownerUserId: "owner" };
   assert.equal(memorialAccess(publicItem, {}).allowed, true);
-  assert.equal(memorialAccess(privateItem, { id: "owner" }).allowed, true);
-  assert.equal(memorialAccess(privateItem, { id: "other" }).reason, "PRIVATE");
+  assert.equal(memorialAccess(privateItem, { id: "owner", linked: false }).reason, "PRIVATE");
+  assert.equal(memorialAccess(privateItem, { id: "owner", linked: true }).allowed, true);
+  assert.equal(memorialAccess(privateItem, { id: "other", linked: true }).reason, "PRIVATE");
+});
+
+test("APP navigation binds one delegated click handler and does not rebind while rendering", () => {
+  const source = fs.readFileSync(path.join(__dirname, "../../web/app/app.js"), "utf8");
+  assert.doesNotMatch(source, /function bindLinks|bindLinks\(\)/);
+  assert.match(source, /document\.addEventListener\("click", handleAppLink\)/);
+  assert.match(source, /safe !== currentPath/);
+  assert.match(source, /window\.addEventListener\("popstate", renderRouteSafely\)/);
+  assert.match(source, /if \(!context\).*pendingRoute/s);
 });
 
 test("APP exposes the required route and mock scenario matrix", () => {
@@ -42,10 +53,10 @@ test("APP exposes the required route and mock scenario matrix", () => {
   for (const scenario of ["guest", "logged-in-no-application", "application-step1", "application-step2", "application-step3", "application-payment", "processing", "failed", "active", "past-only", "current+past", "public-memorial", "private-owner", "private-other", "blocked"]) assert.match(source, new RegExp(scenario.replace(/[+]/g, "\\+")));
 });
 
-test("HOME and router expose distinct participate and APP gateways", () => {
+test("HOME and router expose distinct participate and SSKR manager gateways", () => {
   const home = fs.readFileSync(path.join(__dirname, "../../web/home/index.html"), "utf8");
   const vercel = JSON.parse(fs.readFileSync(path.join(__dirname, "../../vercel.json"), "utf8"));
   assert.match(home, /href="\/participate"[^>]*>[^<]*<small>03 \/ PARTICIPATE/s);
-  assert.match(home, /href="\/app"[^>]*>[^<]*<small>04 \/ SSKR APP/s);
+  assert.match(home, /href="\/app"[^>]*>[^<]*<small>04 \/ MANAGER<\/small><strong>SSKR 매니저/s);
   assert.ok(vercel.rewrites.some((route) => route.source === "/app/:path*" && route.destination === "/web/app/index.html"));
 });

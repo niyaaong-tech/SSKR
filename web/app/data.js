@@ -16,6 +16,15 @@
       { id: "notice-spot", date: "2027.05.18", category: "SPOT", title: "2027 공식 스팟 1차 공개", body: "공식 출발·피니시와 주요 미션 스팟 정보를 공개했습니다." },
       { id: "notice-safety", date: "2027.05.12", category: "SAFETY", title: "참가 전 안전 장비 안내", body: "헬멧과 보호 장구, 바이크 기본 점검 항목을 확인해 주세요." }
     ],
+    manager: {
+      heroImage: "/assets/sskr_road1.png",
+      kitImage: "/participate/assets/benefit-kit.png",
+      notices: [
+        { id: "notice-operation", date: "05.24", category: "운영", title: "운영 일정 업데이트", body: "참가 키트와 현장 운영 일정을 확인해 주세요." },
+        { id: "notice-meeting", date: "05.21", category: "집결", title: "집결 안내 변경", body: "출발지별 집결 위치와 입장 시간이 변경되었습니다." }
+      ],
+      guide: { published: true, image: "/assets/memory-cheongju-v02.jpg" }
+    },
     past: [{ eventId: "sskr-2026", year: 2026, result: "완주", tier: "STANDARD", participantNumber: "#0271", memorialId: "memorial-2026-0271" }]
   });
 })();

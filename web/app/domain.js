@@ -6,7 +6,7 @@
   const PERSONAL_ROUTES = new Set(["/app/my", "/app/preparation"]);
   function normalizePath(pathname = "/app") {
     const clean = String(pathname).split("?")[0].replace(/\/+$/, "") || "/app";
-    return clean.startsWith("/app") ? clean : "/app";
+    return clean === "/app" || clean.startsWith("/app/") ? clean : "/app";
   }
   function safeReturnTo(value, fallback = "/app") {
     if (typeof value !== "string" || !value.startsWith("/app") || value.startsWith("//") || value.includes("://")) return fallback;
@@ -44,7 +44,7 @@
     if (!memorial) return { allowed: false, reason: "NOT_FOUND" };
     if (memorial.publishStatus !== "PUBLISHED") return { allowed: false, reason: "NOT_PUBLISHED" };
     if (memorial.visibility === "PUBLIC") return { allowed: true, reason: null };
-    return memorial.ownerUserId === account.id ? { allowed: true, reason: null } : { allowed: false, reason: "PRIVATE" };
+    return account.linked === true && memorial.ownerUserId === account.id ? { allowed: true, reason: null } : { allowed: false, reason: "PRIVATE" };
   }
   return { PERSONAL_ROUTES, canAccess, currentEventAction, currentRelation, memorialAccess, normalizePath, safeReturnTo };
 });

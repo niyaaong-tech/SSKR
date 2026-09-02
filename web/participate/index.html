@@ -8,8 +8,8 @@
   <base href="/participate/" />
   <title>SSKR 2027 참가</title>
   <link rel="icon" href="data:," />
-  <link rel="stylesheet" href="./styles.css?v=patch-031-reset1" />
   <link rel="stylesheet" href="/web/shared/account-control.css?v=patch-032" />
+  <link rel="stylesheet" href="./styles.css?v=patch-032-layout3" />
 </head>
 <body>
   <a class="skip-link" href="#context-surface">참가 화면으로 바로가기</a>
@@ -55,8 +55,10 @@
       <div class="surface-view surface-view--review" id="mode-a" data-surface-mode="MODE_A" hidden>
         <div class="benefit-area">
           <header class="benefit-heading">
-            <h2 id="benefit-title">참가 혜택 &amp; 전용 서비스 <i aria-hidden="true"></i></h2>
-            <p>참가하면 누릴 수 있는 특별한 경험 <span aria-hidden="true">✧</span></p>
+            <div>
+              <h2 id="benefit-title">참가 혜택 &amp; 전용 서비스 <i aria-hidden="true"></i></h2>
+              <p class="benefit-hint"><span aria-hidden="true">↗</span> 카드를 선택하면 상세 내용을 확인할 수 있습니다.</p>
+            </div>
           </header>
 
           <div class="benefit-grid" id="benefit-grid"></div>
@@ -129,6 +131,6 @@
   <script src="./mode-c.js?v=patch-031"></script>
   <script src="/web/shared/account-control.js?v=patch-032"></script>
   <script src="./account.js?v=patch-031-reset2"></script>
-  <script src="./app.js?v=patch-031-reset1"></script>
+  <script src="./app.js?v=patch-032-layout3"></script>
 </body>
 </html>

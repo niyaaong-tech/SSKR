@@ -3,43 +3,54 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <meta name="theme-color" content="#0c1212" />
-  <meta name="description" content="SSKR의 스팟, 메모리얼과 나의 참가 기록을 확인하는 웹 APP" />
-  <title>SSKR APP</title>
+  <meta name="theme-color" content="#788a7f" />
+  <meta name="description" content="SSKR 참가 준비와 기록을 한곳에서 확인하는 SSKR 매니저" />
+  <title>SSKR 매니저</title>
   <link rel="icon" href="data:," />
-  <link rel="stylesheet" href="/web/shared/account-control.css?v=patch-032" />
-  <link rel="stylesheet" href="/web/app/styles.css?v=patch-032" />
+  <link rel="stylesheet" href="/web/shared/account-control.css?v=patch-032b" />
+  <link rel="stylesheet" href="/web/app/styles.css?v=patch-032b" />
+  <link rel="stylesheet" href="/web/app/manager.css?v=patch-032b" />
 </head>
 <body>
   <a class="skip-link" href="#app-main">본문으로 바로가기</a>
   <div class="app-shell">
-    <header class="app-header">
-      <a class="app-brand" href="/" aria-label="SSKR 홈"><strong>SSKR</strong><span>SUNRISE SUNSET<br>KOREAN RALLY</span></a>
-      <div class="event-shortcut"><span>CURRENT EVENT</span><strong>SSKR 2027</strong></div>
-      <a class="event-action" id="event-action" href="/participate">SSKR 참가하기 <span>→</span></a>
-      <div class="app-account" id="app-account"></div>
-      <button class="mobile-nav-toggle" id="mobile-nav-toggle" type="button" aria-expanded="false" aria-controls="app-nav">MENU</button>
-    </header>
     <aside class="app-sidebar" id="app-nav">
-      <p>SSKR APP</p>
-      <nav aria-label="SSKR APP 주요 메뉴">
-        <a href="/app" data-app-link>APP 홈</a>
-        <a href="/app/current" data-app-link>현재 SSKR</a>
-        <a href="/app/spots" data-app-link>스팟</a>
-        <a href="/app/memorials" data-app-link>메모리얼</a>
-        <a href="/app/my" data-app-link>내 기록</a>
+      <a class="app-brand" href="/" aria-label="SSKR 홈">
+        <strong>SSKR</strong><span>SUNRISE SUNSET<br />KOREAN RALLY</span>
+      </a>
+      <nav aria-label="SSKR 주요 메뉴">
+        <a href="/app" data-app-link><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M4 11.5 12 5l8 6.5V20h-6v-5h-4v5H4z" /></svg><span>SSKR 매니저</span></a>
+        <a href="/app/current" data-app-link><svg aria-hidden="true" viewBox="0 0 24 24"><circle cx="12" cy="12" r="7"/><path d="m12 8 1.4 2.8L16 12l-2.6 1.2L12 16l-1.4-2.8L8 12l2.6-1.2z"/></svg><span id="current-event-nav-label">SSKR 2027</span></a>
+        <a href="/app/spots" data-app-link><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M12 21s6-5.4 6-11a6 6 0 1 0-12 0c0 5.6 6 11 6 11Z"/><circle cx="12" cy="10" r="2"/></svg><span>스팟</span></a>
+        <a href="/app/memorials" data-app-link><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M6 4h12v16H6z"/><path d="M9 8h6M9 12h6M9 16h4"/></svg><span>메모리얼</span></a>
+        <a href="/app/my" data-app-link><svg aria-hidden="true" viewBox="0 0 24 24"><circle cx="12" cy="8" r="3"/><path d="M6 20c.5-4 2.5-6 6-6s5.5 2 6 6"/></svg><span>내 기록</span></a>
       </nav>
-      <div class="sidebar-secondary"><a href="/app/notices" data-app-link>공지</a><a href="/app/preparation" data-app-link>참가 준비</a></div>
-      <small>SSKR WEB APP · 0.3.2</small>
+      <div class="sidebar-scenic" aria-hidden="true"></div>
+      <small>SSKR · 0.3.2b</small>
     </aside>
-    <main class="app-main" id="app-main" tabindex="-1"><div class="app-loading"><i></i><p>SSKR APP을 불러오고 있습니다.</p></div></main>
+
+    <header class="app-header">
+      <button class="mobile-nav-toggle" id="mobile-nav-toggle" type="button" aria-expanded="false" aria-controls="app-nav" aria-label="메뉴 열기"><span></span><span></span><span></span></button>
+      <h1 id="app-section-title">SSKR 매니저</h1>
+      <div class="app-utilities">
+        <button class="utility-button" type="button" aria-label="알림"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M18 9a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4"/></svg><span class="notification-dot"></span></button>
+        <button class="utility-button" type="button" aria-label="설정"><svg aria-hidden="true" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1-2.8 2.8-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.6v.2h-4V21a1.7 1.7 0 0 0-1-1.6 1.7 1.7 0 0 0-1.9.3l-.1.1L4.2 17l.1-.1a1.7 1.7 0 0 0 .3-1.9A1.7 1.7 0 0 0 3 14H2.8v-4H3a1.7 1.7 0 0 0 1.6-1 1.7 1.7 0 0 0-.3-1.9L4.2 7 7 4.2l.1.1A1.7 1.7 0 0 0 9 4.6 1.7 1.7 0 0 0 10 3V2.8h4V3a1.7 1.7 0 0 0 1 1.6 1.7 1.7 0 0 0 1.9-.3l.1-.1L19.8 7l-.1.1a1.7 1.7 0 0 0-.3 1.9 1.7 1.7 0 0 0 1.6 1h.2v4H21a1.7 1.7 0 0 0-1.6 1Z"/></svg></button>
+        <div class="account-meta" id="account-meta" hidden><div><strong id="account-name"></strong><span id="account-number"></span></div></div>
+        <div class="app-account" id="app-account"></div>
+      </div>
+    </header>
+
+    <main class="app-main" id="app-main" tabindex="-1">
+      <div class="app-loading" aria-label="화면을 불러오는 중"><i></i><i></i><i></i></div>
+    </main>
   </div>
-  <script src="/participate/mock-auth.js?v=patch-032"></script>
-  <script src="/participate/mock-session.js?v=patch-032"></script>
-  <script src="/participate/api-client.js?v=patch-032"></script>
-  <script src="/web/shared/account-control.js?v=patch-032"></script>
-  <script src="/web/app/domain.js?v=patch-032"></script>
-  <script src="/web/app/data.js?v=patch-032"></script>
-  <script src="/web/app/app.js?v=patch-032"></script>
+  <script src="/participate/mock-auth.js?v=patch-032b"></script>
+  <script src="/participate/mock-session.js?v=patch-032b"></script>
+  <script src="/participate/api-client.js?v=patch-032b"></script>
+  <script src="/web/shared/account-control.js?v=patch-032b"></script>
+  <script src="/web/app/domain.js?v=patch-032b"></script>
+  <script src="/web/app/data.js?v=patch-032b"></script>
+  <script src="/web/app/manager-resolver.js?v=patch-032b"></script>
+  <script src="/web/app/app.js?v=patch-032b"></script>
 </body>
 </html>

@@ -21,20 +21,26 @@
 
   function renderMarketing() {
     const benefitGrid = document.querySelector("#benefit-grid");
-    benefitGrid.innerHTML = data.benefits.map((benefit) => `<article class="benefit-card" data-key="${benefit.key}"><button class="benefit-trigger" type="button" aria-expanded="false" aria-controls="benefit-${benefit.key}"><span class="benefit-visual" aria-hidden="true"></span><span class="benefit-number">${benefit.number}</span><span class="benefit-copy"><strong>${benefit.title}</strong><small>${benefit.summary}</small></span><span class="benefit-open" aria-hidden="true">＋</span></button><div class="benefit-detail" id="benefit-${benefit.key}"><p>${benefit.description}</p><small>${benefit.details}</small></div></article>`).join("");
+    benefitGrid.innerHTML = data.benefits.map((benefit) => `<article class="benefit-card" data-key="${benefit.key}"><button class="benefit-trigger" type="button" aria-expanded="false" aria-controls="benefit-${benefit.key}" title="상세 보기"><span class="benefit-visual" aria-hidden="true"></span><span class="benefit-number">${benefit.number}</span><span class="benefit-copy"><strong>${benefit.title}</strong><small>${benefit.summary}</small></span><span class="benefit-open" aria-hidden="true">↗</span></button><div class="benefit-detail" id="benefit-${benefit.key}"><p>${benefit.description}</p><small>${benefit.details}</small></div></article>`).join("");
     const cards = [...benefitGrid.querySelectorAll(".benefit-card")];
     const resetCards = () => {
       benefitGrid.classList.remove("has-selection");
-      cards.forEach((card) => { card.classList.remove("is-selected"); card.style.order = ""; card.querySelector("button").setAttribute("aria-expanded", "false"); });
+      delete benefitGrid.dataset.selectedIndex;
+      cards.forEach((card) => {
+        card.classList.remove("is-selected");
+        card.querySelector("button").setAttribute("aria-expanded", "false");
+        card.querySelector(".benefit-open").textContent = "↗";
+      });
     };
-    cards.forEach((card) => card.querySelector("button").addEventListener("click", () => {
+    cards.forEach((card, index) => card.querySelector("button").addEventListener("click", () => {
       const close = card.classList.contains("is-selected");
       resetCards();
       if (close) return;
       benefitGrid.classList.add("has-selection");
+      benefitGrid.dataset.selectedIndex = String(index + 1);
       card.classList.add("is-selected");
-      card.style.order = "-1";
       card.querySelector("button").setAttribute("aria-expanded", "true");
+      card.querySelector(".benefit-open").textContent = "×";
     }));
     window.addEventListener("keydown", (event) => { if (event.key === "Escape") resetCards(); });
     document.querySelector("#manager-title").textContent = data.manager.title;

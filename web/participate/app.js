@@ -87,7 +87,7 @@
     pending = value;
     document.documentElement.dataset.requestPending = String(value);
     primaryAction.disabled = value || context?.surface?.primaryAction?.enabled === false;
-    document.querySelectorAll(".transaction-primary, .transaction-secondary, .mock-promote, .account-menu button").forEach((button) => {
+    document.querySelectorAll(".transaction-primary, .transaction-secondary, .account-menu button").forEach((button) => {
       if (value && !button.disabled) { button.dataset.pendingDisabled = "true"; button.disabled = true; }
       else if (!value && button.dataset.pendingDisabled === "true") { button.disabled = false; delete button.dataset.pendingDisabled; }
     });
@@ -135,6 +135,7 @@
 
   async function startApplication() {
     if (!context?.surface?.primaryAction?.enabled || pending) return;
+    if (context.surface.primaryAction.code === "OPEN_SSKR_APP") { window.location.href = "/app"; return; }
     if (!accountLink.isAccountLinked()) { showMode(SURFACE_MODES.AUTH_GATE); return; }
     await run(() => api.application("START"));
   }
@@ -156,9 +157,7 @@
       if (!retry) await api.checkout();
       return api.payment(retry ? "RETRY" : "START", { idempotencyKey: `${Date.now()}-${Math.random().toString(16).slice(2)}`, mockOutcome });
     }),
-    refreshPayment: () => run(() => api.payment("REFRESH")),
-    promoteWaitlist: () => run(() => api.mock("PROMOTE_WAITLIST")),
-    saveBikeInfo: (bike) => run(() => api.application("SAVE_BIKE_INFO", { bike }))
+    refreshPayment: () => run(() => api.payment("REFRESH"))
   };
 
   accountUI.setup({

@@ -81,3 +81,24 @@ test("participation reset preserves the linked account and clears the applicatio
   assert.equal(result.application, null);
   assert.equal(result.participation, null);
 });
+
+test("blocked checkout is denied but an existing processing payment remains visible", async () => {
+  const blocked = await handleParticipateRequest("checkout", { scenario: "blocked", account: { linked: true, provider: "kakao" }, action: "PREPARE" });
+  assert.equal(blocked.ok, false);
+  assert.equal(blocked.error.code, "USER_BLOCKED");
+  assert.equal(blocked.context.application.state, "DRAFT");
+
+  const processing = await handleParticipateRequest("context", { scenario: "processing", account: { linked: true, provider: "kakao" } });
+  processing.mockSnapshot.account.blocked = true;
+  const refreshed = await handleParticipateRequest("context", { snapshot: processing.mockSnapshot, account: { linked: true, provider: "kakao" } });
+  assert.equal(refreshed.payment.state, "PROCESSING");
+  assert.equal(refreshed.surface.variant, "PROCESSING");
+});
+
+test("MODE C is a completion surface without legacy lobby services", async () => {
+  const result = await handleParticipateRequest("context", { scenario: "active", account: { linked: true, provider: "kakao" } });
+  assert.equal(result.surface.mode, "MODE_C");
+  assert.equal(result.surface.primaryAction.code, "OPEN_SSKR_APP");
+  assert.equal(result.manager, null);
+  assert.deepEqual(result.services, []);
+});

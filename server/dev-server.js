@@ -11,6 +11,8 @@ const routes = {
   "/": "web/home/index.html",
   "/participate": "web/participate/index.html",
   "/participate/": "web/participate/index.html",
+  "/app": "web/app/index.html",
+  "/app/": "web/app/index.html",
   "/journey": "web/journey-presentation/index.html",
   "/journey/": "web/journey-presentation/index.html"
 };
@@ -37,6 +39,7 @@ function sendJson(response, status, value) {
 
 function staticFileFor(pathname) {
   if (routes[pathname]) return path.join(root, routes[pathname]);
+  if (pathname.startsWith("/app/")) return path.join(root, "web/app/index.html");
   if (pathname.startsWith("/participate/")) return path.join(root, "web/participate", pathname.slice("/participate/".length));
   if (pathname.startsWith("/journey/")) return path.join(root, "web/journey-presentation", pathname.slice("/journey/".length));
   if (pathname.startsWith("/web/")) return path.join(root, pathname.slice(1));

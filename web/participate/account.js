@@ -50,7 +50,7 @@
   }
 
   function bindBack() {
-    root.querySelector("[data-account-back]")?.addEventListener("click", () => callbacks.restore(previousSurface));
+    root.querySelector("[data-account-back]")?.addEventListener("click", () => callbacks.resolve());
   }
 
   function renderProfile(editing = false, message = "") {
@@ -109,7 +109,10 @@
   function bindShell() {
     const trigger = shell.querySelector("#account-trigger");
     const wrapper = shell.querySelector(".account-control");
-    trigger.addEventListener("click", (event) => { event.stopPropagation(); openMenu(); });
+    trigger.addEventListener("click", (event) => {
+      event.stopPropagation();
+      if (trigger.getAttribute("aria-expanded") === "true") closeMenu(); else openMenu();
+    });
     trigger.addEventListener("keydown", (event) => { if (["Enter", " ", "ArrowDown"].includes(event.key)) { event.preventDefault(); openMenu(); shell.querySelector("[data-account-view]")?.focus(); } });
     wrapper.addEventListener("mouseenter", openMenu);
     wrapper.addEventListener("mouseleave", () => { closeTimer = setTimeout(closeMenu, 180); });
@@ -126,11 +129,23 @@
   function update(nextContext) {
     context = nextContext;
     const linked = context?.account?.linked === true;
+    if (window.SSKR_ACCOUNT_CONTROL) {
+      window.SSKR_ACCOUNT_CONTROL.render(shell, {
+        account: context.account,
+        showGuest: false,
+        showReset: true,
+        onProfile: () => openView("profile"),
+        onSettings: () => openView("settings"),
+        onReset: async () => { if (window.confirm("참가 신청, 결제 및 참가 확정 상태를 초기화하시겠습니까? 로그인 상태와 프로필은 유지됩니다.")) await callbacks.resetParticipation(); },
+        onLogout: async () => { if (window.confirm("로그아웃하시겠습니까? 참가 신청과 결제 정보는 삭제되지 않습니다.")) await callbacks.logout(); }
+      });
+      return;
+    }
     shell.hidden = !linked;
     if (!linked) { shell.innerHTML = ""; return; }
     const profile = context.account.profile || {};
     const resetControl = `<button type="button" role="menuitem" id="account-reset-participation" class="account-test-action"><span>참가 설정 초기화</span><small>개발 테스트용</small></button>`;
-    shell.innerHTML = `<div class="account-control"><button type="button" class="account-trigger" id="account-trigger" aria-haspopup="menu" aria-expanded="false" aria-controls="account-menu" aria-label="계정 메뉴 열기">${profile.thumbnailUrl ? `<img src="${escapeHtml(profile.thumbnailUrl)}" alt="" />` : `<span>${initials(profile)}</span>`}</button><div class="account-menu" id="account-menu" role="menu" hidden><header><strong>${escapeHtml(profile.name)}</strong><small>${escapeHtml(profile.email)}</small></header><button type="button" role="menuitem" data-account-view="profile">프로필</button><button type="button" role="menuitem" data-account-view="settings">페이지세팅</button><button type="button" role="menuitem" data-account-view="mypage">마이페이지</button><hr />${resetControl}<button type="button" role="menuitem" id="account-logout">로그아웃</button></div></div>`;
+    shell.innerHTML = `<div class="account-control"><button type="button" class="account-trigger" id="account-trigger" aria-haspopup="menu" aria-expanded="false" aria-controls="account-menu" aria-label="계정 메뉴 열기">${profile.thumbnailUrl ? `<img src="${escapeHtml(profile.thumbnailUrl)}" alt="" />` : `<span>${initials(profile)}</span>`}</button><div class="account-menu" id="account-menu" role="menu" hidden><header><strong>${escapeHtml(profile.name)}</strong><small>${escapeHtml(profile.email)}</small></header><button type="button" role="menuitem" data-account-view="profile">프로필</button><button type="button" role="menuitem" data-account-view="settings">페이지세팅</button><a role="menuitem" href="/app/my">마이페이지</a><hr />${resetControl}<button type="button" role="menuitem" id="account-logout">로그아웃</button></div></div>`;
     bindShell();
   }
 

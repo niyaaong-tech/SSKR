@@ -1,7 +1,7 @@
 const { APPLICATION, CAPACITY, CLOSE_REASON, PARTICIPATION, REGISTRATION, SLOT_ALLOCATION } = require("./constants");
 const { findResolvedTier } = require("./tier-policy");
 
-function evaluateCheckoutEligibility({ application, event, participation, price, priceTiers, now = new Date() }) {
+function evaluateCheckoutEligibility({ application, event, participation, price, priceTiers, user, now = new Date() }) {
   const deny = (code, message, closeApplication = true) => ({
     allowed: false,
     slotTarget: SLOT_ALLOCATION.NONE,
@@ -11,6 +11,7 @@ function evaluateCheckoutEligibility({ application, event, participation, price,
   });
 
   if (!event) return deny(CLOSE_REASON.EVENT_UNAVAILABLE, "현재 신청 가능한 이벤트가 없습니다.");
+  if (user?.blocked === true) return deny("USER_BLOCKED", "현재 계정으로는 새로운 결제를 진행할 수 없습니다.", false);
   if (participation?.state === PARTICIPATION.ACTIVE) return deny("PARTICIPATION_ALREADY_ACTIVE", "이미 현재 이벤트 참가권을 보유하고 있습니다.", false);
   if (!application || ![APPLICATION.DRAFT, APPLICATION.SUBMITTED].includes(application.state)) {
     return deny("APPLICATION_NOT_PAYABLE", "결제를 진행할 수 있는 신청 상태가 아닙니다.", false);

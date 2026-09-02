@@ -7,7 +7,8 @@ const allowedScenarios = new Set([
   "a-open-unlinked", "a-open-linked", "b-step1", "b-step2", "b-step2-partial-required", "b-step3", "b-step3-optional-unchecked", "b-step4", "b-processing",
   "b-failed-open", "b-failed-closed", "b-finalizing", "c-waitlisted", "c-confirmed-spots",
   "c-preparation", "c-ride-check", "c-countdown", "c-live-confirmed", "c-live-waitlisted",
-  "c-season-completed", "c-season-no-show", "c-season-retired", "tier-early-ended", "tier-early-limit", "tier-standard-ended", "tier-platinum-extra"
+  "c-season-completed", "c-season-no-show", "c-season-retired", "tier-early-ended", "tier-early-limit", "tier-standard-ended", "tier-platinum-extra",
+  "guest", "logged-in-no-application", "application-step1", "application-step2", "application-step3", "application-payment", "processing", "failed", "active", "blocked"
 ]);
 
 function respond(repository, options = {}) {
@@ -19,6 +20,7 @@ function normalizeAccount(input = {}, current = {}) {
     id: current.id || "mock-rider-0271",
     profile: current.profile || { name: "김라이더", email: "rider0271@example.com", phone: "01012345678", thumbnailUrl: null },
     socialIdentities: current.socialIdentities || [],
+    blocked: current.blocked === true,
     linked: input.linked === true,
     provider: input.linked ? input.provider || current.provider || null : null
   };

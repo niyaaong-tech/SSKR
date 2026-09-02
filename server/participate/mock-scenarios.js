@@ -91,7 +91,8 @@ function baseSnapshot() {
       linked: false,
       provider: null,
       profile: { name: "김라이더", email: "rider0271@example.com", phone: "01012345678", thumbnailUrl: null },
-      socialIdentities: []
+      socialIdentities: [],
+      blocked: false
     },
     event: clone(baseEvent),
     priceTiers: clone(priceTiers),
@@ -170,6 +171,16 @@ function createScenario(name = "a-open-unlinked") {
   };
 
   switch (name) {
+    case "guest": break;
+    case "logged-in-no-application": linked(); break;
+    case "application-step1": linked(); snapshot.application = makeApplication(); break;
+    case "application-step2": linked(); snapshot.application = makeApplication({ acknowledgement: true }); break;
+    case "application-step3": linked(); snapshot.application = makeApplication({ acknowledgement: true, agreements: true }); break;
+    case "application-payment": linked(); snapshot.application = completeApplication(); break;
+    case "processing": linked(); snapshot.application = completeApplication(APPLICATION.SUBMITTED); snapshot.checkoutHold = makeHold(); snapshot.paymentAttempts = [makePayment(PAYMENT.PROCESSING)]; break;
+    case "failed": linked(); snapshot.application = completeApplication(APPLICATION.SUBMITTED); snapshot.checkoutHold = makeHold(CHECKOUT_HOLD.RELEASED); snapshot.paymentAttempts = [makePayment(PAYMENT.FAILED)]; break;
+    case "active": paid(SLOT_ALLOCATION.CONFIRMED); break;
+    case "blocked": linked(); snapshot.account.blocked = true; snapshot.application = completeApplication(); break;
     case "a-open-linked": linked(); break;
     case "b-step1": linked(); snapshot.application = makeApplication(); break;
     case "b-step2": linked(); snapshot.application = makeApplication({ acknowledgement: true }); break;

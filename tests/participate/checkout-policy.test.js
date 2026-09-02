@@ -21,3 +21,10 @@ test("checkout denies missing price and duplicate participation", () => {
   const duplicate = evaluate({ registrationState: "OPEN", capacityState: "AVAILABLE" }, { participation: { state: "ACTIVE" } });
   assert.equal(duplicate.reason.code, "PARTICIPATION_ALREADY_ACTIVE");
 });
+
+test("blocked users cannot begin a new checkout", () => {
+  const result = evaluate({ registrationState: "OPEN", capacityState: "AVAILABLE" }, { user: { blocked: true } });
+  assert.equal(result.allowed, false);
+  assert.equal(result.reason.code, "USER_BLOCKED");
+  assert.equal(result.closeApplication, false);
+});

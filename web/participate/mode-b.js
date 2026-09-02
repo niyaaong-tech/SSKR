@@ -70,7 +70,7 @@
         <form class="agreement-form" id="agreement-form">
           <label class="agreement-all"><input type="checkbox" id="required-agreement-all" /><span><strong>필수 항목 전체 동의</strong><small>현재 행사에서 필요한 필수 동의를 한 번에 선택합니다.</small></span></label>
           <div class="agreement-list">${required.map(agreementRow).join("")}</div>
-          ${optional.length ? `<section class="optional-agreements" aria-label="선택 동의"><label class="agreement-all"><input type="checkbox" id="optional-agreement-all" /><span><strong>선택 항목 전체 동의</strong><small>선택하지 않아도 다음 단계로 진행할 수 있습니다.</small></span></label><div class="agreement-list">${optional.map(agreementRow).join("")}</div></section>` : ""}
+          ${optional.length ? `<section class="optional-agreements" aria-label="선택 동의"><button class="optional-agreements-toggle" id="optional-agreements-toggle" type="button" aria-expanded="false" aria-controls="optional-agreements-panel"><span><strong>선택 항목 보기</strong><small>선택하지 않아도 다음 단계로 진행할 수 있습니다.</small></span><b aria-hidden="true">＋</b></button><div id="optional-agreements-panel" hidden><label class="agreement-all"><input type="checkbox" id="optional-agreement-all" /><span><strong>선택 항목 전체 동의</strong><small>원하는 항목만 선택할 수도 있습니다.</small></span></label><div class="agreement-list">${optional.map(agreementRow).join("")}</div></div></section>` : ""}
           <button class="transaction-primary" type="submit" disabled>다음 <span aria-hidden="true">→</span></button>
         </form>
         <dialog class="agreement-dialog" id="agreement-dialog" aria-labelledby="agreement-dialog-title"><div><p>AGREEMENT DOCUMENT</p><h3 id="agreement-dialog-title"></h3><span id="agreement-dialog-version"></span><p id="agreement-dialog-summary"></p><div class="agreement-placeholder">현재 개발 단계의 문서 영역입니다. 실제 전문은 운영 확정본으로 교체됩니다.</div><button type="button" id="agreement-dialog-close">닫기</button></div></dialog>
@@ -82,6 +82,8 @@
     const optionalChecks = checks.filter((input) => input.dataset.required === "false");
     const requiredAll = root.querySelector("#required-agreement-all");
     const optionalAll = root.querySelector("#optional-agreement-all");
+    const optionalToggle = root.querySelector("#optional-agreements-toggle");
+    const optionalPanel = root.querySelector("#optional-agreements-panel");
     const submit = form.querySelector("button[type='submit']");
     const sync = () => {
       requiredAll.checked = requiredChecks.every((input) => input.checked);
@@ -94,6 +96,13 @@
     };
     requiredAll.addEventListener("change", () => { requiredChecks.forEach((input) => { input.checked = requiredAll.checked; }); sync(); });
     optionalAll?.addEventListener("change", () => { optionalChecks.forEach((input) => { input.checked = optionalAll.checked; }); sync(); });
+    optionalToggle?.addEventListener("click", () => {
+      const expanded = optionalToggle.getAttribute("aria-expanded") === "true";
+      optionalToggle.setAttribute("aria-expanded", String(!expanded));
+      optionalPanel.hidden = expanded;
+      optionalToggle.querySelector("strong").textContent = expanded ? "선택 항목 보기" : "선택 항목 접기";
+      optionalToggle.querySelector("b").textContent = expanded ? "＋" : "−";
+    });
     checks.forEach((input) => input.addEventListener("change", sync));
     const dialog = root.querySelector("#agreement-dialog");
     root.querySelectorAll("[data-agreement-view]").forEach((button) => button.addEventListener("click", () => {
@@ -123,7 +132,7 @@
         <form class="participant-form" id="participant-form" novalidate>
           <fieldset class="tier-fields"><legend>참가 유형 <span>필수</span></legend><div class="tier-grid">
             ${(context.tiers || []).map((tier) => `<label class="tier-card ${tier.availability.selectable ? "" : "is-disabled"}"><input type="radio" name="priceTierId" value="${tier.id}" ${tier.id === selectedId ? "checked" : ""} ${tier.availability.selectable ? "" : "disabled"} /><span class="tier-card-head"><small>${tier.code}</small><em>${escapeHtml(tier.availability.label)}</em></span><strong>${escapeHtml(tier.displayName)}</strong><b>${escapeHtml(tier.displayAmount)}</b><span class="tier-benefits">${tier.benefits.map((benefit) => `<i>${escapeHtml(benefit)}</i>`).join("")}</span></label>`).join("")}
-          </div><small class="field-error" id="tier-error"></small></fieldset>
+          </div><aside class="tier-selection-summary" id="tier-selection-summary" aria-live="polite"></aside><small class="field-error" id="tier-error"></small></fieldset>
           <fieldset class="participant-fields"><legend>참가자 정보</legend><div class="field-grid">
             <label class="field"><span>이름 <b aria-label="필수">*</b></span><input name="name" autocomplete="name" value="${escapeHtml(participant.name)}" aria-describedby="name-error" required /><small class="field-error" id="name-error"></small></label>
             <label class="field"><span>휴대전화 <b aria-label="필수">*</b></span><input name="phone" inputmode="tel" autocomplete="tel" placeholder="010-0000-0000" value="${escapeHtml(participant.phone)}" aria-describedby="phone-error" required /><small class="field-error" id="phone-error"></small></label>
@@ -135,6 +144,15 @@
         </form>
       </section>`);
     const form = root.querySelector("#participant-form");
+    const summary = root.querySelector("#tier-selection-summary");
+    const updateTierSummary = () => {
+      const selected = context.tiers?.find((tier) => tier.id === form.elements.priceTierId.value);
+      summary.innerHTML = selected
+        ? `<span>선택한 참가 유형</span><strong>${escapeHtml(selected.displayName)} · ${escapeHtml(selected.displayAmount)}</strong><small>${selected.benefits.map(escapeHtml).join(" · ")} · ${escapeHtml(selected.availability.label)}</small>`
+        : `<span>선택한 참가 유형</span><strong>아직 선택하지 않았습니다.</strong><small>이용 가능한 유형을 선택하면 금액과 혜택을 바로 확인할 수 있습니다.</small>`;
+    };
+    form.querySelectorAll('input[name="priceTierId"]').forEach((input) => input.addEventListener("change", updateTierSummary));
+    updateTierSummary();
     form.addEventListener("submit", (event) => {
       event.preventDefault();
       const values = new FormData(form);

@@ -46,7 +46,7 @@ function resolveSurface(context) {
       step: null,
       variant,
       statusCode: variant,
-      primaryAction: { code: "OPEN_PRIMARY_SERVICE", label: variant === "WAITLISTED" ? "참가 대기 상태 확인" : "내 참가 준비하기", enabled: true },
+      primaryAction: { code: "OPEN_SSKR_APP", label: "SSKR APP으로 이동", href: "/app", enabled: true },
       blockedReason: null
     };
   }

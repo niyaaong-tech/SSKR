@@ -154,7 +154,7 @@ function createTransactionService(repository, options = {}) {
       log("CHECKOUT_PRICE_CHANGED", { applicationId: application.id, previousAmount, currentAmount: currentPrice.amount });
       throw new DomainError("PRICE_CHANGED", "참가비가 변경되었습니다. 변경된 금액을 확인한 뒤 다시 진행해 주세요.", true);
     }
-    const eligibility = evaluateCheckoutEligibility({ application, event: event(), participation: repository.getParticipation(), price: currentPrice, priceTiers: repository.getPriceTiers(), now: new Date(clock()) });
+    const eligibility = evaluateCheckoutEligibility({ application, event: event(), participation: repository.getParticipation(), price: currentPrice, priceTiers: repository.getPriceTiers(), user: user().account, now: new Date(clock()) });
     if (!eligibility.allowed) {
       if (eligibility.closeApplication) {
         application.state = APPLICATION.CLOSED;

@@ -33,10 +33,15 @@
     const important = relation === "ACTIVE" && variant === "important";
     const waiting = relation === "ACTIVE" && variant === "waiting";
     const active = relation === "ACTIVE";
+    const participantAccess = {
+      available: active,
+      message: "참가 확정되면 SSKR 관련 안내가 제공됩니다."
+    };
 
     let primaryAction;
     if (postEvent && active) primaryAction = action("나의 기록 확인하기", "/app/my", "VIEW_RESULT");
-    else if (["FAILED", "PAYMENT"].includes(relation)) primaryAction = action("결제 이어하기", "/participate", "RECOVER_PAYMENT");
+    else if (relation === "PAYMENT") primaryAction = action("결제 이어하기", "/participate?resumePayment=1", "RECOVER_PAYMENT");
+    else if (relation === "FAILED") primaryAction = action("결제 이어하기", "/participate", "RECOVER_PAYMENT");
     else if (relation === "PROCESSING") primaryAction = action("결제 상태 확인하기", "/participate", "CHECK_PAYMENT");
     else if (["DRAFT", "STEP_1", "STEP_2", "STEP_3"].includes(relation)) primaryAction = action("참가 신청 이어하기", "/participate", "CONTINUE_APPLICATION");
     else if (active && !waiting) primaryAction = action("출발지 선택하기", "/app/current", "SELECT_START");
@@ -95,6 +100,7 @@
 
     return {
       relation,
+      participantAccess,
       alert: important ? { title: "집결 안내가 변경되었습니다.", copy: "선택한 출발지의 집결 위치와 입장 시간을 다시 확인해 주세요.", href: "/app/notices", label: "변경 내용 확인" } : null,
       primaryAction,
       currentEvent: {

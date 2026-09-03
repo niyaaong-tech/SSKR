@@ -18,14 +18,22 @@
   const params = new URLSearchParams(location.search);
   const scenario = params.get("scenario") || "session";
   const managerVariant = params.get("manager") || "default";
-  const linkedScenarios = new Set(["logged-in-no-application", "application-step1", "application-step2", "application-step3", "application-payment", "processing", "failed", "active", "past-only", "current+past", "private-owner", "private-other", "blocked", "c-waitlisted", "c-confirmed-spots", "c-preparation", "c-ride-check", "c-countdown", "c-live-confirmed", "c-live-waitlisted", "c-season-completed", "c-season-no-show", "c-season-retired"]);
+  const linkedScenarios = new Set(["logged-in-no-application", "application-step1", "application-step2", "application-step3", "application-payment", "processing", "failed", "active", "past-only", "current+past", "private-owner", "private-other", "blocked", "c-payment-deferred", "c-waitlisted", "c-confirmed-spots", "c-preparation", "c-ride-check", "c-countdown", "c-live-confirmed", "c-live-waitlisted", "c-season-completed", "c-season-no-show", "c-season-retired"]);
   const publicScenarios = new Set(["guest", "public-memorial"]);
   let context = null;
   let pendingRoute = null;
 
   const esc = (value) => String(value ?? "").replace(/[&<>'"]/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "'": "&#39;", '"': "&quot;" })[char]);
+  const participateHref = (href) => {
+    const target = new URL(href, location.origin);
+    ["scenario", "mockSession", "mockControls", "build"].forEach((key) => {
+      if (params.has(key)) target.searchParams.set(key, params.get(key));
+    });
+    return `${target.pathname}${target.search}`;
+  };
   const pageHead = (eyebrow, title, description = "") => `<header class="page-head"><div><p>${esc(eyebrow)}</p><h1>${esc(title)}</h1></div>${description ? `<span>${esc(description)}</span>` : ""}</header>`;
-  const primary = (action) => `<a class="primary-link" href="${esc(action.href)}">${esc(action.label)} <span aria-hidden="true">→</span></a>`;
+  const primary = (action) => `<a class="primary-link" href="${esc(participateHref(action.href))}">${esc(action.label)} <span aria-hidden="true">→</span></a>`;
+  const participantAccessCopy = "참가 확정되면 SSKR 관련 안내가 제공됩니다.";
   const currentAction = () => domain.currentEventAction(context);
   const relation = () => domain.currentRelation(context);
 
@@ -112,7 +120,12 @@
     const statusIcon = () => `<svg aria-hidden="true" viewBox="0 0 24 24"><path d="M12 3v18M3 12h18"/><circle cx="12" cy="12" r="8"/></svg>`;
     const alert = model.alert ? `<aside class="manager-alert" aria-label="중요 변경 안내"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M12 3 2.8 20h18.4L12 3Z"/><path d="M12 9v5M12 17h.01"/></svg><strong>${esc(model.alert.title)}</strong><p>${esc(model.alert.copy)}</p><a href="${esc(model.alert.href)}" data-app-link>${esc(model.alert.label)} →</a></aside>` : "";
     const statuses = model.currentEvent.status.map((item) => `<div class="manager-status-item" data-tone="${esc(item.tone)}"><span class="manager-status-icon">${statusIcon()}</span><div class="manager-status-copy"><span>${esc(item.label)}</span><strong>${esc(item.value)}</strong></div></div>`).join("");
-    const preparation = model.preparation ? `
+    const noticePanel = `<article class="manager-notices">
+      <div class="manager-card-title"><span>NOTICE</span><h2>최근 공지</h2></div>
+      <ul class="manager-notice-list">${model.notices.map((item) => `<li><time>${esc(item.date)}</time><strong>${esc(item.title)}</strong></li>`).join("")}</ul>
+      <a href="/app/notices" data-app-link>확인하기</a>
+    </article>`;
+    const workspace = model.preparation ? `
       <section class="manager-workspace" aria-label="참가 준비 현황">
         <article class="manager-prep-plan">
           <div class="manager-preparation">
@@ -130,15 +143,31 @@
             <div class="manager-kit-copy"><p class="eyebrow">PARTICIPANT KIT</p><h2>참가 키트</h2><dl><div><dt>상태</dt><dd>${esc(model.kit.state)}</dd></div><div><dt>예정</dt><dd>${esc(model.kit.schedule)}</dd></div></dl></div>
             <img class="manager-kit-image" src="${esc(model.kit.image)}" alt="SSKR 참가 키트" />
           </article>
-          <article class="manager-notices">
-            <div class="manager-card-title"><span>NOTICE</span><h2>최근 공지</h2></div>
-            <ul class="manager-notice-list">${model.notices.map((item) => `<li><time>${esc(item.date)}</time><strong>${esc(item.title)}</strong></li>`).join("")}</ul>
-            <a href="/app/notices" data-app-link>확인하기</a>
-          </article>
+          ${noticePanel}
         </div>
-      </section>` : "";
+      </section>` : `
+      <section class="manager-workspace" data-participant-availability="locked" aria-label="참가 확정 후 제공되는 안내">
+        <article class="manager-prep-plan">
+          <div class="manager-preparation manager-participant-placeholder">
+            <div class="manager-card-title"><span>PREPARATION</span><h2>참가 준비</h2></div>
+            <p>${esc(model.participantAccess.message)}</p>
+          </div>
+          <div class="manager-plan manager-participant-placeholder">
+            <div class="manager-card-title"><span>MY PLAN</span><h2>나의 계획</h2></div>
+            <p>${esc(model.participantAccess.message)}</p>
+          </div>
+        </article>
+        <div class="manager-side-stack">
+          <article class="manager-kit manager-participant-placeholder">
+            <div class="manager-card-title"><span>PARTICIPANT KIT</span><h2>참가 키트</h2></div>
+            <p>${esc(model.participantAccess.message)}</p>
+          </article>
+          ${noticePanel}
+        </div>
+      </section>`;
     const curation = model.curation.length ? `<section class="manager-curation" aria-labelledby="manager-curation-title"><header class="manager-section-head"><h2 id="manager-curation-title">지금 둘러볼 SSKR</h2><p>공개된 스팟과 기록만 안전하게 보여드립니다.</p></header><div class="manager-curation-grid" data-count="${model.curation.length}">${model.curation.map((item) => `<a class="manager-curation-card" href="${esc(item.href)}" data-app-link><img src="${esc(item.image)}" alt="" /><div><span>${esc(item.eyebrow)}</span><h3>${esc(item.title)}</h3><p>${esc(item.copy)}</p></div></a>`).join("")}</div></section>` : "";
-    root.innerHTML = `<div class="manager-dashboard">${alert}<section class="manager-hero" aria-labelledby="manager-hero-title"><div class="manager-hero-visual" style="--manager-hero-image:url('${esc(model.currentEvent.image)}')"><div class="manager-hero-copy"><p class="eyebrow">${esc(model.currentEvent.editionLabel)}</p><h2 id="manager-hero-title">${esc(model.currentEvent.heroTitle)}</h2><p>${esc(model.currentEvent.heroCopy)}</p><a class="manager-primary" href="${esc(model.primaryAction.href)}"${model.primaryAction.href.startsWith("/app") ? " data-app-link" : ""}>${esc(model.primaryAction.label)} <span aria-hidden="true">→</span></a></div></div><div class="manager-status">${statuses}</div></section>${preparation}${curation}</div>`;
+    const primaryHref = model.primaryAction.href.startsWith("/participate") ? participateHref(model.primaryAction.href) : model.primaryAction.href;
+    root.innerHTML = `<div class="manager-dashboard">${alert}<section class="manager-hero" aria-labelledby="manager-hero-title"><div class="manager-hero-visual" style="--manager-hero-image:url('${esc(model.currentEvent.image)}')"><div class="manager-hero-copy"><p class="eyebrow">${esc(model.currentEvent.editionLabel)}</p><h2 id="manager-hero-title">${esc(model.currentEvent.heroTitle)}</h2><p>${esc(model.currentEvent.heroCopy)}</p><a class="manager-primary" href="${esc(primaryHref)}"${model.primaryAction.href.startsWith("/app") ? " data-app-link" : ""}>${esc(model.primaryAction.label)} <span aria-hidden="true">→</span></a></div></div><div class="manager-status">${statuses}</div></section>${workspace}${curation}</div>`;
   }
 
   function renderCurrent() {
@@ -146,7 +175,7 @@
     const action = currentAction();
     const active = relation() === "ACTIVE";
     root.innerHTML = `${pageHead("CURRENT SSKR", "현재 SSKR", "현재 대회와 이 계정의 관계를 기준으로 필요한 다음 행동만 보여줍니다.")}
-      <section class="hero-panel"><div><p class="eyebrow">${esc(data.event.stage)} · ${esc(data.event.date)}</p><h2>${esc(title)}</h2><p>${esc(copy)}</p>${primary(action)} ${active ? `<a class="secondary-link" href="/app/preparation" data-app-link>참가 준비</a>` : ""}</div></section>
+      <section class="hero-panel"><div><p class="eyebrow">${esc(data.event.stage)} · ${esc(data.event.date)}</p><h2>${esc(title)}</h2><p>${esc(copy)}</p>${primary(action)} ${active ? `<a class="secondary-link" href="/app/preparation" data-app-link>참가 준비</a>` : `<span class="participant-inline-note">${esc(participantAccessCopy)}</span>`}</div></section>
       <div class="status-band"><div><span>현재 관계</span><strong>${esc(relationLabel())}</strong><p>${esc(data.event.description)}</p></div><div><span>이벤트 상태</span><strong>${esc(context.event?.stageLabel || "스팟 공개")}</strong><p>${esc(context.event?.eventDateDisplay || data.event.date)}</p></div></div>`;
   }
 
@@ -154,7 +183,7 @@
     if (id) {
       const spot = data.spots.find((item) => item.id === id);
       if (!spot) return renderNotFound();
-      root.innerHTML = `<a class="back-link" href="/app/spots" data-app-link>← 스팟 목록</a>${pageHead(spot.type, spot.name, spot.summary)}<section class="memorial-hero" style="background-image:url('${esc(spot.image)}')"><div><p class="eyebrow">${esc(spot.region)} · PUBLIC SPOT</p><h1>${esc(spot.name)}</h1><p>${esc(spot.summary)}. 실제 주행 경로와 방문 여부는 참가자가 직접 결정합니다.</p></div></section><dl class="detail-list"><div><dt>공개 범위</dt><dd>전체 공개</dd></div><div><dt>스팟 유형</dt><dd>${esc(spot.type)}</dd></div>${context.participation ? `<div><dt>참가자 확장</dt><dd>현재 참가와 연결된 상세 안내를 확인할 수 있습니다.</dd></div>` : ""}</dl>`;
+      root.innerHTML = `<a class="back-link" href="/app/spots" data-app-link>← 스팟 목록</a>${pageHead(spot.type, spot.name, spot.summary)}<section class="memorial-hero" style="background-image:url('${esc(spot.image)}')"><div><p class="eyebrow">${esc(spot.region)} · PUBLIC SPOT</p><h1>${esc(spot.name)}</h1><p>${esc(spot.summary)}. 실제 주행 경로와 방문 여부는 참가자가 직접 결정합니다.</p></div></section><dl class="detail-list"><div><dt>공개 범위</dt><dd>전체 공개</dd></div><div><dt>스팟 유형</dt><dd>${esc(spot.type)}</dd></div><div><dt>참가자 확장</dt><dd>${context.participation ? "현재 참가와 연결된 상세 안내를 확인할 수 있습니다." : esc(participantAccessCopy)}</dd></div></dl>`;
       return;
     }
     root.innerHTML = `${pageHead("PUBLIC SPOTS", "스팟", "공식 스팟의 성격과 지역 정보를 공개 범위 안에서 확인합니다. GPS 추적이나 체크인은 포함하지 않습니다.")}${cards(data.spots, "spots")}`;
@@ -194,7 +223,7 @@
     const authQuery = new URLSearchParams(location.search);
     authQuery.set("returnTo", safe);
     history.replaceState({}, "", `${domain.normalizePath(location.pathname)}?${authQuery}`);
-    root.innerHTML = `<section class="auth-gate"><p class="eyebrow">SSKR ACCOUNT</p><h1>로그인이 필요한 화면입니다.</h1><p>공개 콘텐츠는 로그인 없이 이용할 수 있습니다. 개인 신청·참가·기록은 계정을 확인한 뒤 보여드립니다.</p><div class="auth-actions">${["google","naver","kakao","apple"].map((provider) => `<button type="button" data-login-provider="${provider}">${provider.toUpperCase()}로 이용하기</button>`).join("")}</div></section>`;
+    root.innerHTML = `<section class="auth-gate"><p class="eyebrow">SSKR ACCOUNT</p><h1>로그인이 필요한 화면입니다.</h1><p>공개 콘텐츠는 로그인 없이 이용할 수 있습니다. 개인 신청·참가·기록은 계정을 확인한 뒤 보여드립니다.<br />${esc(participantAccessCopy)}</p><div class="auth-actions">${["google","naver","kakao","apple"].map((provider) => `<button type="button" data-login-provider="${provider}">${provider.toUpperCase()}로 이용하기</button>`).join("")}</div></section>`;
     root.querySelectorAll("[data-login-provider]").forEach((button) => button.addEventListener("click", async () => {
       button.disabled = true;
       try {
@@ -207,6 +236,7 @@
   }
 
   function renderDenied(title, copy) { root.innerHTML = `<section class="access-denied"><p class="eyebrow">ACCESS</p><h1>${esc(title)}</h1><p>${esc(copy)}</p><a class="primary-link" href="/app" data-app-link>SSKR 매니저로</a></section>`; }
+  function renderParticipantUnavailable() { root.innerHTML = `${pageHead("PARTICIPANT ONLY", "참가 준비", participantAccessCopy)}<section class="participant-availability"><p>${esc(participantAccessCopy)}</p><a class="primary-link" href="/app/current" data-app-link>현재 SSKR 확인</a></section>`; }
   function renderNotFound() { renderDenied("페이지를 찾을 수 없습니다.", "주소를 확인하거나 SSKR 매니저에서 다시 이동해 주세요."); }
 
   function renderFailure(error) {
@@ -232,7 +262,8 @@
     nav.querySelectorAll("[data-app-link]").forEach((link) => link.classList.toggle("is-current", link.getAttribute("href") === routeRoot));
     if (!access.allowed) {
       if (access.reason === "AUTH_REQUIRED") renderAuth(access.returnTo);
-      else renderDenied("현재 참가자에게만 열리는 화면입니다.", "참가 확정 후 준비 정보를 확인할 수 있습니다.");
+      else if (access.reason === "ACTIVE_PARTICIPATION_REQUIRED") renderParticipantUnavailable();
+      else renderDenied("현재 참가자에게만 열리는 화면입니다.", participantAccessCopy);
     } else if (path === "/app") renderHome();
     else if (path === "/app/current") renderCurrent();
     else if (path === "/app/spots") renderSpots();

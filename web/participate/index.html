@@ -8,8 +8,8 @@
   <base href="/participate/" />
   <title>SSKR 2027 참가</title>
   <link rel="icon" href="data:," />
-  <link rel="stylesheet" href="/web/shared/account-control.css?v=patch-032" />
-  <link rel="stylesheet" href="./styles.css?v=patch-032-layout3" />
+  <link rel="stylesheet" href="/web/shared/account-control.css?v=patch-034" />
+  <link rel="stylesheet" href="./styles.css?v=patch-034-flow" />
 </head>
 <body>
   <a class="skip-link" href="#context-surface">참가 화면으로 바로가기</a>
@@ -33,7 +33,7 @@
           <span id="event-category"></span>
         </div>
 
-        <h1 id="event-title"><span id="event-title-line"></span><strong id="event-subtitle"></strong></h1>
+        <h1 id="event-title"><span id="event-title-line"></span><span id="event-subtitle"></span></h1>
         <p class="event-description" id="event-description"></p>
 
         <dl class="event-facts" id="event-facts"></dl>
@@ -47,7 +47,20 @@
     </section>
 
     <section class="service-panel" id="context-surface" aria-live="polite">
-      <div class="account-shell" id="account-shell" hidden></div>
+      <div class="participate-utilities" id="participate-utilities" hidden>
+        <a class="participate-utility" href="/app/notices" aria-label="알림">
+          <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M18 9a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4"/></svg>
+          <span class="participate-notification-dot"></span>
+        </a>
+        <button class="participate-utility" id="participate-settings" type="button" aria-label="설정">
+          <svg aria-hidden="true" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1-2.8 2.8-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.6v.2h-4V21a1.7 1.7 0 0 0-1-1.6 1.7 1.7 0 0 0-1.9.3l-.1.1L4.2 17l.1-.1a1.7 1.7 0 0 0 .3-1.9A1.7 1.7 0 0 0 3 14H2.8v-4H3a1.7 1.7 0 0 0 1.6-1 1.7 1.7 0 0 0-.3-1.9L4.2 7 7 4.2l.1.1A1.7 1.7 0 0 0 9 4.6 1.7 1.7 0 0 0 10 3V2.8h4V3a1.7 1.7 0 0 0 1 1.6 1.7 1.7 0 0 0 1.9-.3l.1-.1L19.8 7l-.1.1a1.7 1.7 0 0 0-.3 1.9 1.7 1.7 0 0 0 1.6 1h.2v4H21a1.7 1.7 0 0 0-1.6 1Z"/></svg>
+        </button>
+        <div class="participate-account-meta" id="participate-account-meta" hidden>
+          <strong id="participate-account-name"></strong>
+          <span id="participate-account-number"></span>
+        </div>
+        <div class="account-shell" id="account-shell"></div>
+      </div>
       <section class="surface-view surface-view--loading is-active" id="mode-loading" data-surface-mode="MODE_LOADING" aria-label="참가 정보 불러오는 중">
         <div class="loading-column"><i aria-hidden="true"></i><p>참가 정보를 불러오고 있습니다.</p></div>
       </section>
@@ -127,10 +140,10 @@
   <script src="./mock-session.js?v=patch-031-reset1"></script>
   <script src="./api-client.js?v=patch-031"></script>
   <script src="./step1-content.js?v=patch-031"></script>
-  <script src="./mode-b.js?v=patch-031"></script>
-  <script src="./mode-c.js?v=patch-031"></script>
-  <script src="/web/shared/account-control.js?v=patch-032"></script>
-  <script src="./account.js?v=patch-031-reset2"></script>
-  <script src="./app.js?v=patch-032-layout3"></script>
+  <script src="./mode-b.js?v=patch-034-flow"></script>
+  <script src="./mode-c.js?v=patch-034-flow"></script>
+  <script src="/web/shared/account-control.js?v=patch-034"></script>
+  <script src="./account.js?v=patch-034-flow"></script>
+  <script src="./app.js?v=patch-034-flow"></script>
 </body>
 </html>

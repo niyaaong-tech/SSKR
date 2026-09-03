@@ -5,6 +5,10 @@
   let context = null;
   let shell = null;
   let root = null;
+  let utilities = null;
+  let accountMeta = null;
+  let accountName = null;
+  let accountNumber = null;
   let callbacks = null;
   let previousSurface = null;
   let closeTimer = null;
@@ -123,19 +127,30 @@
       closeMenu();
       if (window.confirm("참가 신청, 결제 및 참가 확정 상태를 초기화하시겠습니까? 로그인 상태와 프로필은 유지됩니다.")) await callbacks.resetParticipation();
     });
+    shell.querySelector("#account-set-payment-processing")?.addEventListener("click", async () => {
+      closeMenu();
+      if (window.confirm("현재 참가 상태를 결제 진행중 테스트 상태로 변경하시겠습니까?")) await callbacks.setPaymentProcessing();
+    });
     shell.querySelector("#account-logout").addEventListener("click", async () => { closeMenu(); if (window.confirm("로그아웃하시겠습니까? 참가 신청과 결제 정보는 삭제되지 않습니다.")) await callbacks.logout(); });
   }
 
   function update(nextContext) {
     context = nextContext;
     const linked = context?.account?.linked === true;
+    utilities.hidden = false;
+    accountMeta.hidden = !linked;
+    accountName.textContent = linked ? context.account.profile?.name || "SSKR 라이더" : "";
+    accountNumber.textContent = linked ? context.participation?.participantNumber || (context.application ? "신청 진행 중" : "SSKR 계정") : "";
     if (window.SSKR_ACCOUNT_CONTROL) {
       window.SSKR_ACCOUNT_CONTROL.render(shell, {
         account: context.account,
-        showGuest: false,
+        showGuest: true,
         showReset: true,
+        showPaymentProcessing: true,
+        onLogin: () => callbacks.login(),
         onProfile: () => openView("profile"),
         onSettings: () => openView("settings"),
+        onPaymentProcessing: async () => { if (window.confirm("현재 참가 상태를 결제 진행중 테스트 상태로 변경하시겠습니까?")) await callbacks.setPaymentProcessing(); },
         onReset: async () => { if (window.confirm("참가 신청, 결제 및 참가 확정 상태를 초기화하시겠습니까? 로그인 상태와 프로필은 유지됩니다.")) await callbacks.resetParticipation(); },
         onLogout: async () => { if (window.confirm("로그아웃하시겠습니까? 참가 신청과 결제 정보는 삭제되지 않습니다.")) await callbacks.logout(); }
       });
@@ -144,7 +159,7 @@
     shell.hidden = !linked;
     if (!linked) { shell.innerHTML = ""; return; }
     const profile = context.account.profile || {};
-    const resetControl = `<button type="button" role="menuitem" id="account-reset-participation" class="account-test-action"><span>참가 설정 초기화</span><small>개발 테스트용</small></button>`;
+    const resetControl = `<button type="button" role="menuitem" id="account-set-payment-processing" class="account-test-action"><span>결제 진행중 상태로 변경</span><small>개발 테스트용</small></button><button type="button" role="menuitem" id="account-reset-participation" class="account-test-action"><span>참가 설정 초기화</span><small>개발 테스트용</small></button>`;
     shell.innerHTML = `<div class="account-control"><button type="button" class="account-trigger" id="account-trigger" aria-haspopup="menu" aria-expanded="false" aria-controls="account-menu" aria-label="계정 메뉴 열기">${profile.thumbnailUrl ? `<img src="${escapeHtml(profile.thumbnailUrl)}" alt="" />` : `<span>${initials(profile)}</span>`}</button><div class="account-menu" id="account-menu" role="menu" hidden><header><strong>${escapeHtml(profile.name)}</strong><small>${escapeHtml(profile.email)}</small></header><button type="button" role="menuitem" data-account-view="profile">프로필</button><button type="button" role="menuitem" data-account-view="settings">페이지세팅</button><a role="menuitem" href="/app/my">마이페이지</a><hr />${resetControl}<button type="button" role="menuitem" id="account-logout">로그아웃</button></div></div>`;
     bindShell();
   }
@@ -153,6 +168,14 @@
     shell = options.shell;
     root = options.root;
     callbacks = options.callbacks;
+    utilities = document.querySelector("#participate-utilities");
+    accountMeta = document.querySelector("#participate-account-meta");
+    accountName = document.querySelector("#participate-account-name");
+    accountNumber = document.querySelector("#participate-account-number");
+    document.querySelector("#participate-settings").addEventListener("click", () => {
+      if (context?.account?.linked) openView("settings");
+      else callbacks.login();
+    });
   }
 
   document.addEventListener("click", (event) => { if (shell && !shell.contains(event.target)) closeMenu(); });

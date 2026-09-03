@@ -16,7 +16,8 @@
     if (context.participation?.state === "ACTIVE") return "ACTIVE";
     if (["PENDING", "PROCESSING"].includes(context.payment?.state)) return "PROCESSING";
     if (context.payment?.state === "FAILED") return "FAILED";
-    if (context.application) {
+    if (context.application?.paymentDeferredAt || context.surface?.variant === "PAYMENT_DEFERRED") return "PAYMENT";
+    if (context.application && ["DRAFT", "SUBMITTED", "COMPLETED"].includes(context.application.state || "DRAFT")) {
       const step = context.surface?.step;
       if (step === "STEP_4") return "PAYMENT";
       if (step) return step;
@@ -29,7 +30,7 @@
     const actions = {
       NONE: { label: "SSKR 참가하기", href: "/participate" }, DRAFT: { label: "참가 신청 이어하기", href: "/participate" },
       STEP_1: { label: "참가 신청 이어하기", href: "/participate" }, STEP_2: { label: "참가 신청 이어하기", href: "/participate" }, STEP_3: { label: "참가 신청 이어하기", href: "/participate" },
-      PAYMENT: { label: "SSKR 참가비용 결제하기", href: "/participate" }, FAILED: { label: "SSKR 참가비용 결제하기", href: "/participate" },
+      PAYMENT: { label: "SSKR 참가비용 결제하기", href: "/participate?resumePayment=1" }, FAILED: { label: "SSKR 참가비용 결제하기", href: "/participate" },
       PROCESSING: { label: "결제 상태 확인", href: "/participate" }, ACTIVE: { label: "현재 SSKR 보기", href: "/app/current" }
     };
     return { ...actions[relation], relation };

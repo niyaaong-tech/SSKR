@@ -15,6 +15,8 @@
   const lobbyRoot = document.querySelector("#mode-c");
   const accountRoot = document.querySelector("#mode-account");
   const accountShell = document.querySelector("#account-shell");
+  const entryParams = new URLSearchParams(window.location.search);
+  const resumePaymentOnEntry = entryParams.get("resumePayment") === "1";
   let context = null;
   let surfaceMode = SURFACE_MODES.LOADING;
   let pending = false;
@@ -115,6 +117,24 @@
     showMode(SURFACE_MODES.ERROR);
   }
 
+  function clearResumePaymentIntent() {
+    if (!entryParams.has("resumePayment")) return;
+    const url = new URL(window.location.href);
+    url.searchParams.delete("resumePayment");
+    window.history.replaceState(window.history.state, "", url);
+  }
+
+  async function loadInitialContext() {
+    const resolved = await api.context();
+    if (!resumePaymentOnEntry || resolved.surface.variant !== "PAYMENT_DEFERRED") {
+      clearResumePaymentIntent();
+      return resolved;
+    }
+    const resumed = await api.application("RESUME_PAYMENT");
+    clearResumePaymentIntent();
+    return resumed;
+  }
+
   async function run(action, { focus = true } = {}) {
     if (pending) return;
     setPending(true);
@@ -158,6 +178,10 @@
     saveAcknowledgement: (acknowledgement) => run(() => api.application("SAVE_ACKNOWLEDGEMENT", { acknowledgement })),
     saveAgreements: (agreements) => run(() => api.application("SAVE_AGREEMENTS", { agreements })),
     saveParticipant: (participant) => run(() => api.application("SAVE_PARTICIPANT_INFO", { participant })),
+    previousStep: (fromStep) => run(() => api.application("PREVIOUS_STEP", { fromStep })),
+    cancelApplication: () => { if (window.confirm("참가 신청을 취소하시겠습니까? 입력한 신청 정보는 초기화됩니다.")) run(() => api.application("CANCEL")); },
+    deferPayment: () => run(() => api.application("DEFER_PAYMENT")),
+    resumePayment: () => run(() => api.application("RESUME_PAYMENT")),
     editParticipant: () => run(() => api.application("EDIT_PARTICIPANT_INFO")),
     startPayment: (mockOutcome, retry) => run(async () => {
       if (!retry) await api.checkout();
@@ -171,6 +195,7 @@
     root: accountRoot,
     callbacks: {
       getSurface: () => surfaceMode,
+      login: () => showMode(SURFACE_MODES.AUTH_GATE),
       showAccount: () => showMode(SURFACE_MODES.ACCOUNT),
       restore: (mode) => showMode(mode || context?.surface?.mode || SURFACE_MODES.REVIEW, { focus: false }),
       updateProfile: (profile) => requestWithoutSurfaceChange(() => api.mock("UPDATE_ACCOUNT_PROFILE", { profile })),
@@ -178,6 +203,13 @@
         await run(async () => {
           const nextContext = await api.mock("RESET", { scenario: "a-open-linked", snapshot: null });
           window.SSKR_MOCK_SESSION.replaceScenario("a-open-linked");
+          return nextContext;
+        });
+      },
+      setPaymentProcessing: async () => {
+        await run(async () => {
+          const nextContext = await api.mock("RESET", { scenario: "b-processing", snapshot: null });
+          window.SSKR_MOCK_SESSION.replaceScenario("b-processing");
           return nextContext;
         });
       },
@@ -191,7 +223,7 @@
   document.querySelector("#surface-retry").addEventListener("click", () => run(() => api.context()));
   renderMarketing();
   showMode(SURFACE_MODES.LOADING, { focus: false });
-  run(() => api.context(), { focus: false });
+  run(loadInitialContext, { focus: false });
 
   window.SSKR_PARTICIPATE = Object.freeze({
     modes: SURFACE_MODES,

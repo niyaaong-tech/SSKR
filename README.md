@@ -4,6 +4,7 @@ SSKR 웹의 현재 실행 결과를 관리하는 저장소입니다. 기획 문�
 
 ## 현재 공개 구조
 
+- `/tests/home-explore/` — `web/tests/home-explore/`: HOME 장소 탐색 인터랙션 검토 시안 (검색엔진 비노출)
 - `/` — `web/home/`: SSKR HOME
 - `/participate` — `web/participate/`: 참가 안내
 - `/journey` — `web/journey-presentation/`: Journey Presentation 임시 서브페이지

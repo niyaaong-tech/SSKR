@@ -10,12 +10,12 @@ test("step 1 contains four groups and sixteen uniquely addressed illustrations",
   assert.equal(new Set(groups.flatMap((group) => group.items.map((item) => item.key))).size, 16);
   const assets = groups.flatMap((group) => group.items.map((item) => item.asset));
   assert.equal(new Set(assets).size, 16);
-  assert.equal(assets.every((asset) => /^\.\/assets\/participation-guide-[1-4]-[1-4]\.png$/.test(asset)), true);
+  assert.equal(assets.every((asset) => /^\.\/assets\/SSKR_pic[1-4]-[1-4]\.png$/.test(asset)), true);
   assets.forEach((asset) => {
     const file = path.resolve(__dirname, "../../web/participate", asset);
     const png = fs.readFileSync(file);
-    assert.equal(png.readUInt32BE(16), 621);
-    assert.equal(png.readUInt32BE(20), 621);
+    assert.equal(png.readUInt32BE(16), 600);
+    assert.equal(png.readUInt32BE(20), 600);
   });
 });
 

@@ -71,6 +71,7 @@
 
 ## 9. 현재 정식 위치
 
+- 사용자 승인 공개 시안: `web/tests/home-explore/` (`/tests/home-explore/`)
 - HOME 배포 결과: `web/home/`
 - Participate 배포 결과: `web/participate/`
 - Journey Presentation 코드와 배포 결과: `web/journey-presentation/`

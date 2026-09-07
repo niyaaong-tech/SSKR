@@ -8,6 +8,10 @@ const port = Number(process.env.SSKR_DEV_PORT || 8080);
 const types = { ".css": "text/css; charset=utf-8", ".html": "text/html; charset=utf-8", ".js": "text/javascript; charset=utf-8", ".jpg": "image/jpeg", ".jpeg": "image/jpeg", ".png": "image/png", ".svg": "image/svg+xml" };
 
 const routes = {
+  "/tests/home-explore": "web/tests/home-explore/index.html",
+  "/tests/home-explore/": "web/tests/home-explore/index.html",
+  "/about": "web/about/index.html",
+  "/about/": "web/about/index.html",
   "/": "web/home/index.html",
   "/participate": "web/participate/index.html",
   "/participate/": "web/participate/index.html",
@@ -39,6 +43,7 @@ function sendJson(response, status, value) {
 
 function staticFileFor(pathname) {
   if (routes[pathname]) return path.join(root, routes[pathname]);
+  if (pathname.startsWith("/about/")) return path.join(root, "web/about", pathname.slice("/about/".length));
   if (pathname.startsWith("/app/")) return path.join(root, "web/app/index.html");
   if (pathname.startsWith("/participate/")) return path.join(root, "web/participate", pathname.slice("/participate/".length));
   if (pathname.startsWith("/journey/")) return path.join(root, "web/journey-presentation", pathname.slice("/journey/".length));

@@ -4,6 +4,7 @@ SSKR 웹의 현재 실행 결과를 관리하는 저장소입니다. 기획 문�
 
 ## 현재 공개 구조
 
+- `/about/` — `web/about/`: SSKR 소개, 스크롤 연동 8개 장면과 읽기 모드
 - `/explore/` — `web/explore/`: 출발 후보 5곳·경유 후보 30곳·대천 도착지 지도 탐색
 - `/tests/home-explore/` — `web/tests/home-explore/`: HOME 장소 탐색 인터랙션 검토 시안 (검색엔진 비노출)
 - `/` — `web/home/`: SSKR HOME
@@ -14,6 +15,7 @@ HOME 헤더의 `THE JOURNEY`만 `/journey`로 연결됩니다. 프레젠테이�
 
 ## 작업 기준
 
+- About 삽화는 `web/about/assets/SSKR_info01.png`부터 `SSKR_info10.png`까지 사용자 제공 원본을 유지합니다. 같은 이름의 WebP는 동일 해상도·크롭 없는 웹용 압축본(quality 88)입니다. 페이지는 WebP만 로드합니다. 데스크톱은 네이티브 스크롤 기반 고정 장면, 좁거나 낮은 화면·모션 감소 설정은 전체 내용을 읽는 레이아웃으로 전환합니다. 기존 About 전용 사진 4장은 교체 후 제거했습니다.
 - 각 공개 페이지의 코드와 런타임 자산은 해당 `web/` 하위 폴더 안에서 함께 관리합니다.
 - Journey Presentation의 코드와 자산은 `web/journey-presentation/` 한 곳에서 관리합니다.
 - 구버전 제작 소스, 증분 패치 도구, 프로토타입, 청크 백업과 과거 배포 워크플로는 현재 트리에 남기지 않습니다.

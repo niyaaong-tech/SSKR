@@ -5,7 +5,7 @@ const { handleParticipateRequest } = require("./participate/request-handler");
 
 const root = path.resolve(__dirname, "..");
 const port = Number(process.env.SSKR_DEV_PORT || 8080);
-const types = { ".css": "text/css; charset=utf-8", ".html": "text/html; charset=utf-8", ".js": "text/javascript; charset=utf-8", ".jpg": "image/jpeg", ".jpeg": "image/jpeg", ".png": "image/png", ".svg": "image/svg+xml" };
+const types = { ".css": "text/css; charset=utf-8", ".html": "text/html; charset=utf-8", ".js": "text/javascript; charset=utf-8", ".jpg": "image/jpeg", ".jpeg": "image/jpeg", ".png": "image/png", ".webp": "image/webp", ".svg": "image/svg+xml" };
 
 const routes = {
   "/explore": "web/explore/index.html",

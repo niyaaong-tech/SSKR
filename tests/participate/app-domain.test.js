@@ -58,7 +58,7 @@ test("HOME exposes three user-facing gateways and the APP route remains availabl
   const vercel = JSON.parse(fs.readFileSync(path.join(__dirname, "../../vercel.json"), "utf8"));
   assert.doesNotMatch(home, /01 \/ DISCOVER|02 \/ EXPLORE|03 \/ PARTICIPATE/);
   assert.match(home, /href="\/about"[^>]*><strong>SSKR 알아보기<\/strong><p>일출에서 일몰까지, SSKR의 하루를 만나보세요.<\/p><span>Read the story ↗<\/span>/s);
-  assert.match(home, /href="#journey"[^>]*><strong>스타팅 포인트 &amp; 경로 스팟<\/strong><p>어디서 출발하고, 어떤 장소를 지나갈지 살펴보세요.<\/p><span>Find your crossing ↗<\/span>/s);
+  assert.match(home, /href="\/explore\/"[^>]*><strong>스타팅 포인트 &amp; 경로 스팟<\/strong><p>어디서 출발하고, 어떤 장소를 지나갈지 살펴보세요.<\/p><span>Find your crossing ↗<\/span>/s);
   assert.match(home, /href="\/participate"[^>]*><strong>2027 참가하기<\/strong><p>참가 조건을 확인하고 나의 SSKR를 준비하세요.<\/p><span>Application guide ↗<\/span>/s);
   assert.ok(vercel.rewrites.some((route) => route.source === "/app/:path*" && route.destination === "/web/app/index.html"));
 });

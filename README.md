@@ -4,6 +4,7 @@ SSKR 웹의 현재 실행 결과를 관리하는 저장소입니다. 기획 문�
 
 ## 현재 공개 구조
 
+- `/explore/` — `web/explore/`: 출발 후보 5곳·경유 후보 30곳·대천 도착지 지도 탐색
 - `/tests/home-explore/` — `web/tests/home-explore/`: HOME 장소 탐색 인터랙션 검토 시안 (검색엔진 비노출)
 - `/` — `web/home/`: SSKR HOME
 - `/participate` — `web/participate/`: 참가 안내
@@ -19,6 +20,8 @@ HOME 헤더의 `THE JOURNEY`만 `/journey`로 연결됩니다. 프레젠테이�
 - 파일명은 역할을 나타내는 안정된 이름을 사용하고 변경 이력은 Git으로 관리합니다.
 
 ## 로컬 실행
+
+`npm run dev` 실행 후 `http://127.0.0.1:8080/explore/`에서 지도 탐색을 확인합니다. 장소 데이터는 `web/explore/places.js`에서 관리합니다. Leaflet 1.9.4와 OpenStreetMap 타일을 사용하므로 인터넷 연결이 필요합니다. 장소 목록은 지도 CDN 실패 시에도 이용할 수 있습니다. 좌표는 탐색용 근사 위치이며 실제 집결 허가·이륜차 경로는 확정되지 않았습니다. 외부 사진은 출처를 표시한 로컬 검토 자료로, 운영 배포 전 이용 조건과 자산 제공 방식을 확인해야 합니다.
 
 저장소 루트에서 정적 파일 서버를 실행해 각 `web/` 하위 페이지를 확인합니다. 공개 URL 연결은 `vercel.json`에 정의되어 있습니다.
 

@@ -8,6 +8,8 @@ const port = Number(process.env.SSKR_DEV_PORT || 8080);
 const types = { ".css": "text/css; charset=utf-8", ".html": "text/html; charset=utf-8", ".js": "text/javascript; charset=utf-8", ".jpg": "image/jpeg", ".jpeg": "image/jpeg", ".png": "image/png", ".svg": "image/svg+xml" };
 
 const routes = {
+  "/explore": "web/explore/index.html",
+  "/explore/": "web/explore/index.html",
   "/tests/home-explore": "web/tests/home-explore/index.html",
   "/tests/home-explore/": "web/tests/home-explore/index.html",
   "/about": "web/about/index.html",

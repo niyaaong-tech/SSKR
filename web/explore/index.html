@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>스타팅 포인트 & 경로 스팟 — SSKR</title>
+  <meta name="description" content="동해안의 다섯 출발점에서 대천까지. SSKR의 스타팅 포인트와 지역의 이야기를 지도에서 만나보세요.">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
+  <link rel="stylesheet" href="/web/explore/styles.css">
+  <script defer src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+  <script defer src="/web/explore/places.js"></script><script defer src="/web/explore/app.js"></script>
+</head>
+<body>
+  <a class="skip" href="#explorer">지도로 바로가기</a>
+  <header class="site-header"><a class="brand" href="/" aria-label="SSKR 홈">SSKR<span>SUNRISE SUNSET<br>KOREAN RALLY</span></a><nav aria-label="주 메뉴"><a href="/about/">SSKR 알아보기</a><a class="current" href="/explore/" aria-current="page">스타팅 포인트 & 경로 스팟</a><a class="nav-apply" href="/participate/">2027 참가 안내 <span aria-hidden="true">↗</span></a></nav></header>
+  <main>
+    <section class="intro"><div><p class="eyebrow">FROM EAST TO WEST · SSKR 2027</p><h1>출발은 다르게.<br class="mobile-only"> 만나는 풍경은 더 넓게.</h1></div><p class="intro-copy">동해안의 다섯 출발점, 서해로 향하는 서른 곳의 발견.<br>지도를 펼치고 나의 하루에 담을 장소를 만나보세요.</p></section>
+    <section class="explorer" id="explorer" aria-label="스타팅 포인트와 스팟 탐색">
+      <div class="explorer-toolbar"><div class="filters" role="group" aria-label="장소 유형"><button class="active" data-kind="all" aria-pressed="true">전체 <span>36</span></button><button data-kind="start" aria-pressed="false">출발지 <span>5</span></button><button data-kind="spot" aria-pressed="false">스팟 <span>30</span></button><button data-kind="finish" aria-pressed="false">도착지 <span>1</span></button></div><label class="corridor-label">탐색 권역 <select id="corridor"><option value="all">모든 권역</option><option value="north">북부 횡단</option><option value="central">중부 횡단</option><option value="south">남부 횡단</option><option value="west">대천 접근</option></select></label></div>
+      <div class="explorer-grid"><div class="map-wrap"><div id="map" aria-label="대한민국 장소 지도"></div><div class="map-caption"><span class="eyebrow">A DAY ACROSS KOREA</span><p>동해에서 시작해<br><em>서해에서 만나는 하루.</em></p></div><div class="map-tools" role="group" aria-label="지도 제어"><button id="zoom-in" aria-label="지도 확대">+</button><button id="zoom-out" aria-label="지도 축소">−</button><button id="reset-map">전체 보기</button></div><div class="map-legend"><span><i class="start-dot"></i>출발지</span><span><i class="spot-dot"></i>경유 스팟</span><span><i class="finish-dot"></i>대천</span></div><p class="map-status" id="map-status" role="status">지도를 불러오는 중입니다.</p></div><aside class="place-panel"><div class="list-heading"><h2>발견할 장소</h2><span id="result-count">36곳</span></div><div id="place-list" class="place-list" aria-label="장소 목록"></div></aside></div>
+      <div class="explorer-foot"><p>마커에 올려 미리보기 · 클릭해 아래에서 자세히 보기</p><span>START 05 <b>—</b> SPOTS 30 <b>—</b> FINISH 01</span></div>
+    </section>
+    <section class="detail" id="place-detail" aria-label="선택한 장소 상세"><div class="detail-photo"><img id="detail-image" alt="" decoding="async"><div class="photo-unavailable" id="photo-unavailable" hidden>사진을 불러오지 못했습니다.<br><a id="photo-source" target="_blank" rel="noopener noreferrer">공식 장소 정보에서 확인하기 ↗</a></div><span class="image-credit" id="image-credit"></span></div><div class="detail-copy"><p class="eyebrow" id="detail-label"></p><h2 id="detail-name"></h2><p class="detail-lead" id="detail-lead"></p><p class="detail-description" id="detail-description"></p><dl><div><dt>지역</dt><dd id="detail-region"></dd></div><div><dt>방문 메모</dt><dd id="detail-note"></dd></div></dl><div class="detail-links"><a id="detail-map" target="_blank" rel="noopener noreferrer">지도에서 위치 확인 <span aria-hidden="true">↗</span></a><a id="detail-source" target="_blank" rel="noopener noreferrer">장소 정보 출처 <span aria-hidden="true">↗</span></a></div><div class="detail-pagination"><button id="previous-place" aria-label="이전 장소">←</button><span id="detail-index"></span><button id="next-place" aria-label="다음 장소">→</button></div></div></section>
+    <section class="planning-note"><h2>길은 하나가 아닙니다.</h2><p>이 지도는 출발지와 경유지를 검토하기 위한 탐색 지도입니다. 마커는 장소의 대략적인 위치이며 집결 입구나 주행 경로를 뜻하지 않습니다. 출발지의 단체 집결 허가·주차 수용 규모와 각 장소의 운영 여부는 확정 전 확인이 필요합니다. 실제 이동은 이륜차 통행이 가능한 일반도로를 기준으로 계획하고, 고속도로·자동차전용도로와 보행 전용 구간은 제외하세요.</p></section>
+  </main><footer><a class="brand" href="/">SSKR</a><p>SUNRISE TO SUNSET · ACROSS KOREA</p><a href="/participate/">나의 SSKR 준비하기 ↗</a></footer>
+  <noscript><p>지도의 확대·축소와 장소 탐색에는 JavaScript가 필요합니다.</p></noscript>
+</body></html>

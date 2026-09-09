@@ -9,7 +9,7 @@ const {
   RUN_RESULT,
   SLOT_ALLOCATION
 } = require("./constants");
-const { acknowledgementComplete, participantInfoComplete, requiredAgreementsComplete } = require("./application-step-resolver");
+const { acknowledgementComplete, participantInfoComplete, requiredAgreementsComplete, resolveApplicationStep } = require("./application-step-resolver");
 const { getAgreementDefinitions } = require("./agreement-policy");
 const { evaluateCheckoutEligibility } = require("./checkout-policy");
 const { findResolvedTier } = require("./tier-policy");
@@ -68,11 +68,69 @@ function createTransactionService(repository, options = {}) {
     return application;
   }
 
-  function saveAcknowledgement(input = {}) {
+  function editableApplication() {
     const application = repository.getApplication();
-    if (!application || application.state !== APPLICATION.DRAFT) throw new DomainError("APPLICATION_NOT_EDITABLE", "현재 신청서를 수정할 수 없습니다.");
+    const payment = repository.getPaymentAttempts().at(-1);
+    if (!user().account?.linked || !application || ![APPLICATION.DRAFT, APPLICATION.SUBMITTED].includes(application.state) || repository.getParticipation()?.state === PARTICIPATION.ACTIVE || (payment && payment.state !== PAYMENT.NOT_STARTED)) {
+      throw new DomainError("APPLICATION_NOT_EDITABLE", "현재 신청서를 수정할 수 없습니다. 결제 상태를 확인해 주세요.");
+    }
+    return application;
+  }
+
+  function releaseUnpaidHold() {
+    const hold = repository.getCheckoutHold();
+    if (hold?.state === CHECKOUT_HOLD.HELD) {
+      hold.state = CHECKOUT_HOLD.RELEASED;
+      repository.saveCheckoutHold(hold);
+    }
+  }
+
+  function previousStep(fromStep) {
+    const application = editableApplication();
+    const current = resolveApplicationStep({ application, event: event() }).step;
+    const previous = { STEP_2: "STEP_1", STEP_3: "STEP_2", STEP_4: "STEP_3" }[fromStep];
+    if (!previous || current !== fromStep) throw new DomainError("APPLICATION_STEP_CHANGED", "신청 단계가 변경되었습니다. 현재 화면에서 다시 진행해 주세요.");
+    releaseUnpaidHold();
+    application.state = APPLICATION.DRAFT;
+    application.editingStep = previous;
+    application.paymentDeferred = false;
+    application.updatedAt = nowIso(clock);
+    repository.saveApplication(application);
+    return application;
+  }
+
+  function cancelApplication() {
+    const application = editableApplication();
+    if (resolveApplicationStep({ application, event: event() }).step !== "STEP_1") throw new DomainError("APPLICATION_STEP_CHANGED", "첫 단계에서 신청을 취소해 주세요.");
+    releaseUnpaidHold();
+    repository.saveApplication(null);
+    log("APPLICATION_CANCELLED", { applicationId: application.id });
+  }
+
+  function deferPayment() {
+    const application = editableApplication();
+    if (resolveApplicationStep({ application, event: event() }).step !== "STEP_4") throw new DomainError("APPLICATION_INCOMPLETE", "신청 정보를 먼저 완료해 주세요.");
+    releaseUnpaidHold();
+    application.state = APPLICATION.DRAFT;
+    application.paymentDeferred = true;
+    application.updatedAt = nowIso(clock);
+    repository.saveApplication(application);
+  }
+
+  function resumePayment() {
+    const application = editableApplication();
+    application.paymentDeferred = false;
+    application.editingStep = "STEP_4";
+    application.updatedAt = nowIso(clock);
+    repository.saveApplication(application);
+  }
+
+  function saveAcknowledgement(input = {}) {
+    const application = editableApplication();
+    if (application.state !== APPLICATION.DRAFT) throw new DomainError("APPLICATION_NOT_EDITABLE", "현재 신청서를 수정할 수 없습니다.");
     if (input.acknowledged !== true) throw new DomainError("ACKNOWLEDGEMENT_REQUIRED", "진행 방식과 안내 내용을 확인해 주세요.");
     const timestamp = nowIso(clock);
+    application.editingStep = "STEP_2";
     application.acknowledgements = [{ code: "PARTICIPATION_GUIDE", contentVersion: event().participationGuideVersion || "2027.1", acknowledgedAt: timestamp }];
     application.updatedAt = timestamp;
     repository.saveApplication(application);
@@ -81,8 +139,8 @@ function createTransactionService(repository, options = {}) {
   }
 
   function saveAgreements(input = {}) {
-    const application = repository.getApplication();
-    if (!application || application.state !== APPLICATION.DRAFT) throw new DomainError("APPLICATION_NOT_EDITABLE", "현재 신청서를 수정할 수 없습니다.");
+    const application = editableApplication();
+    if (application.state !== APPLICATION.DRAFT) throw new DomainError("APPLICATION_NOT_EDITABLE", "현재 신청서를 수정할 수 없습니다.");
     const acceptedCodes = new Set(Array.isArray(input) ? input : Object.entries(input).filter(([, accepted]) => accepted).map(([code]) => code));
     const timestamp = nowIso(clock);
     if (!acknowledgementComplete(application, event())) throw new DomainError("ACKNOWLEDGEMENT_REQUIRED", "참가 진행 방식 안내를 먼저 확인해 주세요.");
@@ -93,14 +151,15 @@ function createTransactionService(repository, options = {}) {
     }));
     if (!requiredAgreementsComplete(application, event())) throw new DomainError("REQUIRED_AGREEMENTS_MISSING", "모든 필수 항목에 동의해 주세요.");
     application.updatedAt = timestamp;
+    application.editingStep = "STEP_3";
     repository.saveApplication(application);
     log("AGREEMENTS_SAVED", { applicationId: application.id, acceptedCount: acceptedCodes.size });
     return application;
   }
 
   function saveParticipantInfo(input = {}) {
-    const application = repository.getApplication();
-    if (!application || application.state !== APPLICATION.DRAFT) throw new DomainError("APPLICATION_NOT_EDITABLE", "현재 신청서를 수정할 수 없습니다.");
+    const application = editableApplication();
+    if (application.state !== APPLICATION.DRAFT) throw new DomainError("APPLICATION_NOT_EDITABLE", "현재 신청서를 수정할 수 없습니다.");
     if (!requiredAgreementsComplete(application, event())) throw new DomainError("AGREEMENTS_REQUIRED", "필수 동의를 먼저 완료해 주세요.");
     const tier = findResolvedTier({ event: event(), priceTiers: repository.getPriceTiers(), now: new Date(clock()) }, input.priceTierId);
     if (!tier) throw new DomainError("REGISTRATION_TIER_REQUIRED", "참가 유형을 선택해 주세요.");
@@ -113,6 +172,7 @@ function createTransactionService(repository, options = {}) {
     if (!participant.name) throw new DomainError("PARTICIPANT_NAME_REQUIRED", "이름을 입력해 주세요.");
     if (!/^01\d{8,9}$/.test(participant.phone)) throw new DomainError("PARTICIPANT_PHONE_INVALID", "연락 가능한 휴대전화 번호를 확인해 주세요.");
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(participant.email)) throw new DomainError("PARTICIPANT_EMAIL_INVALID", "연락 가능한 이메일을 확인해 주세요.");
+    application.editingStep = "STEP_4";
     application.participant = participant;
     application.priceTierId = tier.id;
     application.selectedPriceAmount = tier.amount;
@@ -128,14 +188,13 @@ function createTransactionService(repository, options = {}) {
   }
 
   function editParticipantInfo() {
-    const application = repository.getApplication();
-    if (!application || ![APPLICATION.DRAFT, APPLICATION.SUBMITTED].includes(application.state)) throw new DomainError("APPLICATION_NOT_EDITABLE", "현재 신청서를 수정할 수 없습니다.");
+    const application = editableApplication();
+    releaseUnpaidHold();
     application.state = APPLICATION.DRAFT;
-    application.priceTierId = null;
-    application.selectedPriceAmount = null;
+    application.editingStep = "STEP_3";
+    application.paymentDeferred = false;
     application.updatedAt = nowIso(clock);
     repository.saveApplication(application);
-    log("PARTICIPANT_INFO_REOPENED", { applicationId: application.id });
     return application;
   }
 
@@ -341,7 +400,7 @@ function createTransactionService(repository, options = {}) {
     return participation;
   }
 
-  return { editParticipantInfo, prepareCheckout, promoteWaitlist, refreshPayment, retryPayment, saveAcknowledgement, saveAgreements, saveBikeInfo, saveParticipantInfo, startApplication, startPayment, updateAccountProfile };
+  return { previousStep, cancelApplication, deferPayment, resumePayment, editParticipantInfo, prepareCheckout, promoteWaitlist, refreshPayment, retryPayment, saveAcknowledgement, saveAgreements, saveBikeInfo, saveParticipantInfo, startApplication, startPayment, updateAccountProfile };
 }
 
 module.exports = { DomainError, createTransactionService, deterministicNumber };

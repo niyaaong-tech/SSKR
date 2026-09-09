@@ -32,7 +32,7 @@
       <header class="spot-heading"><div><p>MY DAY, MY STOPS</p><h2>어디에 들를까요?</h2><span>동해의 출발점부터 대천까지, 나의 하루에 어울리는 장소를 골라보세요.</span></div><div class="spot-total"><strong>${places.filter(p=>p.kind==='spot').length}</strong><span>개의 경유 스팟<br>출발지 5곳 · 도착지 1곳</span></div></header>
       <div class="spot-toolbar"><label class="spot-search">${icon('search')}<span class="spot-sr">장소 이름 또는 지역 검색</span><input type="search" placeholder="장소 이름, 지역으로 검색" value="${esc(state.search)}" autocomplete="off"><button type="button" data-action="clear" aria-label="검색어 지우기">×</button></label><label class="spot-region"><span>탐색 권역</span><select><option value="all">모든 권역</option>${Object.entries(corridors).map(([key,label])=>`<option value="${key}">${label}</option>`).join('')}</select></label><div class="spot-kind" role="group" aria-label="장소 구분">${[['spot','스팟'],['start','출발지'],['finish','도착지'],['all','전체']].map(([key,label])=>`<button type="button" data-kind="${key}" aria-pressed="${key===state.kind}">${label}</button>`).join('')}</div></div>
       <div class="spot-categories" role="group" aria-label="스팟 주제">${Object.entries(categories).map(([key,label])=>`<button type="button" data-category="${key}" aria-pressed="${key==='all'}">${key==='all'?'':icon(key)}${label}<span data-count="${key}"></span></button>`).join('')}</div>
-      <div class="spot-workspace"><aside class="spot-results" aria-label="장소 목록"><div class="spot-list-head"><h3>발견할 장소 <span data-result-count></span></h3><label><input type="checkbox" data-in-view> 지도 안에서만</label></div><div class="spot-list" aria-label="검색 결과"></div><div class="spot-list-foot">목록과 지도가 함께 선택됩니다.</div></aside><div class="spot-map-wrap"><div class="spot-map" tabindex="0" role="region" aria-label="출발지와 스팟 지도. 방향키로 이동, 더하기와 빼기로 확대 축소."></div><div class="spot-map-caption">EAST TO WEST <span>동해 → 대천</span></div><div class="spot-map-controls" role="group" aria-label="지도 제어"><button type="button" data-action="zoom-in" aria-label="지도 확대">+</button><button type="button" data-action="zoom-out" aria-label="지도 축소">−</button><button type="button" data-action="fit" aria-label="검색 결과 전체 보기">${icon('reset')}</button></div><div class="spot-map-key"><span><i class="start"></i>출발</span><span><i></i>스팟</span><span><i class="finish"></i>도착</span></div><p class="spot-map-status" role="status"></p></div></div>
+      <div class="spot-workspace"><aside class="spot-results" aria-label="장소 목록"><div class="spot-list-head"><h3>발견할 장소 <span data-result-count></span></h3><label><input type="checkbox" data-in-view> 지도 안에서만</label></div><div class="spot-list" aria-label="검색 결과"></div><div class="spot-list-foot">목록과 지도가 함께 선택됩니다.</div></aside><div class="spot-map-wrap"><div class="spot-map" tabindex="0" role="region" aria-label="출발지와 스팟 지도. 방향키로 이동, 더하기와 빼기로 확대 축소."></div><div class="spot-map-caption">EAST TO WEST <span>동해 → 대천</span></div><div class="spot-map-controls" role="group" aria-label="지도 제어"><button type="button" data-action="zoom-in" aria-label="지도 확대">+</button><button type="button" data-action="zoom-out" aria-label="지도 축소">−</button><button type="button" data-action="fit" aria-label="검색 결과 전체 보기">${icon('reset')}</button></div><div class="spot-map-key"><span><i class="start"></i>출발</span><span><i></i>스팟</span><span><i class="finish"></i>도착</span></div><div class="spot-selection" hidden><strong role="status"></strong><button type="button" data-action="detail">상세 보기 ↓</button></div><p class="spot-map-status" role="status"></p></div></div>
       <section class="spot-detail" aria-label="선택한 장소 상세"></section>
       <p class="spot-map-note">지도 위치는 탐색용 근사 좌표입니다. 실제 입구·주차와 영업 여부는 방문 전 확인해 주세요. 장소 선택은 경로 안내나 출발지 확정으로 처리되지 않습니다.</p>
     </section>`;
@@ -54,6 +54,7 @@
     }
     function choose(place,fly=true) {
       selected=place;syncURL(place);renderDetail(place);
+      $('.spot-selection').hidden=false;$('.spot-selection strong').textContent=place.name;
       host.querySelectorAll('[data-place]').forEach(button=>{button.setAttribute('aria-pressed',String(button.dataset.place===place.id));});
       const active=host.querySelector('[data-place="'+place.id+'"]');
       if(active){const list=$('.spot-list'),rowBox=active.getBoundingClientRect(),listBox=list.getBoundingClientRect();if(rowBox.top<listBox.top||rowBox.bottom>listBox.bottom)list.scrollTop+=rowBox.top-listBox.top;}
@@ -88,6 +89,7 @@
     }
     function fit() {if(map&&visible.length)map.fitBounds(visible.map(p=>[p.lat,p.lng]),{padding:[50,55],maxZoom:12,animate:!reduced.matches,duration:.35});}
     function applyFilters(autoFit=true) {
+      $('.spot-selection').hidden=true;
       visible=filterPlaces(places,state);
       if(!visible.some(p=>p.id===selected?.id))selected=visible[0];
       syncURL(selected);
@@ -115,8 +117,9 @@
       const kind=event.target.closest('[data-kind]');if(kind){state.kind=kind.dataset.kind;state.category='all';applyFilters();return;}
       const category=event.target.closest('[data-category]');if(category){state.category=category.dataset.category;applyFilters();return;}
       const action=event.target.closest('[data-action]')?.dataset.action;
+      if(action==='detail'){const detail=$('.spot-detail');detail.scrollIntoView({behavior:reduced.matches?'auto':'smooth',block:'start'});const heading=detail.querySelector('h3');heading?.setAttribute('tabindex','-1');heading?.focus({preventScroll:true});}
       if(action==='zoom-in')map?.zoomIn();if(action==='zoom-out')map?.zoomOut();if(action==='fit')fit();
-      if(action==='locate'&&selected){map?.flyTo([selected.lat,selected.lng],13,{animate:!reduced.matches,duration:.4});$('.spot-map').focus({preventScroll:true});}
+      if(action==='locate'&&selected){$('.spot-map-wrap').scrollIntoView({behavior:reduced.matches?'auto':'smooth',block:'center'});map?.flyTo([selected.lat,selected.lng],13,{animate:!reduced.matches,duration:.4});$('.spot-map').focus({preventScroll:true});}
       if(action==='clear'||action==='reset'){state.search='';$('.spot-search input').value='';if(action==='reset'){state.kind='spot';state.category='all';state.corridor='all';state.inView=false;$('.spot-region select').value='all';$('[data-in-view]').checked=false;}applyFilters();}
     });
     listen($('.spot-search input'),'input',event=>{state.search=event.target.value;clearTimeout(searchTimer);searchTimer=setTimeout(()=>applyFilters(),160)});

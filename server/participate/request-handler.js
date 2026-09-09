@@ -47,6 +47,10 @@ async function handleParticipateRequest(endpoint, body = {}, options = {}) {
       else if (body.action === "SAVE_AGREEMENTS") service.saveAgreements(body.agreements);
       else if (body.action === "SAVE_PARTICIPANT_INFO") service.saveParticipantInfo(body.participant);
       else if (body.action === "EDIT_PARTICIPANT_INFO") service.editParticipantInfo();
+      else if (body.action === "PREVIOUS_STEP") service.previousStep(body.fromStep);
+      else if (body.action === "CANCEL") service.cancelApplication();
+      else if (body.action === "DEFER_PAYMENT") service.deferPayment();
+      else if (body.action === "RESUME_PAYMENT") service.resumePayment();
       else if (body.action === "SAVE_BIKE_INFO") service.saveBikeInfo(body.bike);
       else throw new DomainError("ACTION_NOT_SUPPORTED", "지원하지 않는 신청 동작입니다.");
     } else if (endpoint === "checkout") {

@@ -19,8 +19,12 @@ function resolveApplicationStep({ application, event, payment, participation }) 
     const variant = payment.state === PAYMENT.FAILED ? "FAILED" : "PROCESSING";
     return { step: APPLICATION_STEP.STEP_4, variant };
   }
+  const editingStep = application?.editingStep;
+  if (editingStep === APPLICATION_STEP.STEP_1) return { step: editingStep, variant: "DEFAULT" };
   if (!acknowledgementComplete(application, event)) return { step: APPLICATION_STEP.STEP_1, variant: "DEFAULT" };
+  if (editingStep === APPLICATION_STEP.STEP_2) return { step: editingStep, variant: "DEFAULT" };
   if (!requiredAgreementsComplete(application, event)) return { step: APPLICATION_STEP.STEP_2, variant: "DEFAULT" };
+  if (editingStep === APPLICATION_STEP.STEP_3) return { step: editingStep, variant: "DEFAULT" };
   if (!participantInfoComplete(application)) return { step: APPLICATION_STEP.STEP_3, variant: "DEFAULT" };
   return { step: APPLICATION_STEP.STEP_4, variant: "DEFAULT" };
 }

@@ -75,6 +75,8 @@
     if (!heading) return;
     window.requestAnimationFrame(() => {
       if (window.matchMedia("(max-width: 760px)").matches && surfaceMode !== SURFACE_MODES.REVIEW) view.scrollIntoView({ behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block: "start" });
+      view.scrollTop = 0;
+      view.querySelector(".transaction-shell, .completion-shell, .account-view")?.scrollTo(0, 0);
       heading.focus({ preventScroll: true });
     });
   }

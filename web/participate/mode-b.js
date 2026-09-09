@@ -190,11 +190,33 @@
     root.querySelector("#payment-action")?.addEventListener("click", () => handlers.startPayment(root.querySelector("#mock-outcome")?.value || "SUCCESS", variant === "FAILED"));
   }
 
+  let draftApplication = null;
+  let drafts = {};
   function render(root, context, handlers) {
+    const applicationKey = context.application?.id + ':' + context.application?.createdAt;
+    if (draftApplication !== applicationKey) { drafts = {}; draftApplication = applicationKey; }
+    const step = context.surface.step;
+    const originalHandlers = handlers;
+    handlers = { ...handlers, previousStep(fromStep) {
+      drafts[fromStep] = [...root.querySelectorAll('form input[name]')].map(input => ({ name: input.name, type: input.type, value: input.value, checked: input.checked }));
+      originalHandlers.previousStep(fromStep);
+    }, cancelApplication() { drafts = {}; originalHandlers.cancelApplication(); } };
+    if (drafts[step]) {
+      for (const name of ['saveAgreements', 'saveParticipant']) {
+        handlers[name] = value => { delete drafts[step]; originalHandlers[name](value); };
+      }
+    }
     if (context.surface.step === "STEP_1") renderStep1(root, context, handlers);
     else if (context.surface.step === "STEP_2") renderStep2(root, context, handlers);
     else if (context.surface.step === "STEP_3") renderStep3(root, context, handlers);
     else renderStep4(root, context, handlers);
+    for (const saved of drafts[step] || []) {
+      const input = [...root.querySelectorAll('form input[name]')].find(input => input.name === saved.name && (!['checkbox', 'radio'].includes(saved.type) || input.value === saved.value));
+      if (!input || input.disabled) continue;
+      if (['checkbox', 'radio'].includes(saved.type)) input.checked = saved.checked;
+      else input.value = saved.value;
+      input.dispatchEvent(new Event('change', { bubbles: true }));
+    }
   }
 
   window.SSKR_MODE_B = Object.freeze({ render });

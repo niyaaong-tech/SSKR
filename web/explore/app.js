@@ -29,8 +29,14 @@
     markers.forEach((m,id)=>{m.getElement()?.classList.toggle('selected',id===place.id);m.setZIndexOffset(id===place.id?1000:0)});
     if(animate&&!reduced){const panel=$('place-detail');panel.classList.remove('entering');void panel.offsetWidth;panel.classList.add('entering');}
   }
+  const selection=el('div','map-selection');selection.hidden=true;
+  const selectionName=el('strong');selectionName.setAttribute('role','status');
+  const selectionLink=el('a','','상세 보기 ↓');selectionLink.href='#place-detail';
+  selectionLink.addEventListener('click',event=>{event.preventDefault();$('place-detail').scrollIntoView({behavior:reduced?'auto':'smooth',block:'start'});$('detail-name').setAttribute('tabindex','-1');$('detail-name').focus({preventScroll:true});});
+  selection.append(selectionName,selectionLink);$('map').parentElement.append(selection);
   function selectPlace(place,fly=true) {
-    setDetail(place);history.replaceState(null,'','#'+place.id);
+    setDetail(place);selection.hidden=false;selectionName.textContent=place.name;history.replaceState(null,'','#'+place.id);
+    renderMarkers();
     if(map&&fly)map.flyTo([place.lat,place.lng],Math.max(map.getZoom(),9),{animate:!reduced,duration:.85});
   }
   function tooltip(place) {
@@ -42,7 +48,32 @@
     if(!map||!visible.length)return;
     map.fitBounds(visible.map(p=>[p.lat,p.lng]),{paddingTopLeft:[65,85],paddingBottomRight:[45,70],maxZoom:10,animate:!reduced,duration:.7});
   }
+  function renderMarkers() {
+    if(!map)return;
+    layer.clearLayers();markers.clear();
+    const groups=[];
+    visible.forEach(place=>{
+      const point=map.project([place.lat,place.lng],map.getZoom());
+      const group=groups.find(group=>group[0].place.id!==selected?.id&&place.id!==selected?.id&&group[0].point.distanceTo(point)<40);
+      if(group)group.push({place,point});else groups.push([{place,point}]);
+    });
+    groups.forEach(group=>{
+      const place=group[0].place,isGroup=group.length>1;
+      const point=isGroup?[group.reduce((n,p)=>n+p.place.lat,0)/group.length,group.reduce((n,p)=>n+p.place.lng,0)/group.length]:[place.lat,place.lng];
+      const size=isGroup?36:place.kind==='spot'?26:32;
+      const marker=L.marker(point,{icon:L.divIcon({className:'place-marker '+(isGroup?'cluster':place.kind)+(place.id===selected?.id&&!isGroup?' selected':''),html:'<span class="marker-disc">'+(isGroup?group.length:place.code)+'</span>',iconSize:[size,size],iconAnchor:[size/2,size/2]}),title:isGroup?group.length+'개 장소 확대':place.name,keyboard:true,riseOnHover:true});
+      const tip=isGroup?el('div','',group.map(p=>p.place.name).join(' · ')):tooltip(place);
+      marker.bindTooltip(tip,{direction:'top',offset:[0,-15],className:'place-tooltip',opacity:1});
+      marker.on('click',()=>{
+        if(!isGroup){selectPlace(place);return;}
+        map.fitBounds(group.map(p=>[p.place.lat,p.place.lng]),{padding:[55,55],maxZoom:15,animate:!reduced,duration:.5});
+      });
+      marker.addTo(layer);marker.getElement()?.setAttribute('aria-label',isGroup?group.length+'개 장소 확대':place.name+' 상세 정보');
+      if(!isGroup){markers.set(place.id,marker);marker.setZIndexOffset(place.id===selected?.id?1000:0);}
+    });
+  }
   function render() {
+    selection.hidden=true;
     visible=places.filter(p=>(kind==='all'||p.kind===kind)&&(corridor==='all'||p.corridor===corridor));
     $('result-count').textContent=visible.length+'곳';
     const list=$('place-list');list.replaceChildren();
@@ -57,12 +88,7 @@
       button.addEventListener('focus',()=>markers.get(place.id)?.openTooltip());button.addEventListener('blur',()=>markers.get(place.id)?.closeTooltip());
       list.append(button);
     });
-    if(map){layer.clearLayers();markers.clear();visible.forEach(place=>{
-      const size=place.kind==='spot'?26:32;
-      const marker=L.marker([place.lat,place.lng],{icon:L.divIcon({className:'place-marker '+place.kind,html:'<span class="marker-disc">'+place.code+'</span>',iconSize:[size,size],iconAnchor:[size/2,size/2]}),title:place.name,alt:place.name+' 상세 정보',keyboard:true,riseOnHover:true});
-      marker.bindTooltip(tooltip(place),{direction:'top',offset:[0,-15],className:'place-tooltip',opacity:1});
-      marker.on('click',()=>selectPlace(place));marker.addTo(layer);marker.getElement()?.setAttribute('aria-label',place.name+' 상세 정보');markers.set(place.id,marker);
-    });}
+    renderMarkers();
     $('previous-place').disabled=$('next-place').disabled=visible.length<2;
     $('place-detail').hidden=!visible.length;
     if(visible.length)setDetail(visible.includes(selected)?selected:visible[0],false);
@@ -75,6 +101,7 @@
     tiles.on('tileerror',()=>{tileFailed=true;$('map-status').textContent='일부 지도 타일을 불러오지 못했습니다. 목록에서 장소를 선택할 수 있습니다.'});
     tiles.on('load',()=>{if(!tileFailed)$('map-status').textContent=''});
     layer=L.layerGroup().addTo(map);
+    map.on('moveend',renderMarkers);
     map.on('focus',()=>map.scrollWheelZoom.enable());map.on('blur',()=>map.scrollWheelZoom.disable());
     let resizeTimer;
     new ResizeObserver(()=>{map.invalidateSize({pan:false});clearTimeout(resizeTimer);resizeTimer=setTimeout(fitVisible,150)}).observe($('map'));

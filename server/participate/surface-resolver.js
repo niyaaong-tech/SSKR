@@ -78,6 +78,9 @@ function resolveSurface(context) {
   const activePayment = payment && [PAYMENT.PENDING, PAYMENT.PROCESSING, PAYMENT.FAILED].includes(payment.state);
   if (activeApplication || activePayment) {
     const stepState = resolveApplicationStep(context);
+    if (application?.paymentDeferred && stepState.step === "STEP_4" && stepState.variant === "DEFAULT") {
+      return { mode: SURFACE_MODE.MODE_C, gate: null, step: null, variant: "PAYMENT_DEFERRED", statusCode: "PAYMENT_DEFERRED", primaryAction: { code: "RESUME_PAYMENT", label: "결제 이어하기", enabled: true }, blockedReason: null };
+    }
     const actions = {
       STEP_1: { code: "SAVE_ACKNOWLEDGEMENT", label: "다음", enabled: true },
       STEP_2: { code: "SAVE_AGREEMENTS", label: "다음", enabled: true },

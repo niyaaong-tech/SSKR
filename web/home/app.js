@@ -350,7 +350,6 @@
     const mobileCompositionShift = window.innerWidth <= 900
       ? -window.innerWidth * .18
         * ease(range(p, .32, .36))
-        * (1 - ease(range(p, .5, .58)))
       : 0;
     if (journeySvg) journeySvg.style.transform = `translate3d(${mobileCompositionShift.toFixed(2)}px,0,0)`;
 

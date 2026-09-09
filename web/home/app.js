@@ -29,6 +29,10 @@
   const introHandoffSunMask = document.querySelector('.intro-handoff-sun-mask');
   const introHandoffSun = document.querySelector('#introHandoffSun');
   const gateway = document.querySelector('#gateway');
+  const mobileLinks = document.querySelector('.mobile-entry-links');
+  const stageHeight = () => window.innerWidth <= 900
+    ? (brochureStage?.offsetHeight || window.innerHeight)
+    : window.innerHeight;
   const introCue = document.querySelector('.intro-scroll-cue');
   const brochure = document.querySelector('#journey');
   const brochureStage = document.querySelector('#brochureStage');
@@ -146,9 +150,9 @@
       : physicalFinalStart + (progress - timelineFinalStart) * ((1 - physicalFinalStart) / (1 - timelineFinalStart));
   };
   const getFrameLayout = () => {
-    const scrollable = Math.max(1, document.documentElement.scrollHeight - window.innerHeight);
+    const scrollable = Math.max(1, document.documentElement.scrollHeight - stageHeight());
     const brochureStart = brochure?.offsetTop ?? 0;
-    const brochureMax = brochure ? Math.max(1, brochure.offsetHeight - window.innerHeight) : 1;
+    const brochureMax = brochure ? Math.max(1, brochure.offsetHeight - stageHeight()) : 1;
     const brochureEnd = brochureStart + brochureMax;
     return { scrollable, brochureStart, brochureMax, brochureEnd };
   };
@@ -186,7 +190,7 @@
   const syncStoryIndex = (scrollY) => {
     if (!storyIndex) return;
     const targets = getChapterTargets();
-    const scrollable = Math.max(1, document.documentElement.scrollHeight - window.innerHeight);
+    const scrollable = Math.max(1, document.documentElement.scrollHeight - stageHeight());
     let activeIndex = 0;
     targets.forEach((chapter, index) => {
       if (scrollY >= chapter.target - 2) activeIndex = index;
@@ -249,7 +253,7 @@
   const update = () => {
     ticking = false;
     const scrollY = window.scrollY || document.documentElement.scrollTop;
-    const scrollable = Math.max(1, document.documentElement.scrollHeight - window.innerHeight);
+    const scrollable = Math.max(1, document.documentElement.scrollHeight - stageHeight());
     const currentFrame = frameFromScroll(scrollY);
     if (pageProgress) pageProgress.style.transform = `scaleX(${scrollY / scrollable})`;
     if (frameNumber) frameNumber.textContent = String(Math.round(currentFrame)).padStart(3, '0');
@@ -257,7 +261,7 @@
     syncStoryIndex(scrollY);
 
     if (intro && !reduced) {
-      const introMax = Math.max(1, intro.offsetHeight - window.innerHeight);
+      const introMax = Math.max(1, intro.offsetHeight - (window.innerWidth <= 900 ? document.querySelector('.intro-sticky').offsetHeight : window.innerHeight));
       const introP = clamp((scrollY - intro.offsetTop) / introMax);
       const headlineOut = range(introP, .18, .43);
       const horizonLift = ease(range(introP, .3, .48));
@@ -324,6 +328,10 @@
         introHandoffCopy.style.opacity = handoffCopyIn.toFixed(3);
         introHandoffCopy.style.transform = `translate3d(0,${mix(38, 0, handoffCopyIn)}px,0)`;
       }
+      if (mobileLinks) {
+        mobileLinks.style.opacity = (1 - headlineOut).toFixed(3);
+        mobileLinks.style.visibility = headlineOut >= .99 ? 'hidden' : 'visible';
+      }
       if (gateway) {
         const gatewayOut = range(introP, .24, .5);
         gateway.style.opacity = (1 - gatewayOut).toFixed(3);
@@ -334,7 +342,7 @@
 
     if (!brochure || reduced) return;
     const brochureStart = brochure.offsetTop;
-    const brochureMax = Math.max(1, brochure.offsetHeight - window.innerHeight);
+    const brochureMax = Math.max(1, brochure.offsetHeight - stageHeight());
     const physicalP = clamp((scrollY - brochureStart) / brochureMax);
     const p = timelineFromPhysical(physicalP);
     if (brochureStage) brochureStage.style.opacity = scrollY >= brochureStart ? '1' : '0';
@@ -455,8 +463,9 @@
         point.x = traceSpots[index][0];
         point.y = traceSpots[index][1];
         const nodePoint = point.matrixTransform(svgMatrix);
-        recallX = nodePoint.x - (card.offsetLeft + card.offsetWidth / 2);
-        recallY = nodePoint.y - (card.offsetTop + card.offsetHeight / 2);
+        const memoryRect = memoryLayer.getBoundingClientRect();
+        recallX = nodePoint.x - memoryRect.left - (card.offsetLeft + card.offsetWidth / 2);
+        recallY = nodePoint.y - memoryRect.top - (card.offsetTop + card.offsetHeight / 2);
       }
       const recallEase = ease(memoryRecall);
       const revealX = mix(24, 0, ease(reveal));
@@ -477,10 +486,20 @@
         const nodePoint = svgPoint.matrixTransform(svgMatrix);
         const cardRect = card.getBoundingClientRect();
         const cardAbove = cardRect.bottom < nodePoint.y;
-        connector.setAttribute('x1', ((nodePoint.x / window.innerWidth) * 1000).toFixed(2));
-        connector.setAttribute('y1', ((nodePoint.y / window.innerHeight) * 700).toFixed(2));
-        connector.setAttribute('x2', (((cardRect.left + cardRect.width / 2) / window.innerWidth) * 1000).toFixed(2));
-        connector.setAttribute('y2', ((((cardAbove ? cardRect.bottom : cardRect.top)) / window.innerHeight) * 700).toFixed(2));
+        // Project both endpoints into the connector SVG, never the browser viewport.
+        const connectorMatrix = cardConnectors.getScreenCTM();
+        if (!connectorMatrix) return;
+        const inverse = connectorMatrix.inverse();
+        const endpoint = cardConnectors.createSVGPoint();
+        endpoint.x = nodePoint.x; endpoint.y = nodePoint.y;
+        const from = endpoint.matrixTransform(inverse);
+        endpoint.x = cardRect.left + cardRect.width / 2;
+        endpoint.y = cardAbove ? cardRect.bottom : cardRect.top;
+        const to = endpoint.matrixTransform(inverse);
+        connector.setAttribute('x1', from.x.toFixed(2));
+        connector.setAttribute('y1', from.y.toFixed(2));
+        connector.setAttribute('x2', to.x.toFixed(2));
+        connector.setAttribute('y2', to.y.toFixed(2));
         const revealStart = cardRevealStart + index * cardRevealStep;
         const reveal = range(p, revealStart, revealStart + cardRevealDuration);
         const memoryRecall = range(p, .8 + index * .012, .84 + index * .012);

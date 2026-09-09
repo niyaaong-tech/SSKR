@@ -22,6 +22,7 @@
   const publicScenarios = new Set(["guest", "public-memorial"]);
   let context = null;
   let pendingRoute = null;
+  let disposeSpots = null;
 
   const esc = (value) => String(value ?? "").replace(/[&<>'"]/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "'": "&#39;", '"': "&quot;" })[char]);
   const participateHref = (href) => {
@@ -180,13 +181,7 @@
   }
 
   function renderSpots(id) {
-    if (id) {
-      const spot = data.spots.find((item) => item.id === id);
-      if (!spot) return renderNotFound();
-      root.innerHTML = `<a class="back-link" href="/app/spots" data-app-link>← 스팟 목록</a>${pageHead(spot.type, spot.name, spot.summary)}<section class="memorial-hero" style="background-image:url('${esc(spot.image)}')"><div><p class="eyebrow">${esc(spot.region)} · PUBLIC SPOT</p><h1>${esc(spot.name)}</h1><p>${esc(spot.summary)}. 실제 주행 경로와 방문 여부는 참가자가 직접 결정합니다.</p></div></section><dl class="detail-list"><div><dt>공개 범위</dt><dd>전체 공개</dd></div><div><dt>스팟 유형</dt><dd>${esc(spot.type)}</dd></div><div><dt>참가자 확장</dt><dd>${context.participation ? "현재 참가와 연결된 상세 안내를 확인할 수 있습니다." : esc(participantAccessCopy)}</dd></div></dl>`;
-      return;
-    }
-    root.innerHTML = `${pageHead("PUBLIC SPOTS", "스팟", "공식 스팟의 성격과 지역 정보를 공개 범위 안에서 확인합니다. GPS 추적이나 체크인은 포함하지 않습니다.")}${cards(data.spots, "spots")}`;
+    disposeSpots = window.SSKR_APP_SPOTS.mount(root, { id, participation: context.participation });
   }
 
   function renderMemorials(id) {
@@ -219,6 +214,7 @@
   }
 
   function renderAuth(returnTo) {
+    disposeSpots?.(); disposeSpots = null;
     const safe = domain.safeReturnTo(returnTo);
     const authQuery = new URLSearchParams(location.search);
     authQuery.set("returnTo", safe);
@@ -240,11 +236,13 @@
   function renderNotFound() { renderDenied("페이지를 찾을 수 없습니다.", "주소를 확인하거나 SSKR 매니저에서 다시 이동해 주세요."); }
 
   function renderFailure(error) {
+    disposeSpots?.(); disposeSpots = null;
     root.innerHTML = `<section class="access-denied"><p class="eyebrow">SSKR MANAGER</p><h1>화면을 표시하지 못했습니다.</h1><p>${esc(error?.message || "현재 상태를 다시 확인해 주세요.")}</p><button class="primary-link" id="app-retry" type="button">다시 시도</button></section>`;
     root.querySelector("#app-retry").addEventListener("click", () => load());
   }
 
   function renderRoute() {
+    disposeSpots?.(); disposeSpots = null;
     const path = domain.normalizePath(location.pathname);
     const routeTitles = {
       "/app": "SSKR 매니저",

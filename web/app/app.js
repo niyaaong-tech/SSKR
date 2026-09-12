@@ -23,6 +23,11 @@
   let context = null;
   let pendingRoute = null;
   let disposeSpots = null;
+  let disposeMemorials = null;
+  let memorialStorage;
+  try { memorialStorage = window.localStorage; } catch { /* Restricted browser storage. */ }
+  const memorialStore = window.SSKR_MEMORIAL_STORE.create(data.memorials, memorialStorage);
+  const memorialAccount = () => scenario === "private-other" ? { ...context.account, id: "mock-rider-other" } : context.account;
 
   const esc = (value) => String(value ?? "").replace(/[&<>'"]/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "'": "&#39;", '"': "&quot;" })[char]);
   const participateHref = (href) => {
@@ -53,6 +58,7 @@
     if (replace) history.replaceState({}, "", destination);
     else if (safe !== currentPath) history.pushState({}, "", destination);
     renderRouteSafely();
+    if (safe !== currentPath && safe.startsWith("/app/memorials")) window.scrollTo({ top: 0, left: 0, behavior: "instant" });
   }
 
   function handleAppLink(event) {
@@ -94,10 +100,6 @@
     renderAccount();
   }
 
-  function cards(items, kind) {
-    return `<div class="resource-grid">${items.map((item) => `<article class="resource-card"><a href="/app/${kind}/${esc(item.id)}" data-app-link><img src="${esc(item.image)}" alt="" /><div class="resource-copy"><span>${esc(item.type || item.eventTitle || item.region)}</span><strong>${esc(item.name || item.title)}</strong><p>${esc(item.summary)}</p></div></a></article>`).join("")}</div>`;
-  }
-
   function relationCopy() {
     const map = {
       NONE: ["아직 이번 SSKR 신청 내역이 없습니다.", "공개된 스팟과 메모리얼을 둘러본 뒤 참가를 결정할 수 있습니다."],
@@ -117,7 +119,7 @@
   }
 
   function renderHome() {
-    const model = managerResolver.resolveManager(context, data, { variant: managerVariant });
+    const model = managerResolver.resolveManager(context, { ...data, memorials: memorialStore.all() }, { variant: managerVariant });
     const statusIcon = () => `<svg aria-hidden="true" viewBox="0 0 24 24"><path d="M12 3v18M3 12h18"/><circle cx="12" cy="12" r="8"/></svg>`;
     const alert = model.alert ? `<aside class="manager-alert" aria-label="중요 변경 안내"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M12 3 2.8 20h18.4L12 3Z"/><path d="M12 9v5M12 17h.01"/></svg><strong>${esc(model.alert.title)}</strong><p>${esc(model.alert.copy)}</p><a href="${esc(model.alert.href)}" data-app-link>${esc(model.alert.label)} →</a></aside>` : "";
     const statuses = model.currentEvent.status.map((item) => `<div class="manager-status-item" data-tone="${esc(item.tone)}"><span class="manager-status-icon">${statusIcon()}</span><div class="manager-status-copy"><span>${esc(item.label)}</span><strong>${esc(item.value)}</strong></div></div>`).join("");
@@ -184,17 +186,11 @@
     disposeSpots = window.SSKR_APP_SPOTS.mount(root, { id, participation: context.participation });
   }
 
-  function renderMemorials(id) {
-    if (id) {
-      const memorial = data.memorials.find((item) => item.id === id || item.publicSlug === id);
-      const account = scenario === "private-other" ? { ...context.account, id: "mock-rider-other" } : context.account;
-      const access = domain.memorialAccess(memorial, account);
-      if (!access.allowed) return renderDenied(access.reason === "PRIVATE" ? "비공개 메모리얼입니다." : "메모리얼을 찾을 수 없습니다.", "이 메모리얼은 소유자만 확인할 수 있습니다.");
-      root.innerHTML = `<a class="back-link" href="/app/memorials" data-app-link>← 메모리얼 목록</a><section class="memorial-hero" style="background-image:url('${esc(memorial.image)}')"><div><p class="eyebrow">${esc(memorial.eventTitle)} · ${esc(memorial.result)}</p><h1>${esc(memorial.title)}</h1><p>${esc(memorial.summary)}</p><span>${esc(memorial.ownerName)}</span></div></section><dl class="detail-list"><div><dt>기록 이벤트</dt><dd>${esc(memorial.eventTitle)}</dd></div><div><dt>공개 상태</dt><dd>${esc(memorial.visibility)}</dd></div><div><dt>참가 결과</dt><dd>${esc(memorial.result)}</dd></div></dl>`;
-      return;
-    }
-    const visible = data.memorials.filter((item) => domain.memorialAccess(item, context.account).allowed);
-    root.innerHTML = `${pageHead("MEMORIAL ARCHIVE", "메모리얼", "현재 대회가 아닌 각 기록의 이벤트 연도와 맥락을 그대로 보존합니다.")}${cards(visible, "memorials")}`;
+  function renderMemorials() {
+    disposeMemorials = window.SSKR_MEMORIALS.mount({
+      root, store: memorialStore, account: memorialAccount(),
+      path: domain.normalizePath(location.pathname)
+    });
   }
 
   function renderMy() {
@@ -215,6 +211,7 @@
 
   function renderAuth(returnTo) {
     disposeSpots?.(); disposeSpots = null;
+    disposeMemorials?.(); disposeMemorials = null;
     const safe = domain.safeReturnTo(returnTo);
     const authQuery = new URLSearchParams(location.search);
     authQuery.set("returnTo", safe);
@@ -237,12 +234,14 @@
 
   function renderFailure(error) {
     disposeSpots?.(); disposeSpots = null;
+    disposeMemorials?.(); disposeMemorials = null;
     root.innerHTML = `<section class="access-denied"><p class="eyebrow">SSKR MANAGER</p><h1>화면을 표시하지 못했습니다.</h1><p>${esc(error?.message || "현재 상태를 다시 확인해 주세요.")}</p><button class="primary-link" id="app-retry" type="button">다시 시도</button></section>`;
     root.querySelector("#app-retry").addEventListener("click", () => load());
   }
 
   function renderRoute() {
     disposeSpots?.(); disposeSpots = null;
+    disposeMemorials?.(); disposeMemorials = null;
     const path = domain.normalizePath(location.pathname);
     const routeTitles = {
       "/app": "SSKR 매니저",
@@ -267,7 +266,7 @@
     else if (path === "/app/spots") renderSpots();
     else if (path.startsWith("/app/spots/")) renderSpots(path.split("/").pop());
     else if (path === "/app/memorials") renderMemorials();
-    else if (path.startsWith("/app/memorials/")) renderMemorials(path.split("/").pop());
+    else if (path.startsWith("/app/memorials/")) renderMemorials();
     else if (path === "/app/my") renderMy();
     else if (path === "/app/preparation") renderPreparation();
     else if (path === "/app/notices") renderNotices();

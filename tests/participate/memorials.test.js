@@ -71,3 +71,14 @@ test("invalid data and storage failures never report a successful save", () => {
   const poisoned = create(items, storage({ "sskr.mock.memorials": JSON.stringify({ "own-public": { title: "이름", summary: "", visibility: "INVALID" } }) }));
   assert.deepEqual(poisoned.all(), items);
 });
+
+test('wheel gesture keeps its initial owner across boundary crossings and reversals', () => {
+  const { createWheelSession } = require('../../web/app/memorial-journey');
+  const session = createWheelSession();
+  assert.deepEqual(session(false,0), {mode:'page',fresh:true});
+  assert.deepEqual(session(true,50), {mode:'page',fresh:false});
+  assert.deepEqual(session(true,250), {mode:'page',fresh:false});
+  assert.deepEqual(session(true,600), {mode:'map',fresh:true});
+  assert.deepEqual(session(false,650), {mode:'map',fresh:false});
+  assert.deepEqual(session(false,1000), {mode:'page',fresh:true});
+});

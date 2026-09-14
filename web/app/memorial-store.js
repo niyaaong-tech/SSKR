@@ -50,5 +50,37 @@
     }
     return { all, update };
   }
-  return { collections, create, isOwner };
+  function sample(items, count = 6, random = Math.random) {
+    const pool = [...items];
+    for (let i = pool.length - 1; i > 0; i--) { const j = Math.floor(random() * (i + 1)); [pool[i], pool[j]] = [pool[j], pool[i]]; }
+    return pool.slice(0, Math.max(0, count));
+  }
+  function filterMemorials(items, { search = "", start = "all" } = {}, places = []) {
+    const normalize = value => String(value).replace(/\s/g, "").toLowerCase();
+    const names = new Map(places.map(place => [place.id, place.name]));
+    const query = normalize(search);
+    return items.filter(item => item.publishStatus === "PUBLISHED" && item.visibility === "PUBLIC" && (start === "all" || item.startLocationId === start) && (!query || normalize([item.title, item.ownerName, ...(item.visitedLocationIds || []).map(id => names.get(id) || id)].join(" ")).includes(query)));
+  }
+  function isPublicPhoto(photo) {
+    return Boolean(photo?.url && photo.status === "READY" && photo.moderationStatus === "APPROVED" && photo.visibility === "PUBLIC");
+  }
+  function selectPhoto(visit) {
+    const uploads = (visit.photoConsent === false ? [] : visit.media || []).filter(photo => photo.sourceKind === "USER_UPLOAD" && isPublicPhoto(photo));
+    uploads.sort((a,b) => (a.sortOrder || 0) - (b.sortOrder || 0) || a.id.localeCompare(b.id));
+    return uploads[0] || (isPublicPhoto(visit.placePhoto) ? visit.placePhoto : null);
+  }
+  function selectCover(visits) {
+    const candidates = visits.map(visit => ({ visit, photo: selectPhoto(visit) })).filter(entry => entry.photo);
+    candidates.sort((a,b) => Number(b.photo.sourceKind === "USER_UPLOAD") - Number(a.photo.sourceKind === "USER_UPLOAD") || Number(b.visit.role === "SPOT") - Number(a.visit.role === "SPOT") || a.visit.sequence - b.visit.sequence);
+    return candidates[0] || null;
+  }
+  function thumbnailStops(visits, featuredVisitId) {
+    const ordered = [...visits].sort((a,b) => a.sequence - b.sequence);
+    if (ordered.length <= 5) return ordered;
+    const middle = ordered.slice(1,-1);
+    const featured = middle.find(v=>v.id===featuredVisitId && v!==middle[0] && v!==middle.at(-1));
+    const selected = [middle[0], featured || middle[Math.floor((middle.length-1)/2)], middle.at(-1)].sort((a,b)=>a.sequence-b.sequence);
+    return [ordered[0], ...selected, ordered.at(-1)];
+  }
+  return { collections, create, isOwner, sample, filterMemorials, isPublicPhoto, selectPhoto, selectCover, thumbnailStops };
 });

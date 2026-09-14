@@ -70,9 +70,13 @@
     document.querySelector("#mobile-nav-toggle").setAttribute("aria-expanded", "false");
   }
 
+  function displayAccount() {
+    const nickname = data.memorials.find(item => item.ownerUserId === context.account.id)?.ownerName;
+    return nickname ? { ...context.account, profile: { ...context.account.profile, name: nickname } } : context.account;
+  }
   function renderAccount() {
     accountControl.render(accountRoot, {
-      account: context.account,
+      account: displayAccount(),
       showGuest: true,
       showReset: true,
       onLogin: () => renderAuth(domain.normalizePath(location.pathname)),
@@ -94,7 +98,7 @@
   function renderChrome() {
     const linked = context.account.linked === true;
     accountMeta.hidden = !linked;
-    accountName.textContent = linked ? context.account.profile?.name || "SSKR 라이더" : "";
+    accountName.textContent = linked ? displayAccount().profile?.name || "SSKR 라이더" : "";
     accountNumber.textContent = linked ? context.participation?.participantNumber || "SSKR 계정" : "";
     currentEventNavLabel.textContent = context.event?.publicTitle || "현재 SSKR";
     renderAccount();
@@ -195,7 +199,7 @@
 
   function renderMy() {
     const active = context.participation;
-    const past = scenario === "past-only" || scenario === "current+past" || active ? data.past : [];
+    const past = data.past.filter(item => memorialStore.all().some(memorial => memorial.id === item.memorialId && memorial.ownerUserId === memorialAccount().id));
     root.innerHTML = `${pageHead("MY SSKR", "내 기록", "현재 신청·참가 관계와 지난 시즌의 결과 및 메모리얼을 확인합니다.")}
       <section class="content-section"><div class="section-head"><h2>현재 SSKR</h2></div><div class="status-band"><div><span>현재 관계</span><strong>${esc(relationLabel())}</strong><p>${esc(relationCopy()[1])}</p></div><div><span>참가자</span><strong>${esc(active?.participantNumber || "참가 전")}</strong><p>${esc(active ? tierLabel(active.registrationTierCode) : context.application ? "신청 진행 중" : "참가 내역 없음")}</p></div></div></section>
       <section class="content-section"><div class="section-head"><h2>지난 참가</h2><p>${past.length ? `${past.length}개의 기록` : "기록 없음"}</p></div>${past.length ? `<div class="notice-list">${past.map((item) => `<a class="notice-item" href="/app/memorials/${esc(item.memorialId)}" data-app-link><span>${item.year}</span><div><h3>SSKR ${item.year}</h3><p>${esc(item.result)} · ${esc(item.tier)} · ${esc(item.participantNumber)}</p></div><time>메모리얼 →</time></a>`).join("")}</div>` : `<div class="empty-state"><h1>아직 지난 참가 기록이 없습니다.</h1><p>완료된 대회의 참가 및 메모리얼 기록이 이곳에 모입니다.</p></div>`}</section>`;

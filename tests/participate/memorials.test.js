@@ -82,3 +82,14 @@ test('wheel gesture keeps its initial owner across boundary crossings and revers
   assert.deepEqual(session(false,650), {mode:'map',fresh:false});
   assert.deepEqual(session(false,1000), {mode:'page',fresh:true});
 });
+
+test('all journey navigation cards keep their side and position through map pan and zoom', () => {
+  const { routeLabelLayout } = require('../../web/app/memorial-journey');
+  const points=Array.from({length:14},(_,index)=>({index,x:128+index*.01,y:37-index*.03}));
+  for(const width of [320,390,1140]){
+    const before=routeLabelLayout(points,width,440);
+    const moved=routeLabelLayout(points.map(p=>({...p,x:p.x*4-500,y:p.y*4+700})),width,440);
+    assert.equal(before.length,14);assert.equal(moved.length,14);
+    for(const card of before){const same=moved.find(p=>p.index===card.index);assert.equal(card.side,same.side);assert.equal(card.left,same.left);assert.ok(Math.abs(card.top-same.top)<.001);}
+  }
+});

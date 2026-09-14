@@ -21,43 +21,24 @@
     });
     return output;
   }
-  // Wheel events have no standard gesture-end event. A quiet interval starts
-  // a new gesture; scrolling or pointer movement never changes its owner.
-  function createWheelSession(idleMs=300) {
-    let last=-Infinity,mode='page';
-    return (overMap,now)=>{
-      const fresh=now-last>idleMs;
-      if(fresh)mode=overMap?'map':'page';
-      last=now;
-      return {mode,fresh};
-    };
+  // Cards are navigation for the complete journey, not only the current viewport.
+  // Normalize route coordinates independently of map zoom and pan to keep their
+  // sides and order stable while the user inspects a particular location.
+  function routeLabelLayout(points,width,height) {
+    if(!points.length)return [];
+    const xs=points.map(p=>p.x),ys=points.map(p=>p.y);
+    const minX=Math.min(...xs),minY=Math.min(...ys),spanX=Math.max(...xs)-minX,spanY=Math.max(...ys)-minY;
+    const scale=Math.min((width-40)/(spanX||1),(height-120)/(spanY||1));
+    const left=(width-spanX*scale)/2,top=(height-spanY*scale)/2;
+    return labelLayout(points.map(p=>({...p,x:left+(p.x-minX)*scale,y:top+(p.y-minY)*scale})),width,height);
   }
+  const mapInteraction=typeof module==='object'&&module.exports?require('./map-interaction'):window.SSKR_MAP_INTERACTION;
+  const {createWheelSession}=mapInteraction;
   function mount(host,item,places){
     const controller=new AbortController(),byId=new Map(places.map(p=>[p.id,p]));let map,record,disposed=false,observer,tiles,highlight;const markers=[];
     host.innerHTML='<div class="memorial-route-loading" role="status">주행 기록을 불러오고 있습니다.</div>';
     const listen=(node,type,fn)=>node.addEventListener(type,fn,{signal:controller.signal});
-    const wheelSession=createWheelSession();let wheelDelta=0,wheelAnchor=null;
-    // Capture from mount time, including page scrolling while route data loads.
-    // Native Leaflet wheel handling stays disabled so it cannot steal a page gesture.
-    document.addEventListener('wheel',event=>{
-      if(event.ctrlKey || !event.deltaY)return;
-      const panel=host.querySelector('.journey-map-panel');
-      const gesture=wheelSession(Boolean(map && panel?.contains(event.target)),performance.now());
-      if(gesture.fresh){
-        wheelDelta=0;
-        wheelAnchor=gesture.mode==='map'?map.mouseEventToContainerPoint(event):null;
-      }
-      if(gesture.mode!=='map' || !map || disposed)return;
-      event.preventDefault();
-      const unit=event.deltaMode===1?40:event.deltaMode===2?map.getSize().y:1;
-      wheelDelta=Math.max(-240,Math.min(240,wheelDelta+event.deltaY*unit));
-      const steps=Math.trunc(wheelDelta/120);
-      if(!steps)return;
-      wheelDelta-=steps*120;
-      const zoom=Math.max(map.getMinZoom(),Math.min(map.getMaxZoom(),map.getZoom()-steps));
-      if(zoom!==map.getZoom())map.setZoomAround(wheelAnchor,zoom,{animate:false});
-    },{capture:true,passive:false,signal:controller.signal});
-
+    mapInteraction.bindWheel({getMap:()=>map,panel:()=>host.querySelector('.journey-map-panel'),signal:controller.signal});
     function select(index){
       if(!record)return;const checkin=record.visits[index],place=byId.get(checkin.locationId),leg=record.legs[Math.max(0,index-1)];
       host.querySelectorAll('[data-map-visit]').forEach(el=>el.setAttribute('aria-pressed',String(Number(el.dataset.mapVisit)===index)));
@@ -66,7 +47,7 @@
       host.querySelector('.journey-selected').innerHTML=`<div><span>${index===0?'출발':index===record.visits.length-1?'도착':index+'번째 스팟'}</span><strong>${esc(place?.name||checkin.locationId)}</strong><p>${time(checkin.arrivedAt)}${checkin.durationSeconds?' · '+Math.round(checkin.durationSeconds/60)+'분 정차':''} · 누적 ${km(checkin.cumulativeDistanceMeters)}km</p></div><a class="memorial-button is-secondary" href="/app/spots/${encodeURIComponent(checkin.locationId)}" data-app-link>장소 정보 →</a>`;
     }
     function render(){
-      host.innerHTML=`<div class="journey-workspace"><section class="journey-map-panel ${record.visits.length > 10 ? 'has-many-visits' : ''}" aria-label="연결된 주행 경로"><div class="journey-map" role="region" aria-label="출발지부터 대천까지의 실제 도로 경로 지도"></div><div class="journey-map-controls"><button type="button" data-map="in" aria-label="주행 지도 확대">+</button><button type="button" data-map="out" aria-label="주행 지도 축소">−</button><button type="button" data-map="fit">전체 경로</button></div><p class="journey-map-status" role="status"></p></section></div><div class="journey-selected" aria-live="polite"></div><section class="journey-log"><header><div><h3>스팟과 주행 기록</h3><p>방문 순서대로 연결된 ${record.legs.length}개 주행 구간</p></div><button type="button" class="memorial-button is-secondary" data-download>테스트 주행기록 GPX ↓</button></header><div class="journey-log-list">${record.visits.map((c,i)=>{const p=byId.get(c.locationId),leg=record.legs[i-1];return `<article class="journey-log-entry"><div class="journey-log-index">${String(i)}</div><div><div class="journey-log-title"><h4>${esc(p?.name||c.locationId)}</h4><span>${time(c.arrivedAt)}${c.durationSeconds?' – '+time(c.departedAt):''}</span></div><p>${esc(c.note)}</p>${c.snapDistanceMeters>100?`<p class="journey-access-note">주행 기록은 장소 주변 도로 접근점까지 연결됩니다. 원본 장소 좌표와 약 ${c.snapDistanceMeters}m 차이가 있습니다.</p>`:''}${leg?`<details><summary>직전 구간 ${km(leg.distanceMeters)}km · ${duration(leg.durationSeconds)} · 도로 정보</summary><p>${esc(leg.roadNames.join(' → ')||'도로명 없는 연결 도로')}</p></details>`:''}</div></article>`;}).join('')}</div></section><details class="journey-data-source"><summary>테스트 데이터와 출처</summary><p>2026년 5월 행사가 치러졌다고 가정한 합성 기록입니다. ${record.sampleCount.toLocaleString('ko-KR')}개 도로 좌표와 구간별 모의 시각을 연결했으며, 실제 참가자가 측정한 GPS 기록이 아닙니다.</p><p>경로: <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer">© OpenStreetMap contributors · ODbL</a> / <a href="https://valhalla.github.io/valhalla/api/route/api-reference/" target="_blank" rel="noreferrer">Valhalla 이륜차 경로</a>. 조회 시점 도로망을 사용했으며 2026년 5월 당시 도로·영업·출입 조건의 검증 자료가 아닙니다. 장소 좌표는 기존 SSKR 카탈로그의 근사 좌표입니다.</p></details>`;
+      host.innerHTML=`<div class="journey-workspace"><section class="journey-map-panel ${record.visits.length > 10 ? 'has-many-visits' : ''}" aria-label="연결된 주행 경로"><div class="journey-map" role="region" aria-label="출발지부터 대천까지의 실제 도로 경로 지도"></div><div class="journey-map-controls"><button type="button" data-map="in" aria-label="주행 지도 확대">+</button><button type="button" data-map="out" aria-label="주행 지도 축소">−</button><button type="button" data-map="fit">전체 경로</button></div><p class="journey-map-status" role="status"></p></section></div><div class="journey-selected" aria-live="polite"></div><section class="journey-log"><header><div><h3>스팟과 주행 기록</h3><p>방문 순서대로 연결된 ${record.legs.length}개 주행 구간</p></div><button type="button" class="memorial-button is-secondary" data-download>테스트 주행기록 GPX ↓</button></header><div class="journey-log-list">${record.visits.map((c,i)=>{const p=byId.get(c.locationId),leg=record.legs[i-1];return `<article class="journey-log-entry"><div class="journey-log-index">${i===0?'출':i===record.visits.length-1?'도':String(i)}</div><div><div class="journey-log-title"><h4>${esc(p?.name||c.locationId)}</h4><span>${time(c.arrivedAt)}${c.durationSeconds?' – '+time(c.departedAt):''}</span></div><p class="journey-log-meta">${c.durationSeconds ? Math.round(c.durationSeconds/60)+'분 정차 · ' : ''}누적 ${km(c.cumulativeDistanceMeters)}km</p><p>${esc(c.note)}</p>${c.snapDistanceMeters>100?`<p class="journey-access-note">주행 기록은 장소 주변 도로 접근점까지 연결됩니다. 원본 장소 좌표와 약 ${c.snapDistanceMeters}m 차이가 있습니다.</p>`:''}${leg?`<details><summary>직전 구간 ${km(leg.distanceMeters)}km · ${duration(leg.durationSeconds)} · 도로 정보</summary><p>${esc(leg.roadNames.join(' → ')||'도로명 없는 연결 도로')}</p></details>`:''}</div></article>`;}).join('')}</div></section><details class="journey-data-source"><summary>테스트 데이터와 출처</summary><p>2026년 5월 행사가 치러졌다고 가정한 합성 기록입니다. ${record.sampleCount.toLocaleString('ko-KR')}개 도로 좌표와 구간별 모의 시각을 연결했으며, 실제 참가자가 측정한 GPS 기록이 아닙니다.</p><p>경로: <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer">© OpenStreetMap contributors · ODbL</a> / <a href="https://valhalla.github.io/valhalla/api/route/api-reference/" target="_blank" rel="noreferrer">Valhalla 이륜차 경로</a>. 조회 시점 도로망을 사용했으며 2026년 5월 당시 도로·영업·출입 조건의 검증 자료가 아닙니다. 장소 좌표는 기존 SSKR 카탈로그의 근사 좌표입니다.</p></details>`;
       if(window.L){
         const L=window.L;map=L.map(host.querySelector('.journey-map'),{zoomControl:false,scrollWheelZoom:false}).setView([36.7,128],7);
         tiles=L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'}).addTo(map);
@@ -90,14 +71,14 @@
         });
         function layoutLabels(){
           if(disposed)return;
-          const size=map.getSize(),positions=markers.map((marker,index)=>{const p=map.latLngToContainerPoint(marker.getLatLng());return {index,x:p.x,y:p.y};});
-          const layout=labelLayout(positions,size.x,size.y);cards.forEach(c=>c.hidden=true);
+          const size=map.getSize(),positions=markers.map((marker,index)=>{const p=map.project(marker.getLatLng(),0);return {index,x:p.x,y:p.y};});
+          const layout=routeLabelLayout(positions,size.x,size.y);cards.forEach(c=>c.hidden=true);
           layout.forEach(p=>{
             const card=cards[p.index];card.hidden=false;Object.assign(card.style,{left:p.left+'px',top:p.top+'px',width:p.width+'px',height:p.height+'px'});
           });
         }
         const fit=()=>{const width=map.getSize().x;map.fitBounds(layer.getBounds(),{paddingTopLeft:[width<440?112:150,72],paddingBottomRight:[width<440?112:150,48],animate:false});layoutLabels();};fit();
-        map.on('move zoom resize',layoutLabels);
+        map.on('resize',layoutLabels);
         listen(host,'click',e=>{const control=e.target.closest('[data-map]');if(!control)return;control.dataset.map==='in'?map.zoomIn():control.dataset.map==='out'?map.zoomOut():fit();});
         observer=new ResizeObserver(()=>{map.invalidateSize({pan:false});});observer.observe(host.querySelector('.journey-map'));
       }else{host.querySelector('.journey-map').innerHTML=preview(item);host.querySelector('.journey-map-status').textContent='지도 연결을 확인해 주세요. 아래 방문 기록은 계속 이용할 수 있습니다.';host.querySelectorAll('[data-map]').forEach(b=>b.disabled=true);}
@@ -108,5 +89,5 @@
     async function load(){try{const response=await fetch(item.routeUrl,{signal:controller.signal});if(!response.ok)throw Error('HTTP '+response.status);record=await response.json();if(disposed)return;if(record.id!==item.runSessionId||!record.legs?.length||!record.visits?.length)throw Error('Invalid journey');render();}catch(error){if(disposed||error.name==='AbortError')return;console.error('Memorial journey load failed',error);observer?.disconnect();map?.remove();map=null;markers.length=0;host.innerHTML='<div class="memorial-route-loading" role="status">주행 기록을 불러오지 못했습니다. <button class="memorial-button is-secondary" type="button" data-retry>다시 불러오기</button></div>';host.querySelector('[data-retry]').addEventListener('click',load,{once:true,signal:controller.signal});}}
     load();return()=>{disposed=true;controller.abort();observer?.disconnect();map?.remove();};
   }
-  return {decode,preview,gpx,mount,km,duration,time,labelLayout,createWheelSession};
+  return {decode,preview,gpx,mount,km,duration,time,labelLayout,routeLabelLayout,createWheelSession};
 });

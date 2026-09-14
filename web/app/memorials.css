@@ -201,6 +201,7 @@
 .journey-log-title h4{margin:0;font-size:16px;letter-spacing:-.035em}
 .journey-log-title>span{font-size:12px;color:var(--sskr-text-2)}
 .journey-log-entry p{margin:9px 0;color:var(--sskr-text-2);font-size:13px;line-height:1.8;word-break:keep-all}
+.journey-log-entry .journey-log-meta{margin:6px 0;color:#526849;font-size:11px}
 .journey-log-entry .journey-access-note{font-size:11px;color:#7b806f}
 .journey-log-entry details{font-size:12px;color:#65785a;margin-top:12px}
 .journey-log-entry summary,.journey-data-source summary{cursor:pointer;width:fit-content;padding:5px 0}

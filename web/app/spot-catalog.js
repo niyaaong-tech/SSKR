@@ -85,15 +85,494 @@
   ];
   sights.forEach(([id,name,region,corridor,lat,lng,address,lead,source,category])=>places.push({id,name,region,corridor,lat,lng,address,lead,source:typeof source==='number'?tourism(source):source,kind:'spot',category,description:lead+' 바이크는 지정된 주차 공간에 세우고 둘러보세요. 산책이나 관람에 필요한 시간을 고려해 다음 목적지까지의 일정을 잡으면 좋습니다.',note:'개방 시간과 입장 조건을 확인하세요. 도로변 임의 정차는 피하고, 해안 장소는 날씨와 물때에 유의하세요.',coordinateAccuracy:'approximate',image:'',reuseStatus:'unverified'}));
   const photos={
-    'the-road-1423':'https://www.mbzine.com/wp-content/uploads/2023/03/2303_life_cafe5-2.jpg',
-    allride:'https://www.mbzine.com/wp-content/uploads/2023/03/2303_life_cafe2-2-2.jpg',
-    bikongs:'https://www.mbzine.com/wp-content/uploads/2023/07/2307_place_bikongs_main.jpg',
-    harleywood:'https://cdn.imweb.me/upload/S2020112077da751d9e507/515b293324ca4.jpg',
-    'road-runner':'https://reitwagen-cdn.baree.net/1_c06c452440.jpeg',
-    'gangneung-market':'66/3495766_image2_1.jpg','donghae-market':'02/3491802_image2_1.JPG','bukpyeong-market':'70/2741970_image2_1.jpg','jeongseon-market':'62/2733762_image2_1.jpg','gongju-market':'45/2393745_image2_1.jpg','yesan-market':'19/3039719_image2_1.jpg','daecheon-market':'67/2751167_image2_1.jpg',
-    nongol:'25/1220425_image2_1.jpg',sindolseok:'50/201850_image2_1.jpg',hupo:'72/3065172_image2_1.JPG',sainam:'55/2917855_image2_1.jpg','uirim-museum':'02/3416202_image2_1.jpg',hwayang:'56/1848556_image2_1.jpg',gongsanseong:'68/2678668_image2_1.jpg'
-  };
-  places.forEach(p=>{if(photos[p.id]){p.image=photos[p.id].startsWith('https:')?photos[p.id]:'https://tong.visitkorea.or.kr/cms/resource/'+photos[p.id];p.photoCredit=p.image.includes('visitkorea')?'한국관광공사 · 관광정보 사진':'장소 소개 매체 사진';p.photoSource=p.source;}});
+  "the-road-1423": "https://www.mbzine.com/wp-content/uploads/2023/03/2303_life_cafe5-2.jpg",
+  "allride": "https://www.mbzine.com/wp-content/uploads/2023/03/2303_life_cafe2-2-2.jpg",
+  "bikongs": "https://www.mbzine.com/wp-content/uploads/2023/07/2307_place_bikongs_main.jpg",
+  "harleywood": "https://cdn.imweb.me/upload/S2020112077da751d9e507/515b293324ca4.jpg",
+  "road-runner": {
+    "image": "/web/app/assets/spots/road-runner.webp",
+    "photoSource": "https://www.reitwagen.co.kr/posts/2147",
+    "photoOriginalUrl": "https://reitwagen-cdn.baree.net/3_03c86a62e9.jpeg",
+    "photoCredit": "사진 · 라이트바겐",
+    "photoKind": "PLACE_PHOTO",
+    "photoVerifiedAt": "2026-09-15",
+    "reuseStatus": "unverified"
+  },
+  "gangneung-market": "66/3495766_image2_1.jpg",
+  "donghae-market": "02/3491802_image2_1.JPG",
+  "bukpyeong-market": "70/2741970_image2_1.jpg",
+  "jeongseon-market": "62/2733762_image2_1.jpg",
+  "gongju-market": "45/2393745_image2_1.jpg",
+  "yesan-market": "19/3039719_image2_1.jpg",
+  "daecheon-market": "67/2751167_image2_1.jpg",
+  "nongol": "25/1220425_image2_1.jpg",
+  "sindolseok": "50/201850_image2_1.jpg",
+  "hupo": "72/3065172_image2_1.JPG",
+  "sainam": "55/2917855_image2_1.jpg",
+  "uirim-museum": "02/3416202_image2_1.jpg",
+  "hwayang": "56/1848556_image2_1.jpg",
+  "gongsanseong": "68/2678668_image2_1.jpg",
+  "andong-market": {
+    "image": "/web/app/assets/spots/andong-market.webp",
+    "photoSource": "https://www.tripinfo.co.kr/info.html?content_id=132282&content_type_id=38",
+    "photoOriginalUrl": "https://tong.visitkorea.or.kr/cms/resource/19/1802319_image2_1.jpg",
+    "photoCredit": "한국관광공사",
+    "photoKind": "PLACE_PHOTO",
+    "photoVerifiedAt": "2026-09-15",
+    "reuseStatus": "unverified"
+  },
+  "baeron": {
+    "image": "/web/app/assets/spots/baeron.webp",
+    "photoSource": "https://english.visitkorea.or.kr/svc/contents/contentsView.do?vcontsId=75548",
+    "photoOriginalUrl": "https://tong.visitkorea.or.kr/cms/resource/49/2026149_image2_1.jpg",
+    "photoCredit": "한국관광공사",
+    "photoKind": "PLACE_PHOTO",
+    "photoVerifiedAt": "2026-09-15",
+    "reuseStatus": "unverified"
+  },
+  "bongpyeong-market": {
+    "image": "/web/app/assets/spots/bongpyeong-market.webp",
+    "photoSource": "https://english.visitkorea.or.kr/svc/contents/contentsView.do?vcontsId=70561",
+    "photoOriginalUrl": "https://tong.visitkorea.or.kr/cms/resource/39/2365239_image2_1.jpg",
+    "photoCredit": "한국관광공사",
+    "photoKind": "PLACE_PHOTO",
+    "photoVerifiedAt": "2026-09-15",
+    "reuseStatus": "unverified"
+  },
+  "buseok-seosan": {
+    "image": "/web/app/assets/spots/buseok-seosan.webp",
+    "photoSource": "https://english.visitkorea.or.kr/svc/contents/contentsView.do?vcontsId=92261",
+    "photoOriginalUrl": "https://tong.visitkorea.or.kr/cms/resource/02/2802602_image2_1.jpg",
+    "photoCredit": "한국관광공사",
+    "photoKind": "PLACE_PHOTO",
+    "photoVerifiedAt": "2026-09-15",
+    "reuseStatus": "unverified"
+  },
+  "buseok-yeongju": {
+    "image": "/web/app/assets/spots/buseok-yeongju.webp",
+    "photoSource": "https://english.visitkorea.or.kr/svc/contents/contentsView.do?vcontsId=111132",
+    "photoOriginalUrl": "https://tong.visitkorea.or.kr/cms/resource/22/2654222_image2_1.jpg",
+    "photoCredit": "한국관광공사",
+    "photoKind": "PLACE_PHOTO",
+    "photoVerifiedAt": "2026-09-15",
+    "reuseStatus": "unverified"
+  },
+  "cafe-299": {
+    "image": "/web/app/assets/spots/cafe-299.webp",
+    "photoSource": "https://dev-story.kr/26",
+    "photoOriginalUrl": "https://blog.kakaocdn.net/dna/cguB7g/btrsA6fd6Os/AAAAAAAAAAAAAAAAAAAAAC2IYd_RBBebE0aJGcOneoHOtzOOK9zIDIJlPk24_7xk/img.jpg?credential=yqXZFxpELC7KVnFOS48ylbz2pIh7yKj8&expires=1790780399&allow_ip=&allow_referer=&signature=sHADIGI%2BupGvuifx2k3XeBNnFqQ%3D",
+    "photoCredit": "사진 · dev-story.kr",
+    "photoKind": "PLACE_PHOTO",
+    "photoVerifiedAt": "2026-09-15",
+    "reuseStatus": "unverified"
+  },
+  "dansan": {
+    "image": "/web/app/assets/spots/dansan.webp",
+    "photoSource": "https://www.tripinfo.co.kr/info.html?content_id=547880&content_type_id=12",
+    "photoOriginalUrl": "https://tong.visitkorea.or.kr/cms/resource/26/2534126_image2_1.jpg",
+    "photoCredit": "한국관광공사",
+    "photoKind": "PLACE_PHOTO",
+    "photoVerifiedAt": "2026-09-15",
+    "reuseStatus": "unverified"
+  },
+  "danyang-market": {
+    "image": "/web/app/assets/spots/danyang-market.webp",
+    "photoSource": "https://english.visitkorea.or.kr/svc/contents/contentsView.do?vcontsId=216109",
+    "photoOriginalUrl": "https://tong.visitkorea.or.kr/cms/resource/72/2366272_image2_1.jpg",
+    "photoCredit": "한국관광공사",
+    "photoKind": "PLACE_PHOTO",
+    "photoVerifiedAt": "2026-09-15",
+    "reuseStatus": "unverified"
+  },
+  "g-rider": {
+    "image": "/web/app/assets/spots/g-rider.webp",
+    "photoSource": "https://www.theneweconomy.kr/news/articleView.html?idxno=11658",
+    "photoOriginalUrl": "https://cdn.theneweconomy.kr/news/photo/202406/11658_12147_4627.png",
+    "photoCredit": "사진 · 신경제",
+    "photoKind": "PLACE_PHOTO",
+    "photoVerifiedAt": "2026-09-15",
+    "reuseStatus": "unverified"
+  },
+  "gampo-market": {
+    "image": "/web/app/assets/spots/gampo-market.webp",
+    "photoSource": "https://data.visitkorea.or.kr/linkedview/2756602",
+    "photoOriginalUrl": "https://tong.visitkorea.or.kr/cms/resource/39/2757139_image2_1.jpg",
+    "photoCredit": "한국관광공사",
+    "photoKind": "PLACE_PHOTO",
+    "photoVerifiedAt": "2026-09-15",
+    "reuseStatus": "unverified"
+  },
+  "ganwolam": {
+    "image": "/web/app/assets/spots/ganwolam.webp",
+    "photoSource": "https://data.visitkorea.or.kr/linkedview/125880",
+    "photoOriginalUrl": "https://tong.visitkorea.or.kr/cms/resource/28/3499228_image2_1.jpg",
+    "photoCredit": "한국관광공사",
+    "photoKind": "PLACE_PHOTO",
+    "photoVerifiedAt": "2026-09-15",
+    "reuseStatus": "unverified"
+  },
+  "geojosa": {
+    "image": "/web/app/assets/spots/geojosa.webp",
+    "photoSource": "https://www.tripinfo.co.kr/info.html?content_id=2758318&content_type_id=12",
+    "photoOriginalUrl": "https://tong.visitkorea.or.kr/cms/resource/09/2758509_image2_1.jpg",
+    "photoCredit": "한국관광공사",
+    "photoKind": "PLACE_PHOTO",
+    "photoVerifiedAt": "2026-09-15",
+    "reuseStatus": "unverified"
+  },
+  "goesan-market": {
+    "image": "/web/app/assets/spots/goesan-market.webp",
+    "photoSource": "https://data.visitkorea.or.kr/linkedview/132010",
+    "photoOriginalUrl": "https://tong.visitkorea.or.kr/cms/resource/81/3353381_image2_1.JPG",
+    "photoCredit": "한국관광공사",
+    "photoKind": "PLACE_PHOTO",
+    "photoVerifiedAt": "2026-09-15",
+    "reuseStatus": "unverified"
+  },
+  "gungnamji": {
+    "image": "/web/app/assets/spots/gungnamji.webp",
+    "photoSource": "https://english.visitkorea.or.kr/svc/contents/contentsView.do?vcontsId=94970",
+    "photoOriginalUrl": "https://tong.visitkorea.or.kr/cms/resource/42/3026142_image2_1.jpg",
+    "photoCredit": "한국관광공사",
+    "photoKind": "PLACE_PHOTO",
+    "photoVerifiedAt": "2026-09-15",
+    "reuseStatus": "unverified"
+  },
+  "gwangcheon-market": {
+    "image": "/web/app/assets/spots/gwangcheon-market.webp",
+    "photoSource": "https://www.tripinfo.co.kr/info.html?content_id=132042&content_type_id=38",
+    "photoOriginalUrl": "https://tong.visitkorea.or.kr/cms/resource/93/1602793_image2_1.jpg",
+    "photoCredit": "한국관광공사",
+    "photoKind": "PLACE_PHOTO",
+    "photoVerifiedAt": "2026-09-15",
+    "reuseStatus": "unverified"
+  },
+  "haemi": {
+    "image": "/web/app/assets/spots/haemi.webp",
+    "photoSource": "https://korean.visitkorea.or.kr/detail/rem_detail.do?cotid=faf7696c-ca1c-4848-bc6b-ba77bc0c96c8",
+    "photoOriginalUrl": "https://cdn.visitkorea.or.kr/img/call?cmd=VIEW&id=847edf5b-9467-4a9b-9209-b707d94e08ea",
+    "photoCredit": "한국관광공사",
+    "photoKind": "PLACE_PHOTO",
+    "photoVerifiedAt": "2026-09-15",
+    "reuseStatus": "unverified"
+  },
+  "heonhwa": {
+    "image": "/web/app/assets/spots/heonhwa.webp",
+    "photoSource": "https://data.visitkorea.or.kr/linkedview/2714722",
+    "photoOriginalUrl": "https://tong.visitkorea.or.kr/cms/resource/76/3088776_image2_1.jpg",
+    "photoCredit": "한국관광공사",
+    "photoKind": "PLACE_PHOTO",
+    "photoVerifiedAt": "2026-09-15",
+    "reuseStatus": "unverified"
+  },
+  "hichichi": {
+    "image": "/web/app/assets/spots/hichichi.webp",
+    "photoSource": "https://www.diningcode.com/profile.php?rid=qMVNtxUNiVzV",
+    "photoOriginalUrl": "https://d12zq4w4guyljn.cloudfront.net/750_750_20240303070127_photo1_2ed3367f84dd.webp",
+    "photoCredit": "사진 · 다이닝코드 이용자",
+    "photoKind": "PLACE_PHOTO",
+    "photoVerifiedAt": "2026-09-15",
+    "reuseStatus": "unverified"
+  },
+  "hongseong-market": {
+    "image": "/web/app/assets/spots/hongseong-market.webp",
+    "photoSource": "https://www.tripinfo.co.kr/info.html?content_id=2771854&content_type_id=38",
+    "photoOriginalUrl": "https://tong.visitkorea.or.kr/cms/resource/42/2850142_image2_1.jpg",
+    "photoCredit": "한국관광공사",
+    "photoKind": "PLACE_PHOTO",
+    "photoVerifiedAt": "2026-09-15",
+    "reuseStatus": "unverified"
+  },
+  "hue-cafe-138": {
+    "image": "/web/app/assets/spots/hue-cafe-138.webp",
+    "photoSource": "https://www.kmnews.net/SPECIAL/?bmode=view&idx=6405213",
+    "photoOriginalUrl": "https://cdn.imweb.me/thumbnail/20210422/124a78e59f63c.jpg",
+    "photoCredit": "사진 · 한국이륜차신문",
+    "photoKind": "PLACE_PHOTO",
+    "photoVerifiedAt": "2026-09-15",
+    "reuseStatus": "unverified"
+  },
+  "hwasodam": {
+    "image": "/web/app/assets/spots/hwasodam.webp",
+    "photoSource": "https://blog.naver.com/PostView.nhn?blogId=srad1340&logNo=224378567864&redirect=Dlog&widgetTypeCall=true",
+    "photoOriginalUrl": "https://postfiles.pstatic.net/MjAyNjA4MTRfMTY4/MDAxNzg2Njg2Mjc1OTU5.UuEYSlcj8D0vXQCuKkbqPFesrIc9lZqq72m8TqQlksQg.AOAgdO6iUYnlSdHihjC3ZCrg7pxYoa1UCEQGU3XODN0g.JPEG/IMG%EF%BC%BF9180.jpg?type=w275",
+    "photoCredit": "사진 · srad1340",
+    "photoKind": "PLACE_PHOTO",
+    "photoVerifiedAt": "2026-09-15",
+    "reuseStatus": "unverified"
+  },
+  "jangho": {
+    "image": "/web/app/assets/spots/jangho.webp",
+    "photoSource": "https://www.tripinfo.co.kr/info.html?content_id=125711&content_type_id=12",
+    "photoOriginalUrl": "https://tong.visitkorea.or.kr/cms/resource/61/2642261_image2_1.jpg",
+    "photoCredit": "한국관광공사",
+    "photoKind": "PLACE_PHOTO",
+    "photoVerifiedAt": "2026-09-15",
+    "reuseStatus": "unverified"
+  },
+  "jecheon-market": {
+    "image": "/web/app/assets/spots/jecheon-market.webp",
+    "photoSource": "https://www.tripinfo.co.kr/info.html?content_id=1309907&content_type_id=38",
+    "photoOriginalUrl": "https://tong.visitkorea.or.kr/cms/resource/59/1303859_image2_1.jpg",
+    "photoCredit": "한국관광공사",
+    "photoKind": "PLACE_PHOTO",
+    "photoVerifiedAt": "2026-09-15",
+    "reuseStatus": "unverified"
+  },
+  "jiyong": {
+    "image": "/web/app/assets/spots/jiyong.webp",
+    "photoSource": "https://data.visitkorea.or.kr/linkedview/127281",
+    "photoOriginalUrl": "https://tong.visitkorea.or.kr/cms/resource/99/878199_image2_1.jpg",
+    "photoCredit": "한국관광공사",
+    "photoKind": "PLACE_PHOTO",
+    "photoVerifiedAt": "2026-09-15",
+    "reuseStatus": "unverified"
+  },
+  "jukseoru": {
+    "image": "/web/app/assets/spots/jukseoru.webp",
+    "photoSource": "https://english.visitkorea.or.kr/svc/contents/contentsView.do?vcontsId=86300",
+    "photoOriginalUrl": "https://tong.visitkorea.or.kr/cms/resource/73/2654473_image2_1.jpg",
+    "photoCredit": "한국관광공사",
+    "photoKind": "PLACE_PHOTO",
+    "photoVerifiedAt": "2026-09-15",
+    "reuseStatus": "unverified"
+  },
+  "jumunjin-market": {
+    "image": "/web/app/assets/spots/jumunjin-market.webp",
+    "photoSource": "https://english.visitkorea.or.kr/svc/contents/contentsView.do?vcontsId=90550",
+    "photoOriginalUrl": "https://tong.visitkorea.or.kr/cms/resource/90/1162090_image2_1.jpg",
+    "photoCredit": "한국관광공사",
+    "photoKind": "PLACE_PHOTO",
+    "photoVerifiedAt": "2026-09-15",
+    "reuseStatus": "unverified"
+  },
+  "jusanji": {
+    "image": "/web/app/assets/spots/jusanji.webp",
+    "photoSource": "https://english.visitkorea.or.kr/svc/contents/contentsView.do?vcontsId=104969",
+    "photoOriginalUrl": "https://tong.visitkorea.or.kr/cms/resource/84/2616884_image2_1.jpg",
+    "photoCredit": "한국관광공사",
+    "photoKind": "PLACE_PHOTO",
+    "photoVerifiedAt": "2026-09-15",
+    "reuseStatus": "unverified"
+  },
+  "mad-brown": {
+    "image": "/web/app/assets/spots/mad-brown.webp",
+    "photoSource": "https://www.diningcode.com/profile.php?rid=7y59sw2oUX5v",
+    "photoOriginalUrl": "https://d12zq4w4guyljn.cloudfront.net/750_750_20250401112344999_photo_f39c8df315b7.webp",
+    "photoCredit": "사진 · 다이닝코드 이용자",
+    "photoKind": "PLACE_PHOTO",
+    "photoVerifiedAt": "2026-09-15",
+    "reuseStatus": "unverified"
+  },
+  "muchangpo": {
+    "image": "/web/app/assets/spots/muchangpo.webp",
+    "photoSource": "https://english.visitkorea.or.kr/svc/contents/contentsView.do?vcontsId=98513",
+    "photoOriginalUrl": "https://tong.visitkorea.or.kr/cms/resource/40/2022140_image2_1.jpg",
+    "photoCredit": "한국관광공사",
+    "photoKind": "PLACE_PHOTO",
+    "photoVerifiedAt": "2026-09-15",
+    "reuseStatus": "unverified"
+  },
+  "muryangsa": {
+    "image": "/web/app/assets/spots/muryangsa.webp",
+    "photoSource": "https://english.visitkorea.or.kr/svc/contents/contentsView.do?vcontsId=77012",
+    "photoOriginalUrl": "https://tong.visitkorea.or.kr/cms/resource/09/2037209_image2_1.jpg",
+    "photoCredit": "한국관광공사",
+    "photoKind": "PLACE_PHOTO",
+    "photoVerifiedAt": "2026-09-15",
+    "reuseStatus": "unverified"
+  },
+  "namaste": {
+    "image": "/web/app/assets/spots/namaste.webp",
+    "photoSource": "https://www.diningcode.com/profile.php?rid=sL6uvvOyg4KE",
+    "photoOriginalUrl": "https://d12zq4w4guyljn.cloudfront.net/750_750_20250902062036623_photo_157683141203.webp",
+    "photoCredit": "사진 · 다이닝코드 이용자",
+    "photoKind": "PLACE_PHOTO",
+    "photoVerifiedAt": "2026-09-15",
+    "reuseStatus": "unverified"
+  },
+  "neumanjang": {
+    "image": "/web/app/assets/spots/neumanjang.webp",
+    "photoSource": "https://blog.naver.com/PostView.nhn?blogId=dailylifesun&logNo=224387216306&redirect=Dlog&widgetTypeCall=true",
+    "photoOriginalUrl": "https://postfiles.pstatic.net/MjAyNjA4MjNfMTk5/MDAxNzg3NDQzMTg1NjM2.d29lLwgkdsTbAXtwcWlACVKZhixO9FbzYYNqDyK6j5wg.L_dHAIntTy-6mB4mRQgxSZmaszAFZHp-RtFOD4SKIXQg.JPEG/IMG%EF%BC%BF6966.jpg?type=w386",
+    "photoCredit": "사진 · dailylifesun",
+    "photoKind": "PLACE_PHOTO",
+    "photoVerifiedAt": "2026-09-15",
+    "reuseStatus": "unverified"
+  },
+  "oeam": {
+    "image": "/web/app/assets/spots/oeam.webp",
+    "photoSource": "https://data.visitkorea.or.kr/linkedview/126001",
+    "photoOriginalUrl": "https://tong.visitkorea.or.kr/cms/resource/30/3355130_image2_1.jpg",
+    "photoCredit": "한국관광공사",
+    "photoKind": "PLACE_PHOTO",
+    "photoVerifiedAt": "2026-09-15",
+    "reuseStatus": "unverified"
+  },
+  "ojanghwan": {
+    "image": "/web/app/assets/spots/ojanghwan.webp",
+    "photoSource": "https://infotravelog.com/places/21536",
+    "photoOriginalUrl": "https://tong.visitkorea.or.kr/cms/resource/55/3339655_image2_1.JPG",
+    "photoCredit": "한국관광공사",
+    "photoKind": "PLACE_PHOTO",
+    "photoVerifiedAt": "2026-09-15",
+    "reuseStatus": "unverified"
+  },
+  "rc79": {
+    "image": "/web/app/assets/spots/rc79.webp",
+    "photoSource": "https://blog.naver.com/PostView.nhn?blogId=eterna01&logNo=224347848068&redirect=Dlog&widgetTypeCall=true",
+    "photoOriginalUrl": "https://postfiles.pstatic.net/MjAyNjA3MTRfMzYg/MDAxNzg0MDM2MTUxMDE5.HLATNga6xGINV_17YMc8nZtkVQswMvHkwH9AlZBiGfkg.Lrfsya182dqZnRVhnNvWAYQ0D1EbQRA7SlC_ZNetd54g.JPEG/IMG_1462.jpeg?type=w466",
+    "photoCredit": "사진 · eterna01",
+    "photoKind": "PLACE_PHOTO",
+    "photoVerifiedAt": "2026-09-15",
+    "reuseStatus": "unverified"
+  },
+  "rest-garden": {
+    "image": "/web/app/assets/spots/rest-garden.webp",
+    "photoSource": "https://data.visitkorea.or.kr/linkedview/3046071",
+    "photoOriginalUrl": "https://tong.visitkorea.or.kr/cms/resource/66/3046066_image2_1.jpg",
+    "photoCredit": "한국관광공사",
+    "photoKind": "PLACE_PHOTO",
+    "photoVerifiedAt": "2026-09-15",
+    "reuseStatus": "unverified"
+  },
+  "road-66": {
+    "image": "/web/app/assets/spots/road-66.webp",
+    "photoSource": "https://blog.naver.com/PostView.nhn?blogId=ujin4ujin&logNo=224196298121&redirect=Dlog&widgetTypeCall=true",
+    "photoOriginalUrl": "https://postfiles.pstatic.net/MjAyNjAxMTRfMTA0/MDAxNzY4Mzg3MTYzOTcx.TaTgQKV8jKZUIgGHshZDMQYKbwMz_sgKZHomnz2OYggg.0qniquWX7SZBrNWtE5Oyt63hZZh7BtVhPpHEDeoy0sMg.JPEG/900%EF%BC%BF20260114%EF%BC%BF183558.jpg?type=w773",
+    "photoCredit": "사진 · ujin4ujin",
+    "photoKind": "PLACE_PHOTO",
+    "photoVerifiedAt": "2026-09-15",
+    "reuseStatus": "unverified"
+  },
+  "route7": {
+    "image": "/web/app/assets/spots/route7.webp",
+    "photoSource": "https://blog.naver.com/PostView.nhn?blogId=tlsdo6127&logNo=224186218271&redirect=Dlog&widgetTypeCall=true",
+    "photoOriginalUrl": "https://postfiles.pstatic.net/MjAyNjAyMTdfMTMx/MDAxNzcxMjk1NDQwMTU0.cp-2QAr5IaBipFL3VzffrmaP5anOBzkp_vEEmis9QF4g.Nzf0yXAkV9IiUYypsjar8N04ZpTM4lr7o7pkBxjXS1kg.JPEG/KakaoTalk_20260215_234754448_02.jpg?type=w773",
+    "photoCredit": "사진 · tlsdo6127",
+    "photoKind": "PLACE_PHOTO",
+    "photoVerifiedAt": "2026-09-15",
+    "reuseStatus": "unverified"
+  },
+  "royce": {
+    "image": "/web/app/assets/spots/royce.webp",
+    "photoSource": "https://blog.naver.com/PostView.nhn?blogId=ssunnong&logNo=224389059845&redirect=Dlog&widgetTypeCall=true",
+    "photoOriginalUrl": "https://postfiles.pstatic.net/MjAyNjA4MjRfMjY1/MDAxNzg3NTYzMjQ0OTk4.bURa74dozItVoTg6MRKTbpS8DT7qWw7nXMYe3ER2rBsg.SHzP-WR3lujPKUhAVC5KB1XiSdTFiLJyvmippjZuxq4g.JPEG/IMG%EF%BC%BF2388.JPG?type=w966",
+    "photoCredit": "사진 · ssunnong",
+    "photoKind": "PLACE_PHOTO",
+    "photoVerifiedAt": "2026-09-15",
+    "reuseStatus": "unverified"
+  },
+  "rpm-moto": {
+    "image": "/web/app/assets/spots/rpm-moto.webp",
+    "photoSource": "https://blog.naver.com/PostView.nhn?blogId=yoonhye_1004&logNo=224345081280&redirect=Dlog&widgetTypeCall=true",
+    "photoOriginalUrl": "https://postfiles.pstatic.net/MjAyNjA1MjdfMjc2/MDAxNzc5ODY2MTQ0OTMx.CSbeZloTz1JK1izr2zw_0kDc3_ojj-boaEzPlK4efAwg._BF33aVQfn01fI2LQbslR_up0M4itW1MEynBYU1zeY8g.JPEG/20260525_150352.jpg?type=w466",
+    "photoCredit": "사진 · yoonhye_1004",
+    "photoKind": "PLACE_PHOTO",
+    "photoVerifiedAt": "2026-09-15",
+    "reuseStatus": "unverified"
+  },
+  "sangseonam": {
+    "image": "/web/app/assets/spots/sangseonam.webp",
+    "photoSource": "https://data.visitkorea.or.kr/linkedview/1627287",
+    "photoOriginalUrl": "https://tong.visitkorea.or.kr/cms/resource/96/3346096_image2_1.JPG",
+    "photoCredit": "한국관광공사",
+    "photoKind": "PLACE_PHOTO",
+    "photoVerifiedAt": "2026-09-15",
+    "reuseStatus": "unverified"
+  },
+  "seongryu": {
+    "image": "/web/app/assets/spots/seongryu.webp",
+    "photoSource": "https://english.visitkorea.or.kr/svc/contents/contentsView.do?vcontsId=90549",
+    "photoOriginalUrl": "https://tong.visitkorea.or.kr/cms/resource/42/2613142_image2_1.jpg",
+    "photoCredit": "한국관광공사",
+    "photoKind": "PLACE_PHOTO",
+    "photoVerifiedAt": "2026-09-15",
+    "reuseStatus": "unverified"
+  },
+  "sosu": {
+    "image": "/web/app/assets/spots/sosu.webp",
+    "photoSource": "https://english.visitkorea.or.kr/svc/contents/contentsView.do?vcontsId=111103",
+    "photoOriginalUrl": "https://tong.visitkorea.or.kr/cms/resource/85/3499385_image2_1.JPG",
+    "photoCredit": "한국관광공사",
+    "photoKind": "PLACE_PHOTO",
+    "photoVerifiedAt": "2026-09-15",
+    "reuseStatus": "unverified"
+  },
+  "sudeoksa": {
+    "image": "/web/app/assets/spots/sudeoksa.webp",
+    "photoSource": "https://english.visitkorea.or.kr/svc/contents/contentsView.do?vcontsId=96644",
+    "photoOriginalUrl": "https://tong.visitkorea.or.kr/cms/resource/85/2357885_image2_1.jpg",
+    "photoCredit": "한국관광공사",
+    "photoKind": "PLACE_PHOTO",
+    "photoVerifiedAt": "2026-09-15",
+    "reuseStatus": "unverified"
+  },
+  "two-stroke": {
+    "image": "/web/app/assets/spots/two-stroke.webp",
+    "photoSource": "https://www.motorcycle-story.com/post/727",
+    "photoOriginalUrl": "https://www.motorcycle-story.com/uploads/cache/editor/2020/11/thumb-20201111144720_4c3e4550f217eba1e746132bc49c7a6e_pteq_300x.jpg",
+    "photoCredit": "사진 · 모터사이클 스토리",
+    "photoKind": "PLACE_PHOTO",
+    "photoVerifiedAt": "2026-09-15",
+    "reuseStatus": "unverified"
+  },
+  "uirim-forest": {
+    "image": "/web/app/assets/spots/uirim-forest.webp",
+    "photoSource": "https://www.tripinfo.co.kr/info.html?content_id=2751857&content_type_id=12",
+    "photoOriginalUrl": "https://tong.visitkorea.or.kr/cms/resource/42/2751942_image2_1.jpg",
+    "photoCredit": "한국관광공사",
+    "photoKind": "PLACE_PHOTO",
+    "photoVerifiedAt": "2026-09-15",
+    "reuseStatus": "unverified"
+  },
+  "uljin-market": {
+    "image": "/web/app/assets/spots/uljin-market.webp",
+    "photoSource": "https://access.visitkorea.or.kr/ms/detail.do?cotId=acfaa3d5-f586-489b-9921-47c49a590b0e",
+    "photoOriginalUrl": "https://access.visitkorea.or.kr/bfvk_img/call?cmd=VIEW&id=ce5f257f-ae2b-4559-82dd-dced4e0c7e34&",
+    "photoCredit": "한국관광공사",
+    "photoKind": "PLACE_PHOTO",
+    "photoVerifiedAt": "2026-09-15",
+    "reuseStatus": "unverified"
+  },
+  "walking-stone": {
+    "image": "/web/app/assets/spots/walking-stone.webp",
+    "photoSource": "https://www.diningcode.com/profile.php?rid=EU8FvJ8NEUcl",
+    "photoOriginalUrl": "https://d12zq4w4guyljn.cloudfront.net/750_750_20260818030121_photo1_a0bf52a91216.webp",
+    "photoCredit": "사진 · 다이닝코드 이용자",
+    "photoKind": "PLACE_PHOTO",
+    "photoVerifiedAt": "2026-09-15",
+    "reuseStatus": "unverified"
+  },
+  "yeongdeok-market": {
+    "image": "/web/app/assets/spots/yeongdeok-market.webp",
+    "photoSource": "https://www.tripinfo.co.kr/info.html?content_id=132283&content_type_id=38",
+    "photoOriginalUrl": "https://tong.visitkorea.or.kr/cms/resource/12/1969012_image2_1.jpg",
+    "photoCredit": "한국관광공사",
+    "photoKind": "PLACE_PHOTO",
+    "photoVerifiedAt": "2026-09-15",
+    "reuseStatus": "unverified"
+  },
+  "yeongju-market": {
+    "image": "/web/app/assets/spots/yeongju-market.webp",
+    "photoSource": "https://access.visitkorea.or.kr/ms/detail.do?cotId=01cbb77e-0049-4bd9-87b6-e70191b94aee",
+    "photoOriginalUrl": "https://access.visitkorea.or.kr/bfvk_img/call?cmd=VIEW&id=a7d83316-34bd-471d-9f79-4a5d4f955ab9&",
+    "photoCredit": "한국관광공사",
+    "photoKind": "PLACE_PHOTO",
+    "photoVerifiedAt": "2026-09-15",
+    "reuseStatus": "unverified"
+  },
+  "yeongwol-market": {
+    "image": "/web/app/assets/spots/yeongwol-market.webp",
+    "photoSource": "https://french.visitkorea.or.kr/svc/contents/contentsView.do?vcontsId=75870",
+    "photoOriginalUrl": "https://tong.visitkorea.or.kr/cms/resource/14/3394714_image2_1.JPG",
+    "photoCredit": "한국관광공사",
+    "photoKind": "PLACE_PHOTO",
+    "photoVerifiedAt": "2026-09-15",
+    "reuseStatus": "unverified"
+  }
+};
+  places.forEach(p=>{const entry=photos[p.id];if(!entry)return;if(typeof entry==='object'){Object.assign(p,entry);return;}p.image=entry.startsWith('https:')?entry:'https://tong.visitkorea.or.kr/cms/resource/'+entry;p.photoCredit=p.image.includes('visitkorea')?'한국관광공사 · 관광정보 사진':'장소 소개 매체 사진';p.photoSource=p.source;});
   root.SSKR_SPOT_CATALOG=places;
   if(typeof module!=='undefined')module.exports=places;
 })(typeof window!=='undefined'?window:globalThis);

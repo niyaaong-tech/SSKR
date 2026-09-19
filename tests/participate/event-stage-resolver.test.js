@@ -6,7 +6,7 @@ const { resolveEventStage } = require("../../server/participate/event-stage-reso
 const base = {
   timezone: "Asia/Seoul",
   eventStartAt: "2027-06-14T06:00:00+09:00",
-  eventEndAt: "2027-06-15T21:00:00+09:00",
+  eventEndAt: "2027-06-14T21:00:00+09:00",
   ridePreparationAt: "2027-05-31T00:00:00+09:00",
   rideCheckAt: "2027-06-07T00:00:00+09:00",
   countdownAt: "2027-06-13T06:00:00+09:00",
@@ -21,6 +21,8 @@ test("event stage follows confirmation facts and time boundaries", () => {
   assert.equal(resolveEventStage(base, "2027-06-07T00:00:00+09:00").stage, EVENT_STAGE.RIDE_CHECK);
   assert.equal(resolveEventStage(base, "2027-06-13T06:00:00+09:00").stage, EVENT_STAGE.COUNTDOWN);
   assert.equal(resolveEventStage(base, "2027-06-14T06:00:00+09:00").stage, EVENT_STAGE.LIVE);
+  assert.equal(resolveEventStage(base, "2027-06-14T20:59:59+09:00").stage, EVENT_STAGE.LIVE);
+  assert.equal(resolveEventStage(base, "2027-06-14T21:00:01+09:00").stage, EVENT_STAGE.SEASON_CLEAR);
   assert.equal(resolveEventStage(base, "2027-06-16T06:00:00+09:00").stage, EVENT_STAGE.SEASON_CLEAR);
 });
 

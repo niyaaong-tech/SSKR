@@ -1,6 +1,5 @@
 (() => {
   window.SSKR_APP_DATA = Object.freeze({
-    event: { id: "sskr-2027", year: 2027, title: "SSKR 2027", date: "2027.06.14 — 06.15", stage: "SPOTS CONFIRMED", description: "해가 뜨는 동해에서 해가 지는 서해까지, 스스로 설계한 하루를 완성합니다." },
     spots: [
       { id: "gangneung", name: "강릉 안목", region: "강원", type: "START", summary: "동해의 첫 빛과 함께 시작하는 공식 스팟", image: "/assets/memory-gangneung-v02.jpg", public: true },
       { id: "pyeongchang", name: "평창 고개", region: "강원", type: "SCENIC", summary: "능선과 굽이진 길이 만나는 산악 구간", image: "/assets/memory-pyeongchang-v02.jpg", public: true },

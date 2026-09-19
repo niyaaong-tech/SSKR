@@ -63,7 +63,7 @@
     const facts = [
       { icon: "₩", label: "참가비", value: price?.displayAmount || "확인 중", note: "1인 기준 · 부가세 포함" },
       { icon: "▣", label: "신청 기간", value: event.applicationPeriodDisplay, note: "선착순 마감" },
-      { icon: "⚑", label: "행사 일시", value: event.eventDateDisplay, note: "1박 2일" },
+      { icon: "⚑", label: "행사 일시", value: event.eventDateDisplay, note: "당일 행사" },
       { icon: "◎", label: "모집 정원", value: event.capacityDisplay, note: event.capacityNote }
     ];
     document.querySelector("#event-facts").innerHTML = facts.map((fact) => `<div class="event-fact"><dt><i aria-hidden="true">${fact.icon}</i>${fact.label}</dt><dd>${fact.value}<small>${fact.note}</small></dd></div>`).join("");
@@ -164,15 +164,18 @@
   async function startApplication() {
     if (!context?.surface?.primaryAction?.enabled || pending) return;
     if (context.surface.primaryAction.code === "OPEN_SSKR_APP") { window.location.href = "/app"; return; }
-    if (!accountLink.isAccountLinked()) { showMode(SURFACE_MODES.AUTH_GATE); return; }
+    if (!accountLink.isAccountLinked()) { showLogin(true); return; }
     await run(() => api.application("START"));
   }
 
+  let startAfterLogin = false;
+  function showLogin(start = false) { startAfterLogin = start; showMode(SURFACE_MODES.AUTH_GATE); }
   async function completeMockAccountLink(provider) {
     accountLink.linkAccount(provider);
     await run(async () => {
       const resolved = await api.context();
-      return resolved.surface.mode === SURFACE_MODES.REVIEW ? api.application("START") : resolved;
+      const shouldStart = startAfterLogin; startAfterLogin = false;
+      return shouldStart && resolved.surface.mode === SURFACE_MODES.REVIEW ? api.application("START") : resolved;
     });
   }
 
@@ -197,7 +200,7 @@
     root: accountRoot,
     callbacks: {
       getSurface: () => surfaceMode,
-      login: () => showMode(SURFACE_MODES.AUTH_GATE),
+      login: () => showLogin(),
       showAccount: () => showMode(SURFACE_MODES.ACCOUNT),
       restore: (mode) => showMode(mode || context?.surface?.mode || SURFACE_MODES.REVIEW, { focus: false }),
       updateProfile: (profile) => requestWithoutSurfaceChange(() => api.mock("UPDATE_ACCOUNT_PROFILE", { profile })),
@@ -221,7 +224,7 @@
   });
 
   primaryAction.addEventListener("click", startApplication);
-  document.querySelectorAll("[data-provider]").forEach((button) => button.addEventListener("click", () => completeMockAccountLink(button.dataset.provider)));
+  window.SSKR_SOCIAL_AUTH.mount(document.querySelector("#participate-social-auth"), { title: "소셜 계정으로 참여하기", note: "참가비용은 소셜 연동 확인 후 별도 절차로 결제됩니다.", onSelect: completeMockAccountLink });
   document.querySelector("#surface-retry").addEventListener("click", () => run(() => api.context()));
   renderMarketing();
   showMode(SURFACE_MODES.LOADING, { focus: false });

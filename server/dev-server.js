@@ -62,6 +62,7 @@ const server = http.createServer(async (request, response) => {
     response.writeHead(400, { "Content-Type": "text/plain; charset=utf-8" });
     return response.end("Invalid URL");
   }
+  if (pathname === "/api/map-tile") return require("./map/tiles").handler(request,response);
   const apiMatch = pathname.match(/^\/api\/participate\/(context|application|checkout|payment|mock)$/);
   if (apiMatch) {
     if (request.method !== "POST") return sendJson(response, 405, { ok: false, error: { code: "METHOD_NOT_ALLOWED", userMessage: "POST 요청만 지원합니다." } });

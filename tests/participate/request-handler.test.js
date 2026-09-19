@@ -102,3 +102,17 @@ test("MODE C is a completion surface without legacy lobby services", async () =>
   assert.equal(result.manager, null);
   assert.deepEqual(result.services, []);
 });
+
+test("saved two-day mock schedule becomes one day without losing application or payment state", async () => {
+  const { createScenario, baseEvent } = require("../../server/participate/mock-scenarios");
+  const snapshot = createScenario("processing");
+  snapshot.event.eventEndAt = "2027-06-15T21:00:00+09:00";
+  snapshot.event.eventDateDisplay = "2027.06.14 (토) – 06.15 (일)";
+  const application = structuredClone(snapshot.application);
+  const payments = structuredClone(snapshot.paymentAttempts);
+  const response = await handleParticipateRequest("context", { snapshot, account: { linked: true } });
+  assert.equal(response.mockSnapshot.event.eventEndAt, baseEvent.eventEndAt);
+  assert.equal(response.mockSnapshot.event.eventDateDisplay, "2027.06.14 (월)");
+  assert.deepEqual(response.mockSnapshot.application, application);
+  assert.deepEqual(response.mockSnapshot.paymentAttempts, payments);
+});

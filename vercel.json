@@ -1,10 +1,22 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "rewrites": [
-    { "source": "/explore", "destination": "/web/explore/index.html" },
-    { "source": "/explore/", "destination": "/web/explore/index.html" },
-    { "source": "/tests/home-explore", "destination": "/web/tests/home-explore/index.html" },
-    { "source": "/tests/home-explore/", "destination": "/web/tests/home-explore/index.html" },
+    {
+      "source": "/explore",
+      "destination": "/web/explore/index.html"
+    },
+    {
+      "source": "/explore/",
+      "destination": "/web/explore/index.html"
+    },
+    {
+      "source": "/tests/home-explore",
+      "destination": "/web/tests/home-explore/index.html"
+    },
+    {
+      "source": "/tests/home-explore/",
+      "destination": "/web/tests/home-explore/index.html"
+    },
     {
       "source": "/app",
       "destination": "/web/app/index.html"
@@ -121,5 +133,10 @@
       "source": "/assets/memory-gunsan-v02.jpg",
       "destination": "/web/home/assets/memory-gunsan-v02.jpg"
     }
-  ]
+  ],
+  "functions": {
+    "api/map-tile.js": {
+      "includeFiles": "server/map/cache/**"
+    }
+  }
 }

@@ -91,12 +91,12 @@ test('photo selection excludes private, pending, rejected and unconsented upload
   assert.equal(selectPhoto({media:[],placePhoto:null}),null);assert.equal(selectCover([]),null);
   for(const m of data.memorials){const chain=thumbnailStops(m.visits);assert.equal(chain.length,5);assert.equal(chain[0].role,'START');assert.equal(chain.at(-1).role,'FINISH');assert.equal(chain.filter(v=>v.role==='SPOT').length,3);for(let i=1;i<chain.length;i++)assert.ok(chain[i].sequence>chain[i-1].sequence);}
 });
-test('mini map cards remain within desktop and mobile maps without colliding',()=>{
-  const {labelLayout}=require('../../web/app/memorial-journey');
-  for(const width of [288,358,696]){
-    const layout=labelLayout(Array.from({length:14},(_,i)=>({index:i,x:width/2+i,y:200+i})),width,440);
-    assert.equal(layout.length,14);
-    for(const p of layout){assert.ok(p.left>=0&&p.left+p.width<=width);assert.ok(p.top>=60&&p.top+p.height<=408);}
-    for(const side of [0,1]){const cards=layout.filter(p=>p.side===side);for(let i=1;i<cards.length;i++)assert.ok(cards[i].top>=cards[i-1].top+cards[i-1].height+5);}
+test('mobile map cards fill complete bottom rows and only the top row may be partial',()=>{
+  const {cardSlots}=require('../../web/shared/map/map');
+  for(let count=1;count<=12;count++){
+    const slots=cardSlots(count,true),rows=Math.ceil(count/4);
+    assert.equal(new Set(slots.map(p=>p.row+':'+p.column)).size,count);
+    assert.ok(slots.every(p=>p.row>=1&&p.row<=3&&p.column>=1&&p.column<=4));
+    for(let row=1;row<=rows;row++)assert.equal(slots.filter(p=>p.row===row).length,row===1?(count%4||4):4);
   }
 });

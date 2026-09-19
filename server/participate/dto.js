@@ -10,6 +10,14 @@ const { resolveRegistrationTiers } = require("./tier-policy");
 const registrationLabels = { OPEN: "모집 중", NOT_OPEN: "모집 예정", CLOSED: "모집 마감", SUSPENDED: "접수 중단" };
 const stageLabels = { PREPARING: "시즌 준비", CORE_CONFIRMED: "핵심 일정 확정", SPOTS_CONFIRMED: "스팟 공개", RIDE_PREPARATION: "참가 준비", RIDE_CHECK: "최종 점검", COUNTDOWN: "출발 임박", LIVE: "행사 진행 중", SEASON_CLEAR: "시즌 정리" };
 
+// Display strings are derived from the same timestamps delivered to all clients.
+function dateRange(start,end,timezone='Asia/Seoul',fallback='일정 안내 예정') {
+  if(!start||!Number.isFinite(Date.parse(start)))return fallback;
+  const parts=value=>Object.fromEntries(new Intl.DateTimeFormat('ko-KR',{timeZone:timezone,year:'numeric',month:'2-digit',day:'2-digit',weekday:'short'}).formatToParts(new Date(value)).map(p=>[p.type,p.value]));
+  const a=parts(start),b=end&&Number.isFinite(Date.parse(end))?parts(end):a;
+  const format=(p,year=true)=>(year?p.year+'.':'')+p.month+'.'+p.day+' ('+p.weekday+')';
+  return a.year===b.year&&a.month===b.month&&a.day===b.day?format(a):format(a)+' – '+format(b,a.year!==b.year);
+}
 function latestPayment(attempts) {
   return attempts.length ? attempts[attempts.length - 1] : { state: PAYMENT.NOT_STARTED };
 }
@@ -21,14 +29,16 @@ function buildContextDto(repository, options = {}) {
   const rawEvent = resolvedCurrent?.event || repository.getCurrentEvent();
   const stage = resolvedCurrent || resolveEventStage(rawEvent, effectiveNow);
   const event = { ...rawEvent, resolvedStage: stage.stage };
-  const prices = repository.getPriceTiers();
-  const application = repository.getApplication();
+  const prices = repository.getPriceTiers().filter(price => price.eventId === event.id);
+  const sameEvent = row => row?.eventId === event.id ? row : null;
+  const application = sameEvent(repository.getApplication());
   const resolvedTiers = resolveRegistrationTiers({ event, priceTiers: prices, now: effectiveNow });
   const selectedTier = resolvedTiers.tiers.find((item) => item.id === application?.priceTierId) || resolvedTiers.tiers.find((item) => item.code === "STANDARD") || resolvedTiers.tiers[0] || null;
-  const checkoutHold = repository.getCheckoutHold();
-  const paymentAttempts = repository.getPaymentAttempts();
+  const rawHold = repository.getCheckoutHold();
+  const checkoutHold = application && rawHold?.applicationId === application.id ? rawHold : null;
+  const paymentAttempts = repository.getPaymentAttempts().filter(payment => application && payment.applicationId === application.id);
   const payment = latestPayment(paymentAttempts);
-  const participation = repository.getParticipation();
+  const participation = sameEvent(repository.getParticipation());
   const account = repository.getUserContext().account || { linked: false, provider: null };
   const state = { account, event, application, checkoutHold, payment, participation, now: effectiveNow };
   const surface = resolveSurface(state);
@@ -48,8 +58,14 @@ function buildContextDto(repository, options = {}) {
 
   return {
     ok: true,
+    generatedAt: new Date(effectiveNow).toISOString(),
     event: {
       id: event.id,
+      timezone: event.timezone || "Asia/Seoul",
+      eventStartAt: event.eventStartAt,
+      eventEndAt: event.eventEndAt,
+      applicationOpenAt: event.applicationOpenAt,
+      applicationCloseAt: event.applicationCloseAt,
       seasonYear: event.seasonYear,
       editionLabel: event.editionLabel,
       publicTitle: event.publicTitle,
@@ -62,8 +78,8 @@ function buildContextDto(repository, options = {}) {
       capacityState: event.capacityState,
       waitlistEnabled: event.waitlistEnabled,
       bikeInfoDeadlineAt: event.bikeInfoDeadlineAt,
-      applicationPeriodDisplay: event.applicationPeriodDisplay,
-      eventDateDisplay: event.eventDateDisplay,
+      applicationPeriodDisplay: dateRange(event.applicationOpenAt, event.applicationCloseAt, event.timezone, event.applicationPeriodDisplay),
+      eventDateDisplay: dateRange(event.eventStartAt, event.eventEndAt, event.timezone, event.eventDateDisplay),
       capacityDisplay: event.capacityDisplay,
       capacityNote: event.capacityNote
     },

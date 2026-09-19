@@ -24,6 +24,7 @@
   let pendingRoute = null;
   let disposeSpots = null;
   let disposeMemorials = null;
+  let disposeAuth = null;
   let memorialStorage;
   try { memorialStorage = window.localStorage; } catch { /* Restricted browser storage. */ }
   const memorialStore = window.SSKR_MEMORIAL_STORE.create(data.memorials, memorialStorage);
@@ -100,24 +101,14 @@
     accountMeta.hidden = !linked;
     accountName.textContent = linked ? displayAccount().profile?.name || "SSKR 라이더" : "";
     accountNumber.textContent = linked ? context.participation?.participantNumber || "SSKR 계정" : "";
-    currentEventNavLabel.textContent = context.event?.publicTitle || "현재 SSKR";
+    currentEventNavLabel.textContent = context.event?.publicTitle || "SSKR";
     renderAccount();
   }
 
-  function relationCopy() {
-    const map = {
-      NONE: ["아직 이번 SSKR 신청 내역이 없습니다.", "공개된 스팟과 메모리얼을 둘러본 뒤 참가를 결정할 수 있습니다."],
-      STEP_1: ["참가 신청을 시작했습니다.", "진행 방식 확인부터 이어서 완료해 주세요."], STEP_2: ["참가 약관을 확인할 차례입니다.", "필수 동의를 완료하면 참가 유형을 선택할 수 있습니다."],
-      STEP_3: ["참가 유형과 정보를 입력할 차례입니다.", "참가자 정보를 확인하면 결제 단계로 이동합니다."], PAYMENT: ["참가 정보 입력을 완료했습니다.", "참가비용 결제를 완료하면 참가가 확정됩니다."],
-      PROCESSING: ["결제 결과를 확인하고 있습니다.", "중복 결제 없이 현재 처리 상태를 확인할 수 있습니다."], FAILED: ["결제가 완료되지 않았습니다.", "현재 참가 조건을 다시 확인하고 결제를 재시도할 수 있습니다."],
-      ACTIVE: ["SSKR 2027 참가가 확정되었습니다.", "현재 SSKR와 참가 준비 화면에서 이번 랠리를 준비하세요."]
-    };
-    return map[relation()] || map.NONE;
-  }
-  function relationLabel() {
-    const labels = { NONE: "참가 전", DRAFT: "신청 진행 중", STEP_1: "신청 진행 중", STEP_2: "필수 동의 진행 중", STEP_3: "참가 정보 입력 중", PAYMENT: "결제 필요", PROCESSING: "결제 확인 중", FAILED: "결제 필요", ACTIVE: "참가 확정" };
-    return labels[relation()] || "상태 확인";
-  }
+  const eventTitle = () => context.event?.publicTitle || 'SSKR';
+  const eventModel = () => window.SSKR_EVENT_VIEW.resolve(context);
+  function relationCopy() { const status=eventModel()?.status;return [status?.title||'행사 안내를 준비하고 있습니다.',status?.copy||'공개된 스팟과 메모리얼을 둘러보세요.']; }
+  function relationLabel() { return eventModel()?.status.label||'안내 예정'; }
   function tierLabel(code) {
     return ({ STANDARD: "일반", EARLY: "얼리액세스", PLATINUM: "플래티넘" })[code] || "선택 전";
   }
@@ -178,12 +169,19 @@
   }
 
   function renderCurrent() {
-    const [title, copy] = relationCopy();
-    const action = currentAction();
-    const active = relation() === "ACTIVE";
-    root.innerHTML = `${pageHead("CURRENT SSKR", "현재 SSKR", "현재 대회와 이 계정의 관계를 기준으로 필요한 다음 행동만 보여줍니다.")}
-      <section class="hero-panel"><div><p class="eyebrow">${esc(data.event.stage)} · ${esc(data.event.date)}</p><h2>${esc(title)}</h2><p>${esc(copy)}</p>${primary(action)} ${active ? `<a class="secondary-link" href="/app/preparation" data-app-link>참가 준비</a>` : `<span class="participant-inline-note">${esc(participantAccessCopy)}</span>`}</div></section>
-      <div class="status-band"><div><span>현재 관계</span><strong>${esc(relationLabel())}</strong><p>${esc(data.event.description)}</p></div><div><span>이벤트 상태</span><strong>${esc(context.event?.stageLabel || "스팟 공개")}</strong><p>${esc(context.event?.eventDateDisplay || data.event.date)}</p></div></div>`;
+    const model=eventModel();
+    if(!model){root.innerHTML=pageHead('행사 안내','공개된 행사를 준비하고 있습니다.','스팟과 메모리얼은 계속 이용할 수 있습니다.');return;}
+    const action=model.status.action;
+    const cta=action?'<a class="primary-link" href="'+esc(action.href.startsWith('/participate')?participateHref(action.href):action.href)+'"'+(action.href.startsWith('/app')?' data-app-link':'')+'>'+esc(action.label)+' <span aria-hidden="true">→</span></a>':'';
+    root.innerHTML=`<div class="event-page">
+      ${pageHead('행사 안내',model.title,model.stage)}
+      <section class="event-overview"><div><p class="eyebrow">${esc(model.category)}</p><h2>${esc(model.description||model.title)}</h2><span class="event-registration">${esc(model.registration)}</span></div></section>
+      <dl class="event-facts"><div><dt>행사 일시</dt><dd>${esc(model.date)}</dd></div><div><dt>신청 기간</dt><dd>${esc(model.period)}</dd></div><div><dt>모집 정원</dt><dd>${esc(model.capacity)}</dd>${model.capacityNote?'<small>'+esc(model.capacityNote)+'</small>':''}</div></dl>
+      <section class="event-account"><div><p class="eyebrow">${esc(model.status.label)}</p><h2>${esc(model.status.title)}</h2><p>${esc(model.status.copy)}</p>${model.participantNumber?'<p class="event-number">참가 번호 '+esc(model.participantNumber)+'</p>':''}</div><div class="event-actions">${cta}${!context.account.linked?'<button type="button" class="secondary-link" data-event-login>로그인</button>':''}</div></section>
+      <section class="event-prices"><h2>참가 유형과 비용</h2>${model.tiers.length?'<dl>'+model.tiers.map(t=>'<div><dt>'+esc(t.name)+'</dt><dd>'+esc(t.amount)+'</dd><span>'+esc(t.availability)+'</span></div>').join('')+'</dl>':'<p>참가비 안내를 준비하고 있습니다.</p>'}<p>유형별 혜택과 신청 조건은 참가 안내에서 확인할 수 있습니다.</p></section>
+      <nav class="event-resources" aria-label="공개 콘텐츠"><a href="/app/spots" data-app-link><strong>스타팅 포인트와 스팟</strong><span>출발지와 들를 장소 살펴보기 →</span></a><a href="/app/memorials" data-app-link><strong>라이더들의 메모리얼</strong><span>참가자가 남긴 여정 보기 →</span></a></nav>
+    </div>`;
+    root.querySelector('[data-event-login]')?.addEventListener('click',()=>renderAuth('/app/current'));
   }
 
   function renderSpots(id) {
@@ -201,7 +199,7 @@
     const active = context.participation;
     const past = data.past.filter(item => memorialStore.all().some(memorial => memorial.id === item.memorialId && memorial.ownerUserId === memorialAccount().id));
     root.innerHTML = `${pageHead("MY SSKR", "내 기록", "현재 신청·참가 관계와 지난 시즌의 결과 및 메모리얼을 확인합니다.")}
-      <section class="content-section"><div class="section-head"><h2>현재 SSKR</h2></div><div class="status-band"><div><span>현재 관계</span><strong>${esc(relationLabel())}</strong><p>${esc(relationCopy()[1])}</p></div><div><span>참가자</span><strong>${esc(active?.participantNumber || "참가 전")}</strong><p>${esc(active ? tierLabel(active.registrationTierCode) : context.application ? "신청 진행 중" : "참가 내역 없음")}</p></div></div></section>
+      <section class="content-section"><div class="section-head"><h2>${esc(eventTitle())}</h2></div><div class="status-band"><div><span>현재 관계</span><strong>${esc(relationLabel())}</strong><p>${esc(relationCopy()[1])}</p></div><div><span>참가자</span><strong>${esc(active?.participantNumber || "참가 전")}</strong><p>${esc(active ? tierLabel(active.registrationTierCode) : context.application ? "신청 진행 중" : "참가 내역 없음")}</p></div></div></section>
       <section class="content-section"><div class="section-head"><h2>지난 참가</h2><p>${past.length ? `${past.length}개의 기록` : "기록 없음"}</p></div>${past.length ? `<div class="notice-list">${past.map((item) => `<a class="notice-item" href="/app/memorials/${esc(item.memorialId)}" data-app-link><span>${item.year}</span><div><h3>SSKR ${item.year}</h3><p>${esc(item.result)} · ${esc(item.tier)} · ${esc(item.participantNumber)}</p></div><time>메모리얼 →</time></a>`).join("")}</div>` : `<div class="empty-state"><h1>아직 지난 참가 기록이 없습니다.</h1><p>완료된 대회의 참가 및 메모리얼 기록이 이곳에 모입니다.</p></div>`}</section>`;
   }
 
@@ -220,20 +218,21 @@
     const authQuery = new URLSearchParams(location.search);
     authQuery.set("returnTo", safe);
     history.replaceState({}, "", `${domain.normalizePath(location.pathname)}?${authQuery}`);
-    root.innerHTML = `<section class="auth-gate"><p class="eyebrow">SSKR ACCOUNT</p><h1>로그인이 필요한 화면입니다.</h1><p>공개 콘텐츠는 로그인 없이 이용할 수 있습니다. 개인 신청·참가·기록은 계정을 확인한 뒤 보여드립니다.<br />${esc(participantAccessCopy)}</p><div class="auth-actions">${["google","naver","kakao","apple"].map((provider) => `<button type="button" data-login-provider="${provider}">${provider.toUpperCase()}로 이용하기</button>`).join("")}</div></section>`;
-    root.querySelectorAll("[data-login-provider]").forEach((button) => button.addEventListener("click", async () => {
-      button.disabled = true;
-      try {
-        auth.linkAccount(button.dataset.loginProvider);
+    disposeAuth?.();
+    root.innerHTML = '<section class="auth-gate" aria-labelledby="auth-title"><div id="app-social-auth"></div></section>';
+    disposeAuth = window.SSKR_SOCIAL_AUTH.mount(root.querySelector('#app-social-auth'), {
+      note: '로그인하면 내 신청 내역과 참가 기록을 확인할 수 있습니다.',
+      onSelect: async provider => {
+        auth.linkAccount(provider);
         context = await api.context();
         renderChrome();
-        route(domain.safeReturnTo(new URLSearchParams(location.search).get("returnTo")), { replace: true });
-      } catch (error) { renderFailure(error); }
-    }));
+        route(safe, { replace: true });
+      }
+    });
   }
 
   function renderDenied(title, copy) { root.innerHTML = `<section class="access-denied"><p class="eyebrow">ACCESS</p><h1>${esc(title)}</h1><p>${esc(copy)}</p><a class="primary-link" href="/app" data-app-link>SSKR 매니저로</a></section>`; }
-  function renderParticipantUnavailable() { root.innerHTML = `${pageHead("PARTICIPANT ONLY", "참가 준비", participantAccessCopy)}<section class="participant-availability"><p>${esc(participantAccessCopy)}</p><a class="primary-link" href="/app/current" data-app-link>현재 SSKR 확인</a></section>`; }
+  function renderParticipantUnavailable() { root.innerHTML = `${pageHead("PARTICIPANT ONLY", "참가 준비", participantAccessCopy)}<section class="participant-availability"><p>${esc(participantAccessCopy)}</p><a class="primary-link" href="/app/current" data-app-link>${esc(eventTitle())} 확인</a></section>`; }
   function renderNotFound() { renderDenied("페이지를 찾을 수 없습니다.", "주소를 확인하거나 SSKR 매니저에서 다시 이동해 주세요."); }
 
   function renderFailure(error) {
@@ -244,12 +243,13 @@
   }
 
   function renderRoute() {
+    disposeAuth?.(); disposeAuth = null;
     disposeSpots?.(); disposeSpots = null;
     disposeMemorials?.(); disposeMemorials = null;
     const path = domain.normalizePath(location.pathname);
     const routeTitles = {
       "/app": "SSKR 매니저",
-      "/app/current": context.event?.publicTitle || "현재 SSKR",
+      "/app/current": context.event?.publicTitle || "SSKR",
       "/app/spots": "스팟",
       "/app/memorials": "메모리얼",
       "/app/my": "내 기록",

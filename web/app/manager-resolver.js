@@ -45,10 +45,10 @@
     else if (relation === "PROCESSING") primaryAction = action("결제 상태 확인하기", "/participate", "CHECK_PAYMENT");
     else if (["DRAFT", "STEP_1", "STEP_2", "STEP_3"].includes(relation)) primaryAction = action("참가 신청 이어하기", "/participate", "CONTINUE_APPLICATION");
     else if (active && !waiting) primaryAction = action("출발지 선택하기", "/app/current", "SELECT_START");
-    else if (active) primaryAction = action("현재 SSKR 보기", "/app/current", "VIEW_CURRENT");
+    else if (active) primaryAction = action((event.publicTitle || "SSKR") + " 보기", "/app/current", "VIEW_CURRENT");
     else primaryAction = action(account.linked ? "SSKR 참가하기" : "참가 안내 보기", "/participate", "START_APPLICATION");
 
-    let heroTitle = "SSKR 2027, 길 위의 하루를 준비하세요.";
+    let heroTitle = (event.publicTitle || "SSKR") + ", 길 위의 하루를 준비하세요.";
     let heroCopy = "동해권 출발지 중 하나를 선택하고 집결 정보를 확인하세요.";
     if (!account.linked) {
       heroTitle = "공개된 SSKR를 먼저 둘러보세요.";
@@ -104,17 +104,17 @@
       alert: important ? { title: "집결 안내가 변경되었습니다.", copy: "선택한 출발지의 집결 위치와 입장 시간을 다시 확인해 주세요.", href: "/app/notices", label: "변경 내용 확인" } : null,
       primaryAction,
       currentEvent: {
-        title: event.publicTitle || source.event?.title || "SSKR 2027",
-        editionLabel: event.editionLabel || "2027 SEASON",
+        title: event.publicTitle || source.event?.title || "SSKR",
+        editionLabel: event.editionLabel || "행사 안내",
         heroTitle,
         heroCopy,
         image: source.manager?.heroImage || "/assets/sskr_road1.png",
         status: [
-          status("CURRENT EVENT", event.publicTitle || "SSKR 2027"),
+          status("CURRENT EVENT", event.publicTitle || "SSKR"),
           status("참가 상태", relationLabel, active ? "ok" : "neutral"),
           status("참가 번호", participantNumber),
           status("참가 유형", tier),
-          status("행사까지", postEvent ? "시즌 종료" : "D-18", postEvent ? "neutral" : "accent"),
+          status("행사까지", postEvent ? "행사 종료" : event.eventStartAt && context.generatedAt ? "D-" + Math.max(0, Math.ceil((Date.parse(event.eventStartAt) - Date.parse(context.generatedAt)) / 86400000)) : "일정 안내 예정", postEvent ? "neutral" : "accent"),
           status("준비 현황", active ? `${progress.complete} / ${progress.total}` : "참가 후 시작")
         ]
       },

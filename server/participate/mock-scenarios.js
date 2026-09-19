@@ -26,7 +26,7 @@ const baseEvent = {
   description: "아름다운 라이딩 코스와 스팟을 연결하며\n다양한 미션을 수행하는 로드 랠리 이벤트",
   timezone: "Asia/Seoul",
   eventStartAt: "2027-06-14T06:00:00+09:00",
-  eventEndAt: "2027-06-15T21:00:00+09:00",
+  eventEndAt: "2027-06-14T21:00:00+09:00",
   coreConfirmedAt: "2026-08-01T09:00:00+09:00",
   spotsConfirmedAt: "2026-08-15T09:00:00+09:00",
   ridePreparationAt: "2027-05-31T00:00:00+09:00",
@@ -49,7 +49,7 @@ const baseEvent = {
   configVersion: 2,
   publishedAt: "2026-08-20T09:00:00+09:00",
   applicationPeriodDisplay: "2027.04.01 (목) – 06.11 (금)",
-  eventDateDisplay: "2027.06.14 (토) – 06.15 (일)",
+  eventDateDisplay: "2027.06.14 (월)",
   capacityDisplay: "기본 300명",
   capacityNote: "플래티넘 추가 정원 60명"
 };
@@ -202,6 +202,7 @@ function createScenario(name = "a-open-unlinked") {
     case "tier-early-limit": linked(); snapshot.mock.now = "2027-04-10T10:00:00+09:00"; snapshot.priceTiers.find((item) => item.code === REGISTRATION_TIER.EARLY).entryCount = 50; snapshot.application = makeApplication({ acknowledgement: true, agreements: true }); break;
     case "tier-standard-ended": linked(); snapshot.mock.now = "2027-05-16T10:00:00+09:00"; snapshot.application = makeApplication({ acknowledgement: true, agreements: true }); break;
     case "tier-platinum-extra": linked(); snapshot.event.capacityPolicy.baseUsed = 300; snapshot.mock.now = "2027-05-16T10:00:00+09:00"; snapshot.application = makeApplication({ acknowledgement: true, agreements: true }); break;
+    case "c-payment-deferred": linked(); snapshot.application = completeApplication(); snapshot.application.paymentDeferred = true; snapshot.application.paymentDeferredAt = snapshot.mock.now; break;
     case "c-waitlisted": paid(SLOT_ALLOCATION.WAITLISTED); break;
     case "c-confirmed-spots": paid(SLOT_ALLOCATION.CONFIRMED); break;
     case "c-preparation": paid(SLOT_ALLOCATION.CONFIRMED, EVENT_STAGE.RIDE_PREPARATION); break;

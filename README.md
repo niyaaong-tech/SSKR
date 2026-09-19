@@ -65,3 +65,9 @@ HOME 헤더의 `THE JOURNEY`만 `/journey`로 연결됩니다. 프레젠테이�
 체크인 사진 예시는 기존 카탈로그 사진으로 업로드 상황을 모의합니다. `sourceKind: USER_UPLOAD`, `synthetic: true`, `originalSourceKind: PLACE_REFERENCE`로 구분하며 실제 참가자 사진이라고 주장하지 않습니다. 사진이 있는 방문과 없는 방문, 대표 사진만 있는 여정을 함께 제공합니다.
 
 운영 전에는 방문 순서의 세션 내 고유성, 세션·행사별 장소의 동일 행사 제약, 업로드 소유자·참가자 일치, 대표 방문·사진 참조를 DB에서 보장해야 합니다. 촬영물 권리·동의 버전·삭제 상태·스토리지 변형·오프라인 업로드와 원본 GPS 품질 속성도 확장 대상입니다. 공개 조회·지도 파일은 서버에서 접근 권한을 검사해야 하며 현재 정적 mock은 운영 인증·DB·업로드 구현을 대신하지 않습니다.
+
+### 공통 지도 검증과 캐시
+
+스팟·메모리얼·공개 탐색은 `web/shared/map/`을 공유합니다. `npm test`는 국내 장소 보존·해외 좌표 제외·공통 스타일 범위·캐시 무결성을 검사합니다. `npm run test:maps`는 개발 서버를 임시 포트에서 실행해 세 화면과 모바일 배열·휠·해안 지도를 브라우저로 검증합니다. Windows에서는 Edge를 사용하며, 다른 환경에서는 먼저 `npx playwright install chromium`을 실행합니다. `BROWSER_CHANNEL`로 브라우저를 지정할 수 있습니다.
+
+대한민국 표시 범위는 OpenStreetMap 행정 경계(`web/shared/map/korea.geojson`)를 사용하고, 실제 해안선은 원본 지도 타일의 water 레이어로 표시합니다. 6·7·8배율 타일은 `npm run map:cache`로 `server/map/cache/`에 생성합니다. 캐시는 경계 해시와 파일 해시로 검증하며, 확대 타일만 요청 시 변환합니다. 경계가 변경되면 배포 전에 캐시를 다시 생성해야 합니다. 지도 데이터는 © OpenStreetMap contributors, ODbL-1.0입니다.

@@ -1,11 +1,11 @@
 const { buildContextDto } = require("./dto");
 const { MockParticipateRepository } = require("./mock-repository");
-const { createScenario } = require("./mock-scenarios");
+const { baseEvent, createScenario } = require("./mock-scenarios");
 const { DomainError, createTransactionService } = require("./transaction-service");
 
 const allowedScenarios = new Set([
   "a-open-unlinked", "a-open-linked", "b-step1", "b-step2", "b-step2-partial-required", "b-step3", "b-step3-optional-unchecked", "b-step4", "b-processing",
-  "b-failed-open", "b-failed-closed", "b-finalizing", "c-waitlisted", "c-confirmed-spots",
+  "b-failed-open", "b-failed-closed", "b-finalizing", "c-payment-deferred", "c-waitlisted", "c-confirmed-spots",
   "c-preparation", "c-ride-check", "c-countdown", "c-live-confirmed", "c-live-waitlisted",
   "c-season-completed", "c-season-no-show", "c-season-retired", "tier-early-ended", "tier-early-limit", "tier-standard-ended", "tier-platinum-extra",
   "guest", "logged-in-no-application", "application-step1", "application-step2", "application-step3", "application-payment", "processing", "failed", "active", "blocked"
@@ -36,6 +36,10 @@ async function handleParticipateRequest(endpoint, body = {}, options = {}) {
   try {
     const scenario = allowedScenarios.has(body.scenario) ? body.scenario : "a-open-unlinked";
     snapshot = body.snapshot && body.snapshot.schemaVersion === 1 ? body.snapshot : createScenario(scenario);
+    // Refresh only the retired two-day mock schedule, preserving application/payment state.
+    if (snapshot.event?.id === baseEvent.id && snapshot.event.eventEndAt === "2027-06-15T21:00:00+09:00") {
+      snapshot.event = { ...snapshot.event, eventEndAt: baseEvent.eventEndAt, eventDateDisplay: baseEvent.eventDateDisplay };
+    }
     snapshot.mockSessionId = body.mockSessionId || snapshot.mockSessionId || "default";
     repository = new MockParticipateRepository(snapshot);
     repository.setAccount(normalizeAccount(body.account, repository.getUserContext().account));

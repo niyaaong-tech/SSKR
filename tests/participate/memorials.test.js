@@ -83,13 +83,14 @@ test('wheel gesture keeps its initial owner across boundary crossings and revers
   assert.deepEqual(session(false,1000), {mode:'page',fresh:true});
 });
 
-test('all journey navigation cards keep their side and position through map pan and zoom', () => {
-  const { routeLabelLayout } = require('../../web/app/memorial-journey');
-  const points=Array.from({length:14},(_,index)=>({index,x:128+index*.01,y:37-index*.03}));
-  for(const width of [320,390,1140]){
-    const before=routeLabelLayout(points,width,440);
-    const moved=routeLabelLayout(points.map(p=>({...p,x:p.x*4-500,y:p.y*4+700})),width,440);
-    assert.equal(before.length,14);assert.equal(moved.length,14);
-    for(const card of before){const same=moved.find(p=>p.index===card.index);assert.equal(card.side,same.side);assert.equal(card.left,same.left);assert.ok(Math.abs(card.top-same.top)<.001);}
+test('journey navigation preserves every visit across twelve-card pages', () => {
+  const {cardSlots}=require('../../web/shared/map/map');
+  const visits=Array.from({length:14},(_,i)=>i),seen=[];
+  for(let page=0;page<2;page++){
+    const items=visits.slice(page*12,page*12+12),slots=cardSlots(items.length,false);
+    assert.equal(slots.length,items.length);
+    for(const side of [0,1]){const cards=slots.filter(p=>p.side===side);assert.ok(cards.length<=6);assert.deepEqual(cards.map(p=>p.row),cards.map((_,i)=>i));}
+    seen.push(...items);
   }
+  assert.deepEqual(seen,visits);
 });

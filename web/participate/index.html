@@ -9,7 +9,8 @@
   <title>SSKR 2027 참가</title>
   <link rel="icon" href="data:," />
   <link rel="stylesheet" href="/web/shared/account-control.css?v=patch-034" />
-  <link rel="stylesheet" href="./styles.css?v=patch-034-flow" />
+  <link rel="stylesheet" href="./styles.css?v=patch-057" />
+  <link rel="stylesheet" href="/web/shared/auth/social-auth.css?v=patch-057">
 </head>
 <body>
   <a class="skip-link" href="#context-surface">참가 화면으로 바로가기</a>
@@ -92,38 +93,7 @@
       </div>
 
       <section class="surface-view surface-view--auth" id="mode-auth" data-surface-mode="MODE_AUTH" aria-labelledby="auth-title" hidden>
-        <div class="auth-column">
-          <div class="auth-brand" aria-label="SSKR">SSKR</div>
-          <h2 id="auth-title" tabindex="-1">소셜 계정으로 참여하기</h2>
-
-          <div class="social-actions" id="social-actions">
-            <button class="social-button social-button--google" type="button" data-provider="google">
-              <svg width="17" height="17" viewBox="0 0 48 48" aria-hidden="true">
-                <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z" />
-                <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z" />
-                <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z" />
-                <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z" />
-              </svg>
-              <span>Google로 이용하기</span>
-            </button>
-            <button class="social-button social-button--naver" type="button" data-provider="naver">
-              <img src="./assets/naver-n.png" alt="" aria-hidden="true" />
-              <span>네이버로 이용하기</span>
-            </button>
-            <button class="social-button social-button--kakao" type="button" data-provider="kakao">
-              <img src="./assets/kakao-symbol.png" alt="" aria-hidden="true" />
-              <span>카카오로 이용하기</span>
-            </button>
-            <button class="social-button social-button--apple" type="button" data-provider="apple">
-              <svg width="15" height="17" viewBox="0 0 24 24" aria-hidden="true">
-                <path fill="#fff" d="M17.05 12.53c-.02-2.06 1.68-3.05 1.76-3.1-.96-1.4-2.46-1.6-2.99-1.62-1.27-.13-2.48.75-3.13.75-.64 0-1.64-.73-2.7-.71-1.39.02-2.67.81-3.38 2.05-1.44 2.5-.37 6.2 1.03 8.23.68.99 1.5 2.11 2.57 2.07 1.03-.04 1.42-.67 2.67-.67 1.24 0 1.6.67 2.69.65 1.11-.02 1.81-1.01 2.49-2.01.78-1.15 1.11-2.27 1.13-2.33-.02-.01-2.17-.83-2.19-3.29zM15.02 6.5c.57-.69.95-1.65.85-2.6-.82.03-1.81.54-2.4 1.23-.53.61-.99 1.59-.87 2.52.91.07 1.85-.46 2.42-1.15z" />
-              </svg>
-              <span>Apple로 이용하기</span>
-            </button>
-          </div>
-
-          <p class="auth-payment-note">참가비용은 소셜 연동 확인 후 별도 절차로 결제됩니다.</p>
-        </div>
+        <div id="participate-social-auth" style="width:100%"></div>
       </section>
 
       <section class="surface-view surface-view--application" id="mode-b" data-surface-mode="MODE_B" hidden></section>
@@ -144,6 +114,7 @@
   <script src="./mode-c.js?v=patch-034-flow"></script>
   <script src="/web/shared/account-control.js?v=patch-034"></script>
   <script src="./account.js?v=patch-034-flow"></script>
-  <script src="./app.js?v=patch-034-flow"></script>
+  <script src="/web/shared/auth/social-auth.js?v=patch-057"></script>
+  <script src="./app.js?v=patch-057"></script>
 </body>
 </html>

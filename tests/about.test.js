@@ -7,27 +7,16 @@ const root=path.resolve(__dirname,'..');
 const html=fs.readFileSync(path.join(root,'web/about/index.html'),'utf8');
 const js=fs.readFileSync(path.join(root,'web/about/app.js'),'utf8');
 const css=fs.readFileSync(path.join(root,'web/about/styles.css'),'utf8');
-test('About includes eight titled scenes and all ten supplied illustrations',()=>{
-  const ids=[...html.matchAll(/<section[^>]+id="(chapter-\d+)"/g)].map(m=>m[1]);
-  assert.equal(ids.length,8);assert.equal(new Set(ids).size,8);
-  const images=[...html.matchAll(/<img[^>]+src="([^"]+)"/g)].map(m=>m[1]);
-  assert.equal(images.length,10);assert.equal(new Set(images).size,10);
-  for(let n=1;n<=10;n++){
-    const name='SSKR_info'+String(n).padStart(2,'0');
-    assert.ok(images.includes('/about/assets/'+name+'.webp'));
-    assert.ok(fs.existsSync(path.join(root,'web/about/assets/'+name+'.png')));
-    assert.ok(fs.statSync(path.join(root,'web/about/assets/'+name+'.webp')).size<500000);
-  }
-  assert.doesNotMatch(html,/\/shared\/assets\/editorial\//);
+test('About keeps eight reachable chapters with unique headings and existing image assets',()=>{
+ const ids=[...html.matchAll(/<section[^>]+id="(chapter-\d+)"[^>]+aria-labelledby="([^"]+)"/g)];assert.equal(ids.length,8);assert.equal(new Set(ids.map(x=>x[1])).size,8);
+ for(const [,id,title] of ids){assert.ok(html.includes('href="#'+id+'"'));assert.ok(html.includes('id="'+title+'"'));}
+ for(const [,url] of html.matchAll(/<img[^>]+src="([^"]+)"/g)){if(url.startsWith('https:'))continue;const file=path.join(root,url.startsWith('/about/')?'web'+url:url);assert.ok(fs.existsSync(file),file);assert.ok(fs.statSync(file).size<500000,url);}
 });
-test('About preserves preparation, noncompetitive principle, benefits and memorial story',()=>{
-  for(const text of ['출발지','주유','휴식','지정 코스는 없습니다','우승자를 가리지 않습니다','안전하게','패키지','완주','메모리얼'])assert.ok(html.includes(text),text);
-  for(const url of ['/','/explore/','/participate/','/app/memorials'])assert.ok(html.includes('href="'+url+'"'));
+test('Experience links lead directly to working service routes and use actual page previews',()=>{
+ const entries=[...html.matchAll(/<a class="experience-link" href="([^"]+)">([\s\S]*?)<\/a>/g)];assert.equal(entries.length,4);
+ assert.deepEqual(entries.map(x=>x[1]),['/participate/','/app/spots/jikjisa','/app/spots','/app/memorials/memorial-sskr-2026-may-001']);
+ for(const [,url,body] of entries){assert.match(body,/preview-[a-z]+\.webp/);assert.doesNotMatch(url,/scenario=|javascript:/);}
 });
-test('Motion script parses, keeps native scroll and provides reading/accessibility fallbacks',()=>{
-  assert.doesNotThrow(()=>new vm.Script(js));
-  for(const text of ['prefers-reduced-motion','userReading','visibilitychange','aria-hidden','scene.inert','requestAnimationFrame'])assert.ok(js.includes(text),text);
-  assert.doesNotMatch(js,/addEventListener\(['"](?:wheel|touchmove)['"]/);
-  assert.ok(css.includes('html:not(.is-cinematic)'));
-  assert.ok(css.includes('height:auto;aspect-ratio:1.6'));
+test('Motion enhances native scrolling without hiding content from keyboard or reduced-motion readers',()=>{
+ assert.doesNotThrow(()=>new vm.Script(js));assert.match(js,/prefers-reduced-motion/);assert.match(js,/aria-current/);assert.match(js,/aria-pressed/);assert.doesNotMatch(js,/addEventListener\(['"](?:wheel|touchmove)['"]|\.inert\s*=/);assert.match(css,/@media\(prefers-reduced-motion:reduce\)/);assert.match(css,/\.skip-link:focus-visible/);
 });

@@ -91,9 +91,9 @@ html:not(.is-cinematic) .spot-insets{position:relative;inset:auto;width:auto;mar
 
 /* A shared wide copy area prevents short trailing fragments on desktop. */
 .is-cinematic .scene .story-copy{width:80%;max-width:none}
-/* Keep inset photographs below the expanded copy instead of behind it. */
-.is-cinematic .spot-insets{top:auto;bottom:14%;left:7.5%;right:auto;width:80%;height:21%;grid-template-columns:repeat(3,minmax(0,1fr));grid-template-rows:minmax(0,1fr)}
-.is-cinematic .memorial-inset{top:auto;bottom:14%;height:23%;left:8%;width:26%;justify-content:flex-start}
+/* Inset scenes retain their two-column composition. */
+.is-cinematic .scene--spots .story-copy{width:52%}
+.is-cinematic .scene--pace .story-copy{width:52%}
 html:not(.is-cinematic) .scene .story-copy{width:80%;max-width:none;padding-left:0;padding-right:0}
 
 /* Bright sunset sky remains unshaded behind the service links. */

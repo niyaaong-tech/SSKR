@@ -69,9 +69,20 @@
       });
     });
   }
+  const memorialInset=document.querySelector('.memorial-inset');
+  function playMemorialEntrance(){
+    memorialInset.getAnimations().forEach(animation=>animation.cancel());
+    if(reduced.matches)return;
+    memorialInset.animate([
+      {clipPath:'inset(0 0 100% 0)',opacity:0},
+      {clipPath:'inset(0 0 88% 0)',opacity:1,offset:.15},
+      {clipPath:'inset(0)',opacity:1}
+    ],{duration:1100,easing:'cubic-bezier(.22,.72,.16,1)',fill:'backwards'});
+  }
   function setActive(index, fraction) {
     if(index!==active&&index===2)playRouteCross();
     if(index!==active&&index===3)playSpotEntrance();
+    if(index!==active&&index===4)playMemorialEntrance();
     active=index;
     document.getElementById('chapterCount').textContent=`${String(index+1).padStart(2,'0')} / 08`;
     document.getElementById('chapterLabel').textContent=scenes[index].dataset.title;
@@ -130,6 +141,7 @@
   }
   function resetStyles() {
     cancelSpotEntrance();
+    memorialInset.getAnimations().forEach(animation=>animation.cancel());
     scenes.forEach(scene=>{scene.removeAttribute('style');scene.classList.remove('is-visible');scene.inert=false;scene.removeAttribute('aria-hidden');});
     live.clear();
   }
@@ -161,8 +173,28 @@
   window.addEventListener('pageshow',()=>{if(cinematic){measure();onScroll();}});
   const previews=[['sskr_web1.webp','SSKR 참가 안내 화면','SSKR 참가 페이지'],['sskr_web2.webp','SSKR 스팟 지도 화면','스팟 지도 페이지'],['sskr_web3.webp','SSKR 공개 메모리얼 화면','메모리얼 페이지']];
   const preview=document.getElementById('servicePreview');
+  let previewRequest=0, previewAnimation;
   document.querySelectorAll('[data-preview]').forEach(link=>{
-    const show=()=>{const [file,alt,caption]=previews[Number(link.dataset.preview)-1];preview.src='/about/assets/'+file;preview.alt=alt;document.getElementById('service-preview-caption').textContent=caption;};
+    const show=async()=>{
+      const request=++previewRequest;
+      const [file,alt,caption]=previews[Number(link.dataset.preview)-1];
+      const src='/about/assets/'+file;
+      previewAnimation?.cancel();
+      if(preview.getAttribute('src')===src)return;
+      const loaded=new Image();loaded.src=src;
+      try{await loaded.decode();}catch{return;}
+      if(request!==previewRequest)return;
+      previewAnimation?.cancel();
+      if(!reduced.matches){
+        previewAnimation=preview.animate([{opacity:1},{opacity:0}],{duration:140,fill:'forwards'});
+        try{await previewAnimation.finished;}catch{return;}
+      }
+      if(request!==previewRequest)return;
+      preview.src=src;preview.alt=alt;
+      document.getElementById('service-preview-caption').textContent=caption;
+      previewAnimation?.cancel();
+      if(!reduced.matches)previewAnimation=preview.animate([{opacity:0},{opacity:1}],{duration:260,easing:'ease-out'});
+    };
     link.addEventListener('pointerenter',show);link.addEventListener('focus',show);
   });
   const routeObserver=new IntersectionObserver(entries=>{if(!cinematic&&entries.some(entry=>entry.isIntersecting))playRouteCross();},{threshold:.2});
@@ -171,6 +203,10 @@
     if(!cinematic&&entries.some(entry=>entry.isIntersecting))playSpotEntrance();
   },{threshold:.2});
   spotObserver.observe(document.querySelector('.spot-insets'));
+  const memorialObserver=new IntersectionObserver(entries=>{
+    if(!cinematic&&entries.some(entry=>entry.isIntersecting))playMemorialEntrance();
+  },{threshold:.2});
+  memorialObserver.observe(memorialInset);
   configure();
   if(location.hash){const i=scenes.findIndex(s=>'#'+s.id===location.hash);if(i>=0)requestAnimationFrame(()=>goTo(i,false));}
 })();

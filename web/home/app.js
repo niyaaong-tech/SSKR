@@ -15,8 +15,6 @@
 
   const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   const pageProgress = document.querySelector('#pageProgress');
-  const frameNumber = document.querySelector('#frameNumber');
-  const framePhase = document.querySelector('#framePhase');
   const header = document.querySelector('#siteHeader');
   const intro = document.querySelector('#intro');
   const introSky = document.querySelector('.intro-sky');
@@ -145,7 +143,7 @@
   // Illustration anchors share the existing map's projected coordinate space.
   const routeDefinitions=[
     {name:'강릉',points:routeSpots,names:['강릉','평창','원주','충주','괴산','청주','익산','군산'],count:4},
-    {name:'울진 후포방파제',points:[[989,386],[853,411],[797,498],[756,444],routeSpots[5],routeSpots[6],routeSpots[7]],names:['울진 후포방파제','안동','구미','상주','청주','익산','군산'],count:3},
+    {name:'울진 후포',points:[[966,386],[853,411],[797,498],[756,444],routeSpots[5],routeSpots[6],routeSpots[7]],names:['울진 후포','안동','구미','상주','청주','익산','군산'],count:3},
     {name:'부산 죽도공원',points:[[948,670],[860,655],[752,667],[647,629],[562,603],routeSpots[7]],names:['부산 죽도공원','창원','진주','남원','정읍','군산'],count:5}
   ];
   let randomState=2026;
@@ -156,7 +154,7 @@
     if(index===0)path.style.visibility='hidden';
     const start=svgElement('circle',{cx:definition.points[0][0],cy:definition.points[0][1],r:6,class:'multi-route-dot'},group);
     const startRing=svgElement('circle',{cx:definition.points[0][0],cy:definition.points[0][1],r:10,class:'node-ring'},group);
-    const label=svgElement('text',{x:definition.points[0][0]-12,y:definition.points[0][1]-15,'text-anchor':'end',class:'multi-route-label'},group);label.textContent=definition.name;
+    const label=svgElement('text',{x:definition.points[0][0]-(index===2?0:12),y:definition.points[0][1]-(index===2?22:15),'text-anchor':index===2?'middle':'end',class:'multi-route-label'},group);label.textContent=definition.name;
     const spots=definition.points.slice(1,-1).map((point,i)=>{
       const spot=svgElement('g',{class:'extra-spot'},group);
       svgElement('circle',{cx:point[0],cy:point[1],r:5,class:'spot-core'},spot);
@@ -363,7 +361,6 @@
       sceneOneCopy.style.transform=`translate3d(0,${mix(38,0,ease(firstCopyOpacity))}px,0)`;
     }
     if (pageProgress) pageProgress.style.transform = `scaleX(${scrollY / scrollable})`;
-    if (frameNumber) frameNumber.textContent = String(Math.round(motionFrame)).padStart(3, '0');
     header?.classList.toggle('is-scrolled', scrollY > 20);
     syncStoryIndex(scrollY);
 
@@ -394,7 +391,6 @@
       // vertical remap expands only the photograph's sea slice; it must never
       // be substituted with an unrelated color or gradient layer.
       const seaImageHeight = visibleSeaHeight * heroImage.height / (heroImage.height - heroImage.horizonY);
-      if (framePhase) framePhase.textContent = introP < .45 ? 'INTRO' : introP < .7 ? 'HORIZON DRAW' : 'HANDOFF';
       if (introCopy) {
         introCopy.style.opacity = (1 - headlineOut).toFixed(3);
         introCopy.style.transform = `translate3d(0,${mix(0, -28, ease(headlineOut))}px,0)`;
@@ -448,7 +444,7 @@
 
     const mobileCompositionShift = window.innerWidth <= 900
       ? -window.innerWidth * .18
-        * ease(range(motionFrame,295,325))
+        * ease(range(motionFrame,295,325)) * (1-ease(range(p,.458,.64)))
       : 0;
     if (journeySvg) journeySvg.style.transform = `translate3d(${mobileCompositionShift.toFixed(2)}px,0,0)`;
 
@@ -626,9 +622,6 @@
       if (sceneCurrent) sceneCurrent.textContent = String(scene + 1).padStart(2, '0');
     }
     if (sceneProgress) sceneProgress.style.transform = `scaleY(${p})`;
-    if (framePhase) {
-      framePhase.textContent = ['SCENE 01','SCENE 02','SCENE 03','SCENE 04','SCENE 05','FINALE'][scene];
-    }
 
     setOpacity(day, range(p, .08, .2) * (1 - range(p, .54, .68)));
     setOpacity(dawn, 1 - range(p, .06, .2));

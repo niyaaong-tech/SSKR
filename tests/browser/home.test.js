@@ -77,3 +77,10 @@ test('mobile memory route fits the viewport and coastal labels remain readable',
   assert.equal(await p.locator('#frameDebug').count(),0);await p.close();
  }
 });
+test('all mobile route labels enlarge and Iksan stays clear of Gunsan',async()=>{
+ const p=await browser.newPage({viewport:{width:390,height:844}});await openHome(p);await seek(p,730);
+ assert.ok(await p.locator('.multi-route-label').evaluateAll(es=>es.every(e=>getComputedStyle(e).fontSize==='24px')));
+ const a=await p.locator('[data-node="6"] .route-place').boundingBox(),b=await p.locator('[data-node="7"] .route-place').boundingBox();
+ assert.ok(a.x>=b.x+b.width||b.x>=a.x+a.width||a.y>=b.y+b.height||b.y>=a.y+a.height);
+ assert.equal(await p.getByText('2027 가을',{exact:true}).count(),0);await p.close();
+});

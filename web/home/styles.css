@@ -129,6 +129,8 @@ html{scrollbar-width:none}html::-webkit-scrollbar{display:none}.scene-rail{displ
 
 /* SVG labels need larger local units when the map scales down on phones. */
 @media(max-width:900px){
- :is(.route-node,.extra-spot) .route-place,:is(.route-node,.extra-spot) .trace-place,.multi-route-label{font-size:24px}
+ :is(.route-node,.extra-spot) .route-place,:is(.route-node,.extra-spot) .trace-place,:is(.extra-spot,.multi-routes) .multi-route-label{font-size:24px}
  .route-node .memory-label{font-size:14px}
 }
+
+.intro-deck{grid-template-columns:1fr}

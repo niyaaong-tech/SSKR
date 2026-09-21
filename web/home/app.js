@@ -526,7 +526,7 @@
       const memoryLabel = node.querySelector('.memory-label');
       if (routePlace) {
         const labelMove = ease(routeToTrace);
-        routePlace.setAttribute('x', mix(-24, 0, labelMove).toFixed(2));
+        routePlace.setAttribute('x', mix(index===6?24:-24, 0, labelMove).toFixed(2));
         routePlace.setAttribute('y', mix(-14, 28, labelMove).toFixed(2));
         routePlace.setAttribute('text-anchor', 'middle');
         routePlace.style.opacity = ((1 - memoryRecall) * (1 - nodeOut)).toFixed(3);

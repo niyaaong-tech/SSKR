@@ -8,13 +8,12 @@
   const links = [...document.querySelectorAll('.chapter-nav a')];
   const previous = document.getElementById('previousScene');
   const next = document.getElementById('nextScene');
-  const toggle = document.getElementById('motionToggle');
   const reduced = matchMedia('(prefers-reduced-motion: reduce)');
   const desktop = matchMedia('(min-width: 900px) and (min-height: 700px)');
   const clamp = (n, a=0, b=1) => Math.max(a,Math.min(b,n));
   const ease = n => { n=clamp(n);return n*n*(3-2*n); };
   const lerp = (a,b,t) => a+(b-a)*t;
-  let userReading = false, cinematic = false, current = 0, target = 0, active = 0;
+  let cinematic = false, current = 0, target = 0, active = 0;
   let frame = 0, lastTime = 0, step = 1, top = 0, resizeTimer;
   const live = new Set();
 
@@ -43,7 +42,36 @@
     scene.style.setProperty('--word-x',`${-phase*26}px`);
     scene.style.setProperty('--line-progress',String(ease(clamp(phase*2+.25))));
   }
+  function playRouteCross(){
+    if(reduced.matches)return;
+    document.querySelectorAll('.route-inset').forEach(figure=>{
+      figure.getAnimations().forEach(animation=>animation.cancel());
+      const direction=figure.classList.contains('route-inset--right')?-1:1;
+      figure.animate([{transform:'translateX('+direction*innerWidth*1.3+'px)',opacity:0},{transform:'translateX(0)',opacity:1}],{duration:1100,easing:'cubic-bezier(.22,.72,.16,1)'});
+    });
+  }
+  const spotFigures=[...document.querySelectorAll('.spot-insets figure')];
+  function cancelSpotEntrance(){
+    spotFigures.forEach(figure=>[figure,figure.querySelector('figcaption')].forEach(element=>element.getAnimations().forEach(animation=>animation.cancel())));
+  }
+  function playSpotEntrance(){
+    cancelSpotEntrance();
+    if(reduced.matches)return;
+    spotFigures.forEach((figure,index)=>{
+      const delay=index*140;
+      const distance=figure.getBoundingClientRect().right+24;
+      figure.animate([
+        {transform:`translateX(${-distance}px)`,opacity:0},
+        {transform:'translateX(0)',opacity:1}
+      ],{duration:700,delay,easing:'cubic-bezier(.22,.72,.16,1)',fill:'backwards'});
+      figure.querySelector('figcaption').animate([{opacity:0},{opacity:1}],{
+        duration:320,delay:delay+700,easing:'ease-out',fill:'backwards'
+      });
+    });
+  }
   function setActive(index, fraction) {
+    if(index!==active&&index===2)playRouteCross();
+    if(index!==active&&index===3)playSpotEntrance();
     active=index;
     document.getElementById('chapterCount').textContent=`${String(index+1).padStart(2,'0')} / 08`;
     document.getElementById('chapterLabel').textContent=scenes[index].dataset.title;
@@ -101,19 +129,17 @@
     }
   }
   function resetStyles() {
+    cancelSpotEntrance();
     scenes.forEach(scene=>{scene.removeAttribute('style');scene.classList.remove('is-visible');scene.inert=false;scene.removeAttribute('aria-hidden');});
     live.clear();
   }
   function configure(keepPosition=false) {
-    const desired=desktop.matches&&!reduced.matches&&!userReading;
+    const desired=desktop.matches&&!reduced.matches;
     const old=cinematic;
     const saved=old?active:scenes.reduce((best,scene,i)=>Math.abs(scene.getBoundingClientRect().top)<Math.abs(scenes[best].getBoundingClientRect().top)?i:best,0);
     if(frame)cancelAnimationFrame(frame);frame=0;
     cinematic=desired;root.classList.toggle('is-cinematic',cinematic);
     resetStyles();controls.hidden=!cinematic;
-    toggle.hidden=!desktop.matches||reduced.matches;
-    toggle.textContent=cinematic?'모션 줄이고 읽기':'장면으로 감상하기';
-    toggle.setAttribute('aria-pressed',String(!cinematic));
     if(cinematic){measure();current=target=keepPosition?(saved+.14):clamp((window.scrollY-top)/step,0,scenes.length-1+.72);render();}
     else story.style.removeProperty('--story-height');
     if(keepPosition&&old!==cinematic)requestAnimationFrame(()=>goTo(saved,false));
@@ -124,16 +150,27 @@
     if(cinematic){event.preventDefault();history.replaceState(null,'','#'+scenes[index].id);goTo(index);}
   }));
   previous.addEventListener('click',()=>goTo(active-1));next.addEventListener('click',()=>goTo(active+1));
-  toggle.addEventListener('click',()=>{userReading=!userReading;configure(true);});
   window.addEventListener('scroll',onScroll,{passive:true});
   window.addEventListener('resize',()=>{clearTimeout(resizeTimer);resizeTimer=setTimeout(()=>{
-    const was=cinematic;if(was=== (desktop.matches&&!reduced.matches&&!userReading)){if(cinematic){const position=current;measure();window.scrollTo({top:top+position*step,behavior:'instant'});onScroll();}}
+    const was=cinematic;if(was=== (desktop.matches&&!reduced.matches)){if(cinematic){const position=current;measure();window.scrollTo({top:top+position*step,behavior:'instant'});onScroll();}}
     else configure(true);
   },120);},{passive:true});
   reduced.addEventListener('change',()=>configure(true));
   document.addEventListener('visibilitychange',()=>{if(document.hidden){if(frame)cancelAnimationFrame(frame);frame=0;}else onScroll();});
   window.addEventListener('hashchange',()=>{const i=scenes.findIndex(s=>'#'+s.id===location.hash);if(i>=0)goTo(i,false)});
   window.addEventListener('pageshow',()=>{if(cinematic){measure();onScroll();}});
+  const previews=[['sskr_web1.webp','SSKR 참가 안내 화면','SSKR 참가 페이지'],['sskr_web2.webp','SSKR 스팟 지도 화면','스팟 지도 페이지'],['sskr_web3.webp','SSKR 공개 메모리얼 화면','메모리얼 페이지']];
+  const preview=document.getElementById('servicePreview');
+  document.querySelectorAll('[data-preview]').forEach(link=>{
+    const show=()=>{const [file,alt,caption]=previews[Number(link.dataset.preview)-1];preview.src='/about/assets/'+file;preview.alt=alt;document.getElementById('service-preview-caption').textContent=caption;};
+    link.addEventListener('pointerenter',show);link.addEventListener('focus',show);
+  });
+  const routeObserver=new IntersectionObserver(entries=>{if(!cinematic&&entries.some(entry=>entry.isIntersecting))playRouteCross();},{threshold:.2});
+  routeObserver.observe(scenes[2]);
+  const spotObserver=new IntersectionObserver(entries=>{
+    if(!cinematic&&entries.some(entry=>entry.isIntersecting))playSpotEntrance();
+  },{threshold:.2});
+  spotObserver.observe(document.querySelector('.spot-insets'));
   configure();
   if(location.hash){const i=scenes.findIndex(s=>'#'+s.id===location.hash);if(i>=0)requestAnimationFrame(()=>goTo(i,false));}
 })();

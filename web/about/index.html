@@ -7,8 +7,8 @@
   <meta name="description" content="SSKR의 참가 방식, 루트와 스팟 탐색, 매니저와 메모리얼 이용 방법을 알아보세요.">
   <title>SSKR 알아보기 — 참가 방식과 이용 안내</title>
   <link rel="preload" as="image" href="/about/assets/SSKR_info01.webp" fetchpriority="high">
-  <link rel="stylesheet" href="/about/styles.css">
-  <script defer src="/about/app.js"></script>
+  <link rel="stylesheet" href="/about/styles.css?rev=gallery">
+  <script defer src="/about/app.js?rev=gallery"></script>
 </head>
 <body>
   <a class="skip-link" href="#chapter-01">이용 안내 본문으로</a>
@@ -20,112 +20,59 @@
   <main>
     <div class="story" id="story">
       <div class="story-screen" id="storyScreen">
-        <section class="scene scene--opening" id="chapter-01" data-title="랠리 소개" data-transition="horizon" aria-labelledby="title-01">
+        <section class="scene scene--opening" id="chapter-01" data-title="한반도 횡단" data-transition="horizon" aria-labelledby="title-01">
           <div class="scene-art"><img class="scene-photo" src="/about/assets/SSKR_info01.webp" width="1536" height="1024" alt="일출이 비치는 해안의 굽잇길을 달리는 라이더" fetchpriority="high"></div>
           <div class="scene-shade" aria-hidden="true"></div>
-          <div class="story-copy">
-            <p class="eyebrow">SSKR은 어떤 랠리인가요</p>
-            <h1 id="title-01">하루 만에 끝내는 한반도 횡단</h1>
-            <p class="body-copy">SSKR은 아침의 동해에서 저녁의 서해까지 바이크로 가로지르는 여정입니다. 열린 도로 위를 순위 다툼 없이 달리며, 하루 안에 한반도를 횡단하는 성취감을 제공합니다.</p>
-            <p class="body-copy">동해안 스타트 스팟 → 서해안 피니시 스팟</p>
-            <p class="body-copy">새벽부터 해질녘까지, 단 하루의 여정 · 순위 책정 없는 비경쟁 주행</p>
+          <div class="story-copy"><h1 id="title-01">하루 만에 끝내는 한반도 횡단</h1><p class="body-copy">SSKR은 아침의 동해에서 저녁의 서해까지 바이크로 가로지르는 여정입니다.<br>열린 도로 위를 순위 다툼 없이 달리며, 하루 안에 한반도를 횡단하는 성취감을 제공합니다.</p><ul class="feature-summary"><li>동해안 스타트 스팟 → 서해안 피니시 스팟</li><li>새벽부터 해질녘까지, 단 하루의 여정</li><li>순위 책정 없는 100% 비경쟁 주행</li></ul></div>
 
-          </div>
-          <div class="opening-footer"><p>동해안 출발 · 자유로운 루트 · 서해 도착</p><a href="#chapter-02" class="scroll-cue">신청 방법 알아보기 <span aria-hidden="true">↓</span></a></div>
         </section>
-        <section class="scene scene--prepare" id="chapter-02" data-title="신청 절차" data-transition="wipe" aria-labelledby="title-02">
+        <section class="scene scene--prepare" id="chapter-02" data-title="일출과 일몰" data-transition="wipe" aria-labelledby="title-02">
           <div class="scene-art"><img class="scene-photo" src="/about/assets/SSKR_info04.webp" width="1672" height="941" alt="해안에서 헬멧을 쓰고 출발을 기다리는 라이더" loading="lazy" decoding="async"></div>
           <div class="scene-shade" aria-hidden="true"></div>
-          <figure class="inset-photo"><img src="/about/assets/SSKR_info03.webp" width="1536" height="1024" alt="출발 전 장갑과 장비를 챙기는 라이더" loading="lazy" decoding="async"><figcaption>신청 후에는 매니저에서 준비 상태를 확인하세요.</figcaption></figure>
-          <div class="story-copy">
-            <p class="eyebrow">참가 신청</p>
-            <h2 id="title-02">해 뜨면 출발, 해 지기 전 피니시</h2>
-            <p class="body-copy">일출과 일몰 시각을 기준으로 주행 시간이 설정됩니다. 태양이 떠 있는 동안 각자의 페이스로 달리는 것이 SSKR 여정의 유일한 시간 조건입니다.</p>
-            <p class="body-copy">일출 시각 이후, 동해안에서 자율 출발</p>
-            <p class="body-copy">일몰 시각 이전, 서해안 피니시 체크인</p>
 
-          </div>
+          <div class="story-copy"><h2 id="title-02">해 뜨면 출발, 해 지기 전 피니시</h2><p class="body-copy">일출과 일몰 시각을 기준으로 주행 시간이 설정됩니다.<br>태양이 떠 있는 동안 각자의 페이스로 달리는 것이 SSKR 여정의 유일한 시간 조건입니다.</p><ul class="feature-summary"><li>일출 시각 이후 동해안에서 자율 출발</li><li>일몰 시각 이전 서해안 피니시 체크인</li></ul></div>
         </section>
-        <section class="scene scene--route" id="chapter-03" data-title="루트 계획" data-transition="aperture" aria-labelledby="title-03">
+        <section class="scene scene--route" id="chapter-03" data-title="자유로운 루트" data-transition="aperture" aria-labelledby="title-03">
           <div class="scene-art"><img class="scene-photo" src="/about/assets/SSKR_info05.webp" width="1536" height="1024" alt="호수와 산길로 갈라지는 길 앞의 라이더" loading="lazy" decoding="async"></div>
           <div class="scene-shade" aria-hidden="true"></div>
-          <figure class="inset-photo"><img src="/about/assets/SSKR_info02.webp" width="1536" height="1024" alt="호수 옆 도로를 따라 주행하는 라이더" loading="lazy" decoding="async"><figcaption>주행과 휴식 시간을 함께 고려해 루트를 계획하세요.</figcaption></figure>
-          <div class="story-copy">
-            <p class="eyebrow">출발 전 준비</p>
-            <h2 id="title-03">핸들 향하는 대로, 바퀴 가는 대로. 자유로운 주행 루트.</h2>
-            <p class="body-copy">주최 측이 지정한 경로는 없습니다. 굽이진 산길을 탈지, 한적한 국도를 달릴지는 라이더가 결정합니다. 어디를 어떻게 가든, SSKR의 라이딩은 참가자가 만들어냅니다.</p>
-            <p class="body-copy">최단거리보다 선호하는 도로와 주행 난이도. 주행 루트도, 휴식과 경유에 쓸 시간도 직접 정합니다.</p>
-            <a class="text-link" href="/explore/">출발지와 스팟 지도 열기 <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12h16m-6-6 6 6-6 6"/></svg></a>
-          </div>
+          <div class="route-insets"><figure class="route-inset route-inset--right"><img src="/about/assets/SSKR_info12.webp" width="1448" height="1086" alt="산길을 따라 달리는 라이더" loading="lazy" decoding="async"></figure><figure class="route-inset route-inset--left"><img src="/about/assets/SSKR_info13.webp" width="1448" height="1086" alt="들판 옆 국도를 달리는 라이더" loading="lazy" decoding="async"></figure></div>
+          <div class="story-copy"><h2 id="title-03">자유로운 주행 루트</h2><blockquote class="story-quote"><p><em>핸들 향하는 대로, 바퀴 가는 대로</em></p></blockquote><p class="body-copy">주최 측이 지정한 경로는 없습니다.<br>굽이진 산길을 탈지, 한적한 국도를 달릴지는 라이더가 결정합니다.<br>어디를 어떻게 가든, SSKR의 라이딩은 참가자가 만들어냅니다.</p><ul class="feature-summary"><li><em>최단거리 <strong>✕</strong> / 선호 도로 및 주행 난이도 <strong>○</strong></em></li><li><em>참가자 자율적 주행 루트와 시간 배분</em></li></ul></div>
         </section>
-        <section class="scene scene--spots" id="chapter-04" data-title="스팟 탐색" data-transition="wipe" aria-labelledby="title-04">
+        <section class="scene scene--spots" id="chapter-04" data-title="추천 스팟" data-transition="wipe" aria-labelledby="title-04">
           <div class="scene-art"><img class="scene-photo" src="/about/assets/SSKR_info06.webp" width="1536" height="1024" alt="바이크를 세우고 호수 풍경을 바라보는 라이더" loading="lazy" decoding="async"></div>
           <div class="scene-shade" aria-hidden="true"></div>
-          <div class="story-copy">
-            <p class="eyebrow">지도 활용</p>
-            <h2 id="title-04">스팟: 참가자를 위한 문화의 접점</h2>
-            <p class="body-copy">스팟은 SSKR이 참가자분께 제공하는 추천 경유지입니다. 자연 경관, 랜드마크, 명승 고적, 맛집, 라이딩 카페 등 다양한 취향을 고려한 각 지역의 명소를 체험할 수 있도록 안내합니다.</p>
-            <p class="body-copy">한반도에는, 깜짝 놀랄 정도로 유니크하지만 잘 알려지지 않은 숨겨진 명소가 얼마든지 있습니다.</p>
-            <p class="body-copy">그러나, 안내된 스팟들을 모두 방문할 필요는 없습니다.</p>
-            <a class="text-link" href="/explore/">스팟 찾아보기 <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12h16m-6-6 6 6-6 6"/></svg></a>
-          </div>
+          <div class="spot-insets" aria-label="추천 스팟 풍경"><figure><img src="/about/assets/sskr_sp1.webp" width="1448" height="1086" alt="익산 황등석산" loading="lazy" decoding="async"><figcaption><strong>황등석산</strong><span>익산</span></figcaption></figure><figure><img src="/about/assets/sskr_sp2.webp" width="1448" height="1086" alt="청송 백석탄 포트홀" loading="lazy" decoding="async"><figcaption><strong>백석탄 포트홀</strong><span>청송</span></figcaption></figure><figure><img src="/about/assets/sskr_sp3.webp" width="1448" height="1086" alt="밀양 만어사" loading="lazy" decoding="async"><figcaption><strong>만어사</strong><span>밀양</span></figcaption></figure></div><div class="story-copy"><h2 id="title-04">스팟 : 참가자를 위한 문화의 접점</h2><p class="body-copy">스팟은 SSKR이 참가자분께 제공하는 추천 경유지입니다.<br>자연 경관, 랜드마크, 명승 고적, 맛집, 라이딩 카페 등<br>다양한 취향을 고려한 각 지역의 명소를 체험할 수 있도록 안내합니다.</p><blockquote class="story-quote"><p><em>한반도에는, 깜짝 놀랄 정도로 유니크하지만<br>잘 알려지지 않은 숨겨진 명소가 얼마든지 있습니다.</em></p></blockquote><p class="spot-note">※ 안내된 스팟들을 모두 방문할 필요는 없습니다.</p></div>
         </section>
-        <section class="scene scene--pace" id="chapter-05" data-title="안전한 라이딩" data-transition="horizon" aria-labelledby="title-05">
-          <div class="scene-art"><img class="scene-photo" src="/about/assets/SSKR_info07.webp" width="1536" height="1024" alt="넓게 펼쳐진 내륙의 풍경을 따라 주행하는 라이더" loading="lazy" decoding="async"></div>
+        <section class="scene scene--pace" id="chapter-05" data-title="메모리얼" data-transition="horizon" aria-labelledby="title-05">
+          <div class="scene-art"><img class="scene-photo" src="/about/assets/SSKR_info02.webp" width="1536" height="1024" alt="호숫가 도로를 달리는 라이더" loading="lazy" decoding="async"></div>
           <div class="scene-shade" aria-hidden="true"></div>
-          <div class="story-copy">
-            <p class="eyebrow">라이딩 원칙</p>
-            <h2 id="title-05">달린 길과 머문 자리의 기록, 메모리얼</h2>
-            <p class="body-copy">방문한 스팟의 체크인 기록에 사진과 메모를 더해 그날의 여정을 SSKR에 남길 수 있습니다. 완주 후에도 기록을 자유롭게 다듬고, 완성된 메모리얼을 다른 사람과 공유할 수 있습니다.</p>
-            <p class="body-copy">SSKR의 기록은 숙제가 아니라 일기입니다.</p>
-
-          </div>
+          <figure class="memorial-inset"><img src="/about/assets/sskr_memorial.webp" width="602" height="1170" alt="스팟과 주행 경로가 담긴 SSKR 메모리얼 화면" loading="lazy" decoding="async"></figure><div class="story-copy"><h2 id="title-05">달린 길과 머문 자리의 기록, 메모리얼</h2><p class="body-copy">방문한 스팟의 체크인 기록이 SSKR 메모리얼에 수록됩니다.<br>다른 참가자의 메모리얼을 둘러보거나 내 기록을 공유할 수 있습니다.</p><blockquote class="story-quote"><p><em>SSKR의 기록은 숙제가 아니라 일기입니다.</em></p></blockquote><ul class="feature-summary"><li>내 메모리얼 공유</li><li>다른 참가자의 공개 메모리얼 열람</li><li>방문 스팟에 사진과 메모 추가</li><li>주행일 이후에도 편집 가능</li></ul></div>
         </section>
-        <section class="scene scene--company" id="chapter-06" data-title="매니저 이용" data-transition="wipe" aria-labelledby="title-06">
-          <div class="scene-art"><img class="scene-photo" src="/about/assets/SSKR_info08.webp" width="1672" height="941" alt="바이크 옆 쉼터에서 이야기를 나누는 세 라이더" loading="lazy" decoding="async"></div>
+        <section class="scene scene--company" id="chapter-06" data-title="안전과 휴식" data-transition="wipe" aria-labelledby="title-06">
+          <div class="scene-art"><img class="scene-photo" src="/about/assets/SSKR_info14.webp" width="1447" height="1087" alt="산과 들판을 바라보며 쉬는 라이더" loading="lazy" decoding="async"></div>
           <div class="scene-shade" aria-hidden="true"></div>
-          <div class="story-copy">
-            <p class="eyebrow">SSKR 매니저</p>
-            <h2 id="title-06">속도보다 안전. 휴식도 주행의 일부.</h2>
-            <p class="body-copy">순위를 매기지 않으므로 무리하게 과속하거나 빠른 골인을 추구할 이유가 없습니다. 주유와 식사, 휴게 시간을 고려해서 충분히 여유 있는 주행 계획을 세울 수 있습니다. 당일의 날씨와 도로 상황, 컨디션에 따라 계획을 바꾸거나 주행을 중단해도 전혀 문제가 없습니다.</p>
-            <p class="body-copy">계획부터 세우는 J 타입도, 일단 떠나고 보는 P 타입도. SSKR에서는 평등합니다.</p>
-            <a class="text-link" href="/app">SSKR 매니저 열기 <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12h16m-6-6 6 6-6 6"/></svg></a>
-          </div>
+          <div class="story-copy"><h2 id="title-06">속도보다 안전</h2><blockquote class="story-quote"><p><em>휴식도 주행의 일부입니다.</em></p></blockquote><p class="body-copy">순위를 매기지 않으므로 무리하게 과속하거나 빠른 골인을 추구할 이유가 없습니다.<br>주유와 식사, 휴게 시간을 고려해서 충분히 여유 있는 주행 계획을 세울 수 있습니다.<br>당일의 날씨와 도로 상황, 컨디션에 따라 계획을 바꾸거나 주행을 중단해도 전혀 문제가 없습니다.</p><blockquote class="story-quote"><p><em>계획부터 세우는 J 타입도, 일단 떠나고 보는 P 타입도—<br>SSKR에서는 어느 쪽도 좋습니다.</em></p></blockquote></div>
         </section>
-        <section class="scene scene--memory" id="chapter-07" data-title="기록과 메모리얼" data-transition="dissolve" aria-labelledby="title-07">
-          <div class="scene-art"><img class="scene-photo" src="/about/assets/SSKR_info09.webp" width="1448" height="1086" alt="노을이 지는 바다 앞에 앉아 하루를 돌아보는 라이더" loading="lazy" decoding="async"></div>
+        <section class="scene scene--memory" id="chapter-07" data-title="서해의 피날레" data-transition="dissolve" aria-labelledby="title-07">
+          <div class="scene-art"><img class="scene-photo" src="/about/assets/SSKR_info11.webp" width="1448" height="1086" alt="서해 일몰을 함께 바라보는 라이더들" loading="lazy" decoding="async"></div>
           <div class="scene-shade" aria-hidden="true"></div>
-          <div class="story-copy">
-            <p class="eyebrow">라이딩 이후</p>
-            <h2 id="title-07">모두가 달린 후, 같은 피니시에서 만납니다.</h2>
-            <p class="body-copy">출발지가 달라도, 선택한 스팟이 달라도, 달리는 시간과 골인하는 타이밍이 달라도. 모든 참가자는 서해의 일몰에서 SSKR의 피날레를 함께합니다.</p>
-            <a class="text-link" href="/app/memorials">공개 메모리얼 둘러보기 <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12h16m-6-6 6 6-6 6"/></svg></a>
-          </div>
+          <div class="story-copy"><h2 id="title-07">하루의 끝은 서해에서</h2><blockquote class="story-quote"><p>모두가 달린 후, 같은 피니시에서 만납니다.<br><br>출발지가 달라도, 선택한 스팟이 달라도, 달리는 시간과 골인하는 타이밍이 달라도.<br>모든 참가자는 서해의 일몰에서 SSKR의 피날레를 함께합니다.</p></blockquote></div>
         </section>
-        <section class="scene scene--ending" id="chapter-08" data-title="다음으로" data-transition="horizon" aria-labelledby="title-08">
+        <section class="scene scene--ending" id="chapter-08" data-title="직접 체험하기" data-transition="horizon" aria-labelledby="title-08">
           <div class="scene-art"><img class="scene-photo" src="/about/assets/SSKR_info10.webp" width="1536" height="1024" alt="바이크 옆에서 서해의 노을을 바라보는 라이더" loading="lazy" decoding="async"></div>
           <div class="scene-shade" aria-hidden="true"></div>
-          <div class="story-copy">
-            <p class="eyebrow">시작하기</p>
-            <h2 id="title-08">일단 체험해보셔도 좋습니다</h2>
-            <p class="body-copy">현재 행사의 일정과 참가 조건, 참가비 등을 확인합니다.</p>
-            <p class="body-copy">어떤 장소를 어떤 정보와 함께 제공하는지 예시로 확인합니다.</p>
-            <p class="body-copy">현재 준비된 출발지와 경유 스팟을 지도에서 직접 둘러봅니다.</p>
-            <p class="body-copy">초년도용 샘플 메모리얼로 참가 후 남게 될 기록을 미리 살펴봅니다.</p>
-            <p class="body-copy">SSKR의 문은 열려 있습니다. 선착순이지만요.</p>
-            <div class="closing-actions"><a class="primary-link" href="/explore/">출발지와 스팟 보기 <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12h16m-6-6 6 6-6 6"/></svg></a><a class="text-link" href="/participate/">2027 참가 안내 <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12h16m-6-6 6 6-6 6"/></svg></a></div>
-          </div>
-          <div class="ending-signature"><strong>SSKR</strong><span>SUNRISE SUNSET KOREAN RALLY</span></div>
+          <div class="story-copy"><h2 id="title-08">일단 체험해보셔도 좋습니다</h2><div class="service-paths"><a class="service-path" href="/participate/" data-preview="1" aria-describedby="service-preview-caption"><h3>다음 SSKR 진행 정보를 확인할 수 있습니다</h3><blockquote class="story-quote"><p>진행 일정과 참가 조건, 참가비 등을 확인합니다.</p></blockquote><ul><li>이동: <span class="service-link">SSKR 참가 페이지 <span aria-hidden="true">↗</span></span></li></ul></a><a class="service-path" href="/app/spots" data-preview="2" aria-describedby="service-preview-caption"><h3>SSKR 스팟은 이렇게 제공됩니다</h3><blockquote class="story-quote"><p>어떤 장소가 어떤 정보와 함께 제공되는지 확인합니다.<br>현재 공개된 스팟이 전부는 아니며, 변경 및 추가될 수 있습니다.</p></blockquote><ul><li>이동: <span class="service-link">스팟 지도 페이지 <span aria-hidden="true">↗</span></span></li></ul></a><a class="service-path" href="/app/memorials" data-preview="3" aria-describedby="service-preview-caption"><h3>메모리얼은 이렇게 남습니다</h3><blockquote class="story-quote"><p>SSKR 참가 후 남게 될 메모리얼 페이지를 미리 살펴봅니다.<br>첫 SSKR 주행일 이전에는 예시 메모리얼이 제공됩니다.</p></blockquote><ul><li>이동: <span class="service-link">메모리얼 페이지 <span aria-hidden="true">↗</span></span></li></ul></a></div><p class="service-closing"><strong>SSKR의 문은 열려 있습니다. 선착순이지만요.</strong></p></div><figure class="service-preview"><img id="servicePreview" src="/about/assets/sskr_web1.webp" alt="SSKR 참가 안내 화면" width="1798" height="1051" loading="lazy" decoding="async"><figcaption id="service-preview-caption">SSKR 참가 페이지</figcaption></figure>
+
         </section>
         <div class="frame-edge" aria-hidden="true"></div>
         <div class="story-controls" id="storyControls" hidden>
-          <div class="chapter-status"><span id="chapterCount">01 / 08</span><span id="chapterLabel">랠리 소개</span></div>
-          <nav class="chapter-nav" aria-label="이용 안내 목차"><a href="#chapter-01" aria-label="랠리 소개" aria-current="step"><span></span></a><a href="#chapter-02" aria-label="신청 절차"><span></span></a><a href="#chapter-03" aria-label="루트 계획"><span></span></a><a href="#chapter-04" aria-label="스팟 탐색"><span></span></a><a href="#chapter-05" aria-label="안전한 라이딩"><span></span></a><a href="#chapter-06" aria-label="매니저 이용"><span></span></a><a href="#chapter-07" aria-label="기록과 메모리얼"><span></span></a><a href="#chapter-08" aria-label="다음으로"><span></span></a></nav>
+          <div class="chapter-status"><span id="chapterCount">01 / 08</span><span id="chapterLabel">한반도 횡단</span></div>
+          <nav class="chapter-nav" aria-label="이용 안내 목차"><a href="#chapter-01" aria-label="한반도 횡단" aria-current="step"><span></span></a><a href="#chapter-02" aria-label="일출과 일몰"><span></span></a><a href="#chapter-03" aria-label="자유로운 루트"><span></span></a><a href="#chapter-04" aria-label="추천 스팟"><span></span></a><a href="#chapter-05" aria-label="메모리얼"><span></span></a><a href="#chapter-06" aria-label="안전과 휴식"><span></span></a><a href="#chapter-07" aria-label="서해의 피날레"><span></span></a><a href="#chapter-08" aria-label="직접 체험하기"><span></span></a></nav>
           <div class="chapter-arrows"><button type="button" id="previousScene" aria-label="이전 장면"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m14 5-7 7 7 7"/></svg></button><button type="button" id="nextScene" aria-label="다음 장면"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m10 5 7 7-7 7"/></svg></button></div>
         </div>
       </div>
     </div>
   </main>
-  <div class="reading-controls"><button id="motionToggle" type="button" aria-pressed="false" hidden>모션 줄이고 읽기</button><a href="/">홈으로</a></div>
+
 </body>
 </html>

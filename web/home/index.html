@@ -33,15 +33,21 @@
   </header>
 
   <nav class="story-index" id="storyIndex" aria-label="스크롤 장면 목차">
-    <button type="button" data-chapter="home"><strong>홈</strong></button>
-    <button type="button" data-chapter="sunrise"><strong>일출로부터</strong></button>
-    <button type="button" data-chapter="crossing"><strong>한반도 횡단</strong></button>
-    <button type="button" data-chapter="route"><strong>내가 설계한 루트</strong></button>
-    <button type="button" data-chapter="checkin"><strong>스팟 체크인</strong></button>
-    <button type="button" data-chapter="complete"><strong>여정의 완성</strong></button>
+    <button type="button" data-chapter="intro"><strong>인트로</strong></button>
+    <button type="button" data-chapter="sunrise"><strong>01 · 동틀 무렵</strong></button>
+    <button type="button" data-chapter="crossing"><strong>02 · 한반도 횡단</strong></button>
+    <button type="button" data-chapter="route"><strong>03 · 서로 다른 길</strong></button>
+    <button type="button" data-chapter="spots"><strong>04 · 스팟과 기록</strong></button>
+    <button type="button" data-chapter="memorial"><strong>05 · 메모리얼</strong></button>
+    <button type="button" data-chapter="complete"><strong>피날레 · 여정의 완성</strong></button>
   </nav>
 
   <main id="top">
+        <div class="scene-copy scene-copy-horizon" id="sceneOneCopy">
+          <span class="scene-no">FIRST LIGHT</span>
+          <h2>동틀 무렵 시작되는 하루</h2>
+          <p>동해안 곳곳의 스타트 포인트에서<br />참가자들은 일출을 기다립니다.<br />해가 떠오르면 SSKR의 하루가 시작됩니다.</p>
+        </div>
     <section class="intro-scroll" id="intro" aria-labelledby="introTitle">
       <div class="intro-sticky">
         <nav class="mobile-entry-links" aria-label="SSKR 알아보기와 스팟 탐색">
@@ -53,11 +59,6 @@
         <div class="intro-grain" aria-hidden="true"></div>
 
         <div class="intro-handoff" aria-hidden="true">
-          <div class="intro-handoff-copy" id="introHandoffCopy">
-            <span class="scene-no">FIRST LIGHT</span>
-            <h2>동틀 무렵 시작되는 하루</h2>
-            <p>동해안 곳곳의 스타트 포인트에서,<br />참가자들은 일출을 기다립니다.</p>
-          </div>
           <div class="intro-handoff-sun-mask"><i id="introHandoffSun"></i></div>
           <div class="intro-handoff-line"><i id="introHandoffLine"></i></div>
         </div>
@@ -71,7 +72,7 @@
           <h1 id="introTitle">동해의 일출에서 출발하여<br /><span>서해의 낙조에 이르는 여정</span></h1>
           <div class="intro-deck">
             <span>2027 가을</span>
-            <p>동해안 곳곳의 스타트 포인트에서 출발해,<br />각자의 루트로 한반도를 횡단합니다.</p>
+            <p>SSKR은 하루 동안 한반도를 횡단하는<br />비경쟁형 모터사이클 랠리입니다.<br /><br />정해진 코스나 순위는 없습니다.<br />서로 다른 스타트 포인트에서 출발해<br />하나의 피니시를 향합니다.</p>
           </div>
         </div>
 
@@ -131,7 +132,7 @@
           <title id="svgTitle">동해에서 서해로 이어지는 SSKR의 선</title>
           <desc id="svgDesc">동해 수평선이 한반도 횡단 경로가 되고, 다시 라이더의 시간 기록으로 전환됩니다.</desc>
           <defs>
-            <filter id="lineGlow" x="-40%" y="-40%" width="180%" height="180%">
+            <filter id="lineGlow" filterUnits="userSpaceOnUse" x="-200" y="-200" width="1400" height="1100">
               <feGaussianBlur stdDeviation="4" result="blur" />
               <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
             </filter>
@@ -139,7 +140,7 @@
           <g class="map-art" id="mapArt">
             <image class="peninsula-art" href="./assets/korean_peninsula_precise.svg" x="575" y="42" width="335" height="618" />
             <text class="sea-label sea-label-east" x="825" y="410">EAST SEA</text>
-            <text class="sea-label sea-label-west" x="505" y="480">WEST SEA</text>
+            <text class="sea-label sea-label-west" x="575" y="480">WEST SEA</text>
           </g>
           <path class="journey-line-shadow" id="journeyLineShadow" pathLength="1" />
           <path class="journey-line" id="journeyLine" pathLength="1" />
@@ -157,29 +158,25 @@
           </g>
         </svg>
 
-        <div class="scene-copy scene-copy-horizon" data-scene="0">
-          <span class="scene-no">FIRST LIGHT</span>
-          <h2>동틀 무렵 시작되는 하루</h2>
-          <p>동해안 곳곳의 스타트 포인트에서,<br />참가자들은 일출을 기다립니다.</p>
-        </div>
+
 
         <div class="scene-copy scene-copy-geography" data-scene="1">
           <span class="scene-no">COAST TO COAST</span>
           <h2>일출부터 일몰까지<br /><span>동해에서 서해로—</span></h2>
-          <p>하나의 피니시를 향해<br />각자의 국토 횡단 라이딩이 펼쳐집니다.</p>
-          <dl><div><dt>STARTS</dt><dd>5+</dd></div><div><dt>SPOTS</dt><dd>50+</dd></div><div><dt>FINISH</dt><dd>01</dd></div></dl>
+          <p>하루 동안 한반도를 가로지르는,<br />함께하지만 저마다 자유롭게 달리는 여행이 펼쳐집니다.</p>
         </div>
 
         <div class="scene-copy scene-copy-places" data-scene="2">
           <span class="scene-no">ALONG THE WAY</span>
-          <h2>한반도의 풍경을 따라<br /><span>각자의 길을 따라</span></h2>
-          <p>산길을 넘고, 평원을 가르며, 작은 도시를 지나<br />같은 목적지를 향해도 저마다 다른 여정이 펼쳐집니다.</p>
+          <h2>한반도의 풍경을 따라<br /><span>서로 다른 길을 지나며</span></h2>
+          <p>산길과 평원, 작은 도시 사이<br />마음 닿는 스팟을 골라 여정을 이어갑니다.</p>
         </div>
 
-        <div class="scene-copy scene-copy-memory" data-scene="3">
+        <div class="scene-copy scene-copy-checkin" data-scene="3"><span class="scene-no">ALONG THE WAY</span><h2>쉬어 가는 길에<br />쌓여가는 SSKR의 기록</h2><p>스팟에 멈춰 체크인할 때마다<br />하루의 여정이 기록으로 쌓여갑니다.</p></div>
+        <div class="scene-copy scene-copy-memory" data-scene="4">
           <span class="scene-no">JOURNEY TRACE</span>
-          <h2>머무는 스팟마다<br /><span>영원히 남는 기억</span></h2>
-          <p>스팟에 멈춰 체크인한 시간과 장면은<br />나만의 여정을 이루는 기록으로 남습니다.</p>
+          <h2>기억으로 남는 여정의 발자취</h2>
+          <p>체크인 기록은 SSKR 개인 페이지에 남습니다.<br />혼자 간직할 수도, 모두와 공유할 수도 있습니다.</p>
         </div>
 
         <div class="scene-rail" aria-hidden="true">
@@ -192,7 +189,6 @@
           <span class="finale-scene-no">SUNSET FINISH</span>
           <small>18:47:32 · LAST LIGHT</small>
           <p><span>서해의 낙조 아래</span><strong>당신의 여정이 완성됩니다.</strong></p>
-          <a href="/app">MY SSKR를 시작하기 <span>↗</span></a>
         </div>
       </div>
     </section>
@@ -206,7 +202,6 @@
     </div>
     <div class="footer-bottom">
       <div class="footer-brand"><strong>SSKR</strong><span>SUNRISE SUNSET<br />KOREAN RALLY</span></div>
-      <nav aria-label="Footer navigation"><a href="#journey">ABOUT</a><a href="#journey">STARTS</a><a href="#journey">SPOTS</a><a href="#journey">MEMORY</a></nav>
       <div><a href="#top">INSTAGRAM ↗</a><span>© 2026 SSKR</span></div>
     </div>
     <div class="business-info" aria-label="사업자 정보 예시">
@@ -215,6 +210,6 @@
     </div>
   </footer>
 
-  <script src="./app.js?rev=intro-sun-anchor-v01"></script>
+  <script src="./app.js?rev=home-motion"></script>
 </body>
 </html>

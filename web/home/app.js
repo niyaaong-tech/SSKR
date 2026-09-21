@@ -23,7 +23,7 @@
   const introGrain = document.querySelector('.intro-grain');
   const introMeta = document.querySelector('.intro-meta');
   const introCopy = document.querySelector('#introCopy');
-  const introHandoffCopy = document.querySelector('#introHandoffCopy');
+  const sceneOneCopy = document.querySelector('#sceneOneCopy');
   const introHandoffTrack = document.querySelector('.intro-handoff-line');
   const introHandoffLine = document.querySelector('#introHandoffLine');
   const introHandoffSunMask = document.querySelector('.intro-handoff-sun-mask');
@@ -46,11 +46,14 @@
   const seaLabels = [...document.querySelectorAll('.sea-label')];
   const routeNodes = document.querySelector('#routeNodes');
   const placesLayer = document.querySelector('#placesLayer');
+  const placeTop = document.querySelector('.place-1');
+  const placeMiddle = document.querySelector('.place-2');
+  const placeBottom = document.querySelector('.place-3');
   const memoryLayer = document.querySelector('#memoryLayer');
   const memoryCards = [...document.querySelectorAll('.memory-card')];
   const cardConnectors = document.querySelector('#cardConnectors');
   const connectorLines = [...document.querySelectorAll('[data-connector]')];
-  const sceneCopies = [...document.querySelectorAll('.scene-copy')];
+  const sceneCopies = [...document.querySelectorAll('.scene-copy[data-scene]')];
   const firstLightStamp = document.querySelector('#firstLightStamp');
   const sceneCurrent = document.querySelector('#sceneCurrent');
   const sceneProgress = document.querySelector('#sceneProgress');
@@ -132,6 +135,83 @@
     });
   };
 
+  const svgNS='http://www.w3.org/2000/svg';
+  const svgElement=(tag,attributes,parent)=>{
+    const element=document.createElementNS(svgNS,tag);
+    Object.entries(attributes).forEach(([key,value])=>element.setAttribute(key,String(value)));
+    parent.append(element);return element;
+  };
+  const multiLayer=svgElement('g',{class:'multi-routes','aria-hidden':'true'},journeySvg);
+  // Illustration anchors share the existing map's projected coordinate space.
+  const routeDefinitions=[
+    {name:'강릉',points:routeSpots,names:['강릉','평창','원주','충주','괴산','청주','익산','군산'],count:4},
+    {name:'울진 후포방파제',points:[[989,386],[853,411],[797,498],[756,444],routeSpots[5],routeSpots[6],routeSpots[7]],names:['울진 후포방파제','안동','구미','상주','청주','익산','군산'],count:3},
+    {name:'부산 죽도공원',points:[[948,670],[860,655],[752,667],[647,629],[562,603],routeSpots[7]],names:['부산 죽도공원','창원','진주','남원','정읍','군산'],count:5}
+  ];
+  let randomState=2026;
+  const random=()=>{randomState=(Math.imul(randomState,1664525)+1013904223)>>>0;return randomState/4294967296;};
+  const routes=routeDefinitions.map((definition,index)=>{
+    const group=svgElement('g',{'data-route':index,class:'extra-spot'},multiLayer);
+    const path=svgElement('path',{d:pathFrom(definition.points.flat()),class:'extra-route',pathLength:1},group);
+    if(index===0)path.style.visibility='hidden';
+    const start=svgElement('circle',{cx:definition.points[0][0],cy:definition.points[0][1],r:6,class:'multi-route-dot'},group);
+    const startRing=svgElement('circle',{cx:definition.points[0][0],cy:definition.points[0][1],r:10,class:'node-ring'},group);
+    const label=svgElement('text',{x:definition.points[0][0]-12,y:definition.points[0][1]-15,'text-anchor':'end',class:'multi-route-label'},group);label.textContent=definition.name;
+    const spots=definition.points.slice(1,-1).map((point,i)=>{
+      const spot=svgElement('g',{class:'extra-spot'},group);
+      svgElement('circle',{cx:point[0],cy:point[1],r:5,class:'spot-core'},spot);
+      svgElement('circle',{cx:point[0],cy:point[1],r:10,class:'node-ring'},spot);
+      const text=svgElement('text',{x:point[0]-24,y:point[1]-14,'text-anchor':'middle',class:'multi-route-label'},spot);text.textContent=definition.names[i+1];
+      return spot;
+    });
+    let departure=360+index*3;
+    const riders=Array.from({length:definition.count},()=>{
+      departure+=8+random()*7;
+      return {start:departure,duration:66+random()*15,element:svgElement('path',{d:'M9 0 L-6 -5 L-4 0 L-6 5 Z',class:'route-rider'},group)};
+    });
+    return {group,path,start,startRing,label,spots,riders,length:path.getTotalLength()};
+  });
+  // Finish the last rider at 495, leaving exactly 20 frames before the copy crossfade.
+  const lastArrival=Math.max(...routes.flatMap(route=>route.riders.map(rider=>rider.start+rider.duration)));
+  routes.forEach(route=>route.riders.forEach(rider=>{rider.duration+=495-lastArrival;}));
+  const finishGroup=svgElement('g',{class:'extra-spot'},multiLayer);
+  const finishRing=svgElement('circle',{cx:routeSpots[7][0],cy:routeSpots[7][1],r:10,class:'node-ring'},finishGroup);
+  const finish=svgElement('circle',{cx:routeSpots[7][0],cy:routeSpots[7][1],r:5,class:'spot-core'},finishGroup);
+  const finishLabel=svgElement('text',{x:routeSpots[7][0]-12,y:routeSpots[7][1]-16,'text-anchor':'end',class:'multi-route-label'},multiLayer);finishLabel.textContent='군산';
+  const renderMultiRoutes=(frame,p)=>{
+    const visibility=range(frame,295,325)*(1-range(frame,753,783));
+    setOpacity(multiLayer,visibility);
+    const pulse=(at)=>1-range(frame,at,at+9);
+    let finishPulse=0;
+    routes.forEach((route,index)=>{
+      const draw=range(frame,295+Math.max(0,index-1)*30,325+Math.max(0,index-1)*30);
+      route.path.style.strokeDasharray='1';route.path.style.strokeDashoffset=String(1-draw);
+      let startPulse=0;
+      route.riders.forEach(rider=>{
+        const progress=range(frame,rider.start,rider.start+rider.duration);
+        const visible=frame>=rider.start&&progress<1;
+        setOpacity(rider.element,visible?1:0);
+        const distance=progress*route.length,point=route.path.getPointAtLength(distance);
+        const ahead=route.path.getPointAtLength(Math.min(route.length,distance+1));
+        const angle=Math.atan2(ahead.y-point.y,ahead.x-point.x)*180/Math.PI;
+        rider.element.setAttribute('transform',`translate(${point.x} ${point.y}) rotate(${angle})`);
+        if(frame>=rider.start)startPulse=Math.max(startPulse,pulse(rider.start));
+        if(frame>=rider.start+rider.duration)finishPulse=Math.max(finishPulse,pulse(rider.start+rider.duration));
+      });
+      route.start.setAttribute('r',5+startPulse*7);
+      route.startRing.setAttribute('r',10+startPulse*9);
+      route.start.style.opacity='1';
+      route.spots.forEach((spot,i)=>setOpacity(spot,index===0||(index===1&&i>=3)?0:range(frame,(index===1?610:655)+i*6,(index===1?640:685)+i*6)));
+      setOpacity(route.label,draw*(index===0?1-range(frame,535,565):1));
+      if(index===0){setOpacity(route.start,1-range(frame,535,565));setOpacity(route.startRing,1-range(frame,535,565));}
+    });
+    finish.setAttribute('r',5+finishPulse*8);
+    finishRing.setAttribute('r',10+finishPulse*9);
+    setOpacity(finishGroup,1-range(frame,535,565));
+    setOpacity(finish,(.65+.35*finishPulse)*(1-range(frame,535,565)));
+    setOpacity(finishLabel,1-range(frame,535,565));
+  };
+
   // Keep the editorial frame numbers stable while giving the finale more
   // physical scroll distance. The last 4% of the motion timeline occupies
   // 12.3% of the brochure scroll, roughly tripling the sunset hold.
@@ -149,6 +229,25 @@
       ? progress * (physicalFinalStart / timelineFinalStart)
       : physicalFinalStart + (progress - timelineFinalStart) * ((1 - physicalFinalStart) / (1 - timelineFinalStart));
   };
+  // Insert scroll-distance holds without changing the original visual keyframes.
+  const holds=[{at:138,duration:30},{at:265,duration:240},{at:443,duration:40},{at:835,duration:50}];
+  const visualFrameFromMotion=(frame)=>{
+    let added=0;
+    for(const hold of holds){
+      const start=hold.at+added;
+      if(frame<start)return frame-added;
+      if(frame<=start+hold.duration)return hold.at;
+      added+=hold.duration;
+    }
+    return frame-added;
+  };
+  const motionFrameFromVisual=(frame)=>frame+holds.reduce((sum,h)=>sum+(frame>h.at?h.duration:0),0);
+  const copyEnvelope=(frame,start,end)=>range(frame,start,start+30)*(1-range(frame,end,end+30));
+  if(!reduced){
+    // Preserve pixels-per-frame while extending the document for added beats.
+    intro.style.height='250svh';
+    brochure.style.height='1056.43svh';
+  }
   const getFrameLayout = () => {
     const scrollable = Math.max(1, document.documentElement.scrollHeight - stageHeight());
     const brochureStart = brochure?.offsetTop ?? 0;
@@ -158,42 +257,38 @@
   };
   const frameFromScroll = (scrollY) => {
     const { scrollable, brochureStart, brochureMax, brochureEnd } = getFrameLayout();
-    if (scrollY <= brochureStart) return mix(0, 150, clamp(scrollY / Math.max(1, brochureStart)));
-    if (scrollY <= brochureEnd) return mix(150, 850, clamp((scrollY - brochureStart) / brochureMax));
-    return mix(850, 900, clamp((scrollY - brochureEnd) / Math.max(1, scrollable - brochureEnd)));
+    if (scrollY <= brochureStart) return mix(0, 180, clamp(scrollY / Math.max(1, brochureStart)));
+    if (scrollY <= brochureEnd) return mix(180, 1210, clamp((scrollY - brochureStart) / brochureMax));
+    return mix(1210, 1260, clamp((scrollY - brochureEnd) / Math.max(1, scrollable - brochureEnd)));
   };
   const scrollFromFrame = (frame) => {
     const { scrollable, brochureStart, brochureMax, brochureEnd } = getFrameLayout();
-    const targetFrame = clamp(frame, 0, 900);
-    if (targetFrame <= 150) return brochureStart * (targetFrame / 150);
-    if (targetFrame <= 850) return brochureStart + brochureMax * ((targetFrame - 150) / 700);
-    return brochureEnd + (scrollable - brochureEnd) * ((targetFrame - 850) / 50);
+    const targetFrame = clamp(frame, 0, 1260);
+    if (targetFrame <= 180) return brochureStart * (targetFrame / 180);
+    if (targetFrame <= 1210) return brochureStart + brochureMax * ((targetFrame - 180) / 1030);
+    return brochureEnd + (scrollable - brochureEnd) * ((targetFrame - 1210) / 50);
   };
 
+  // Menu destinations showcase each scene; active states follow scene boundaries.
   const chapterDefinitions = [
-    { key: 'home', frame: 0 },
-    { key: 'sunrise', frame: 140 },
-    { key: 'crossing', progress: .16 },
-    { key: 'route', frame: 410 },
-    { key: 'checkin', progress: .625 },
-    { key: 'complete', frame: 840 }
+    { key:'intro', start:0, frame:0 },
+    { key:'sunrise', start:105, frame:150 },
+    { key:'crossing', start:168, frame:280 },
+    { key:'route', start:295, frame:410 },
+    { key:'spots', start:515, frame:730 },
+    { key:'memorial', start:753, frame:960 },
+    { key:'complete', start:1080, frame:1165 }
   ];
-  const getChapterTargets = () => {
-    const { brochureStart, brochureMax } = getFrameLayout();
-    return chapterDefinitions.map((chapter) => ({
-      ...chapter,
-      target: chapter.frame !== undefined
-        ? scrollFromFrame(chapter.frame)
-        : brochureStart + brochureMax * physicalFromTimeline(chapter.progress)
-    }));
-  };
+  const getChapterTargets = () => chapterDefinitions.map(chapter=>({
+    ...chapter,target:scrollFromFrame(chapter.frame)
+  }));
   const syncStoryIndex = (scrollY) => {
     if (!storyIndex) return;
     const targets = getChapterTargets();
     const scrollable = Math.max(1, document.documentElement.scrollHeight - stageHeight());
     let activeIndex = 0;
     targets.forEach((chapter, index) => {
-      if (scrollY >= chapter.target - 2) activeIndex = index;
+      if (frameFromScroll(scrollY) >= chapter.start) activeIndex = index;
     });
     chapterButtons.forEach((button, index) => {
       const active = index === activeIndex;
@@ -252,21 +347,32 @@
   let lastScene = -1;
   const update = () => {
     ticking = false;
+    if(placeTop&&placeMiddle&&placeBottom){
+      const center=(placeTop.offsetTop+placeTop.offsetHeight/2+placeBottom.offsetTop+placeBottom.offsetHeight/2)/2;
+      placeMiddle.style.top=`${center-placeMiddle.offsetHeight/2}px`;
+      placeMiddle.style.bottom='auto';
+    }
     const scrollY = window.scrollY || document.documentElement.scrollTop;
     const scrollable = Math.max(1, document.documentElement.scrollHeight - stageHeight());
-    const currentFrame = frameFromScroll(scrollY);
+    const motionFrame = frameFromScroll(scrollY);
+    const currentFrame = visualFrameFromMotion(motionFrame);
+    const firstCopyOpacity=copyEnvelope(motionFrame,105,168);
+    if(!reduced&&sceneOneCopy){
+      sceneOneCopy.style.opacity=firstCopyOpacity.toFixed(3);
+      sceneOneCopy.style.visibility=firstCopyOpacity>0?'visible':'hidden';
+      sceneOneCopy.style.transform=`translate3d(0,${mix(38,0,ease(firstCopyOpacity))}px,0)`;
+    }
     if (pageProgress) pageProgress.style.transform = `scaleX(${scrollY / scrollable})`;
-    if (frameNumber) frameNumber.textContent = String(Math.round(currentFrame)).padStart(3, '0');
+    if (frameNumber) frameNumber.textContent = String(Math.round(motionFrame)).padStart(3, '0');
     header?.classList.toggle('is-scrolled', scrollY > 20);
     syncStoryIndex(scrollY);
 
     if (intro && !reduced) {
-      const introMax = Math.max(1, intro.offsetHeight - (window.innerWidth <= 900 ? document.querySelector('.intro-sticky').offsetHeight : window.innerHeight));
-      const introP = clamp((scrollY - intro.offsetTop) / introMax);
-      const headlineOut = range(introP, .18, .43);
+      const introP = clamp(currentFrame/150);
+      const headlineOut = range(motionFrame,27,57);
       const horizonLift = ease(range(introP, .3, .48));
       const lineReveal = ease(range(introP, .48, .68));
-      const handoffCopyIn = ease(range(introP, .7, .84));
+
       const imageFade = ease(range(introP, .68, .94));
       const skyWidth = introSky?.offsetWidth || window.innerWidth;
       const skyHeight = introSky?.offsetHeight || window.innerHeight;
@@ -302,7 +408,7 @@
         introSky.style.setProperty('--intro-sea-image-height', `${seaImageHeight.toFixed(2)}px`);
       }
       setOpacity(introGrain, mix(.15, .08, imageFade));
-      setOpacity(introMeta, 1 - range(introP, .28, .55));
+      setOpacity(introMeta, 1 - range(motionFrame,42,72));
       if (introHandoffLine) {
         introHandoffLine.style.opacity = lineReveal.toFixed(3);
         introHandoffLine.style.transform = `scaleX(${lineReveal})`;
@@ -324,37 +430,30 @@
           introHandoffSun.style.transform = `translate3d(0,${mix(100, 30, sunRise).toFixed(2)}%,0)`;
         }
       }
-      if (introHandoffCopy) {
-        introHandoffCopy.style.opacity = handoffCopyIn.toFixed(3);
-        introHandoffCopy.style.transform = `translate3d(0,${mix(38, 0, handoffCopyIn)}px,0)`;
-      }
       if (mobileLinks) {
         mobileLinks.style.opacity = (1 - headlineOut).toFixed(3);
         mobileLinks.style.visibility = headlineOut >= .99 ? 'hidden' : 'visible';
       }
       if (gateway) {
-        const gatewayOut = range(introP, .24, .5);
+        const gatewayOut = range(motionFrame,36,66);
         gateway.style.opacity = (1 - gatewayOut).toFixed(3);
         gateway.style.transform = `translate3d(0,${mix(0, 28, gatewayOut)}px,0)`;
       }
-      setOpacity(introCue, 1 - range(introP, .03, .24));
+      setOpacity(introCue, 1 - range(motionFrame,5,35));
     }
 
     if (!brochure || reduced) return;
-    const brochureStart = brochure.offsetTop;
-    const brochureMax = Math.max(1, brochure.offsetHeight - stageHeight());
-    const physicalP = clamp((scrollY - brochureStart) / brochureMax);
-    const p = timelineFromPhysical(physicalP);
-    if (brochureStage) brochureStage.style.opacity = scrollY >= brochureStart ? '1' : '0';
+    const p = timelineFromPhysical(clamp((currentFrame-150)/700));
+    if (brochureStage) brochureStage.style.opacity = currentFrame >= 150 ? '1' : '0';
 
     const mobileCompositionShift = window.innerWidth <= 900
       ? -window.innerWidth * .18
-        * ease(range(p, .32, .36))
+        * ease(range(motionFrame,295,325))
       : 0;
     if (journeySvg) journeySvg.style.transform = `translate3d(${mobileCompositionShift.toFixed(2)}px,0,0)`;
 
     const horizonToRoute = range(p, 0, .14);
-    const routeToTrace = range(p, .52, .64);
+    const routeToTrace = range(p, .458, .64);
     const traceBaselineIn = range(currentFrame, 545, 559);
     const viewportHorizon = getViewportHorizon();
     let currentPath = interpolatePath(viewportHorizon, route, horizonToRoute);
@@ -390,29 +489,30 @@
 
     const mapIn = range(p, .015, .085);
     const southZoom = range(p, .045, .18);
-    const mapOut = range(p, .5, .64);
+    const mapOut = range(p, .458, .64);
     const mapOpacity = mapIn * (1 - mapOut) * mix(1, .62, ease(southZoom));
     setOpacity(mapArt, mapOpacity);
     setOpacity(mapGrid, mapOpacity * .8);
-    const seaLabelFade = range(p, .36, .4);
+    const seaLabelStart=motionFrameFromVisual(150+700*physicalFromTimeline(.36));
+    const seaLabelFade = range(motionFrame,seaLabelStart,seaLabelStart+30);
     seaLabels.forEach((label) => setOpacity(label, 1 - seaLabelFade));
     if (mapArt) mapArt.style.transform = `translate3d(${mix(42, -70, ease(southZoom))}px,0,0) scale(${mix(.92, 3.15, ease(southZoom))})`;
 
-    const routeReveal = range(p, .2, .34);
+    const routeReveal = motionFrame>=535?1:0;
     const nodeOut = range(currentFrame, 770, 805);
     setOpacity(traceBaseline, traceBaselineIn * (1 - nodeOut));
     setOpacity(routeNodes, routeReveal * (1 - nodeOut));
     const placesIn = range(p, .36, .43);
-    const placesOut = range(p, .51, .58);
+    const placesOut = range(p, .458, .58);
     setOpacity(placesLayer, placesIn * (1 - placesOut));
     document.querySelectorAll('.place').forEach((place, index) => {
       const reveal = range(p, .37 + index * .014, .43 + index * .014);
-      place.style.clipPath = `circle(${(ease(reveal) * 50).toFixed(2)}% at 50% 50%)`;
+      place.style.clipPath = `circle(${(ease(reveal) * 50 * (1-placesOut)).toFixed(2)}% at 50% 50%)`;
       place.style.transform = `translate3d(0,${mix(24, 0, ease(reveal))}px,0)`;
     });
     const routeNodeElements = routeNodes ? [...routeNodes.children] : [];
     routeNodeElements.forEach((node, index) => {
-      const nodeReveal = range(p, .2 + index * .012, .27 + index * .012);
+      const nodeReveal = range(motionFrame,535+index*6,565+index*6);
       const eventReveal = range(p, .61 + index * .012, .655 + index * .012);
       const memoryRecall = range(p, .8 + index * .012, .84 + index * .012);
       const elastic = easeOutBack(eventReveal);
@@ -508,26 +608,26 @@
     }
 
     const sceneWeights = [
-      1 - range(p, .06, .14),
-      fadeWindow(p, .08, .16, .36),
-      fadeWindow(p, .36, .405, .56),
-      fadeWindow(p, .54, .61, .73)
+      copyEnvelope(motionFrame,188,295),
+      copyEnvelope(motionFrame,315,515),
+      copyEnvelope(motionFrame,535,753),
+      copyEnvelope(motionFrame,773,1095)
     ];
-    sceneCopies.forEach((copy, index) => {
-      const opacity = sceneWeights[index];
-      copy.style.opacity = opacity.toFixed(3);
-      copy.style.transform = `translate3d(0,${mix(28, 0, ease(opacity))}px,0)`;
+    sceneCopies.forEach((copy,index)=>{
+      const opacity=sceneWeights[index];
+      copy.style.opacity=opacity.toFixed(3);
+      copy.style.transform=`translate3d(0,${mix(28,0,ease(opacity))}px,0)`;
     });
-    if (firstLightStamp) firstLightStamp.style.opacity = sceneWeights[0].toFixed(3);
-
-    const scene = p < .12 ? 0 : p < .36 ? 1 : p < .54 ? 2 : currentFrame < 805 ? 3 : 4;
+    setOpacity(firstLightStamp,firstCopyOpacity);
+    renderMultiRoutes(motionFrame,p);
+    const scene = motionFrame < 168 ? 0 : motionFrame < 295 ? 1 : motionFrame < 515 ? 2 : motionFrame < 753 ? 3 : motionFrame < 1080 ? 4 : 5;
     if (scene !== lastScene) {
       lastScene = scene;
       if (sceneCurrent) sceneCurrent.textContent = String(scene + 1).padStart(2, '0');
     }
     if (sceneProgress) sceneProgress.style.transform = `scaleY(${p})`;
     if (framePhase) {
-      framePhase.textContent = currentFrame >= 805 ? 'SUNSET HOLD' : currentFrame >= 770 ? 'MEMORY EXIT' : p < .01 ? 'HORIZON' : p < .18 ? 'MAP + ROUTE' : p < .52 ? 'MY ROUTE' : p < .6 ? 'STRAIGHTEN' : p < .8 ? 'SPOT CHECK-IN' : 'MEMORY RECALL';
+      framePhase.textContent = ['SCENE 01','SCENE 02','SCENE 03','SCENE 04','SCENE 05','FINALE'][scene];
     }
 
     setOpacity(day, range(p, .08, .2) * (1 - range(p, .54, .68)));
@@ -552,7 +652,7 @@
       sunOrb.style.clipPath = `inset(0 0 ${(1 - visibleHeight) * 100}% 0)`;
     }
 
-    const hold = range(currentFrame, 805, 845);
+    const hold = range(motionFrame,1115,1145);
     setOpacity(sunsetHold, hold);
     if (sunsetHold) {
       sunsetHold.style.pointerEvents = hold > .9 ? 'auto' : 'none';

@@ -11,7 +11,7 @@ SSKR 웹의 현재 실행 결과를 관리하는 저장소입니다. 기획 문�
 - `/participate` — `web/participate/`: 참가 안내
 - `/journey` — `web/journey-presentation/`: Journey Presentation 임시 서브페이지
 
-HOME 헤더의 `THE JOURNEY`만 `/journey`로 연결됩니다. 프레젠테이션을 정식 웹 콘텐츠로 사용할지는 아직 결정되지 않았으므로 `/journey`에는 검색엔진 비노출 설정을 적용했습니다.
+HOME 헤더에서 Journey Presentation 링크를 제거했습니다. 기존 `/journey` 주소와 소스는 아직 유지되며 검색엔진 비노출 설정이 적용되어 있습니다.
 
 ## 작업 기준
 

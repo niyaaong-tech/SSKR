@@ -23,3 +23,6 @@
 }
 
 .sskr-map-return{padding:8px 11px;border:1px solid #cbd5c5;border-radius:5px;background:#f2f3ef;color:#395a47;font:inherit;font-size:12px;cursor:pointer}
+
+.sskr-map .leaflet-sskr-land-pane svg{width:auto;height:auto}.sskr-map .sskr-land-label{pointer-events:none;text-align:center}.sskr-map .sskr-land-label span{display:inline-block;padding:1px 3px;border-radius:3px;background:#f2f5f0cc;color:#4a6251;font:600 10px/16px sans-serif;white-space:nowrap;text-shadow:0 1px 1px #fff}
+.sskr-map .sskr-land-label.is-dokdo i{display:block;width:6px;height:6px;margin:0 auto 1px;border:1px solid #fff;border-radius:50%;background:#536e5e;box-shadow:0 0 0 1px #536e5e}

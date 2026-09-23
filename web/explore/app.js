@@ -18,6 +18,7 @@
     img.alt=place.name+'의 풍경';
     if(place.image){img.hidden=false;img.src=place.image;$('photo-unavailable').hidden=true;}else{img.removeAttribute('src');img.hidden=true;$('photo-unavailable').hidden=false;}
     $('image-credit').textContent=place.image?place.photoCredit:'';
+    $('image-credit').href=place.photoSource||place.source;
     $('detail-index').textContent=String(visible.indexOf(place)+1).padStart(2,'0')+' / '+String(visible.length).padStart(2,'0');
     if(animate&&!reduced){const panel=$('place-detail');panel.classList.remove('entering');void panel.offsetWidth;panel.classList.add('entering');}
   }

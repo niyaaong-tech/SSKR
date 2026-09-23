@@ -5,7 +5,7 @@ SSKR 웹의 현재 실행 결과를 관리하는 저장소입니다. 기획 문�
 ## 현재 공개 구조
 
 - `/about/` — `web/about/`: SSKR 소개, 스크롤 연동 8개 장면과 읽기 모드
-- `/explore/` — `web/explore/`: 출발 후보 5곳·경유 후보 30곳·대천 도착지 지도 탐색
+- `/explore/` — `web/explore/`: 출발 후보 7곳·경유 후보 30곳·대천 도착지 지도 탐색
 - `/tests/home-explore/` — `web/tests/home-explore/`: HOME 장소 탐색 인터랙션 검토 시안 (검색엔진 비노출)
 - `/` — `web/home/`: SSKR HOME
 - `/participate` — `web/participate/`: 참가 안내

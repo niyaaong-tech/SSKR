@@ -2,8 +2,8 @@ const test=require('node:test'),assert=require('node:assert/strict'),fs=require(
 const {tileMask,contains,tile,boundaryHash}=require('../../server/map/tiles');
 const catalog=require('../../web/app/spot-catalog');
 const project=(lng,lat,z)=>{const n=2**z,s=Math.sin(lat*Math.PI/180),x=(lng+180)/360*n,y=(.5-Math.log((1+s)/(1-s))/(4*Math.PI))*n;return {x:Math.floor(x),y:Math.floor(y),point:[(x-Math.floor(x))*4096,(y-Math.floor(y))*4096]};};
-test('all 106 catalog places are retained, including ports, beaches and coastal approaches',()=>{
- assert.equal(catalog.length,106);
+test('all 158 catalog places are retained, including ports, beaches and coastal approaches',()=>{
+ assert.equal(catalog.length,158);
  for(const place of catalog)for(const z of [6,8,12,14]){const p=project(place.lng,place.lat,z);assert.ok(contains(p.point,tileMask(z,p.x,p.y)),place.name+' at '+z);}
  for(const [lng,lat] of [[126.554,37.97],[125.75,39.03],[124.38,40.13],[129.287,34.205],[130.4,33.59],[121.47,31.23]]){const p=project(lng,lat,8);assert.equal(contains(p.point,tileMask(8,p.x,p.y)),false);}
 });

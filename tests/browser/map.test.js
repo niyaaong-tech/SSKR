@@ -33,6 +33,22 @@ test('mobile cards fill bottom rows; wheel gestures retain their original owner'
  await p.waitForTimeout(350);const zoom=await p.evaluate(()=>__map.getZoom());await p.mouse.move(195,30);await p.mouse.wheel(0,60);await p.waitForTimeout(60);box=await p.locator('.spot-map').boundingBox();await p.mouse.move(box.x+box.width/2,box.y+box.height*.3);await p.mouse.wheel(0,60);await p.waitForTimeout(100);assert.equal(await p.evaluate(()=>__map.getZoom()),zoom);assert.ok(await p.evaluate(()=>scrollY)>before.y);
  await capture(p,'mobile');await p.close();assert.deepEqual(errors,[]);
 });
+test('maximum zoom out shows both Korean landmasses and the southern islands',async()=>{
+ for(const [width,height,name] of [[1440,1000,'overview-desktop'],[390,844,'overview-mobile']]){
+  const p=await page(width,height);await p.goto(base+'/app/spots?scenario=guest');await p.waitForSelector('.spot-mini-card');
+  await p.waitForSelector('.leaflet-sskr-land-pane path');
+  await p.evaluate(()=>__map.setView([38,128.1],__map.getMinZoom(),{animate:false}));
+  const shape=await p.evaluate(()=>{
+   const bounds=__map.getBounds();
+   const paths=[...document.querySelectorAll('.leaflet-sskr-land-pane path')];
+   return {min:__map.getMinZoom(),sizes:paths.map(e=>e.getBoundingClientRect().height),islands:[[33.38,126.53],[37.5,130.88],[37.24078,131.86956]].every(p=>bounds.contains(p)),dokdo:!!document.querySelector('.sskr-land-label.is-dokdo i')};
+  });
+  assert.ok(shape.min<=6);assert.ok(shape.sizes.length===2&&shape.sizes.every(h=>h>80));assert.equal(shape.islands,true);assert.equal(shape.dokdo,true);
+  await capture(p,name);await p.close();
+ }
+ assert.deepEqual(errors,[]);
+});
+
 test('coastal map details are preserved at high zoom',async()=>{
  const p=await page();for(const id of ['daecheon','daecheon-market','gyeongju','hupo','ganwolam','muchangpo']){await open(p,'/app/spots/'+id+'?scenario=guest');const place=require('../../web/app/spot-catalog').find(p=>p.id===id);await p.evaluate(p=>__map.setView([p.lat,p.lng],14,{animate:false}),place);await p.waitForTimeout(300);await p.waitForFunction(()=>__backdrop.getMaplibreMap().getZoom()>=13&&__backdrop.getMaplibreMap().areTilesLoaded(),null,{timeout:60000});assert.ok(await p.evaluate(p=>__map.getCenter().distanceTo([p.lat,p.lng])<100,place));const counts=await p.evaluate(()=>{const g=__backdrop.getMaplibreMap();return {water:g.querySourceFeatures('openmaptiles',{sourceLayer:'water'}).length,roads:g.querySourceFeatures('openmaptiles',{sourceLayer:'transportation'}).length};});assert.ok(counts.water>0,id+' water');assert.ok(counts.roads>0,id+' roads');if(id==='daecheon')await capture(p,'coast');}await p.close();assert.deepEqual(errors,[]);
 });

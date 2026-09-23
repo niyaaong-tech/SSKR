@@ -10,6 +10,8 @@
     ['uljin','start','central','망양정해수욕장','경북 · 울진',36.970,129.416,'왕피천이 동해에 닿는 곳에서 시작합니다.','왕피천 하구와 망양정 아래 펼쳐진 해변입니다. 불영계곡과 봉화 방향으로 향하는 중부 횡단의 출발 후보입니다.','해변 주차장 후보 · 진출입 동선과 집결 허가 확인',126100,''],
     ['yeongdeok','start','south','고래불해수욕장','경북 · 영덕',36.602,129.410,'고래불의 긴 해안, 남쪽에서 시작하는 하루.','병곡 쪽 광장과 해변 주차 구역을 출발 후보로 선정했습니다. 해안의 아침을 뒤로하고 영덕 내륙과 청송 방향을 살펴볼 수 있습니다.','병곡 해변 광장·주차장 후보 · 축제 일정 및 대관 확인',null,''],
     ['gyeongju','start','south','읍천항 · 파도소리길','경북 · 경주',35.692,129.475,'주상절리의 바다를 곁에 두고 출발합니다.','양남 주상절리 파도소리길과 가까운 읍천항 공용주차장을 후보로 선정했습니다. 주상절리 탐방로는 보행 공간이므로 바이크는 주차 후 둘러봅니다.','읍천항 공용주차장 후보 · 어항 작업 및 주민 동선 우선',2603500,''],
+    ['gwangalli','start','south','광안리해수욕장','부산 · 수영',35.153813,129.118548,'광안대교와 바다가 함께 보이는 도심 출발점.','광안리해수욕장은 부산 도심에서 바다를 만나는 곳입니다. 해변 주변 공영주차장 일대를 출발 후보로 두고 서쪽 내륙으로 향하는 경로를 검토합니다.','인근 공영주차장 후보 · 새벽 집결 동선과 행사 사용 협의 필요',126078,''],
+    ['songjeong','start','south','송정해수욕장','부산 · 해운대',35.178712,129.199640,'송정의 바다에서 남부 횡단을 시작합니다.','송정해수욕장과 죽도 인근에서 아침 바다를 보고 출발하는 후보입니다. 주차장에서 집결한 뒤 부산 시가지를 지나 내륙으로 이어지는 동선을 검토합니다.','송정해변 주차장 후보 · 성수기 혼잡과 집결 허가 확인',126080,''],
     ['daegwallyeong','spot','north','대관령마을휴게소','강원 · 평창',37.687,128.754,'동해에서 고원으로, 첫 번째 고갯마루.','영동고속도로 휴게소가 아닌 옛 대관령 고갯길의 휴게소입니다. 해안에서 내륙으로 풍경이 바뀌는 지점을 잠시 쉬어 갑니다.','옛길 휴게소 · 안개·강풍·노면 상태 확인',null,''],
     ['auraji','spot','north','아우라지','강원 · 정선',37.483,128.721,'두 물줄기와 정선 아리랑이 만나는 자리.','송천과 골지천이 합류하는 물가에서 정선의 지형과 이야기를 만납니다. 강변을 걷는 짧은 휴식으로 산간 구간의 리듬을 바꿔보세요.','강변 공용 주차 구역 이용 · 산책로 보행',125777,''],
     ['seondol','spot','north','선돌','강원 · 영월',37.199,128.427,'서강 위로 선 바위, 짧은 걸음의 긴 여운.','영월 서강을 내려다보는 두 갈래 바위가 인상적인 전망 지점입니다. 주차장에서 전망대로 걸어 들어가 굽이치는 강과 마을을 바라봅니다.','전망대는 주차 후 도보 · 이륜차 진입 금지 구간 확인',126887,'39/2922039_image2_1.jpg'],
@@ -47,6 +49,8 @@
     uljin:{image:'https://www.uljin.go.kr/upload_data/board_data/BBS_ATTRACTION_TU/173923364455613.jpg',source:'https://www.uljin.go.kr/board/view.uljin?boardId=BBS_ATTRACTION_TU&dataSid=1664',photoCredit:'사진 · 울진군'},
     yeongdeok:{image:'https://access.visitkorea.or.kr/bfvk_img/call?cmd=VIEW&id=98c9ee51-a79b-4750-a826-dfbd2dd4870a',source:'https://access.visitkorea.or.kr/opentour/detail.do?cotId=9b7101c9-7965-42b6-b00a-ad2513e8d9ac',photoCredit:'사진 · 영덕군 / 한국관광공사'},
     gyeongju:{image:'https://www.gyeongju.go.kr/design/tour2019/img/sub/tMonth_2024/20241128-41.jpg',source:'https://www.gyeongju.go.kr/tour/page.do?mnu_uid=3621',photoCredit:'사진 · 경주시, 공공누리 제1유형 (주상절리 파도소리길)'},
+    gwangalli:{image:'https://commons.wikimedia.org/wiki/Special:FilePath/Sunrise_at_Gwangalli_Beach%2C_Busan.jpg?width=900',photoSource:'https://commons.wikimedia.org/wiki/File:Sunrise_at_Gwangalli_Beach,_Busan.jpg',photoCredit:'Wikimedia Commons · VN.NguyenDucDuy · CC BY-SA 4.0'},
+    songjeong:{image:'https://commons.wikimedia.org/wiki/Special:FilePath/Songjeong_Beach.jpg?width=900',photoSource:'https://commons.wikimedia.org/wiki/File:Songjeong_Beach.jpg',photoCredit:'Wikimedia Commons · Andrewssi2 · CC BY-SA 3.0'},
     daecheon:{image:'https://access.visitkorea.or.kr/bfvk_img/call?cmd=VIEW&id=6ed6c886-feb5-4834-91cc-4ccc2695f83f',source:'https://access.visitkorea.or.kr/opentour/detail.do?cotId=7d7bd27c-9d19-443b-adb6-6867c21e15dc'},
     'cafe-sann':{source:'https://www.sann.co.kr/'},
     samcheok:{source:'https://www.samcheok.go.kr/tour.web'}

@@ -106,7 +106,12 @@ html:not(.is-cinematic) .scene--ending .service-path h3,html:not(.is-cinematic) 
 .is-cinematic .scene--ending .story-copy{width:55%;right:4%;left:auto;margin:0;max-width:none}
 .scene--ending .service-paths,.scene--ending .service-closing{text-shadow:0 1px 2px #fff9,0 0 5px #fff9,0 0 12px #fff8}
 .scene--ending .service-preview{position:absolute;right:4%;bottom:12%;width:min(660px,48vw);height:38vh;margin:0;z-index:1;pointer-events:none;opacity:0;visibility:hidden;transition:opacity .22s,visibility .22s}
-.scene--ending:has(.service-path:hover) .service-preview,.scene--ending:has(.service-path:focus-visible) .service-preview{opacity:1;visibility:visible}
-.scene--ending .service-preview img{object-position:right bottom}
+.scene--ending .service-preview.is-active{opacity:1;visibility:visible}
+.scene--ending .service-preview img{position:absolute;inset:0;object-position:right bottom;opacity:0;transition:opacity .26s ease-out}.scene--ending .service-preview.is-active img.is-current{opacity:1}
 html:not(.is-cinematic) .scene--ending .service-preview{width:70%;height:32vh;bottom:4%;right:4%}
 @media(max-width:899px){.scene--ending .service-paths,.scene--ending .service-closing{text-shadow:0 0 5px #fff3}}
+
+/* Keep animated cuts hidden until their entrance begins; no-script reading stays visible. */
+html.has-js .route-inset,html.has-js .spot-insets figure,html.has-js .memorial-inset{opacity:0}
+html.has-js .route-inset.is-entered,html.has-js .spot-insets figure.is-entered,html.has-js .memorial-inset.is-entered{opacity:1}
+@media(prefers-reduced-motion:reduce){html.has-js .route-inset,html.has-js .spot-insets figure,html.has-js .memorial-inset{opacity:1}}

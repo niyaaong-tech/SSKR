@@ -115,3 +115,8 @@ html:not(.is-cinematic) .scene--ending .service-preview{width:70%;height:32vh;bo
 html.has-js .route-inset,html.has-js .spot-insets figure,html.has-js .memorial-inset{opacity:0}
 html.has-js .route-inset.is-entered,html.has-js .spot-insets figure.is-entered,html.has-js .memorial-inset.is-entered{opacity:1}
 @media(prefers-reduced-motion:reduce){html.has-js .route-inset,html.has-js .spot-insets figure,html.has-js .memorial-inset{opacity:1}}
+
+/* In reading layouts, reserve a separate preview stage below the closing copy. */
+html:not(.is-cinematic) .scene--ending{padding-bottom:clamp(52px,8vw,88px)}
+html:not(.is-cinematic) .scene--ending .story-copy{padding-bottom:0}
+html:not(.is-cinematic) .scene--ending .service-preview{position:relative;inset:auto;width:min(88%,620px);height:auto;aspect-ratio:1798/1051;margin:28px auto 0}

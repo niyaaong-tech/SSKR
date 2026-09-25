@@ -9,7 +9,7 @@
  function mount(host,options={}){
   const events=new AbortController(),reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
   let items=options.items||[],selected=items.find(p=>p.id===options.initialId)||null,inView=options.inView??true,page=0,pageItems=[],map,layer,routeLayer,highlight,landLayer,observer,resizeTimer,creditTimer,creditObserver,creditPinned=false,disposed=false,returnY=0;
-  let markers=new Map();
+  let markers=new Map(),landRings=[],correctingPan=false;
   host.classList.add('sskr-map');
   host.innerHTML=`<div class="spot-workspace"><div class="spot-map-wrap"><div class="spot-map" tabindex="0" role="region" aria-label="대한민국 SSKR 장소 지도"></div><div class="spot-list-head"><h3><span data-result-label></span> <span data-result-count></span></h3>${options.inViewControl===false?'':`<label><input type="checkbox" data-in-view ${inView?'checked':''}> 지도 안에서만</label>`}</div><div class="spot-map-controls" role="group" aria-label="지도 제어"><button type="button" data-action="zoom-in" aria-label="지도 확대">+</button><button type="button" data-action="zoom-out" aria-label="지도 축소">−</button><button type="button" data-action="fit" aria-label="${options.route?'전체 경로':'전체 장소'} 보기">↺</button></div><div class="spot-list" aria-label="지도 장소 목록"></div><div class="spot-card-pages"><button type="button" data-action="previous-cards" aria-label="이전 장소 목록">‹</button><span data-card-page aria-live="polite"></span><button type="button" data-action="next-cards" aria-label="다음 장소 목록">›</button></div><p class="spot-map-status" role="status"></p><details class="spot-attribution" open><summary>지도 출처</summary><div><a href="https://openfreemap.org/" target="_blank" rel="noopener">OpenFreeMap</a> · <a href="https://www.openmaptiles.org/" target="_blank" rel="noopener">OpenMapTiles</a><br>© <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap contributors</a><br>남북한 육지 윤곽: <a href="https://www.geoboundaries.org/" target="_blank" rel="noopener">geoBoundaries</a> (남한 Natural Earth, 북한 WFP·OCHA / CC BY 3.0 IGO)<br>도로·지역: <a href="https://www.openstreetmap.org/relation/307756" target="_blank" rel="noopener">OpenStreetMap</a></div></details></div></div>`;
   const $=s=>host.querySelector(s),listen=(node,type,fn)=>node?.addEventListener(type,fn,{signal:events.signal});
@@ -20,7 +20,44 @@
   root.SSKR_MAP_INTERACTION.bindWheel({getMap:()=>map,panel:()=>$('.spot-map'),signal:events.signal});
   function sizing(){const height=$('.spot-map-wrap').clientHeight,mobile=matchMedia('(max-width:700px)').matches,cardHeight=mobile?Math.min(74,Math.max(34,height*.105)):Math.min(104,Math.max(24,(height-146)/6));$('.spot-map-wrap').style.setProperty('--spot-card-height',cardHeight+'px');return {height,mobile,cardHeight};}
   function padding(){const {height,mobile,cardHeight}=sizing();if(mobile)return {paddingTopLeft:[20,Math.min(90,height*.14)],paddingBottomRight:[20,Math.min(cardHeight*3+96,height*.43)]};const side=Math.min(172,Math.max(88,cardHeight*1.85))+20;return {paddingTopLeft:[side,Math.min(115,height*.2)],paddingBottomRight:[side,60]};}
-  function limits(){const wasOverview=Math.abs(map.getZoom()-map.getMinZoom())<.26;map.setMinZoom(4);const bounds=root.L.latLngBounds([[32.95,124.1],[43.14,132.32]]),pad=padding(),minimum=Math.max(4,map.getBoundsZoom(bounds,false,root.L.point(pad.paddingTopLeft).add(pad.paddingBottomRight)));const ne=map.project(bounds.getNorthEast(),minimum),sw=map.project(bounds.getSouthWest(),minimum),offset=root.L.point(pad.paddingBottomRight).subtract(pad.paddingTopLeft).divideBy(2),center=ne.add(sw).divideBy(2).add(offset),half=map.getSize().divideBy(2);map.setMaxBounds(root.L.latLngBounds(map.unproject(center.subtract(half),minimum),map.unproject(center.add(half),minimum)));map.setMinZoom(minimum);if(wasOverview)map.setZoom(minimum,{animate:false});}
+  function limits(){
+   const wasOverview=Math.abs(map.getZoom()-map.getMinZoom())<.26;
+   map.setMinZoom(4);
+   const overview=root.L.latLngBounds([[34.58,126.4],[37.9,129.52]]),pad=padding();
+   const minimum=Math.max(4,map.getBoundsZoom(overview,false,root.L.point(pad.paddingTopLeft).add(pad.paddingBottomRight)));
+   map.setMaxBounds(root.L.latLngBounds([[33.05,124.26],[43.07,131.96]]));
+   map.setMinZoom(minimum);
+   if(wasOverview)map.setZoom(minimum,{animate:false});
+  }
+  function clampPan(){
+   if(!landRings.length||correctingPan||disposed)return false;
+   const size=map.getSize(),pad=padding();
+   const box={left:pad.paddingTopLeft[0],top:pad.paddingTopLeft[1],right:size.x-pad.paddingBottomRight[0],bottom:size.y-pad.paddingBottomRight[1]};
+   if(box.left>=box.right||box.top>=box.bottom)return false;
+   const corners=[{x:box.left,y:box.top},{x:box.right,y:box.top},{x:box.right,y:box.bottom},{x:box.left,y:box.bottom}];
+   const midpoint={x:(box.left+box.right)/2,y:(box.top+box.bottom)/2};
+   let nearest={distance:Infinity,dx:0,dy:0};
+   const offer=p=>{const x=Math.max(box.left,Math.min(box.right,p.x)),y=Math.max(box.top,Math.min(box.bottom,p.y)),dx=x-p.x,dy=y-p.y,distance=dx*dx+dy*dy;if(distance<nearest.distance)nearest={distance,dx,dy};};
+   const contains=(point,ring)=>{let inside=false;for(let i=0,j=ring.length-1;i<ring.length;j=i++){const a=ring[i],b=ring[j];if((a.y>point.y)!==(b.y>point.y)&&point.x<(b.x-a.x)*(point.y-a.y)/(b.y-a.y)+a.x)inside=!inside;}return inside;};
+   const crosses=(a,b)=>{const dx=b.x-a.x,dy=b.y-a.y;let lo=0,hi=1;for(const [p,q] of [[-dx,a.x-box.left],[dx,box.right-a.x],[-dy,a.y-box.top],[dy,box.bottom-a.y]]){if(!p){if(q<0)return false;continue;}const t=q/p;if(p<0)lo=Math.max(lo,t);else hi=Math.min(hi,t);if(lo>hi)return false;}return true;};
+   for(const ring of landRings){
+    const points=ring.map(([lng,lat])=>map.latLngToContainerPoint([lat,lng]));
+    if(contains(midpoint,points))return false;
+    for(let i=0;i<points.length;i++){
+     const a=points[i],b=points[(i+1)%points.length];
+     if(crosses(a,b))return false;
+     offer(a);
+     const dx=b.x-a.x,dy=b.y-a.y,length=dx*dx+dy*dy;
+     if(length)for(const corner of corners){const t=Math.max(0,Math.min(1,((corner.x-a.x)*dx+(corner.y-a.y)*dy)/length));offer({x:a.x+t*dx,y:a.y+t*dy});}
+    }
+   }
+   const dokdo=map.latLngToContainerPoint([37.24078,131.86956]);
+   if(dokdo.x>=box.left&&dokdo.x<=box.right&&dokdo.y>=box.top&&dokdo.y<=box.bottom)return false;
+   offer(dokdo);
+   if(nearest.distance<=1)return false;
+   correctingPan=true;map.panBy([-nearest.dx,-nearest.dy],{animate:false});correctingPan=false;
+   return true;
+  }
   function renderCards(focus=false){
    const list=items.filter(p=>!inView||!map||map.getBounds().contains([p.lat,p.lng]));const {mobile}=sizing();
    if(focus){const i=list.findIndex(p=>p.id===selected?.id);if(i>=0)page=Math.floor(i/12);}
@@ -59,12 +96,12 @@
    map=root.L.map($('.spot-map'),{zoomControl:false,attributionControl:false,scrollWheelZoom:false,minZoom:4,maxZoom:16,zoomSnap:.25,maxBoundsViscosity:1}).setView([36.5,127.8],7);layer=root.L.layerGroup().addTo(map);limits();
    const landPane=map.createPane('sskr-land');landPane.style.zIndex=450;landPane.style.pointerEvents='none';
    const landStyle=feature=>{const north=feature.properties.iso==='PRK',overview=map.getZoom()<6.5;return {color:north?'#94aa99':'#a6b9a7',weight:north||overview?1:0,opacity:north||overview?1:0,fillColor:'#d7e2d6',fillOpacity:north||overview?1:0};};
-   fetch('/web/shared/map/land.geojson',{signal:events.signal}).then(response=>{if(!response.ok)throw Error('Land silhouette unavailable');return response.json()}).then(data=>{if(disposed)return;landLayer=root.L.geoJSON(data,{pane:'sskr-land',interactive:false,style:landStyle}).addTo(map);map.on('zoomend',()=>landLayer?.setStyle(landStyle));const islands=[['제주도',33.38,126.53],['울릉도',37.5,130.88],['독도',37.24078,131.86956]];islands.forEach(([name,lat,lng])=>root.L.marker([lat,lng],{interactive:false,keyboard:false,icon:root.L.divIcon({className:'sskr-land-label'+(name==='독도'?' is-dokdo':''),html:`${name==='독도'?'<i aria-hidden="true"></i>':''}<span>${name}</span>`,iconSize:name==='독도'?[48,24]:[48,18],iconAnchor:name==='독도'?[24,3]:[24,9]})}).addTo(map));}).catch(error=>{if(error.name!=='AbortError'&&!disposed)console.warn(error);});
+   fetch('/web/shared/map/land.geojson',{signal:events.signal}).then(response=>{if(!response.ok)throw Error('Land silhouette unavailable');return response.json()}).then(data=>{if(disposed)return;landRings=data.features.flatMap(feature=>feature.geometry.coordinates.map(polygon=>polygon[0]));landLayer=root.L.geoJSON(data,{pane:'sskr-land',interactive:false,style:landStyle}).addTo(map);map.on('zoomend',()=>landLayer?.setStyle(landStyle));const islands=[['제주도',33.38,126.53],['울릉도',37.5,130.88],['독도',37.24078,131.86956]];islands.forEach(([name,lat,lng])=>root.L.marker([lat,lng],{interactive:false,keyboard:false,icon:root.L.divIcon({className:'sskr-land-label'+(name==='독도'?' is-dokdo':''),html:`${name==='독도'?'<i aria-hidden="true"></i>':''}<span>${name}</span>`,iconSize:name==='독도'?[48,24]:[48,18],iconAnchor:name==='독도'?[24,3]:[24,9]})}).addTo(map));clampPan();}).catch(error=>{if(error.name!=='AbortError'&&!disposed)console.warn(error);});
    if(root.L.maplibreGL&&root.maplibregl){try{const backdrop=root.L.maplibreGL({style:'/web/shared/map/style.json',transformRequest:url=>({url:new URL(url,location.href).href}),interactive:false,attributionControl:false}).addTo(map);backdrop.getMaplibreMap().on('error',()=>{if(!disposed)$('.spot-map-status').textContent='지도 배경을 불러오지 못했습니다. 장소 카드는 계속 이용할 수 있습니다.';});backdrop.getMaplibreMap().on('idle',()=>{if(!disposed)$('.spot-map-status').textContent='';});}catch{$('.spot-map-status').textContent='지도 배경을 표시할 수 없습니다. 장소 카드는 계속 이용할 수 있습니다.';}}
    else $('.spot-map-status').textContent='지도 배경을 불러오지 못했습니다. 장소 카드는 계속 이용할 수 있습니다.';
    if(options.route?.length){routeLayer=root.L.featureGroup().addTo(map);options.route.forEach(coords=>root.L.polyline(coords,{color:'#47695b',weight:4,opacity:.95}).addTo(routeLayer));highlight=root.L.polyline([],{color:'#b47a36',weight:5,opacity:0}).addTo(map);}
-   map.on('moveend',()=>{renderCards();renderMarkers()});map.on('click',()=>{selected=null;highlight?.setStyle({opacity:0});renderCards();renderMarkers();options.onDeselect?.();});
-   observer=new ResizeObserver(()=>{clearTimeout(resizeTimer);resizeTimer=setTimeout(()=>{if(disposed)return;map.invalidateSize({pan:false});limits();renderCards();renderMarkers();},100)});observer.observe($('.spot-map'));
+   map.on('moveend',()=>{if(clampPan())return;renderCards();renderMarkers()});map.on('click',()=>{selected=null;highlight?.setStyle({opacity:0});renderCards();renderMarkers();options.onDeselect?.();});
+   observer=new ResizeObserver(()=>{clearTimeout(resizeTimer);resizeTimer=setTimeout(()=>{if(disposed)return;map.invalidateSize({pan:false});limits();if(!clampPan()){renderCards();renderMarkers();}},100)});observer.observe($('.spot-map'));
   }else{$('.spot-map-status').textContent='지도 연결을 확인해 주세요. 장소 카드는 계속 이용할 수 있습니다.';host.querySelectorAll('.spot-map-controls button,[data-in-view]').forEach(b=>b.disabled=true);}
   listen(host,'click',e=>{const p=items.find(p=>p.id===e.target.closest('[data-place]')?.dataset.place);if(p){select(p,{open:true});return;}const action=e.target.closest('[data-action]')?.dataset.action;if(action==='zoom-in')map?.zoomIn();if(action==='zoom-out')map?.zoomOut();if(action==='fit')fit();if(action==='previous-cards'||action==='next-cards'){page+=action==='next-cards'?1:-1;renderCards();renderMarkers();}});
   listen($('[data-in-view]'),'change',e=>{inView=e.target.checked;page=0;renderCards();renderMarkers();});

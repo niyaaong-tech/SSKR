@@ -33,17 +33,21 @@ test('mobile cards fill bottom rows; wheel gestures retain their original owner'
  await p.waitForTimeout(350);const zoom=await p.evaluate(()=>__map.getZoom());await p.mouse.move(195,30);await p.mouse.wheel(0,60);await p.waitForTimeout(60);box=await p.locator('.spot-map').boundingBox();await p.mouse.move(box.x+box.width/2,box.y+box.height*.3);await p.mouse.wheel(0,60);await p.waitForTimeout(100);assert.equal(await p.evaluate(()=>__map.getZoom()),zoom);assert.ok(await p.evaluate(()=>scrollY)>before.y);
  await capture(p,'mobile');await p.close();assert.deepEqual(errors,[]);
 });
-test('maximum zoom out shows both Korean landmasses and the southern islands',async()=>{
- for(const [width,height,name] of [[1440,1000,'overview-desktop'],[390,844,'overview-mobile']]){
+test('overview zoom stops at the spot layout and panning stays within Korean territory',async()=>{
+ for(const [width,height,name,floor] of [[1440,1000,'overview-desktop',7],[390,844,'overview-mobile',6.5]]){
   const p=await page(width,height);await p.goto(base+'/app/spots?scenario=guest');await p.waitForSelector('.spot-mini-card');
   await p.waitForSelector('.leaflet-sskr-land-pane path');
-  await p.evaluate(()=>__map.setView([38,128.1],__map.getMinZoom(),{animate:false}));
-  const shape=await p.evaluate(()=>{
-   const bounds=__map.getBounds();
-   const paths=[...document.querySelectorAll('.leaflet-sskr-land-pane path')];
-   return {min:__map.getMinZoom(),sizes:paths.map(e=>e.getBoundingClientRect().height),islands:[[33.38,126.53],[37.5,130.88],[37.24078,131.86956]].every(p=>bounds.contains(p)),dokdo:!!document.querySelector('.sskr-land-label.is-dokdo i')};
-  });
-  assert.ok(shape.min<=6);assert.ok(shape.sizes.length===2&&shape.sizes.every(h=>h>80));assert.equal(shape.islands,true);assert.equal(shape.dokdo,true);
+  const min=await p.evaluate(()=>__map.getMinZoom());
+  assert.ok(min>=floor&&min<=9,`${name} minimum zoom ${min}`);
+  await p.evaluate(()=>__map.setZoom(4,{animate:false}));
+  assert.equal(await p.evaluate(()=>__map.getZoom()),min);
+  await p.evaluate(()=>__map.setZoom(Math.max(__map.getMinZoom(),9),{animate:false}));
+  for(const [direction,lat,lng] of [['north',50,128],['south',25,127],['east',37,140],['west',36,115]]){
+   await p.evaluate(([lat,lng])=>__map.panTo([lat,lng],{animate:false}),[lat,lng]);
+   const bounds=await p.evaluate(()=>{const b=__map.getBounds();return {north:b.getNorth(),south:b.getSouth(),east:b.getEast(),west:b.getWest()};});
+   assert.ok(bounds.north<=43.08&&bounds.south>=33.04&&bounds.east<=131.97&&bounds.west>=124.25,`${name} ${direction}: ${JSON.stringify(bounds)}`);
+  }
+  assert.ok(await p.locator('.sskr-land-label.is-dokdo').count());
   await capture(p,name);await p.close();
  }
  assert.deepEqual(errors,[]);

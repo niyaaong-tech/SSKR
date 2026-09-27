@@ -6,10 +6,13 @@
   const tourism = id => 'https://data.visitkorea.or.kr/linkedview/' + id;
   const rows = [
     ['gangneung','start','north','남항진해변','강원 · 강릉',37.764,128.954,'강릉의 아침, 바다와 강이 만나는 출발점.','남대천 하구와 동해가 만나는 해변입니다. 해변 주차장 일대를 출발 후보로 두고, 대관령 너머 내륙으로 이어지는 하루를 그려봅니다.','해변 주차장 후보 · 단체 집결 및 주차 구획 협의 필요',125691,'80/177480_image2_1.jpg'],
+    ['mangsang','start','north','망상해변','강원 · 동해',37.592269,129.089671,'긴 백사장과 솔숲 앞에서 여는 하루.','강릉과 삼척 사이의 동해안 출발점입니다. 해변 공영주차장과 편의시설이 있고, 동해 시가지를 지나 정선·태백 방면 내륙 길로 이어갈 수 있습니다.','해변 공영주차장 후보 · 실제 집결 구획과 행사 사용 협의 필요',125713,''],
     ['samcheok','start','north','맹방해수욕장','강원 · 삼척',37.389,129.232,'긴 모래사장 앞에서 각자의 길을 열다.','넓게 이어지는 백사장과 덕봉산이 삼척의 해안 풍경을 만듭니다. 해수욕장 공영 주차 구역을 후보로 하며, 캠핑장 전용 주차장과 구분합니다.','해수욕장 주차장 후보 · 성수기 혼잡 및 행사 사용 확인',null,'79/1813179_image2_1.jpg'],
     ['uljin','start','central','망양정해수욕장','경북 · 울진',36.970,129.416,'왕피천이 동해에 닿는 곳에서 시작합니다.','왕피천 하구와 망양정 아래 펼쳐진 해변입니다. 불영계곡과 봉화 방향으로 향하는 중부 횡단의 출발 후보입니다.','해변 주차장 후보 · 진출입 동선과 집결 허가 확인',126100,''],
     ['yeongdeok','start','south','고래불해수욕장','경북 · 영덕',36.602,129.410,'고래불의 긴 해안, 남쪽에서 시작하는 하루.','병곡 쪽 광장과 해변 주차 구역을 출발 후보로 선정했습니다. 해안의 아침을 뒤로하고 영덕 내륙과 청송 방향을 살펴볼 수 있습니다.','병곡 해변 광장·주차장 후보 · 축제 일정 및 대관 확인',null,''],
+    ['chilpo','start','south','칠포해수욕장','경북 · 포항',36.131961,129.400554,'포항의 긴 해변에서 서쪽으로 떠나다.','영덕과 경주 사이에 놓인 포항 북부의 출발점입니다. 넓은 해변 주차장과 화장실이 있으며 흥해를 거쳐 영천·대구 방면 내륙으로 이어갈 수 있습니다.','해변 주차장 후보 · 축제 일정, 사용 허가와 실제 주차 면수 확인',126092,'84/188084_image2_1.jpg'],
     ['gyeongju','start','south','읍천항 · 파도소리길','경북 · 경주',35.692,129.475,'주상절리의 바다를 곁에 두고 출발합니다.','양남 주상절리 파도소리길과 가까운 읍천항 공용주차장을 후보로 선정했습니다. 주상절리 탐방로는 보행 공간이므로 바이크는 주차 후 둘러봅니다.','읍천항 공용주차장 후보 · 어항 작업 및 주민 동선 우선',2603500,''],
+    ['jinha','start','south','진하해수욕장','울산 · 울주',35.383522,129.346011,'명선도 앞 새벽 바다에서 출발합니다.','경주와 부산 사이의 울주 출발점입니다. 진하 공영주차장을 집결 후보로 두고 온양·양산 방향으로 내륙 진입을 살펴볼 수 있습니다.','진하 공영주차장 후보 · 새벽 집결 사용, 주차 구획과 진출입 협의 필요',null,''],
     ['gwangalli','start','south','광안리해수욕장','부산 · 수영',35.153813,129.118548,'광안대교와 바다가 함께 보이는 도심 출발점.','광안리해수욕장은 부산 도심에서 바다를 만나는 곳입니다. 해변 주변 공영주차장 일대를 출발 후보로 두고 서쪽 내륙으로 향하는 경로를 검토합니다.','인근 공영주차장 후보 · 새벽 집결 동선과 행사 사용 협의 필요',126078,''],
     ['songjeong','start','south','송정해수욕장','부산 · 해운대',35.178712,129.199640,'송정의 바다에서 남부 횡단을 시작합니다.','송정해수욕장과 죽도 인근에서 아침 바다를 보고 출발하는 후보입니다. 주차장에서 집결한 뒤 부산 시가지를 지나 내륙으로 이어지는 동선을 검토합니다.','송정해변 주차장 후보 · 성수기 혼잡과 집결 허가 확인',126080,''],
     ['daegwallyeong','spot','north','대관령마을휴게소','강원 · 평창',37.687,128.754,'동해에서 고원으로, 첫 번째 고갯마루.','영동고속도로 휴게소가 아닌 옛 대관령 고갯길의 휴게소입니다. 해안에서 내륙으로 풍경이 바뀌는 지점을 잠시 쉬어 갑니다.','옛길 휴게소 · 안개·강풍·노면 상태 확인',null,''],
@@ -46,6 +49,9 @@
   ];
   const places = rows.map(([id,kind,corridor,name,region,lat,lng,lead,description,note,sourceId,image])=>({id,kind,corridor,name,region,lat,lng,lead,description,note,source:sourceId?tourism(sourceId):'https://map.naver.com/p/search/'+encodeURIComponent(region.split(' · ')[1]+' '+name),image:image?photo(image):'',photoCredit:'사진 · 한국관광공사 / 원문 출처 확인',coordinateAccuracy:'approximate'}));
   const overrides = {
+    mangsang:{image:'https://access.visitkorea.or.kr/bfvk_img/call?cmd=VIEW&id=1f0231b3-d52e-431a-ac1c-171a8e91eef1',source:'https://access.visitkorea.or.kr/opentour/detail.do?cotId=561aff08-da51-4e3b-a2c1-9a141973f590',photoCredit:'사진 · 한국관광공사'},
+    chilpo:{source:'https://data.visitkorea.or.kr/linkedview/126092',photoCredit:'사진 · 한국관광공사'},
+    jinha:{image:'https://commons.wikimedia.org/wiki/Special:FilePath/Sunrise_(169520597).jpeg?width=900',source:'https://www.ulsan.go.kr/tour/kor/unit/attrctn/view.do?mId=001002001000000000&unqId=16',photoSource:'https://commons.wikimedia.org/wiki/File:Sunrise_(169520597).jpeg',photoCredit:'Wikimedia Commons · Jh Jung · CC BY 3.0'},
     uljin:{image:'https://www.uljin.go.kr/upload_data/board_data/BBS_ATTRACTION_TU/173923364455613.jpg',source:'https://www.uljin.go.kr/board/view.uljin?boardId=BBS_ATTRACTION_TU&dataSid=1664',photoCredit:'사진 · 울진군'},
     yeongdeok:{image:'https://access.visitkorea.or.kr/bfvk_img/call?cmd=VIEW&id=98c9ee51-a79b-4750-a826-dfbd2dd4870a',source:'https://access.visitkorea.or.kr/opentour/detail.do?cotId=9b7101c9-7965-42b6-b00a-ad2513e8d9ac',photoCredit:'사진 · 영덕군 / 한국관광공사'},
     gyeongju:{image:'https://www.gyeongju.go.kr/design/tour2019/img/sub/tMonth_2024/20241128-41.jpg',source:'https://www.gyeongju.go.kr/tour/page.do?mnu_uid=3621',photoCredit:'사진 · 경주시, 공공누리 제1유형 (주상절리 파도소리길)'},

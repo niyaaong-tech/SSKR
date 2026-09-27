@@ -185,7 +185,17 @@
   }
 
   function renderSpots(id) {
-    disposeSpots = window.SSKR_APP_SPOTS.mount(root, { id, participation: context.participation });
+    disposeSpots = window.SSKR_APP_SPOTS.mount(root, {
+      id, participation: context.participation,
+      getAccount: () => context.account,
+      onLogin: async provider => {
+        auth.linkAccount(provider);
+        if (publicScenarios.has(scenario)) window.SSKR_MOCK_SESSION.replaceScenario("logged-in-no-application");
+        context = await api.context();
+        renderChrome();
+        return context.account;
+      }
+    });
   }
 
   function renderMemorials() {

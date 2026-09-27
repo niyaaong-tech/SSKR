@@ -5,7 +5,7 @@ SSKR 웹의 현재 실행 결과를 관리하는 저장소입니다. 기획 문�
 ## 현재 공개 구조
 
 - `/about/` — `web/about/`: SSKR 소개, 스크롤 연동 8개 장면과 읽기 모드
-- `/explore/` — `web/explore/`: 출발 후보 7곳·경유 후보 30곳·대천 도착지 지도 탐색
+- `/explore/` — `web/explore/`: 출발 후보 10곳·경유 후보 30곳·대천 도착지 지도 탐색
 - `/tests/home-explore/` — `web/tests/home-explore/`: HOME 장소 탐색 인터랙션 검토 시안 (검색엔진 비노출)
 - `/` — `web/home/`: SSKR HOME
 - `/participate` — `web/participate/`: 참가 안내
@@ -71,3 +71,28 @@ HOME 헤더에서 Journey Presentation 링크를 제거했습니다. 기존 `/jo
 스팟·메모리얼·공개 탐색은 `web/shared/map/`을 공유합니다. `npm test`는 국내 장소 보존·해외 좌표 제외·공통 스타일 범위·캐시 무결성을 검사합니다. `npm run test:maps`는 개발 서버를 임시 포트에서 실행해 세 화면과 모바일 배열·휠·해안 지도를 브라우저로 검증합니다. Windows에서는 Edge를 사용하며, 다른 환경에서는 먼저 `npx playwright install chromium`을 실행합니다. `BROWSER_CHANNEL`로 브라우저를 지정할 수 있습니다.
 
 대한민국 표시 범위는 OpenStreetMap 행정 경계(`web/shared/map/korea.geojson`)를 사용하고, 실제 해안선은 원본 지도 타일의 water 레이어로 표시합니다. 6·7·8배율 타일은 `npm run map:cache`로 `server/map/cache/`에 생성합니다. 캐시는 경계 해시와 파일 해시로 검증하며, 확대 타일만 요청 시 변환합니다. 경계가 변경되면 배포 전에 캐시를 다시 생성해야 합니다. 지도 데이터는 © OpenStreetMap contributors, ODbL-1.0입니다.
+
+### 스팟 주행 루트 편집
+
+`/app/spots`의 **루트 만들기**에서 출발지와 경유지를 선택합니다. 도착지는 카탈로그의 고정 피니시이며, 경유 스팟 10곳부터 완성 루트로 분류합니다. 10곳 미만도 초안으로 저장할 수 있습니다. 비로그인 이용자는 편집·도로 조회·추천을 사용할 수 있고, 저장은 참가 여부와 관계없이 로그인한 계정에 귀속됩니다.
+
+- `web/app/route-plan.js`: 루트 모델, 방향별 도로 거리 기반 추천·순서 정리, 계정별 저장 어댑터.
+- `web/app/route-provider.js`: 거리 행렬과 필요한 출발 지점의 압축 도로 형상 조회. 끊긴 구간은 거리·연결선을 추정하지 않습니다.
+- `web/app/route-planner.js`, `route-planner.css`: 공통 지도를 사용하는 편집 패널. 모바일에서는 패널 높이를 조절할 수 있습니다.
+- `web/shared/routes/`: 현재 장소 카탈로그의 실제 도로 데이터. `manifest.json`에 출처·스냅샷·정책 버전·접근 좌표, `validation.json`에 연결 불가 구간을 기록합니다.
+
+현재 계정 인증은 기존 mock을 사용하며 루트는 브라우저의 계정별 localStorage에 저장합니다. 운영 전환 시 저장 어댑터와 로그인 콜백을 서버 인증·DB로 연결해야 합니다. 저장 형상은 복제하지 않고 장소 ID·순서·도로 데이터 버전을 보존합니다. 도로 조회 어댑터를 통해 서버 경로 엔진으로 전환할 수 있습니다.
+
+도로 데이터는 [Geofabrik 대한민국 OSM 추출본](https://download.geofabrik.de/asia/south-korea.html)을 로컬 Valhalla로 계산합니다. 고속도로·자동차전용도로·명시적 이륜차 통행 금지·사유지·페리·비포장·보행 전용 도로를 제외하고, 일방통행과 회전 제한을 유지합니다. 조건부 통행 제한은 출발 시각을 확정하지 않으므로 보수적으로 제외합니다. 경로는 거리 최단 기준이며 정차·실시간 교통·현장 통제는 반영하지 않습니다. 모든 공개 구간의 원본 도로 ID를 통행 정책에 다시 대조합니다. 장소 표시 좌표와 도로 접근점은 별도로 관리합니다.
+
+재생성은 격리한 Python 환경에 `tools/route-requirements.txt`를 설치한 뒤 다음 순서로 실행합니다. `WORK`와 원본 PBF는 저장소 밖의 작업 경로를 지정합니다.
+
+```text
+python tools/build-route-data.py --work WORK --input south-korea.osm.pbf --stage prepare
+python tools/build-route-data.py --work WORK --stage graph
+python tools/build-route-data.py --work WORK --stage routes --workers 3
+python -m unittest discover -s tests/routes -p "test_*.py"
+npm test
+```
+
+`--stage routes --only gangneung`은 해당 출발지의 경로만 작업 폴더에 검증하며 서비스 데이터를 게시하지 않습니다. 전체 실행은 완료된 행을 재사용합니다. 원본 도로·정책·장소 좌표가 바뀌면 다시 생성해야 합니다. Windows native 빌드는 1개 스레드로 그래프를 생성하고 경로 계산만 여러 프로세스로 처리합니다. 프로세스당 약 1GB의 메모리를 사용하므로 8GB PC에서는 기본 3개 이하를 권장합니다. 원본 PBF·그래프·중간 파일은 Git에 넣지 않습니다. 배포에는 검증된 압축 데이터만 포함합니다. `npm run test:routes`로 실제 도로 데이터와 비로그인·저장·모바일 편집 흐름을 검사합니다. 도로 형상과 파생 데이터: [© OpenStreetMap contributors](https://www.openstreetmap.org/copyright), ODbL-1.0.

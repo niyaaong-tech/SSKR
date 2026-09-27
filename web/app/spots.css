@@ -11,13 +11,12 @@
 .spot-heading p{font-size:12px;letter-spacing:.14em;color:var(--sskr-text-2);margin:0 0 7px}
 .spot-heading h2{font-size:30px;letter-spacing:-.045em;font-weight:650;line-height:1.4;margin:0 0 7px}
 .spot-heading>div>span{font-size:14px;color:var(--sskr-text-2)}
-.spot-total{display:flex;gap:15px;align-items:center;flex-shrink:0}
-.spot-total strong{font-size:38px;line-height:1.2;font-weight:500;color:var(--spot-accent);font-variant-numeric:tabular-nums}
-.spot-total span{line-height:1.6;font-size:13px!important}
 .spot-toolbar{display:flex;gap:14px;align-items:center;flex-wrap:wrap}
-.spot-search{flex:1;min-width:220px;display:flex;align-items:center;gap:12px;background:var(--spot-paper);border:1px solid var(--spot-line);border-radius:7px;padding:0 14px;height:46px;color:#69786b}
+.spot-search{flex:1 1 220px;max-width:340px;min-width:220px;display:flex;align-items:center;gap:12px;background:#fff;border:1px solid #aebfae;border-radius:7px;padding:0 14px;height:46px;color:var(--spot-accent);cursor:text;box-shadow:0 1px 3px #183f3610;transition:border-color .15s,box-shadow .15s}
+.spot-search:hover{border-color:#7d9a82;box-shadow:0 2px 8px #183f3618}
 .spot-search input{border:0;outline:0;min-width:0;width:100%;background:transparent;color:var(--sskr-text);font-size:15px}
-.spot-search:focus-within{border-color:var(--spot-accent);box-shadow:0 0 0 1px var(--spot-accent)}
+.spot-search input::placeholder{color:#607866;opacity:1}
+.spot-search:focus-within{border-color:var(--spot-accent);box-shadow:0 0 0 3px #536e5e2b}
 .spot-search button{border:0;background:none;font-size:23px;color:var(--sskr-text-2);width:26px}
 .spot-region{display:flex;align-items:center;gap:10px;font-size:14px}
 .spot-region>span{color:var(--sskr-text-2)}
@@ -62,11 +61,10 @@
 }
 @media(max-width:1100px){.app-main.spots-main{padding:20px 24px 40px}
 .spot-toolbar{gap:10px}
-.spot-region>span{display:none}
+.spot-region>span{display:inline}
 .spot-kind button{padding:0 11px}
 .spot-detail-copy{padding:22px}
 .spot-detail{grid-template-columns:.7fr 1.3fr}
-.spot-total{display:none}
 .spot-categories{gap:3px}
 .spot-categories button{padding:8px 10px}
 }
@@ -75,8 +73,9 @@
 .spot-heading h2{font-size:25px}
 .spot-heading>div>span{font-size:14px;line-height:1.7;display:block}
 .spot-heading p{font-size:11px}
-.spot-search{flex-basis:100%;height:46px}
-.spot-region{flex:1}
+.spot-search{flex:1 1 100%;max-width:none;min-width:0;margin-left:0;height:46px}
+.spot-region{flex:0 0 100%}
+.spot-region>span{display:none}
 .spot-region select{width:100%;height:42px}
 .spot-kind button{padding:0 12px;height:32px}
 .spot-categories{gap:5px;overflow:auto;flex-wrap:nowrap;padding:12px 0;scrollbar-width:none}

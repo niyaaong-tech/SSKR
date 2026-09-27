@@ -5,6 +5,7 @@
     "test": "node --test tests/participate/*.test.js",
     "dev": "node server/dev-server.js",
     "test:maps": "node --test tests/browser/map.test.js",
+    "test:routes": "node --test tests/browser/route-planner.test.js",
     "map:cache": "node tools/build-map-cache.cjs"
   },
   "dependencies": {

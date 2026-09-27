@@ -2,7 +2,7 @@
   const model = window.SSKR_MEMORIAL_STORE;
   const domain = window.SSKR_APP_DOMAIN;
   const journey = window.SSKR_MEMORIAL_JOURNEY;
-  const places = window.SSKR_SPOT_CATALOG;
+  const places = [...window.SSKR_SPOT_CATALOG, ...(window.SSKR_SPOT_LEGACY || [])];
   const placeById = new Map(places.map(place => [place.id, place]));
   const esc = (value) => String(value ?? "").replace(/[&<>'"]/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "'": "&#39;", '"': "&quot;" })[char]);
   const href = (item) => "/app/memorials/" + encodeURIComponent(item.id);

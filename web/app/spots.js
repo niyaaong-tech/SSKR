@@ -29,7 +29,7 @@
       <div class="spot-categories" role="group" aria-label="스팟 주제">${Object.entries(categories).map(([key,label])=>`<button type="button" data-category="${key}" aria-pressed="${key==='all'}">${key==='all'?'':icon(key)}${label}<span data-count="${key}"></span></button>`).join('')}</div>
       <div class="spot-planning-area"><div class="spot-map-host"></div><aside class="route-planner" aria-label="주행 루트 편집" hidden></aside></div>
       <section class="spot-detail" aria-label="선택한 장소 상세"></section>
-      <p class="spot-map-note">지도 위치는 탐색용 근사 좌표입니다. 실제 입구·주차와 영업 여부는 방문 전 확인해 주세요. 장소 선택은 경로 안내나 출발지 확정으로 처리되지 않습니다.</p>
+      <p class="spot-map-note">경유 스팟은 지도에 등록된 주차 구역을 가리킵니다. 현장 주차 운영과 이륜차 이용 조건은 방문 전 확인해 주세요.</p>
     </section>`;
 
     const $=selector=>host.querySelector(selector),listen=(node,event,handler)=>node.addEventListener(event,handler,{signal:events.signal});
@@ -45,6 +45,12 @@
       const category=place.kind==='spot'?categories[place.category]||'자연 · 전망':labels[place.kind];
       const mapURL='https://map.naver.com/p/search/'+encodeURIComponent((place.address||place.region)+' '+place.name);
       detail.innerHTML=`<button type="button" class="spot-return" data-action="return-map">← 지도로 돌아가기</button><div class="spot-detail-visual ${place.image?'':'spot-location-visual'}">${place.image?`<img src="${esc(place.image)}" alt="${esc(place.name)}" decoding="async" referrerpolicy="no-referrer"><a class="spot-photo-credit" href="${esc(place.photoSource||place.source)}" target="_blank" rel="noopener noreferrer">${esc(place.photoCredit||'장소 정보 사진')}</a>`:`${icon(place.category)}<strong>${esc(place.region)}</strong><span>${place.lat.toFixed(3)}° N · ${place.lng.toFixed(3)}° E</span><a href="${esc(mapURL)}" target="_blank" rel="noopener noreferrer">지도에서 장소 사진 확인 ${icon('external')}</a>`}</div><div class="spot-detail-copy"><div class="spot-detail-top"><span>${esc(category)} · ${esc(corridors[place.corridor])}</span><a href="${esc(place.source)}" target="_blank" rel="noopener noreferrer" aria-label="${esc(place.name)} 정보 출처">출처 ${icon('external')}</a></div><h3>${esc(place.name)}</h3><p class="spot-detail-lead">${esc(place.lead)}</p><p>${esc(place.description)}</p><dl><div><dt>위치</dt><dd>${esc(place.address||place.region)}</dd></div><div><dt>방문 메모</dt><dd>${esc(place.note)}</dd></div></dl><div class="spot-detail-actions"><a href="${esc(mapURL)}" target="_blank" rel="noopener noreferrer">네이버 지도에서 확인 ${icon('external')}</a><button type="button" data-action="locate">지도에서 위치 보기 ${icon('pin')}</button></div><div class="spot-participant-note">${options.participation?'장소를 둘러보며 나의 경유 계획을 준비하세요.':'참가 확정되면 SSKR 관련 안내가 제공됩니다.'}</div></div>`;
+      if(place.parking){
+        const {lat,lng,osm}=place.parking;
+        const gps=`${lat.toFixed(6)}, ${lng.toFixed(6)}`;
+        const parkingURL=`https://www.google.com/maps/search/?api=1&query=${lat},${lng}`;
+        detail.querySelector('dl').insertAdjacentHTML('beforeend',`<div><dt>주차 구역 GPS</dt><dd><a href="${esc(parkingURL)}" target="_blank" rel="noopener noreferrer">${esc(gps)} ${icon('external')}</a> · <a href="${esc(osm)}" target="_blank" rel="noopener noreferrer">주차 구역 원본</a></dd></div>`);
+      }
       const img=detail.querySelector('img');
       if(img)listen(img,'error',()=>{const visual=detail.querySelector('.spot-detail-visual');visual.classList.add('spot-location-visual');visual.innerHTML=`${icon(place.category)}<strong>${esc(place.region)}</strong><a href="${esc(mapURL)}" target="_blank" rel="noopener noreferrer">장소 사진 확인 ${icon('external')}</a>`});
     }

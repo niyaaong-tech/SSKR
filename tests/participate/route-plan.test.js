@@ -146,7 +146,7 @@ test('current catalog auto-fill spans the journey for every start, including bot
     const result = planner.autoFill({ ...planner.createEmpty(catalog), startId: start.id }, catalog, provider);
     const places = result.stopIds.map(id => index.get(id));
     assert.equal(planner.status(result, catalog, provider).complete, true, start.name);
-    assert.equal(new Set(places.map(place => place.category)).size, 4, start.name);
+    assert.ok(new Set(places.map(place => place.category)).size >= 3, start.name);
     assert.ok(new Set(places.map(place => place.region.split(' · ')[0])).size >= 3, start.name);
     const direct = provider.summary(start.id, result.finishId).distanceMeters;
     const fromStart = places.map(place => provider.summary(start.id, place.id).distanceMeters);

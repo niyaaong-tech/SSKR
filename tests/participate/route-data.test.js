@@ -29,7 +29,7 @@ test('published road rows and directed matrix describe the same catalog and grap
  assert.equal(count,validation.routeCount);assert.ok(count>18000,'Most catalog pairs must connect through verified roads');
 });
 
-test('all ten starts produce ten connected real-road stops with continuous access endpoints',async()=>{
+test('all eleven starts produce ten connected real-road stops with continuous access endpoints',async()=>{
  const provider=create({base:'/routes',fetcher});await provider.ready();
  for(const start of catalog.filter(p=>p.kind==='start')){
   const plan=domain.autoFill({...domain.createEmpty(catalog),startId:start.id},catalog,provider);
@@ -47,13 +47,7 @@ test('all ten starts produce ten connected real-road stops with continuous acces
  }
 });
 
-test('places without a confirmed road approach remain explicitly unavailable',async()=>{
+test('every curated parking coordinate has a confirmed motorcycle-road approach',async()=>{
  const provider=create({base:'/routes',fetcher});await provider.ready();
- const unresolved=catalog.filter(p=>provider.accessPoint(p.id)?.status==='unavailable');
- assert.ok(unresolved.length>0);
- for(const p of unresolved){
-  const result=await provider.route(['gangneung',p.id,'daecheon']);
-  assert.equal(result.valid,false);assert.equal(result.distanceMeters,null);
-  assert.ok(result.legs.every(leg=>leg.status==='unavailable'&&leg.coordinates.length===0));
- }
+ for(const p of catalog){const access=provider.accessPoint(p.id);assert.equal(access?.status,'ready',p.id);assert.ok(access.snapDistanceMeters<=750,p.id);}
 });

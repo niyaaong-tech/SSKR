@@ -7,6 +7,7 @@ const vm=require('node:vm');
 const root=path.resolve(__dirname,'../..');
 const data=require('../../data/fixtures/memorial-event.json');
 const catalog=require('../../web/app/spot-catalog');
+const historicalCatalog=[...catalog,...(globalThis.SSKR_SPOT_LEGACY||[])];
 const {decode,gpx}=require('../../web/app/memorial-journey');
 const {collections,sample,filterMemorials}=require('../../web/app/memorial-store');
 const routes=data.runSessions.map(run=>JSON.parse(fs.readFileSync(path.join(root,run.trackUrl))));
@@ -28,7 +29,7 @@ test('price snapshots and application-payment-participation relationships reconc
   assert.equal(data.payments.reduce((n,p)=>n+p.amount,0),20500000);
 });
 test('30 distinct road journeys use existing five starts, actual catalog spots and the same finish',()=>{
-  const locations=new Map(catalog.map(p=>[p.id,p]));assert.equal(new Set(data.memorials.map(m=>m.visitedLocationIds.join(','))).size,30);
+  const locations=new Map(historicalCatalog.map(p=>[p.id,p]));assert.equal(new Set(data.memorials.map(m=>m.visitedLocationIds.join(','))).size,30);
   assert.equal(new Set(routes.map(r=>crypto.createHash('sha256').update(r.legs.map(l=>l.shape).join('|')).digest('hex'))).size,30);
   assert.equal(new Set(data.memorials.map(m=>m.startLocationId)).size,5);
   for(const m of data.memorials){assert.equal(locations.get(m.startLocationId).kind,'start');assert.equal(m.finishLocationId,'daecheon');assert.ok(m.visitedLocationIds.every(id=>locations.has(id)));assert.equal(m.spotCount,m.visitedLocationIds.length-2);assert.equal(m.coverLocationId&&m.visitedLocationIds.includes(m.coverLocationId),true);}
@@ -50,11 +51,11 @@ test('public DTO excludes payment details and remains linked to the import fixtu
 test('sampling and discovery preserve privacy, distinct records and place search',()=>{
   const publicItems=collections(data.memorials,{id:'mock-rider-0271',linked:true}).public;
   const chosen=sample(publicItems,6,()=>.3);assert.equal(chosen.length,6);assert.equal(new Set(chosen.map(m=>m.id)).size,6);assert.ok(!chosen.some(m=>m.ownerUserId==='mock-rider-0271'));assert.equal(sample([],6).length,0);
-  assert.equal(filterMemorials(data.memorials,{start:'gangneung'},catalog).length,6);
-  assert.equal(filterMemorials(data.memorials,{search:'노을 수집가'},catalog).length,1);
-  assert.ok(filterMemorials(data.memorials,{search:'말티재'},catalog).length>0);
-  assert.equal(filterMemorials(data.memorials,{search:'존재하지않는장소'},catalog).length,0);
-  assert.equal(filterMemorials([{...data.memorials[0],visibility:'PRIVATE'}],{},catalog).length,0);
+  assert.equal(filterMemorials(data.memorials,{start:'gangneung'},historicalCatalog).length,6);
+  assert.equal(filterMemorials(data.memorials,{search:'노을 수집가'},historicalCatalog).length,1);
+  assert.ok(filterMemorials(data.memorials,{search:'말티재'},historicalCatalog).length>0);
+  assert.equal(filterMemorials(data.memorials,{search:'존재하지않는장소'},historicalCatalog).length,0);
+  assert.equal(filterMemorials([{...data.memorials[0],visibility:'PRIVATE'}],{},historicalCatalog).length,0);
 });
 test('GPX exports contain route samples, UTC times and explicit synthetic provenance',()=>{
   const r=routes[0],xml=gpx(r,'<테스트 & 기록>');assert.match(xml,/SYNTHETIC TEST DATA/);assert.match(xml,/Not recorded GPS/);assert.match(xml,/&lt;테스트 &amp; 기록&gt;/);assert.equal((xml.match(/<trkpt /g)||[]).length,r.sampleCount);assert.equal((xml.match(/<trkseg>/g)||[]).length,r.legs.length);assert.ok(xml.includes(r.startedAt));assert.ok(xml.includes(r.finishedAt));

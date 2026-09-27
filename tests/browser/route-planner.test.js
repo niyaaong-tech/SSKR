@@ -28,7 +28,7 @@ test('route creation starts with origins only, then shows nearby stops',async()=
  assert.equal(await p.locator('[data-kind="spot"]').isDisabled(),true);
  assert.equal(await p.locator('.rp-place-add').count(),0);
  await p.locator('#rp-tab-places').click();
- assert.equal(await p.locator('.rp-place-results .rp-place-add').count(),10);
+ assert.equal(await p.locator('.rp-place-results .rp-place-add').count(),11);
  assert.equal(await p.locator('.rp-place-results .rp-place-add').first().textContent(),'출발지 선택');
  await p.locator('#rp-tab-route').click();await p.locator('#rp-start').selectOption('songjeong');
  await p.waitForSelector('.rp-next .rp-place-add');

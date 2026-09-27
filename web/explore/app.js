@@ -1,7 +1,7 @@
 (()=>{'use strict';
-  const $=id=>document.getElementById(id),catalog=window.SSKR_SPOT_CATALOG,ids=new Set(window.SSKR_PLACES.map(p=>p.id));
+  const $=id=>document.getElementById(id),catalog=window.SSKR_SPOT_CATALOG;
   const numbers=new Map(catalog.filter(p=>p.kind==='spot').map((p,i)=>[p.id,i+1]));
-  const places=catalog.filter(p=>ids.has(p.id)).map(p=>({...p,code:p.kind==='start'?'출':p.kind==='finish'?'도':numbers.get(p.id),number:p.kind==='start'?'출':p.kind==='finish'?'도':numbers.get(p.id)}));
+  const places=catalog.map(p=>({...p,code:p.kind==='start'?'출':p.kind==='finish'?'도':numbers.get(p.id),number:p.kind==='start'?'출':p.kind==='finish'?'도':numbers.get(p.id)}));
   const kindLabels={start:'STARTING POINT',spot:'LOCAL SPOT',finish:'FINISH POINT'},corridorLabels={north:'북부 횡단',central:'중부 횡단',south:'남부 횡단',west:'대천 접근'},reduced=matchMedia('(prefers-reduced-motion:reduce)').matches;
   let kind='all',corridor='all',selected=places.find(p=>p.id===location.hash.slice(1))||places[0],visible=places;
   function setDetail(place, animate=true) {
@@ -10,7 +10,10 @@
     $('detail-name').textContent=place.name; $('detail-lead').textContent=place.lead;
     $('detail-description').textContent=place.description; $('detail-region').textContent=place.region;
     $('detail-note').textContent=place.note; $('detail-source').href=place.source;
-    $('detail-map').href='https://map.naver.com/p/search/'+encodeURIComponent(place.region.split(' · ')[1]+' '+place.name);
+    $('detail-map').href=place.parking?`https://www.google.com/maps/search/?api=1&query=${place.parking.lat},${place.parking.lng}`:'https://map.naver.com/p/search/'+encodeURIComponent(place.region.split(' · ')[1]+' '+place.name);
+    $('detail-map').innerHTML=(place.parking?'주차장 GPS로 안내':'지도에서 위치 확인')+' <span aria-hidden="true">↗</span>';
+    $('detail-parking-row').hidden=!place.parking;
+    $('detail-parking').textContent=place.parking?`${place.parking.lat.toFixed(6)}, ${place.parking.lng.toFixed(6)}`:'';
     $('photo-source').href=place.source;
     const img=$('detail-image');
     img.onload=()=>{$('photo-unavailable').hidden=true;img.hidden=false};

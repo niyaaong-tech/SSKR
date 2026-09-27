@@ -5,6 +5,7 @@
   const photo = path => 'https://tong.visitkorea.or.kr/cms/resource/' + path;
   const tourism = id => 'https://data.visitkorea.or.kr/linkedview/' + id;
   const rows = [
+    ['sokcho','start','north','속초해수욕장','강원 · 속초',38.18743167,128.6052197,'설악과 동해를 곁에 둔 북쪽 출발점.','속초해수욕장 주차 구역에서 출발해 동해안을 따라 남하하거나 강원 내륙으로 향할 수 있습니다. 백사장과 산책로에는 이륜차로 들어가지 않습니다.','속초해수욕장 주차장 후보 · 행사 집결과 이륜차 주차 가능 구획은 운영 주체와 확인',null,''],
     ['gangneung','start','north','남항진해변','강원 · 강릉',37.764,128.954,'강릉의 아침, 바다와 강이 만나는 출발점.','남대천 하구와 동해가 만나는 해변입니다. 해변 주차장 일대를 출발 후보로 두고, 대관령 너머 내륙으로 이어지는 하루를 그려봅니다.','해변 주차장 후보 · 단체 집결 및 주차 구획 협의 필요',125691,'80/177480_image2_1.jpg'],
     ['mangsang','start','north','망상해변','강원 · 동해',37.592269,129.089671,'긴 백사장과 솔숲 앞에서 여는 하루.','강릉과 삼척 사이의 동해안 출발점입니다. 해변 공영주차장과 편의시설이 있고, 동해 시가지를 지나 정선·태백 방면 내륙 길로 이어갈 수 있습니다.','해변 공영주차장 후보 · 실제 집결 구획과 행사 사용 협의 필요',125713,''],
     ['samcheok','start','north','맹방해수욕장','강원 · 삼척',37.389,129.232,'긴 모래사장 앞에서 각자의 길을 열다.','넓게 이어지는 백사장과 덕봉산이 삼척의 해안 풍경을 만듭니다. 해수욕장 공영 주차 구역을 후보로 하며, 캠핑장 전용 주차장과 구분합니다.','해수욕장 주차장 후보 · 성수기 혼잡 및 행사 사용 확인',null,'79/1813179_image2_1.jpg'],
@@ -49,6 +50,7 @@
   ];
   const places = rows.map(([id,kind,corridor,name,region,lat,lng,lead,description,note,sourceId,image])=>({id,kind,corridor,name,region,lat,lng,lead,description,note,source:sourceId?tourism(sourceId):'https://map.naver.com/p/search/'+encodeURIComponent(region.split(' · ')[1]+' '+name),image:image?photo(image):'',photoCredit:'사진 · 한국관광공사 / 원문 출처 확인',coordinateAccuracy:'approximate'}));
   const overrides = {
+    sokcho:{image:'https://commons.wikimedia.org/wiki/Special:FilePath/Sokcho_Beach_01.jpg?width=900',source:'https://sokcho.go.kr/sc/fields/traffic/parking',photoSource:'https://commons.wikimedia.org/wiki/File:Sokcho_Beach_01.jpg',photoCredit:'Wikimedia Commons · Grapesurgeon · CC BY-SA 4.0'},
     mangsang:{image:'https://access.visitkorea.or.kr/bfvk_img/call?cmd=VIEW&id=1f0231b3-d52e-431a-ac1c-171a8e91eef1',source:'https://access.visitkorea.or.kr/opentour/detail.do?cotId=561aff08-da51-4e3b-a2c1-9a141973f590',photoCredit:'사진 · 한국관광공사'},
     chilpo:{source:'https://data.visitkorea.or.kr/linkedview/126092',photoCredit:'사진 · 한국관광공사'},
     jinha:{image:'https://commons.wikimedia.org/wiki/Special:FilePath/Sunrise_(169520597).jpeg?width=900',source:'https://www.ulsan.go.kr/tour/kor/unit/attrctn/view.do?mId=001002001000000000&unqId=16',photoSource:'https://commons.wikimedia.org/wiki/File:Sunrise_(169520597).jpeg',photoCredit:'Wikimedia Commons · Jh Jung · CC BY 3.0'},

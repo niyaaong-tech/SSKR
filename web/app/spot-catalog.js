@@ -1,4 +1,4 @@
-/* APP 탐색 카탈로그. 기존 Explore 30곳은 원본을 참조하며 APP에서만 확장한다. */
+/* APP와 공개 탐색이 공유하는 출발지·경유지·도착지 카탈로그. */
 (function(root){
   const base=root.SSKR_PLACES||(typeof require!=='undefined'?require('../explore/places.js'):[]);
   const culture=new Set(['cheongnyeongpo','cheongpung','buryeongsa','buncheon','daksil','museom','mungyeong','hahoe','imgo','hwabon','jikjisa','munui','magoksa','baekje','seongjusa']);
@@ -626,6 +626,22 @@
   }
 };
   places.forEach(p=>{const entry=photos[p.id];if(!entry)return;if(typeof entry==='object'){Object.assign(p,entry);return;}p.image=entry.startsWith('https:')?entry:'https://tong.visitkorea.or.kr/cms/resource/'+entry;p.photoCredit=p.image.includes('visitkorea')?'한국관광공사 · 관광정보 사진':'장소 소개 매체 사진';p.photoSource=p.source;});
+  const curation=root.SSKR_SPOT_CURATION||(typeof require!=='undefined'?require('./spot-curation.js'):null);
+  if(curation){
+    const removed=new Set(curation.removedIds);
+    root.SSKR_SPOT_LEGACY=places.filter(p=>removed.has(p.id));
+    for(let i=places.length-1;i>=0;i--)if(removed.has(places[i].id))places.splice(i,1);
+    for(const place of places){
+      const parking=curation.parkingById[place.id];
+      if(!parking)continue;
+      place.visitCoordinate=[place.lat,place.lng];
+      place.lat=parking.lat;place.lng=parking.lng;
+      place.parking=parking;place.coordinateAccuracy='parking-osm';
+    }
+    for(const replacement of curation.replacements){
+      places.push({...replacement,lat:replacement.parking.lat,lng:replacement.parking.lng,coordinateAccuracy:'parking-osm'});
+    }
+  }
   root.SSKR_SPOT_CATALOG=places;
   if(typeof module!=='undefined')module.exports=places;
 })(typeof window!=='undefined'?window:globalThis);

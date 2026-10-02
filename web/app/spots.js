@@ -55,10 +55,13 @@
       if(img)listen(img,'error',()=>{const visual=detail.querySelector('.spot-detail-visual');visual.classList.add('spot-location-visual');visual.innerHTML=`${icon(place.category)}<strong>${esc(place.region)}</strong><a href="${esc(mapURL)}" target="_blank" rel="noopener noreferrer">장소 사진 확인 ${icon('external')}</a>`});
     }
 
+    const filterParking=document.createElement('div');filterParking.className='spot-filter-parking';
+    $('.spot-planning-area').before(filterParking);
+    const filters=[$('.spot-toolbar'),$('.spot-categories')];filters.forEach(node=>filterParking.append(node));
     viewer=shared.mount($('.spot-map-host'),{items:entries,catalog:entries,initialId:selected?.id,initialZoom:initial?11:undefined,inView:true,
-      onSelect:p=>{selected=p;if(editing){planner?.select(p);return;}syncURL(p);renderDetail(p)},onOpen:p=>{if(editing){planner?.openPlace(p);return;}$('.spot-detail').scrollIntoView({behavior:reduced.matches?'auto':'smooth',block:'start'});},onDeselect:()=>{selected=null;if(!editing){syncURL(null);renderDetail(null);}}});
-    planner=root.SSKR_ROUTE_PLANNER.mount($('.route-planner'),{catalog:entries,viewer,getAccount:options.getAccount,onLogin:options.onLogin,
-      onModeChange:(value,startId)=>{if(value&&!editing)browseFilters={...state};editing=value;routeStartId=value?startId:null;if(value){state.kind=startId?'spot':'start';state.category='all';state.corridor='all';state.search='';}else if(browseFilters){Object.assign(state,browseFilters);browseFilters=null;}$('.spot-search input').value=state.search;$('.spot-region select').value=state.corridor;$('.spot-workbench').classList.toggle('is-planning',value);$('.spot-planning-area').classList.toggle('is-editing',value);host.querySelectorAll('[data-spot-mode]').forEach(b=>b.setAttribute('aria-pressed',String((b.dataset.spotMode==='plan')===value)));if(viewer)applyFilters();},
+      onRouteAdd:p=>planner?.addFromMap(p),onSelect:p=>{selected=p;if(editing){planner?.select(p);return;}syncURL(p);renderDetail(p)},onOpen:p=>{if(editing){planner?.openPlace(p);return;}$('.spot-detail').scrollIntoView({behavior:reduced.matches?'auto':'smooth',block:'start'});},onDeselect:()=>{selected=null;if(!editing){syncURL(null);renderDetail(null);}}});
+    planner=root.SSKR_ROUTE_PLANNER.mount($('.route-planner'),{catalog:entries,viewer,filters,filterParking,getAccount:options.getAccount,onLogin:options.onLogin,
+      onModeChange:(value,startId)=>{if(value&&!editing)browseFilters={...state};editing=value;if(!value)filters.forEach(node=>filterParking.append(node));routeStartId=value?startId:null;if(value){state.kind=startId?'spot':'start';state.category='all';state.corridor='all';state.search='';}else if(browseFilters){Object.assign(state,browseFilters);browseFilters=null;}$('.spot-search input').value=state.search;$('.spot-region select').value=state.corridor;$('.spot-workbench').classList.toggle('is-planning',value);$('.spot-planning-area').classList.toggle('is-editing',value);host.querySelectorAll('[data-spot-mode]').forEach(b=>b.setAttribute('aria-pressed',String((b.dataset.spotMode==='plan')===value)));if(viewer)applyFilters();},
       onStartChange:id=>{routeStartId=id;state.kind=id?'spot':'start';state.category='all';state.corridor='all';state.search='';$('.spot-search input').value='';$('.spot-region select').value='all';applyFilters();},
       onRoadReady:()=>{if(editing&&routeStartId)applyFilters();},
       onFindPlaces:()=>{state.kind=routeStartId?'spot':'start';state.category='all';applyFilters();}
@@ -73,7 +76,7 @@
       host.querySelectorAll('[data-kind]').forEach(b=>{b.setAttribute('aria-pressed',String(b.dataset.kind===state.kind));b.disabled=editing&&b.dataset.kind!==(routeStartId?'spot':'start');});
       host.querySelectorAll('[data-category]').forEach(b=>{b.setAttribute('aria-pressed',String(b.dataset.category===state.category));b.disabled=state.kind==='start'||state.kind==='finish'});
       const counts=filterPlaces(entries,{...state,category:'all'});host.querySelectorAll('[data-count]').forEach(n=>n.textContent=counts.filter(p=>n.dataset.count==='all'||p.category===n.dataset.count).length);
-      $('[data-action="clear"]').hidden=!state.search;viewer.setItems(visible,{selectedId:editing?undefined:selected?.id,reset,fit:!editing});planner?.setFilters(visible);if(!editing)renderDetail(selected);
+      $('[data-action="clear"]').hidden=!state.search;viewer.setItems(visible,{selectedId:editing?undefined:selected?.id,reset,fit:!editing});planner?.setFilters(visible,Boolean(state.search||state.corridor!=='all'||state.category!=='all'));if(!editing)renderDetail(selected);
     }
     listen(host,'click',event=>{
       const mode=event.target.closest('[data-spot-mode]');if(mode){planner.setMode(mode.dataset.spotMode==='plan');if(editing&&!routeStartId)viewer.fitRoute?.();return;}

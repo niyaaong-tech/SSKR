@@ -45,6 +45,8 @@ function fixture(options={}){
   constructor(){this.style={setProperty:(key,value)=>{this.style[key]=value;},removeProperty:key=>delete this.style[key]};this.listeners={};this.attributes={};this.children=new Map();this.classes=new Set();this.classList={add:(...names)=>names.forEach(n=>this.classes.add(n)),remove:(...names)=>names.forEach(n=>this.classes.delete(n)),toggle:(n,value)=>value?this.classes.add(n):this.classes.delete(n),contains:n=>this.classes.has(n)};this.clientHeight=700;this.clientWidth=1200;}
   addEventListener(type,fn){this.listeners[type]=fn;}
   setAttribute(name,value){this.attributes[name]=value;}
+  append(child){this.children.set(String(this.children.size),child);}
+  prepend(child){this.children.set('first',child);}
   querySelector(selector){return this.children.get(selector)||null;}
   querySelectorAll(){return [];}
   contains(){return false;}

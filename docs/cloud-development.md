@@ -1,0 +1,216 @@
+# SSKR 로컬·클라우드 개발 컨텍스트
+
+로컬을 주 작업 환경으로 유지하면서 클라우드에서 일부 개발을 진행하기 위한 실행·검증·인수인계 기준입니다. 제품 기획의 정본은 Notion이며, 이 문서는 현재 소스의 구조와 구현 계약을 설명합니다.
+
+## 1. 작업 기준과 현재 상태
+
+- 저장소: https://github.com/niyaaong-tech/SSKR
+- 주 작업 경로: `C:\Project\SSKR\source`. 클라우드에서는 해당 저장소의 checkout 루트를 사용합니다.
+- 운영 주소: https://sskr.vercel.app
+- 운영 브랜치: `main`. main push는 Vercel 운영 배포를 자동 실행합니다.
+- 기능 기준: `ca1a519ff8ec5fa91a19e7d9a0afa7a4e825d943` (2026-10-05 확인). 이후 작업은 항상 최신 `origin/main`에서 시작하고 실제 시작 SHA를 기록합니다.
+- 구조: HTML/CSS/JavaScript, Node.js 개발 서버와 Vercel API 함수. React·Next.js 프로젝트가 아니며 `npm run build`는 없습니다.
+- 로컬 확인 환경: Node.js 24.18.0 / npm 11.16.0. 클라우드도 Node.js 24.x를 기준으로 맞추고 `package-lock.json`으로 설치합니다.
+- 최근 검증: 단위 테스트 149개, 루트 브라우저 22개, 공통 지도 브라우저 4개 통과. 이 숫자는 기준 커밋의 결과이며 이후 수정본은 다시 검증합니다.
+
+로컬의 산출물 폴더, 브라우저 저장 상태, 미커밋 변경, 사용자 제공 원본은 클라우드 checkout에 자동 전달되지 않습니다. 로컬 파일 경로를 웹 URL이나 클라우드 실행 경로에 하드코딩하지 않습니다.
+
+## 2. 시작 절차
+
+먼저 `AGENTS.md`와 이 문서를 읽고 작업 트리·브랜치·기준 커밋을 확인합니다. 클라우드 환경이 checkout을 준비했다면 다시 복제할 필요가 없습니다.
+
+```sh
+git status --short
+git branch --show-current
+git remote -v
+git fetch origin
+git rev-parse origin/main
+```
+
+깨끗한 checkout에서 요청 범위를 나타내는 기능 브랜치를 만듭니다. 아래 이름은 예시이며 기존 작업을 이어갈 때는 해당 브랜치를 사용합니다.
+
+```sh
+git switch -c feature/route-usability origin/main
+npm ci
+npx playwright install --with-deps chromium
+```
+
+브라우저의 OS 의존성 설치는 환경 권한이 필요할 수 있습니다. 권한이나 네트워크 제한으로 설치가 실패하면 임의로 검증을 통과 처리하지 말고 실패 원인과 가능한 검증 범위를 기록합니다.
+
+수동 브라우징용 개발 서버:
+
+```sh
+SSKR_DEV_PORT=8080 npm run dev
+```
+
+Windows PowerShell에서는:
+
+```powershell
+$env:SSKR_DEV_PORT = '8095'
+npm run dev
+```
+
+확인 주소:
+
+- `http://127.0.0.1:8080/app/spots?scenario=guest`: 비로그인 탐색·루트 만들기
+- `http://127.0.0.1:8080/app/spots?scenario=logged-in-no-application`: 로그인한 비참가자
+- `http://127.0.0.1:8080/app/memorials?scenario=guest`: 공개 메모리얼
+- `http://127.0.0.1:8080/explore/`: 공개 지도 탐색
+- `http://127.0.0.1:8080/`, `/about/`, `/participate`: HOME·소개·참가 안내
+
+실제 포트에 맞춰 URL을 바꿉니다. 개발 서버는 `127.0.0.1`에 바인딩합니다. 클라우드 미리보기 도구가 다른 바인딩을 요구하면 그 환경의 연결 방식을 먼저 확인합니다.
+
+단순 정적 파일 서버로 대체하면 `/app/*` 라우팅, 지도 타일, 참가 API가 동작하지 않습니다. `server/dev-server.js`를 사용합니다. 브라우저 테스트는 각각 임시 포트의 서버를 자동 실행·종료하므로 사전에 수동 서버를 띄울 필요가 없습니다.
+
+## 3. 소스 지도
+
+| 역할 | 소스 | 공개 경로·연결 |
+|---|---|---|
+| HOME 모션 | `web/home/index.html`, `app.js`, `styles.css` | `/` |
+| SSKR 소개 | `web/about/` | `/about/` |
+| 참가 UI | `web/participate/` | `/participate` |
+| 참가 도메인·API | `server/participate/`, `api/participate/` | `/api/participate/*` |
+| APP 진입·화면 전환 | `web/app/index.html`, `app.js`, `domain.js`, `data.js` | `/app/*` |
+| 스팟 탐색·편집 연결 | `web/app/spots.js`, `spots.css` | `/app/spots`, `/app/spots/:id` |
+| 루트 도메인·저장 어댑터 | `web/app/route-plan.js` | `SSKR_ROUTE_PLAN` |
+| 도로 조회·압축 해제 | `web/app/route-provider.js` | `SSKR_ROUTE_PROVIDER` |
+| 루트 편집 UI | `web/app/route-planner.js`, `route-planner.css` | `SSKR_ROUTE_PLANNER` |
+| 메모리얼 | `web/app/memorials.js`, `memorial-journey.js`, `memorial-store.js` | `/app/memorials/*` |
+| 공통 지도·카드・휠 처리 | `web/shared/map/map.js`, `map.css`, `interaction.js` | `SSKR_MAP` |
+| 지도 스타일·영토 데이터 | `web/shared/map/style.json`, `korea.geojson`, `land.geojson` | 지도 화면 전체가 공유 |
+| 타일 변환·캐시 | `server/map/tiles.js`, `server/map/cache/`, `api/map-tile.js` | `/api/map-tile` |
+| 장소 원본·검증 정보 | `web/explore/places.js`, `web/app/spot-catalog.js`, `spot-curation.js` | APP·공개 탐색이 같은 카탈로그 사용 |
+| 실제 도로 데이터 | `web/shared/routes/manifest.json`, `validation.json`, `legs/*.json.gz` | 필요 출발 지점의 행을 지연 조회 |
+| 공통 로그인·계정 UI | `web/shared/auth/`, `web/shared/account-control.*` | 참가·APP 공유 |
+| 운영 URL 규칙 | `vercel.json` | 개발 서버 규칙과 함께 확인 |
+
+브라우저 전역과 CommonJS로 재사용하는 모듈이 섞여 있습니다. 새 프레임워크로 전환하거나 페이지별 지도·로그인 컴포넌트를 복제하지 않습니다.
+
+## 4. 유지해야 할 구현 계약
+
+### 장소와 지도
+
+- 현재 카탈로그는 **경유 150곳 + 출발 11곳 + 도착 1곳**입니다. 도착지는 `daecheon`(대천해수욕장)입니다. 개수와 장소 ID는 테스트로 확인합니다.
+- `web/explore/places.js`의 42개 기반 데이터만 보고 전체 목록으로 오인하지 않습니다. curation을 적용한 `SSKR_SPOT_CATALOG`가 활성 목록입니다.
+- 장소 ID는 저장 경로와 메모리얼의 참조입니다. 삭제된 ID를 임의의 새 장소로 자동 치환하지 않습니다. 활성 목록에서 제외된 장소의 기존 기록은 legacy 참조로 유지합니다.
+- 권역 UI와 `corridor`는 제거됐습니다. 다시 도입하지 않습니다. 지역·장소 유형·카테고리·검색은 유지합니다.
+- 지도 안내 좌표는 확인된 주차 지점입니다. 출발·도착을 포함해 주차 좌표 간 직선거리 2km 미만 쌍이 없어야 합니다.
+- 이륜차 접근, 주차, 짧은 방문 동선을 확인한 장소와 출처·재사용 조건이 확인된 실제 사진을 사용합니다. 이미지 경로·크레딧을 함께 관리하고 웹 이미지는 WebP를 사용합니다.
+- 지도·사진 카드·레이아웃은 스팟·메모리얼·공개 탐색이 공유합니다. 북한 육지, 남쪽 해안선, 제주·울릉·독도의 표시를 보존합니다. 상세 정보 제거와 육지 제거를 혼동하지 않습니다.
+- 기존 줌·이동 제한, 모바일 하단 4열의 아래 행부터 채우는 배열, 최대 12개 카드, 접히는 지도 출처 표시를 유지합니다.
+- **호버는 사진만 표시**하고 지도를 이동하지 않습니다. **선택한 카드에만 추가 버튼**을 표시하며 실제 카드·버튼 크기와 패널·제어 영역을 고려해 화면 안으로 이동합니다.
+- 마커와 번호는 선명하게 유지합니다. 선택·추천·경로 포함 상태는 색과 테두리로 구분하며 불투명도를 낮추지 않습니다.
+- `SSKR_MAP.formatPlaceText`는 표시용 중점을 공백으로 바꿉니다. 이름과 지역을 한 줄에 함께 표시할 때만 사이에 ` · `를 둡니다. 표시 정리를 이유로 저장 데이터를 일괄 변경하지 않습니다.
+
+### 루트 편집
+
+- 넓은 화면은 **내 경로 → 지도 → 추천·검색·저장 목록**의 3영역, 좁은 화면은 **지도 + 접힘·기본·확장 하단 패널**입니다.
+- 출발지 선택 전에는 출발지만 선택할 수 있습니다. 선택 후 직접 경유지 선택과 10곳 자동 완성을 제공합니다.
+- 비로그인 편집·도로 조회·추천이 가능합니다. 저장은 로그인 계정이면 참가 여부와 관계없이 허용합니다. 경유 10곳 미만도 초안 저장이 가능합니다.
+- 후보 상세를 보는 동작과 삽입 기준을 구분합니다. 경로에 포함된 지점만 추천·삽입 기준이 되며, 추가한 지점이 다음 기준입니다.
+- 중간 삽입 증가량은 **기준점→후보→다음 지점 − 기준점→다음 지점**으로 계산합니다. 마지막 지점 뒤에는 고정 도착지를 사용합니다. 거리·시간은 방향별 실제 도로 데이터로 계산합니다.
+- 출발지만 선택했을 때는 전체 동선의 약 1/10 지점을 추천하는 원칙을 유지합니다. 추천 후보 보기만으로 기준을 바꾸지 않습니다.
+- 추가 동작은 지도 선택 카드의 `출발지 설정`·`경유지 추가` 버튼에 모읍니다. 추천 목록과 상세에 중복 추가 버튼을 복원하지 않습니다.
+- 자동 완성·순서 정리 미리보기에서는 지도·경로 목록·개수·거리·시간을 모두 제안 경로로 표시하고 일반 편집을 잠급니다. 적용·취소 전까지 원본 경로는 유지합니다.
+- 출발지를 바꿀 때 기존 경유지가 있으면 거리·시간 변화와 기존 경유지 유지 여부를 먼저 보여주고 적용·취소를 제공합니다.
+- 실행 취소, 기존 경유지 뒤 삽입, 위·아래 이동, PC 드래그, 삭제, 로그인 취소·완료 후 작성 내용 보존을 유지합니다.
+- 예상 주행 시간은 정차·실시간 교통을 포함하지 않습니다. 최소 경유 개수 충족이 시간 내 완주 보장을 의미하지 않습니다.
+- 짧은 모바일 화면에서는 선택 카드·추가 버튼과 패널을 함께 계산합니다. 하단 주요 버튼과 목록이 겹치지 않아야 합니다. 화면 전환 후 선택 위치를 다시 계산합니다.
+
+### 데이터와 백엔드 경계
+
+- 현재 로그인·신청·결제는 mock입니다. 메모리얼 행사와 GPS 시각은 합성 테스트 데이터입니다. 화면이 동작한다는 이유로 실운영 인증·결제·DB가 구현됐다고 판단하지 않습니다.
+- 루트 저장은 `route-plan.js`의 계정별 localStorage 어댑터, 편집 복원은 `sessionStorage['sskr.route-editor']`입니다. 브라우저·origin·포트가 달라지면 작성 상태와 저장 목록이 공유되지 않습니다. 기기 간 동기화는 아직 없습니다.
+- 루트 필드 `id/title/startId/stopIds/finishId/catalogVersion/routingVersion/createdAt/updatedAt`와 소유자 식별, 공개 API 형식을 보존합니다. 도로 형상을 저장 루트마다 복제하지 않습니다.
+- 백엔드 연결은 저장·인증·도로 조회 어댑터 경계에서 진행합니다. 권한을 화면 숨김에만 의존하지 않습니다.
+- 도로 데이터는 거리 최단 기준으로 생성하며 고속도로·자동차전용도로·명시적 이륜차 금지·사유지·페리·비포장·보행 전용 도로와 조건부 제한을 제외합니다. 내비게이션 기능으로 확장하지 않습니다.
+- 장소 ID·주차 좌표·도로 정책이 바뀌면 manifest·거리 행렬·압축 형상·접근 좌표를 함께 재생성·검증합니다. UI 작업만 할 때는 기존 도로 데이터를 재생성하지 않습니다.
+
+## 5. 검증과 네트워크
+
+기본 검증:
+
+```sh
+npm test
+npm run test:routes
+npm run test:maps
+git diff --check
+```
+
+변경한 JavaScript에는 `node --check <파일>`을 실행합니다. HOME·About·공개 탐색을 수정했다면 해당 테스트도 직접 실행합니다.
+
+```sh
+node --test tests/browser/home.test.js
+node --test tests/about.test.js
+node --test tests/explore.test.js
+```
+
+- 루트·지도 브라우저 테스트는 Windows에서 Edge, Linux에서 설치한 Chromium을 사용합니다. `BROWSER_CHANNEL`이 설정돼 있으면 그 채널이 우선합니다. Linux에서 Edge 채널을 그대로 지정하지 않습니다.
+- 브라우저 테스트의 일부는 UI용 모의 도로 응답을 사용합니다. 테스트를 위해 만든 직선 연결을 운영 provider로 옮기지 않습니다. `npm test`의 실제 생성 도로 검증과 실제 도로 브라우저 사례를 함께 확인합니다.
+- 모바일 360·390·430px, 짧은 화면·가로 화면, 768px, PC 1280·1440·1920px을 확인합니다. 후보 확인→추가→중간 삽입→순서 이동·삭제→취소→미리보기→저장을 연속 조작합니다.
+- hover·클릭·키보드 선택을 구분하고, 지도 이동·확대와 패널 스크롤·드래그가 충돌하지 않는지 확인합니다.
+- 실제 iPhone의 키보드·터치와 실운영 로그인은 에뮬레이션·mock 검증과 구분해 보고합니다.
+- 설치에는 npm 레지스트리와 Playwright 브라우저 다운로드 접근이 필요합니다. 지도 실행에는 `unpkg.com`, `tiles.openfreemap.org` 접근이 필요합니다. upstream 타일 호스트는 `/planet` 응답으로 정해집니다.
+- 낮은 줌 타일 캐시는 Git에 포함되어 있지만 브라우저 라이브러리·glyph·sprite와 높은 줌 타일은 외부 네트워크에 의존합니다. 네트워크가 막힌 환경에서는 지도·사진 시각 검증 범위를 정확히 보고하며 기능 코드로 실패를 숨기지 않습니다.
+- QA 출력이 필요하면 `SSKR_QA_OUTPUT`을 저장소 밖 임시 경로로 지정합니다. 캡처·로그·다운로드·브라우저 캐시는 커밋하지 않습니다.
+
+도로 생성 도구를 바꾼 경우에만 별도 Python 가상환경에 `tools/route-requirements.txt`를 설치하고 다음 검증을 추가합니다.
+
+```sh
+python -B -m unittest discover -s tests/routes -p "test_*.py"
+```
+
+전체 재생성의 prepare→graph→routes 명령과 원본 OSM 주소는 README의 「스팟 주행 루트 편집」을 따릅니다. 원본 PBF·그래프는 저장소 밖에 둡니다. 지도 경계가 바뀐 경우에는 `npm run map:cache`도 필요합니다. 작업 환경에서 생성하지 못하면 일부 자산만 게시하지 말고 필요한 로컬 생성 작업을 인계합니다.
+
+## 6. 로컬·클라우드 병행 규칙
+
+1. **로컬이 통합 책임을 가집니다.** 클라우드는 요청한 기능만 별도 브랜치에서 개발하고 결과 커밋·PR을 인계합니다. 별도 지시 없이 main merge·운영 배포를 진행하지 않습니다.
+2. 클라우드 시작 시 최신 원격 main의 SHA를 기록합니다. 로컬의 미커밋 변경은 볼 수 없다는 전제로 작업 범위를 나눕니다.
+3. 공유 지도·카탈로그·루트 핵심 파일을 양쪽에서 동시에 바꾸는 경우에는 담당 범위를 먼저 구분합니다. 기존 합의가 명확하면 불필요한 승인 요청 없이 그 범위에서 진행합니다.
+4. 작업 도중 main이 변경되면 합치기 전에 차이를 검토합니다. 무조건 pull·force push·hard reset·자동 stash로 현재 작업을 덮지 않습니다.
+5. 로컬에서 결과를 통합할 때 먼저 작업 트리를 확인하고 브랜치의 변경을 검토합니다.
+
+```sh
+git status --short
+git fetch origin
+git log --oneline main..origin/feature/route-usability
+git diff main...origin/feature/route-usability
+```
+
+로컬 미커밋 작업을 보존한 상태에서 통합 방법을 정합니다. 깨끗한 호환 작업 트리라면 fast-forward를 우선하고, 분기됐다면 필요한 merge·충돌 해결 후 실제 합쳐진 코드로 다시 검증합니다. 파일 전체를 한쪽 버전으로 대체하지 않습니다.
+
+클라우드 완료 보고에는 다음을 포함합니다.
+
+- 시작 main SHA, 결과 브랜치·커밋 또는 PR
+- 수정 파일과 사용자에게 달라지는 동작
+- 실행한 테스트의 통과·실패·미실행과 사유
+- 지도·데이터·사진 재생성 여부
+- 로컬에서 이어서 해야 할 검증·통합 작업
+
+인수인계용 문서나 상태 정보를 날짜별로 복제하지 않습니다. 지속적으로 필요한 기술 기준은 이 문서를 수정하고 작업 결과는 커밋·PR로 남깁니다.
+
+## 7. 배포와 자산 주의사항
+
+- 운영은 main의 Git 연동 배포를 사용합니다. `vercel --prod`로 같은 변경을 다시 배포하거나 `.vercel` 연결 파일을 새로 만들지 않습니다.
+- 명시적인 배포 요청이 있을 때 main 반영→push→Vercel READY→운영 alias→커밋 SHA 일치→영향 경로와 변경 자산 확인 순서로 검증합니다. push 성공만으로 배포 완료라고 보고하지 않습니다.
+- Vercel 프로젝트: `prj_IJuMBUZ5yC1M041vUaIIHunTaPtz`, 팀: `team_Voiu5udniLzdbBRgaj9BPRA4`. 식별자이며 비밀값이 아닙니다. 배포 권한은 연결 계정에서 별도로 확보합니다.
+- 기본 UI 개발에는 운영 비밀값이 필요하지 않습니다. 토큰·쿠키·개인정보·.env 값을 코드·문서·로그로 복사하지 않습니다.
+- 현재 도로 행 161개는 약 64.5MiB입니다. 모두 배포에 사용하는 자산입니다. 압축 파일이라는 이유로 지우거나 QA 캐시와 혼동하지 않습니다.
+- 최근 추가된 장소 WebP 92장(약 12.7MiB)은 공용 런타임 자산입니다. 출처와 크레딧을 유지합니다.
+- 로컬의 다음 About 원본 7개는 미추적 사용자 파일입니다. 이 문서 작성 기준 커밋에는 포함되지 않았으며 클라우드에서 있다고 가정하지 않습니다. 웹용 WebP와 구분하고 삭제·자동 추가하지 않습니다.
+
+```text
+web/about/assets/SSKR_info11.png
+web/about/assets/SSKR_info12.png
+web/about/assets/SSKR_info13.png
+web/about/assets/SSKR_info14b.png
+web/about/assets/sskr_sp1.png
+web/about/assets/sskr_sp2.png
+web/about/assets/sskr_sp3.png
+```
+
+## 8. 클라우드 작업 시작 메시지
+
+아래의 작업 범위만 실제 요청에 맞춰 바꿔 사용할 수 있습니다.
+
+> SSKR 개발 작업입니다. AGENTS.md와 docs/cloud-development.md를 먼저 읽어주세요. 주 작업은 로컬에서 계속합니다. 최신 origin/main 기준으로 별도 기능 브랜치에서 [작업 범위]를 구현하고 검증해주세요. 현재 지도·카탈로그·루트 저장 형식과 UX 계약을 유지하고, 요청과 관계없는 페이지는 변경하지 마세요. main merge와 운영 배포는 진행하지 마세요. 완료 후 시작 SHA, 결과 브랜치·커밋 또는 PR, 변경 파일, 검증 결과, 로컬 인계 사항을 알려주세요.

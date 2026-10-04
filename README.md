@@ -2,10 +2,13 @@
 
 SSKR 웹의 현재 실행 결과를 관리하는 저장소입니다. 기획 문서의 정본은 Notion이며, 이 저장소에는 공개 페이지와 실행에 필요한 자산만 둡니다.
 
+로컬·클라우드 개발을 시작할 때는 [개발 컨텍스트](docs/cloud-development.md)를 먼저 읽습니다. 실행 환경, 소스 구조, 지도·루트 구현 계약, 검증 및 통합 기준을 정리한 기술 문서입니다.
+
 ## 현재 공개 구조
 
 - `/about/` — `web/about/`: SSKR 소개, 스크롤 연동 8개 장면과 읽기 모드
-- `/explore/` — `web/explore/`: 출발 후보 10곳·경유 후보 30곳·대천 도착지 지도 탐색
+- `/explore/` — `web/explore/`: 출발 11곳·경유 150곳·대천 도착지 공통 지도 탐색
+- `/app/*` — `web/app/`: 매니저·행사·스팟 탐색과 루트 만들기·메모리얼·내 기록
 - `/tests/home-explore/` — `web/tests/home-explore/`: HOME 장소 탐색 인터랙션 검토 시안 (검색엔진 비노출)
 - `/` — `web/home/`: SSKR HOME
 - `/participate` — `web/participate/`: 참가 안내
@@ -23,9 +26,9 @@ HOME 헤더에서 Journey Presentation 링크를 제거했습니다. 기존 `/jo
 
 ## 로컬 실행
 
-`npm run dev` 실행 후 `http://127.0.0.1:8080/explore/`에서 지도 탐색을 확인합니다. 장소 데이터는 `web/explore/places.js`에서 관리합니다. Leaflet 1.9.4와 OpenStreetMap 타일을 사용하므로 인터넷 연결이 필요합니다. 장소 목록은 지도 CDN 실패 시에도 이용할 수 있습니다. 좌표는 탐색용 근사 위치이며 실제 집결 허가·이륜차 경로는 확정되지 않았습니다. 외부 사진은 출처를 표시한 로컬 검토 자료로, 운영 배포 전 이용 조건과 자산 제공 방식을 확인해야 합니다.
+`npm ci` 후 `npm run dev`를 실행하고 `http://127.0.0.1:8080/app/spots?scenario=guest`에서 탐색·루트 만들기를 확인합니다. `/explore/`도 같은 카탈로그와 지도를 사용합니다. 전체 장소는 `web/explore/places.js`의 기반 데이터에 `web/app/spot-catalog.js`와 `spot-curation.js`를 적용해 구성합니다. 현재 150개 경유지·11개 출발지·1개 고정 도착지가 있으며 지도 안내 좌표는 주차 지점입니다. 공통 지도는 Leaflet·MapLibre와 `/api/map-tile`을 사용합니다. 외부 라이브러리·지도 글꼴·확대 타일에는 인터넷 연결이 필요합니다. 실제 도로 데이터는 저장소에 포함돼 있습니다. 로그인·계정별 저장은 mock 및 브라우저 저장 어댑터이며 운영 인증·DB 연동과 구분합니다.
 
-저장소 루트에서 정적 파일 서버를 실행해 각 `web/` 하위 페이지를 확인합니다. 공개 URL 연결은 `vercel.json`에 정의되어 있습니다.
+저장소 루트에서 `server/dev-server.js`를 실행해 공개 URL로 확인합니다. 단순 정적 파일 서버는 지도·참가 API를 제공하지 않습니다. 운영 URL 연결은 `vercel.json`에 정의되어 있습니다.
 
 ## 보존 기준
 

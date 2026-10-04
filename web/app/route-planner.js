@@ -51,7 +51,7 @@
     function currentId(){return anchorId===plan.startId||plan.stopIds.includes(anchorId)?anchorId:plan.stopIds.at(-1)||plan.startId;}
     function recommendations(){if(!ready||!plan.startId||preview)return[];return domain.nextRecommendations(plan,currentId(),catalog,provider,{limit:3});}
     function syncMap(fit=false){if(!active)return;mapPlan(preview?.plan||plan,fit);viewer.setCandidates?.(recommendations().map(item=>byId.get(item.placeId)).filter(Boolean));}
-    function setMode(value){active=value;document.body.classList.toggle('route-editor-active',value);options.onModeChange?.(value,plan.startId);host.hidden=!value;viewer.setEditing?.(value);if(value){render();root.scrollTo({top:0,behavior:'instant'});scheduleLayout();syncMap();if(selected)selectOnMap(selected.id);if(!providerStarted)loadProvider();}persist();}
+    function setMode(value){active=value;document.body.classList.toggle('route-editor-active',value);host.hidden=!value;viewer.setEditing?.(value);options.onModeChange?.(value,plan.startId);if(value){render();root.scrollTo({top:0,behavior:'instant'});scheduleLayout();syncMap();if(selected)selectOnMap(selected.id);if(!providerStarted)loadProvider();}persist();}
     async function calculate(fit=false){
       const request=++routeRequest;routeAbort?.abort();routeError='';
       const ids=domain.orderedIds(plan),pairs=new Set(ids.slice(1).map((id,i)=>ids[i]+'\u0000'+id));

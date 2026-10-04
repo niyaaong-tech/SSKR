@@ -23,7 +23,11 @@ const metrics=p=>p.locator('.spot-mini-select').first().evaluate(e=>{const s=get
 async function capture(p,name){if(!process.env.SSKR_QA_OUTPUT)return;fs.mkdirSync(process.env.SSKR_QA_OUTPUT,{recursive:true});await p.locator('.spot-workspace').screenshot({path:path.join(process.env.SSKR_QA_OUTPUT,name+'.png')});}
 test('spot, memorial and public explorer keep the same map style and card dimensions',async()=>{
  const p=await page(),memorial=fixture.memorials.find(m=>m.spotCount===12);let expected;
- for(const [name,url] of [['spots','/app/spots?scenario=guest'],['memorial','/app/memorials/'+memorial.id+'?scenario=guest'],['explore','/explore/']]){await open(p,url);const current=await metrics(p);if(expected)assert.deepEqual(current,expected);else expected=current;assert.equal(await p.locator('.spot-mini-card').count(),12);assert.equal(await p.evaluate(()=>__backdrop.getMaplibreMap().getStyle().name),'SSKR Korea');await capture(p,name);if(name==='memorial'){await p.locator('[data-action="next-cards"]').click();assert.equal(await p.locator('.spot-mini-card').count(),2);assert.match(await p.locator('.spot-mini-select').last().textContent(),/대천해수욕장/);}}
+ for(const [name,url] of [['spots','/app/spots?scenario=guest'],['memorial','/app/memorials/'+memorial.id+'?scenario=guest'],['explore','/explore/']]){await open(p,url);const current=await metrics(p);if(expected)assert.deepEqual(current,expected);else expected=current;assert.equal(await p.locator('.spot-mini-card').count(),12);assert.equal(await p.evaluate(()=>__backdrop.getMaplibreMap().getStyle().name),'SSKR Korea');
+  await p.locator('.spot-mini-select').first().click();await p.locator('.leaflet-tooltip .spot-photo-card').last().waitFor();
+  const photo=await p.locator('.leaflet-tooltip .spot-photo-card').last().evaluate(e=>{const r=e.getBoundingClientRect(),caption=e.querySelector('strong').getBoundingClientRect();return {height:r.height,top:r.top,bottom:r.bottom,captionTop:caption.top,captionBottom:caption.bottom};});
+  assert.ok(photo.height>=80&&photo.captionTop>=photo.top&&photo.captionBottom<=photo.bottom,name+' tooltip photo and caption must fill the card');
+  await capture(p,name);if(name==='memorial'){await p.locator('[data-action="next-cards"]').click();assert.equal(await p.locator('.spot-mini-card').count(),2);assert.match(await p.locator('.spot-mini-select').last().textContent(),/대천해수욕장/);}}
  await p.close();assert.deepEqual(errors,[]);
 });
 test('mobile cards fill bottom rows; wheel gestures retain their original owner',async()=>{

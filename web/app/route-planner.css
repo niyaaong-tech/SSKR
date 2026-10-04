@@ -1,6 +1,6 @@
 /* Shared route editor: wide three-column workspace and compact map sheet. */
 .spot-mode-switch{display:flex;gap:4px;padding:4px;border:1px solid #c5d0c4;border-radius:9px;width:max-content;background:#edf0e9;margin-bottom:18px}
-.spot-mode-switch button{min-height:44px;padding:8px 18px;border:0;border-radius:6px;background:transparent;color:#58715f;font:inherit;font-size:14px;font-weight:600}
+.spot-mode-switch button{min-height:44px;padding:8px 18px;border:0;border-radius:6px;background:transparent;color:#58715f;font:inherit;font-size:14px;font-weight:600;white-space:nowrap}
 .spot-mode-switch button[aria-pressed=true]{background:#294c3a;color:white}
 .spot-workbench.is-planning>.spot-heading,.spot-workbench.is-planning>.spot-detail,.spot-workbench.is-planning>.spot-map-note,.is-planning>.spot-filter-parking{display:none}
 .is-planning .spot-mode-switch{margin-bottom:8px}

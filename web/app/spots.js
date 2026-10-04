@@ -15,7 +15,9 @@
   function mount(host,options={}){
     const places=root.SSKR_SPOT_CATALOG||root.SSKR_PLACES||[],aliases={pyeongchang:'daegwallyeong',goesan:'sanmagi',gunsan:'daecheon'};
     const initial=places.find(p=>p.id===(aliases[options.id]||options.id)),query=new URLSearchParams(location.search);
-    const state={kind:initial?.kind||'spot',category:'all',search:query.get('spotSearch')||''};
+    const kind=query.get('spotKind'),category=query.get('spotCategory');
+    const state={kind:kind==='all'||Object.hasOwn(labels,kind)?kind:initial?.kind||'spot',category:Object.hasOwn(categories,category)?category:'all',search:query.get('spotSearch')||''};
+    if(state.kind==='start'||state.kind==='finish')state.category='all';
     let selected=initial||places.find(p=>p.kind==='spot'),visible=[],searchTimer,viewer,planner,editing=false,browseFilters=null,routeStartId=null;
     const events=new AbortController(),reduced=matchMedia('(prefers-reduced-motion:reduce)');
     const numbers=new Map(places.filter(p=>p.kind==='spot').map((p,i)=>[p.id,i+1]));
@@ -35,6 +37,8 @@
     function syncURL(place) {
       const url=new URL(location.href);url.pathname='/app/spots'+(place?'/'+encodeURIComponent(place.id):'');
       state.search?url.searchParams.set('spotSearch',state.search):url.searchParams.delete('spotSearch');
+      state.kind==='spot'?url.searchParams.delete('spotKind'):url.searchParams.set('spotKind',state.kind);
+      state.category==='all'?url.searchParams.delete('spotCategory'):url.searchParams.set('spotCategory',state.category);
       history.replaceState(history.state,'',url.pathname+url.search);
     }
     function renderDetail(place) {
@@ -60,7 +64,7 @@
     viewer=shared.mount($('.spot-map-host'),{items:entries,catalog:entries,initialId:selected?.id,initialZoom:initial?11:undefined,inView:true,
       onRouteAdd:p=>planner?.addFromMap(p),onSelect:p=>{selected=p;if(editing){planner?.select(p);return;}syncURL(p);renderDetail(p)},onOpen:p=>{if(editing){planner?.openPlace(p);return;}$('.spot-detail').scrollIntoView({behavior:reduced.matches?'auto':'smooth',block:'start'});},onDeselect:()=>{selected=null;if(!editing){syncURL(null);renderDetail(null);}}});
     planner=root.SSKR_ROUTE_PLANNER.mount($('.route-planner'),{catalog:entries,viewer,filters,filterParking,getAccount:options.getAccount,onLogin:options.onLogin,
-      onModeChange:(value,startId)=>{if(value&&!editing)browseFilters={...state};editing=value;if(!value)filters.forEach(node=>filterParking.append(node));routeStartId=value?startId:null;if(value){state.kind=startId?'spot':'start';state.category='all';state.search='';}else if(browseFilters){Object.assign(state,browseFilters);browseFilters=null;}$('.spot-search input').value=state.search;$('.spot-workbench').classList.toggle('is-planning',value);$('.spot-planning-area').classList.toggle('is-editing',value);host.querySelectorAll('[data-spot-mode]').forEach(b=>b.setAttribute('aria-pressed',String((b.dataset.spotMode==='plan')===value)));if(viewer)applyFilters();},
+      onModeChange:(value,startId)=>{clearTimeout(searchTimer);if(value&&!editing)browseFilters={...state};editing=value;if(!value)filters.forEach(node=>filterParking.append(node));routeStartId=value?startId:null;if(value){state.kind=startId?'spot':'start';state.category='all';state.search='';}else if(browseFilters){Object.assign(state,browseFilters);browseFilters=null;}$('.spot-search input').value=state.search;$('.spot-workbench').classList.toggle('is-planning',value);$('.spot-planning-area').classList.toggle('is-editing',value);host.querySelectorAll('[data-spot-mode]').forEach(b=>b.setAttribute('aria-pressed',String((b.dataset.spotMode==='plan')===value)));if(viewer)applyFilters();},
       onStartChange:id=>{routeStartId=id;state.kind=id?'spot':'start';state.category='all';state.search='';$('.spot-search input').value='';applyFilters();},
       onRoadReady:()=>{if(editing&&routeStartId)applyFilters();},
       onFindPlaces:()=>{state.kind=routeStartId?'spot':'start';state.category='all';applyFilters();}

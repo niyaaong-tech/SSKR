@@ -16,6 +16,7 @@
 .spot-search:hover{border-color:#7d9a82;box-shadow:0 2px 8px #183f3618}
 .spot-search input{border:0;outline:0;min-width:0;width:100%;background:transparent;color:var(--sskr-text);font-size:15px}
 .spot-search input::placeholder{color:#607866;opacity:1}
+.spot-search input::-webkit-search-cancel-button{display:none}
 .spot-search:focus-within{border-color:var(--spot-accent);box-shadow:0 0 0 3px #536e5e2b}
 .spot-search button{border:0;background:none;font-size:23px;color:var(--sskr-text-2);width:26px}
 .spot-kind{display:flex;border:1px solid var(--spot-line);border-radius:7px;background:var(--spot-paper);padding:4px}

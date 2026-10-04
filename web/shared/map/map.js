@@ -12,14 +12,14 @@
  function routePlaces(catalog,ids=[]){let stop=0;return [...new Set(ids)].map(id=>catalog.get(id)).filter(Boolean).map(p=>({...p,number:p.kind==='start'?'출':p.kind==='finish'?'도':++stop}));}
  function safePadding({width,height,mobile,cardHeight,editing=false,insets={}}){
   const side=editing?20:Math.min(172,Math.max(88,cardHeight*1.85))+20;
-  const base=editing?[20,60,20,30]:mobile?[20,Math.min(90,height*.14),20,Math.min(cardHeight*3+96,height*.43)]:[side,Math.min(115,height*.2),side,60];
+  const base=editing?[20,height<230?10:60,20,height<230?10:30]:mobile?[20,Math.min(90,height*.14),20,Math.min(cardHeight*3+96,height*.43)]:[side,Math.min(115,height*.2),side,60];
   const values=['left','top','right','bottom'].map((key,i)=>base[i]+Math.max(0,Number(insets[key])||0));
   for(const [a,b,size] of [[0,2,width],[1,3,height]]){const max=Math.max(0,size-64),sum=values[a]+values[b];if(sum>max){values[a]*=max/sum;values[b]*=max/sum;}}
   return {paddingTopLeft:values.slice(0,2),paddingBottomRight:values.slice(2)};
  }
  function mount(host,options={}){
   const events=new AbortController(),reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
-  let items=options.items||[],selected=items.find(p=>p.id===options.initialId)||null,inView=options.inView??true,page=0,pageItems=[],map,layer,routeLayer,highlight,landLayer,observer,resizeTimer,creditTimer,creditObserver,creditPinned=false,disposed=false,returnY=0;
+  let items=options.items||[],selected=items.find(p=>p.id===options.initialId)||null,inView=options.inView??true,page=0,pageItems=[],map,layer,routeLayer,highlight,landLayer,observer,resizeTimer,revealTimer,creditTimer,creditObserver,creditPinned=false,disposed=false,returnY=0;
   let markers=new Map(),landRings=[],correctingPan=false,editing=false,plannerLegs=[],routeIds=[],activeId='',candidates=[],insets={};
   const catalog=new Map((options.catalog||items).map(p=>[p.id,p])),remember=places=>places.forEach(p=>catalog.set(p.id,p));remember(items);
   host.classList.add('sskr-map');
@@ -78,19 +78,45 @@
    const cards=pageItems.map(card),split=Math.ceil(cards.length/2);
    $('.spot-list').innerHTML=cards.length?(mobile?cards.join(''):`<div class="spot-card-column">${cards.slice(0,split).join('')}</div><div class="spot-card-column">${cards.slice(split).join('')}</div>`):'<div class="spot-list-empty">현재 지도 안에는 장소가 없습니다.</div>';
    $('.spot-list').style.setProperty('--spot-rows',Math.max(1,Math.ceil(cards.length/4)));
-   $('[data-result-label]').textContent=inView?'지도 안':options.route?'방문 장소':'검색 결과';$('[data-result-count]').textContent=list.length+'곳';
+   const countItems=editing?[...new Map([...items,...candidates,...routePlaces(catalog,routeIds)].map(p=>[p.id,p])).values()].filter(p=>map?.getBounds().contains([p.lat,p.lng])):list;
+   $('[data-result-label]').textContent=editing?'화면 안 장소':inView?'지도 안':options.route?'방문 장소':'검색 결과';$('[data-result-count]').textContent=countItems.length+'곳';const filterLabel=$('[data-in-view]')?.closest('label');if(filterLabel)filterLabel.hidden=editing;
    $('.spot-card-pages').hidden=list.length<=12;$('.spot-map-wrap').classList.toggle('has-pages',list.length>12);
    $('[data-card-page]').textContent=list.length?`${page*12+1}–${page*12+cards.length} / ${list.length}`:'0 / 0';
    $('[data-action="previous-cards"]').disabled=page===0;$('[data-action="next-cards"]').disabled=(page+1)*12>=list.length;
    $('.spot-list').querySelectorAll('img').forEach(img=>img.onerror=()=>img.remove());
   }
-  function select(item,{open=false,fly=false}={}){
+  function revealSelected(id,settle=true){
+   if(!map||disposed||selected?.id!==id)return;
+   if(settle){clearTimeout(revealTimer);revealTimer=setTimeout(()=>revealSelected(id,false),180);}
+   const marker=markers.get(id),tooltip=marker?.getTooltip?.()?.getElement?.(),panel=$('.spot-map');
+   if(!tooltip||!panel)return;
+   const bounds=panel.getBoundingClientRect(),pad=padding(),margin=10;
+   const safe={left:bounds.left+pad.paddingTopLeft[0]+margin,top:bounds.top+pad.paddingTopLeft[1]+margin,right:bounds.right-pad.paddingBottomRight[0]-margin,bottom:bounds.bottom-pad.paddingBottomRight[1]-margin};
+   const photo=tooltip.getBoundingClientRect(),button=tooltip.querySelector('.spot-route-add,.spot-route-state')?.getBoundingClientRect();
+   const card={left:Math.min(photo.left,button?.left??photo.left),top:Math.min(photo.top,button?.top??photo.top),right:Math.max(photo.right,button?.right??photo.right),bottom:Math.max(photo.bottom,button?.bottom??photo.bottom)};
+   const width=card.right-card.left,height=card.bottom-card.top;
+   const clamp=(v,min,max)=>Math.max(min,Math.min(max,v));
+   let target={left:clamp(card.left,safe.left,safe.right-width),top:clamp(card.top,safe.top,safe.bottom-height)};
+   const obstacles=['.spot-map-controls','.spot-list-head'].map(selector=>$(selector)?.getBoundingClientRect()).filter(r=>r&&r.width&&r.height);
+   const clear=position=>obstacles.every(r=>position.left+width<=r.left-6||position.left>=r.right+6||position.top+height<=r.top-6||position.top>=r.bottom+6);
+   if(!clear(target)){
+    const xs=[target.left,safe.left,safe.right-width,...obstacles.flatMap(r=>[r.left-width-6,r.right+6])];
+    const ys=[target.top,safe.top,safe.bottom-height,...obstacles.flatMap(r=>[r.top-height-6,r.bottom+6])];
+    const slots=xs.flatMap(left=>ys.map(top=>({left,top}))).filter(p=>p.left>=safe.left&&p.left+width<=safe.right&&p.top>=safe.top&&p.top+height<=safe.bottom&&clear(p));
+    slots.sort((a,b)=>Math.hypot(a.left-card.left,a.top-card.top)-Math.hypot(b.left-card.left,b.top-card.top));
+    if(slots.length)target=slots[0];
+   }
+   const dx=target.left-card.left,dy=target.top-card.top;
+   if(Math.abs(dx)>.5||Math.abs(dy)>.5)map.panBy([-dx,-dy],{animate:false});
+  }
+  function select(item,{open=false,fly=false,reveal=true}={}){
    selected=item;renderCards(true);renderMarkers();options.onSelect?.(item);
-   if(fly&&map)map.flyTo([item.lat,item.lng],Math.max(map.getZoom(),11),{animate:!reduced,duration:.4});
+   if(fly&&map){if(reveal)map.once('moveend',()=>requestAnimationFrame(()=>revealSelected(item.id)));map.flyTo([item.lat,item.lng],Math.max(map.getZoom(),11),{animate:!reduced,duration:.4});}
+   else if(reveal)requestAnimationFrame(()=>revealSelected(item.id));
    if(open){returnY=scrollY;options.onOpen?.(item);}
   }
   function renderMarkers(){
-   if(!map||disposed)return;layer.clearLayers();markers.clear();
+   if(!map||disposed)return;layer.eachLayer(marker=>marker.unbindTooltip());layer.clearLayers();markers.clear();
    const ordered=editing?routePlaces(catalog,routeIds):[],chosen=new Set(ordered.map(p=>p.id)),candidateIds=new Set(editing?candidates.map(p=>p.id):[]);
    const visible=new Map(items.map(p=>[p.id,p]));if(editing){candidates.forEach(p=>visible.set(p.id,p));ordered.forEach(p=>visible.set(p.id,p));}
    const pinned=editing?new Set([...chosen,...candidateIds]):new Set(pageItems.map(p=>p.id));
@@ -98,19 +124,20 @@
    groups.forEach(group=>{
     const p=group[0],multiple=group.length>1,point=multiple?[group.reduce((n,p)=>n+p.lat,0)/group.length,group.reduce((n,p)=>n+p.lng,0)/group.length]:[p.lat,p.lng];
     const planned=!multiple&&chosen.has(p.id),candidate=!multiple&&!planned&&candidateIds.has(p.id),active=planned&&activeId===p.id;
-    const marker=root.L.marker(point,{keyboard:true,title:multiple?group.length+'개 장소 확대':p.name,zIndexOffset:active?1000:planned?600:candidate?400:0,icon:root.L.divIcon({className:'spot-pin '+(multiple?'cluster':p.kind)+(selected?.id===p.id&&!multiple?' is-selected':'')+(planned?' is-route-stop':'')+(candidate?' is-route-candidate':'')+(active?' is-route-active':''),html:`<span>${esc(multiple?group.length+'곳':p.number??'·')}</span>`,iconSize:multiple?[36,36]:[18,18],iconAnchor:multiple?[18,18]:[9,9]})});
+    const marker=root.L.marker(point,{keyboard:true,autoPanOnFocus:false,title:multiple?group.length+'개 장소 확대':p.name,zIndexOffset:active?1000:planned?600:candidate?400:0,icon:root.L.divIcon({className:'spot-pin '+(multiple?'cluster':p.kind)+(selected?.id===p.id&&!multiple?' is-selected':'')+(planned?' is-route-stop':'')+(candidate?' is-route-candidate':'')+(active?' is-route-active':''),html:`<span>${esc(multiple?group.length+'곳':p.number??'·')}</span>`,iconSize:multiple?[36,36]:[18,18],iconAnchor:multiple?[18,18]:[9,9]})});
     const tip=document.createElement('div');tip.className=multiple?'spot-tip-copy':'spot-route-tooltip';
     if(multiple)tip.innerHTML=`<strong>${group.length}개 장소</strong><span>${group.slice(0,3).map(p=>esc(editing?formatPlaceText(p.name):p.name)).join(' · ')}</span>`;
     else{
       const photo=document.createElement('button');photo.type='button';photo.className='spot-photo-card';photo.setAttribute('aria-label',formatPlaceText(p.name)+' 상세 보기');photo.innerHTML=photoCard(p,editing);photo.addEventListener('click',()=>select(p,{open:true}));tip.append(photo);
-      if(editing&&options.onRouteAdd&&(p.kind==='start'||p.kind==='spot'&&!planned)){
+      if(editing&&selected?.id===p.id&&options.onRouteAdd&&(p.kind==='start'&&!planned||p.kind==='spot'&&!planned)){
         const add=document.createElement('button');add.type='button';add.className='spot-route-add';add.textContent=p.kind==='start'?'출발지 설정':'경유지 추가';add.setAttribute('aria-label',`${formatPlaceText(p.name)} ${add.textContent}`);add.addEventListener('click',event=>{event.stopPropagation();options.onRouteAdd?.(p);});tip.prepend(add);
       }
+      if(editing&&selected?.id===p.id&&p.kind==='start'&&planned){const status=document.createElement('span');status.className='spot-route-state';status.textContent='선택된 출발지';tip.prepend(status);}
       root.L.DomEvent.disableClickPropagation(tip);const img=tip.querySelector('img');if(img)img.onerror=()=>img.remove();
     }
     marker.bindTooltip(tip,{direction:'top',offset:[0,-10],className:'spot-tooltip'+(multiple?' spot-tooltip-group':'')+(editing?' is-route-tooltip':''),opacity:1,interactive:!multiple,permanent:!multiple&&selected?.id===p.id});
-    marker.on('click',event=>{if(event.originalEvent)root.L.DomEvent.stopPropagation(event.originalEvent);if(!multiple){requestAnimationFrame(()=>{if(!disposed)select(p)});return;}if(map.getZoom()>=16){select(p);return;}map.fitBounds(group.map(p=>[p.lat,p.lng]),{padding:[70,70],maxZoom:Math.min(16,map.getZoom()+2),animate:!reduced});});
-    marker.addTo(layer);if(!multiple)markers.set(p.id,marker);
+    marker.on('click keypress',event=>{if(event.type==='keypress'){if(!['Enter',' '].includes(event.originalEvent?.key))return;root.L.DomEvent.preventDefault(event.originalEvent);}if(event.originalEvent)root.L.DomEvent.stopPropagation(event.originalEvent);if(!multiple){requestAnimationFrame(()=>{if(!disposed)select(p)});return;}if(map.getZoom()>=16){select(p);return;}map.fitBounds(group.map(p=>[p.lat,p.lng]),{padding:[70,70],maxZoom:Math.min(16,map.getZoom()+2),animate:!reduced});});
+    marker.addTo(layer);marker.getElement()?.setAttribute('aria-label',multiple?group.length+'개 장소 확대':`${formatPlaceText(p.name)} · ${p.kind==='start'?'출발지':p.kind==='finish'?'도착지':`${p.number}번 스팟`}${planned?' · 경로 포함':''}${selected?.id===p.id?' · 선택됨':''}`);if(!multiple)markers.set(p.id,marker);
    });
   }
   function renderRoute(){
@@ -123,7 +150,8 @@
    highlight.setLatLngs([]).setStyle({opacity:0});
    $('[data-action="fit"]').setAttribute('aria-label',editing||options.route?'전체 경로 보기':'전체 장소 보기');
   }
-  function fit(){if(!map||disposed)return;const bounds=routeLayer?.getBounds(),places=editing?routePlaces(catalog,routeIds):items;if(bounds?.isValid()){places.forEach(p=>bounds.extend([p.lat,p.lng]));map.fitBounds(bounds,{...padding(),maxZoom:12,animate:!reduced,duration:.35});}else if(places.length)map.fitBounds(places.map(p=>[p.lat,p.lng]),{...padding(),maxZoom:12,animate:!reduced,duration:.35});}
+  function clearSelection(){selected=null;clearTimeout(revealTimer);renderCards();renderMarkers();}
+  function fit(){if(!map||disposed)return;if(editing)clearSelection();const bounds=routeLayer?.getBounds(),places=editing?routePlaces(catalog,routeIds):items;if(bounds?.isValid()){places.forEach(p=>bounds.extend([p.lat,p.lng]));map.fitBounds(bounds,{...padding(),maxZoom:12,animate:!reduced,duration:.35});}else if(places.length)map.fitBounds(places.map(p=>[p.lat,p.lng]),{...padding(),maxZoom:12,animate:!reduced,duration:.35});}
   if(root.L){
    map=root.L.map($('.spot-map'),{zoomControl:false,attributionControl:false,scrollWheelZoom:false,minZoom:4,maxZoom:16,zoomSnap:.25,maxBoundsViscosity:1}).setView([36.5,127.8],7);layer=root.L.layerGroup().addTo(map);limits();
    const landPane=map.createPane('sskr-land');landPane.style.zIndex=450;landPane.style.pointerEvents='none';
@@ -133,8 +161,9 @@
    if(root.L.maplibreGL&&root.maplibregl){try{const backdrop=root.L.maplibreGL({style:'/web/shared/map/style.json',transformRequest:url=>({url:new URL(url,location.href).href}),interactive:false,attributionControl:false}).addTo(map);backdrop.getMaplibreMap().on('error',()=>{if(!disposed)$('.spot-map-status').textContent='지도 배경을 불러오지 못했습니다. 장소 카드는 계속 이용할 수 있습니다.';});backdrop.getMaplibreMap().on('idle',()=>{if(!disposed)$('.spot-map-status').textContent='';});}catch{$('.spot-map-status').textContent='지도 배경을 표시할 수 없습니다. 장소 카드는 계속 이용할 수 있습니다.';}}
    else $('.spot-map-status').textContent='지도 배경을 불러오지 못했습니다. 장소 카드는 계속 이용할 수 있습니다.';
    if(options.route?.length)renderRoute();
+   map.on('dragstart',()=>clearTimeout(revealTimer));
    map.on('moveend',()=>{if(clampPan())return;renderCards();renderMarkers()});map.on('click',()=>{if(editing)return;selected=null;highlight?.setStyle({opacity:0});renderCards();renderMarkers();options.onDeselect?.();});
-   observer=new ResizeObserver(()=>{clearTimeout(resizeTimer);resizeTimer=setTimeout(()=>{if(disposed)return;map.invalidateSize({pan:false});limits();if(!clampPan()){renderCards();renderMarkers();}},100)});observer.observe($('.spot-map'));
+   observer=new ResizeObserver(()=>{clearTimeout(resizeTimer);resizeTimer=setTimeout(()=>{if(disposed)return;map.invalidateSize({pan:false});limits();if(!clampPan()){renderCards();renderMarkers();if(selected){const id=selected.id;requestAnimationFrame(()=>revealSelected(id));}}},100)});observer.observe($('.spot-map'));
   }else{$('.spot-map-status').textContent='지도 연결을 확인해 주세요. 장소 카드는 계속 이용할 수 있습니다.';host.querySelectorAll('.spot-map-controls button,[data-in-view]').forEach(b=>b.disabled=true);}
   listen(host,'click',e=>{const id=e.target.closest('[data-place]')?.dataset.place,p=items.find(p=>p.id===id)||(editing?catalog.get(id):null);if(p){select(p,{open:true});return;}const action=e.target.closest('[data-action]')?.dataset.action;if(action==='zoom-in')map?.zoomIn();if(action==='zoom-out')map?.zoomOut();if(action==='fit')fit();if(action==='previous-cards'||action==='next-cards'){page+=action==='next-cards'?1:-1;renderCards();renderMarkers();}});
   listen($('[data-in-view]'),'change',e=>{inView=e.target.checked;page=0;renderCards();renderMarkers();});
@@ -144,7 +173,7 @@
    setCandidates(next=[]){if(disposed)return;candidates=next;remember(candidates);renderMarkers();},
    setEditing(value){if(disposed||editing===Boolean(value))return;editing=Boolean(value);host.classList.toggle('is-route-editing',editing);if(editing)credits.open=false;selected=null;renderRoute();renderCards();renderMarkers();if(map){limits();clampPan();}},
    setInsets(next={}){if(disposed)return;insets=Object.fromEntries(['left','top','right','bottom'].map(key=>[key,Math.max(0,Number(next[key])||0)]));for(const [key,value] of Object.entries(insets))host.style.setProperty('--map-inset-'+key,value+'px');if(map){limits();clampPan();}},
-   fitRoute:fit,select(id,opts){if(disposed)return;const p=items.find(p=>p.id===id)||(editing?catalog.get(id):null);if(p)select(p,opts)},highlight(coords){if(!disposed)highlight?.setLatLngs(coords).setStyle({opacity:1});},returnToMap(){if(disposed)return;scrollTo({top:returnY,behavior:reduced?'auto':'smooth'});$('.spot-map').focus({preventScroll:true});},locate(id){if(disposed)return;host.scrollIntoView({behavior:reduced?'auto':'smooth',block:'center'});this.select(id,{fly:true});},destroy(){disposed=true;events.abort();clearTimeout(resizeTimer);clearTimeout(creditTimer);observer?.disconnect();creditObserver?.disconnect();map?.remove();markers.clear();catalog.clear();plannerLegs=[];routeIds=[];candidates=[];host.classList.remove('sskr-map','is-route-editing');for(const key of ['left','top','right','bottom'])host.style.removeProperty('--map-inset-'+key);}};
+   fitRoute:fit,clearSelection,select(id,opts){if(disposed)return;const p=items.find(p=>p.id===id)||(editing?catalog.get(id):null);if(p)select(p,opts)},revealSelected,highlight(coords){if(!disposed)highlight?.setLatLngs(coords).setStyle({opacity:1});},returnToMap(){if(disposed)return;scrollTo({top:returnY,behavior:reduced?'auto':'smooth'});$('.spot-map').focus({preventScroll:true});},locate(id){if(disposed)return;host.scrollIntoView({behavior:reduced?'auto':'smooth',block:'center'});this.select(id,{fly:true});},destroy(){disposed=true;events.abort();clearTimeout(resizeTimer);clearTimeout(revealTimer);clearTimeout(creditTimer);observer?.disconnect();creditObserver?.disconnect();map?.remove();markers.clear();catalog.clear();plannerLegs=[];routeIds=[];candidates=[];host.classList.remove('sskr-map','is-route-editing');for(const key of ['left','top','right','bottom'])host.style.removeProperty('--map-inset-'+key);}};
  }
  return {mount,cardSlots,clusterPlaces,photoCard,formatPlaceText,routeCoordinates,routePlaces,safePadding};
 });

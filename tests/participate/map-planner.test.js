@@ -50,15 +50,16 @@ function fixture(options={}){
   querySelector(selector){return this.children.get(selector)||null;}
   querySelectorAll(){return [];}
   contains(){return false;}
+  closest(){return null;}
  }
  const host=new Element();
  for(const selector of ['.spot-attribution','.spot-map','.spot-map-wrap','.spot-list','.spot-list-head','.spot-card-pages','.spot-map-status','[data-result-label]','[data-result-count]','[data-card-page]','[data-in-view]','[data-action="fit"]','[data-action="previous-cards"]','[data-action="next-cards"]'])host.children.set(selector,new Element());
  host.querySelector('.spot-attribution').children.set('summary',new Element());
  const map={zoom:7,min:4,layers:[],fitCalls:[],handlers:{},setView(){return this;},setMinZoom(n){this.min=n;return this;},setMaxBounds(){return this;},getMinZoom(){return this.min;},getZoom(){return this.zoom;},getBoundsZoom(){return 7;},setZoom(n){this.zoom=n;return this;},getBounds(){return {contains:()=>true};},project:([lat,lng])=>({x:lng*100,y:lat*100}),createPane:()=>({style:{}}),on(name,fn){this.handlers[name]=fn;return this;},fitBounds(bounds,opts){this.fitCalls.push({bounds,opts});return this;},getSize(){return {x:1200,y:700};},remove(){this.removed=true;this.layers.forEach(l=>l.clearLayers?.());this.layers=[];}};
  const groups=[];
- const group=()=>{const g={children:[],addTo(m){m.layers.push(this);return this;},clearLayers(){this.children=[];return this;},getBounds(){return {isValid:()=>this.children.length>0,extend(){return this;}};}};groups.push(g);return g;};
+ const group=()=>{const g={children:[],addTo(m){m.layers.push(this);return this;},eachLayer(fn){this.children.forEach(fn);return this;},clearLayers(){this.children=[];return this;},getBounds(){return {isValid:()=>this.children.length>0,extend(){return this;}};}};groups.push(g);return g;};
  const leaflet={map:()=>map,latLngBounds:points=>({points}),point:points=>({add:other=>points.map((v,i)=>v+other[i])}),layerGroup:group,featureGroup:group,DomEvent:{disableClickPropagation(){},stopPropagation(){}},divIcon:opts=>opts,
-  marker(point,opts){return {point,options:opts,handlers:{},bindTooltip(tip,options){this.tip=tip;this.tipOptions=options;return this;},on(name,fn){this.handlers[name]=fn;return this;},addTo(layer){layer.children.push(this);return this;}};},
+  marker(point,opts){return {point,options:opts,element:new Element(),getElement(){return this.element;},handlers:{},bindTooltip(tip,options){this.tip=tip;this.tipOptions=options;return this;},unbindTooltip(){delete this.tip;delete this.tipOptions;return this;},on(names,fn){for(const name of names.split(' '))this.handlers[name]=fn;return this;},addTo(layer){layer.children.push(this);return this;}};},
   polyline(coordinates,opts){return {coordinates,options:opts,addTo(layer){(layer.children||layer.layers).push(this);return this;},setLatLngs(next){this.coordinates=next;return this;},setStyle(next){Object.assign(this.options,next);return this;}};}
  };
  const observers=[];
@@ -84,6 +85,7 @@ test('planner updates retain filtered stops and candidates without refitting the
  assert.equal(markers.filter(m=>m.options.icon.className.includes('is-route-candidate')).length,1);
  const active=markers.find(m=>m.options.icon.className.includes('is-route-active'));
  assert.equal(active.options.title,'첫 스팟');
+ assert.match(active.getElement().attributes['aria-label'],/첫 스팟.*경로 포함/);
  active.handlers.click({});
  assert.deepEqual(callbacks,['a'],'callbacks retain original place IDs');
  api.setRoute([leg(places[0],places[2])],{selectedIds:['start','b','finish']});

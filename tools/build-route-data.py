@@ -2,7 +2,7 @@
 
 Install tools/route-requirements.txt in an isolated Python environment.
 Pass --work outside the repository; only the final compact data is published.
-The input is Geofabrik south-korea-latest.osm.pbf, never a public routing API.
+The input is a South Korea OSM extract, never a public routing API.
 """
 from __future__ import annotations
 
@@ -85,13 +85,26 @@ def catalog():
     return json.loads(raw.decode("utf-8"))
 
 
-def prepare(work, source):
+def prepare(work, source, source_url):
+    with osmium.io.Reader(str(source)) as reader:
+        snapshot = reader.header().get("osmosis_replication_timestamp")
+    snapshot_basis = "replication-header" if snapshot else "latest-object-timestamp"
+    latest_timestamp = None
+
+    def observe_timestamp(obj):
+        nonlocal latest_timestamp
+        if not snapshot:
+            timestamp = obj.timestamp
+            if timestamp.year > 1970 and (latest_timestamp is None or timestamp > latest_timestamp):
+                latest_timestamp = timestamp
+
     target = work / "korea-motorcycle.osm.pbf"
     if target.exists():
         target.unlink()  # Replace only this named generated file in external work.
     allowed, denied = set(), set()
     class Filter(osmium.SimpleHandler):
         def node(self, n):
+            observe_timestamp(n)
             tags = dict(n.tags)
             if node_forbidden(tags):
                 tags["motorcycle"] = "no"
@@ -100,6 +113,7 @@ def prepare(work, source):
                 writer.add_node(n)
 
         def way(self, w):
+            observe_timestamp(w)
             tags = dict(w.tags)
             if "highway" in tags or tags.get("route") in {"ferry", "shuttle_train"}:
                 blocked = forbidden(tags)
@@ -115,17 +129,18 @@ def prepare(work, source):
                 writer.add_way(w)
 
         def relation(self, r):
+            observe_timestamp(r)
             writer.add_relation(r)  # Preserve turn restrictions and boundaries.
 
-    with osmium.io.Reader(str(source)) as reader:
-        snapshot = reader.header().get("osmosis_replication_timestamp")
     started = time.time()
     with osmium.SimpleWriter(str(target)) as writer:
         Filter().apply_file(str(source))
+    if not snapshot and latest_timestamp is not None:
+        snapshot = latest_timestamp.isoformat().replace("+00:00", "Z")
     with source.open("rb") as stream:
         digest = hashlib.file_digest(stream, "sha256").hexdigest()
-    dump(work / "input.json", {"source": "https://download.geofabrik.de/asia/south-korea-latest.osm.pbf",
-         "snapshot": snapshot, "sha256": digest, "policyVersion": POLICY_VERSION,
+    dump(work / "input.json", {"source": source_url,
+         "snapshot": snapshot, "snapshotBasis": snapshot_basis, "sha256": digest, "policyVersion": POLICY_VERSION,
          "allowedWayCount": len(allowed), "blockedWayCount": len(denied)})
     dump(work / "allowed-ways.json", sorted(allowed))
     dump(work / "blocked-ways.json", sorted(denied))
@@ -305,6 +320,11 @@ def routes(work, workers, only):
           "license": "ODbL-1.0", "attribution": "© OpenStreetMap contributors", "policyVersion": POLICY_VERSION})
     dump(publication / "validation.json", {"version": version, "routeCount": sum(v is not None and v > 0 for row in distances for v in row),
           "unavailable": unavailable, "policy": "Every published route was edge-walked and checked against permitted OSM way IDs."})
+    # Removed catalog origins must not leave unused public geometry behind.
+    active_origins = {p["id"] for p in places if p["kind"] != "finish"}
+    for path in (publication / "legs").glob("*.json.gz"):
+        if path.name.removesuffix(".json.gz") not in active_origins:
+            path.unlink()
     print(json.dumps({"stage": "publish", "version": version, "bytes": sum(p.stat().st_size for p in output.rglob("*") if p.is_file())}), flush=True)
 
 
@@ -312,6 +332,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--work", type=Path, required=True)
     parser.add_argument("--input", type=Path)
+    parser.add_argument("--source-url", default="https://download.geofabrik.de/asia/south-korea-latest.osm.pbf")
     parser.add_argument("--stage", choices=["prepare", "graph", "routes"], required=True)
     parser.add_argument("--resume", default="initialize")
     parser.add_argument("--workers", type=int, default=3)
@@ -324,7 +345,7 @@ def main():
     if args.stage == "prepare":
         if not args.input:
             parser.error("--input is required for prepare")
-        prepare(work, args.input)
+        prepare(work, args.input, args.source_url)
     elif args.stage == "graph":
         graph(work, args.resume)
     elif args.stage == "routes":

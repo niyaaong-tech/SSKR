@@ -18,9 +18,6 @@
 .spot-search input::placeholder{color:#607866;opacity:1}
 .spot-search:focus-within{border-color:var(--spot-accent);box-shadow:0 0 0 3px #536e5e2b}
 .spot-search button{border:0;background:none;font-size:23px;color:var(--sskr-text-2);width:26px}
-.spot-region{display:flex;align-items:center;gap:10px;font-size:14px}
-.spot-region>span{color:var(--sskr-text-2)}
-.spot-region select{height:46px;border:1px solid var(--spot-line);background:var(--spot-paper);color:var(--sskr-text);border-radius:7px;padding:0 32px 0 12px;font-size:14px}
 .spot-kind{display:flex;border:1px solid var(--spot-line);border-radius:7px;background:var(--spot-paper);padding:4px}
 .spot-kind button{height:36px;border:0;border-radius:4px;background:none;padding:0 14px;color:var(--sskr-text-2);font-size:14px;white-space:nowrap}
 .spot-kind button[aria-pressed=true]{background:var(--spot-accent);color:#fff}
@@ -61,7 +58,6 @@
 }
 @media(max-width:1100px){.app-main.spots-main{padding:20px 24px 40px}
 .spot-toolbar{gap:10px}
-.spot-region>span{display:inline}
 .spot-kind button{padding:0 11px}
 .spot-detail-copy{padding:22px}
 .spot-detail{grid-template-columns:.7fr 1.3fr}
@@ -74,9 +70,6 @@
 .spot-heading>div>span{font-size:14px;line-height:1.7;display:block}
 .spot-heading p{font-size:11px}
 .spot-search{flex:1 1 100%;max-width:none;min-width:0;margin-left:0;height:46px}
-.spot-region{flex:0 0 100%}
-.spot-region>span{display:none}
-.spot-region select{width:100%;height:42px}
 .spot-kind button{padding:0 12px;height:32px}
 .spot-categories{gap:5px;overflow:auto;flex-wrap:nowrap;padding:12px 0;scrollbar-width:none}
 .spot-categories button{flex-shrink:0;font-size:13px;padding:7px 10px}

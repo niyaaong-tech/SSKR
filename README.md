@@ -83,12 +83,12 @@ HOME 헤더에서 Journey Presentation 링크를 제거했습니다. 기존 `/jo
 
 현재 계정 인증은 기존 mock을 사용하며 루트는 브라우저의 계정별 localStorage에 저장합니다. 운영 전환 시 저장 어댑터와 로그인 콜백을 서버 인증·DB로 연결해야 합니다. 저장 형상은 복제하지 않고 장소 ID·순서·도로 데이터 버전을 보존합니다. 도로 조회 어댑터를 통해 서버 경로 엔진으로 전환할 수 있습니다.
 
-도로 데이터는 [Geofabrik 대한민국 OSM 추출본](https://download.geofabrik.de/asia/south-korea.html)을 로컬 Valhalla로 계산합니다. 고속도로·자동차전용도로·명시적 이륜차 통행 금지·사유지·페리·비포장·보행 전용 도로를 제외하고, 일방통행과 회전 제한을 유지합니다. 조건부 통행 제한은 출발 시각을 확정하지 않으므로 보수적으로 제외합니다. 경로는 거리 최단 기준이며 정차·실시간 교통·현장 통제는 반영하지 않습니다. 모든 공개 구간의 원본 도로 ID를 통행 정책에 다시 대조합니다. 장소 표시 좌표와 도로 접근점은 별도로 관리합니다.
+도로 데이터는 대한민국 OSM 추출본을 로컬 Valhalla로 계산합니다. 실제 원본 주소와 스냅샷·해시는 manifest.json에 기록하며, 현재 입력은 [OSM 한국 미러](https://tiles.osm.kr/download/)의 비군사 추출본입니다. 원본에 복제 시각이 없으면 포함된 객체의 마지막 수정 시각과 그 기준을 기록합니다. 고속도로·자동차전용도로·명시적 이륜차 통행 금지·사유지·페리·비포장·보행 전용 도로를 제외하고, 일방통행과 회전 제한을 유지합니다. 조건부 통행 제한은 출발 시각을 확정하지 않으므로 보수적으로 제외합니다. 경로는 거리 최단 기준이며 정차·실시간 교통·현장 통제는 반영하지 않습니다. 모든 공개 구간의 원본 도로 ID를 통행 정책에 다시 대조합니다. 장소 표시 좌표와 도로 접근점은 별도로 관리합니다.
 
 재생성은 격리한 Python 환경에 `tools/route-requirements.txt`를 설치한 뒤 다음 순서로 실행합니다. `WORK`와 원본 PBF는 저장소 밖의 작업 경로를 지정합니다.
 
 ```text
-python tools/build-route-data.py --work WORK --input south-korea.osm.pbf --stage prepare
+python tools/build-route-data.py --work WORK --input south-korea.osm.pbf --source-url https://tiles.osm.kr/download/south-korea-latest-non-military.osm.pbf --stage prepare
 python tools/build-route-data.py --work WORK --stage graph
 python tools/build-route-data.py --work WORK --stage routes --workers 3
 python -m unittest discover -s tests/routes -p "test_*.py"

@@ -132,18 +132,23 @@
   function nextRecommendations(value, currentId, catalog, provider, { limit = 3 } = {}) {
     const plan = normalize(value, catalog), current = currentId || plan.stopIds.at(-1) || plan.startId;
     if (!plan.startId || !current || referenceIssues(plan, catalog).length) return [];
-    const used = new Set(orderedIds(plan)), baseline = leg(provider, current, plan.finishId);
-    if (!baseline) return [];
-    const target = baseline.distanceMeters / Math.max(2, 10 - plan.stopIds.length);
+    const used = new Set(orderedIds(plan)), position = insertionIndex(plan, current);
+    const next = plan.stopIds[position] || plan.finishId;
+    const baseline = leg(provider, current, next), finish = leg(provider, current, plan.finishId);
+    if (!baseline || !finish) return [];
+    const target = next === plan.finishId ? finish.distanceMeters / Math.max(2, 10 - plan.stopIds.length) : baseline.distanceMeters / 2;
     return listPlaces(catalog).filter(place => place.kind === 'spot' && !used.has(place.id) && place.id !== current)
       .flatMap(place => {
-        const incoming = leg(provider, current, place.id), remaining = leg(provider, place.id, plan.finishId);
-        if (!incoming || !remaining || remaining.distanceMeters >= baseline.distanceMeters) return [];
-        const detour = Math.max(0, incoming.distanceMeters + remaining.distanceMeters - baseline.distanceMeters);
-        const progress = baseline.distanceMeters - remaining.distanceMeters;
-        const score = Math.abs(progress - target) * 1.3 + detour * 1.1 + Math.abs(incoming.distanceMeters - target) * .25;
-        return [{ placeId: place.id, fromDistanceMeters: incoming.distanceMeters, addedDistanceMeters: Math.round(detour), durationSeconds: incoming.durationSeconds,
-          reason: `피니시까지 ${Math.round(progress / 1000)} km 전진 · 예상 동선에서 +${Math.round(detour / 1000)} km`, score }];
+        const incoming = leg(provider, current, place.id), outgoing = leg(provider, place.id, next);
+        if (!incoming || !outgoing) return [];
+        const progress = baseline.distanceMeters - outgoing.distanceMeters;
+        if (progress <= 0) return [];
+        const added = incoming.distanceMeters + outgoing.distanceMeters - baseline.distanceMeters;
+        const addedTime = incoming.durationSeconds + outgoing.durationSeconds - baseline.durationSeconds;
+        const score = Math.abs(progress - target) * 1.3 + Math.max(0, added) * 1.1 + Math.abs(incoming.distanceMeters - target) * .25;
+        return [{ placeId: place.id, fromDistanceMeters: incoming.distanceMeters, addedDistanceMeters: added,
+          addedDurationSeconds: addedTime, durationSeconds: incoming.durationSeconds,
+          reason: `다음 구간에 추가 · 전체 경로 ${added >= 0 ? '+' : '−'}${Math.round(Math.abs(added) / 1000)} km`, score }];
       }).sort((a, b) => a.score - b.score || a.placeId.localeCompare(b.placeId))
       .slice(0, Math.max(0, Math.floor(Number(limit) || 0)))
       .map(({ score, ...entry }) => entry);

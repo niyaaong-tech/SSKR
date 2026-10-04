@@ -295,3 +295,18 @@ test('a disconnected partial draft saves and reloads for repair without being ma
   assert.equal(repaired.id, draft.id);
   assert.equal(planner.status(repaired, catalog, provider).issues.some(issue => issue.code === 'UNREACHABLE'), false);
 });
+
+
+test('next recommendations report the exact directed insertion delta including time',()=>{
+ const {catalog,provider,plan,blocked}=fixture();plan.stopIds=['spot-3','spot-7','spot-14'];
+ const before=planner.status(plan,catalog,provider);
+ for(const anchor of ['start','spot-3','spot-7','spot-14']){
+  const index=anchor==='start'?0:plan.stopIds.indexOf(anchor)+1;
+  const choices=planner.nextRecommendations(plan,anchor,catalog,provider,{limit:30});assert.ok(choices.length);
+  for(const choice of choices){const next=structuredClone(plan);next.stopIds.splice(index,0,choice.placeId);const after=planner.status(next,catalog,provider);
+   assert.ok(Math.abs(after.distanceMeters-before.distanceMeters-choice.addedDistanceMeters)<.001);
+   assert.ok(Math.abs(after.durationSeconds-before.durationSeconds-choice.addedDurationSeconds)<.001);
+  }
+ }
+ blocked.add('spot-4:spot-7');assert.ok(!planner.nextRecommendations(plan,'spot-3',catalog,provider,{limit:30}).some(x=>x.placeId==='spot-4'));
+});

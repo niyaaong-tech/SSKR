@@ -131,14 +131,14 @@ class PreparedDataTests(unittest.TestCase):
             202: {"type": "restriction", "restriction:motorcycle": "only_right_turn", "except": "bicycle;psv"},
             203: {"type": "restriction", "restriction": "no_right_turn", "except": "motorcycle"},
         }
-        nodes = "".join(f'<node id="{n}" version="1" lat="{36 + n / 1000}" lon="127">{tag_xml(node_tags.get(n, {}))}</node>' for n in range(1, 7))
+        nodes = "".join(f'<node id="{n}" version="1" timestamp="2026-09-30T10:00:00Z" lat="{36 + n / 1000}" lon="127">{tag_xml(node_tags.get(n, {}))}</node>' for n in range(1, 7))
         ways = "".join(f'<way id="{wid}" version="1"><nd ref="5"/><nd ref="6"/>{tag_xml(tags)}</way>' for wid, tags in cls.original_ways.items())
         members = '<member type="way" ref="101" role="from"/><member type="node" ref="6" role="via"/><member type="way" ref="104" role="to"/>'
         relations = "".join(f'<relation id="{rid}" version="1">{members}{tag_xml(tags)}</relation>' for rid, tags in cls.original_relations.items())
         cls.source = cls.work / "source.osm"
         cls.source.write_text(f'<?xml version="1.0" encoding="UTF-8"?><osm version="0.6" generator="sskr-policy-test">{nodes}{ways}{relations}</osm>', encoding="utf-8")
         with contextlib.redirect_stdout(io.StringIO()):
-            builder.prepare(cls.work, cls.source)
+            builder.prepare(cls.work, cls.source, "https://example.test/south-korea.osm")
 
         class Capture(builder.osmium.SimpleHandler):
             def __init__(self):
@@ -200,6 +200,9 @@ class PreparedDataTests(unittest.TestCase):
         self.assertEqual(blocked, [102, 107, 108, 109, 110, 111, 115])
         self.assertFalse(set(allowed).intersection(blocked))
         metadata = json.loads((self.work / "input.json").read_text())
+        self.assertEqual(metadata["source"], "https://example.test/south-korea.osm")
+        self.assertEqual(metadata["snapshot"], "2026-09-30T10:00:00Z")
+        self.assertEqual(metadata["snapshotBasis"], "latest-object-timestamp")
         self.assertEqual(metadata["sha256"], hashlib.sha256(self.source.read_bytes()).hexdigest())
         self.assertEqual(metadata["policyVersion"], builder.POLICY_VERSION)
         self.assertEqual(metadata["allowedWayCount"], len(allowed))

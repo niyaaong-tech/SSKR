@@ -4,18 +4,18 @@ const fs = require('node:fs');
 const path = require('node:path');
 const root = path.resolve(__dirname,'..');
 const places = require('../web/explore/places.js');
-test('36 unique places: five east-coast starts, thirty spots, Daecheon finish',()=>{
-  assert.equal(places.length,36);assert.equal(new Set(places.map(p=>p.id)).size,36);
-  assert.equal(places.filter(p=>p.kind==='start').length,5);
+test('42 unique places: eleven starts, thirty spots, Daecheon finish',()=>{
+  assert.equal(places.length,42);assert.equal(new Set(places.map(p=>p.id)).size,42);
+  assert.equal(places.filter(p=>p.kind==='start').length,11);
   assert.equal(places.filter(p=>p.kind==='spot').length,30);
   assert.deepEqual(places.filter(p=>p.kind==='finish').map(p=>p.id),['daecheon']);
 });
 test('place content has coordinates, photo, source and visitor guidance',()=>{
   for(const p of places){
-    assert.ok(p.lat>35&&p.lat<38,p.id);assert.ok(p.lng>126&&p.lng<130,p.id);
+    assert.ok(p.lat>33&&p.lat<39,p.id);assert.ok(p.lng>125&&p.lng<131,p.id);
     for(const k of ['name','region','lead','description','note','photoCredit'])assert.ok(p[k]?.length,p.id+' '+k);
     assert.equal(new URL(p.image).protocol,'https:');assert.equal(new URL(p.source).protocol,'https:');
-    assert.ok(['north','central','south','west'].includes(p.corridor));
+    assert.ok(!('corridor' in p));
   }
 });
 test('both HOME gateways and production/local route entries exist',()=>{

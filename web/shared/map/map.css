@@ -38,14 +38,17 @@
 .sskr-map .spot-pin.is-route-stop.finish>span{background:#587b90}
 .sskr-map .spot-pin.is-route-candidate>span{border:2px solid #8c5d26;background:#fff2d7;color:#694418;box-shadow:0 0 0 3px #e6ba724d}
 .sskr-map .spot-pin.is-route-active>span{box-shadow:0 0 0 4px #edc77fc9,0 2px 8px #26392b66}
-.sskr-map.is-route-editing .spot-pin:not(.is-route-stop):not(.is-route-candidate):not(.is-selected)>span{opacity:.38}
-.sskr-map.is-route-editing .spot-pin:hover>span,.sskr-map.is-route-editing .spot-pin:focus-visible>span{opacity:1}
 @media(max-width:700px){.sskr-map.is-route-editing .spot-map-controls{right:calc(8px + var(--map-inset-right,0px));top:calc(10px + var(--map-inset-top,0px))}.sskr-map.is-route-editing .spot-list-head{left:calc(8px + var(--map-inset-left,0px));top:calc(10px + var(--map-inset-top,0px));max-width:calc(100% - 124px - var(--map-inset-left,0px) - var(--map-inset-right,0px))}}
 
 /* Route actions float above the selected map photo without changing browse cards. */
 .sskr-map.is-route-editing .spot-tooltip.is-route-tooltip{overflow:visible!important}
 .sskr-map.is-route-editing .spot-route-tooltip{position:relative;width:100%;height:100%}
 .sskr-map.is-route-editing .spot-route-tooltip>.spot-photo-card{width:100%;height:100%}
-.sskr-map.is-route-editing .spot-route-add{position:absolute;top:-42px;left:0;right:0;z-index:2;min-height:36px;padding:6px 8px;border:1px solid #fff;border-radius:6px;background:#294b39;color:#fff;box-shadow:0 3px 10px #1b35284d;font-size:12px;font-weight:700;text-align:center;white-space:nowrap}
+.sskr-map.is-route-editing .spot-route-add{position:absolute;top:-50px;left:0;right:0;z-index:2;min-height:44px;padding:6px 8px;border:1px solid #fff;border-radius:6px;background:#294b39;color:#fff;box-shadow:0 3px 10px #1b35284d;font-size:12px;font-weight:700;text-align:center;white-space:nowrap}
 .sskr-map.is-route-editing .spot-route-add:hover{background:#1f3b2c}
-@media(max-width:700px){.sskr-map.is-route-editing .spot-route-add{min-height:40px;top:-46px;font-size:11px}}
+@media(max-width:700px){.sskr-map.is-route-editing .spot-route-add{font-size:11px}}
+
+/* Square catalog numbers and circular visit-order numbers remain fully opaque. */
+.sskr-map.is-route-editing .spot-pin.spot:not(.is-route-stop)>span{border-radius:4px;border:1px solid #809682;background:#f7f9f2;color:#344e3d}
+.sskr-map.is-route-editing .spot-pin.is-route-stop>span{border-radius:50%;border:2px solid #fff}
+.sskr-map.is-route-editing .spot-pin.is-route-candidate:not(.is-route-stop)>span{border:2px solid #8c5d26;background:#fff2d7;color:#694418}

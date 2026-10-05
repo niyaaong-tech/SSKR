@@ -55,7 +55,7 @@ function fixture(options={}){
  const host=new Element();
  for(const selector of ['.spot-attribution','.spot-map','.spot-map-wrap','.spot-list','.spot-list-head','.spot-card-pages','.spot-map-status','[data-result-label]','[data-result-count]','[data-card-page]','[data-in-view]','[data-action="fit"]','[data-action="previous-cards"]','[data-action="next-cards"]'])host.children.set(selector,new Element());
  host.querySelector('.spot-attribution').children.set('summary',new Element());
- const map={zoom:7,min:4,layers:[],fitCalls:[],handlers:{},invalidateSize(){return this;},setView(){return this;},setMinZoom(n){this.min=n;return this;},setMaxBounds(){return this;},getMinZoom(){return this.min;},getZoom(){return this.zoom;},getBoundsZoom(){return 7;},setZoom(n){this.zoom=n;return this;},getBounds(){return {contains:()=>true};},project:([lat,lng])=>({x:lng*100,y:lat*100}),createPane:()=>({style:{}}),on(name,fn){this.handlers[name]=fn;return this;},fitBounds(bounds,opts){this.fitCalls.push({bounds,opts});return this;},getSize(){return {x:1200,y:700};},remove(){this.removed=true;this.layers.forEach(l=>l.clearLayers?.());this.layers=[];}};
+ const map={zoom:7,min:4,layers:[],fitCalls:[],handlers:{},limitCalls:[],stop(){this.limitCalls.push("stop");return this;},panInsideBounds(bounds,options){this.limitCalls.push({action:"pan",bounds,options});return this;},invalidateSize(){return this;},setView(){return this;},setMinZoom(n){this.min=n;return this;},setMaxBounds(bounds){this.limitCalls.push({action:"bounds",bounds});return this;},getMinZoom(){return this.min;},getZoom(){return this.zoom;},getBoundsZoom(){return 7;},setZoom(n){this.zoom=n;return this;},getBounds(){return {contains:()=>true};},project:([lat,lng])=>({x:lng*100,y:lat*100}),createPane:()=>({style:{}}),on(name,fn){this.handlers[name]=fn;return this;},fitBounds(bounds,opts){this.fitCalls.push({bounds,opts});return this;},getSize(){return {x:1200,y:700};},remove(){this.removed=true;this.layers.forEach(l=>l.clearLayers?.());this.layers=[];}};
  const groups=[];
  const group=()=>{const g={children:[],addTo(m){m.layers.push(this);return this;},eachLayer(fn){this.children.forEach(fn);return this;},clearLayers(){this.children=[];return this;},getBounds(){return {isValid:()=>this.children.length>0,extend(){return this;}};}};groups.push(g);return g;};
  const leaflet={map:()=>map,latLngBounds:points=>({points}),point:points=>({add:other=>points.map((v,i)=>v+other[i])}),layerGroup:group,featureGroup:group,DomEvent:{disableClickPropagation(){},stopPropagation(){}},divIcon:opts=>opts,
@@ -123,4 +123,19 @@ test('legacy memorial routes survive edit toggles and destroy disposes planner s
  assert.equal(host.style['--map-inset-bottom'],undefined);
  api.setEditing(true);api.setRoute([leg(places[0],places[1])]);api.setCandidates(places);api.setItems(places);api.fitRoute();
  assert.equal(groups[1].children.length,0,'disposed map cannot recreate overlays');
+});
+
+test('layout limits stop stale bounds pans before enforcing the new viewport',()=>{
+ const {map,api}=fixture();map.limitCalls=[];api.setEditing(true);
+ assert.equal(map.limitCalls[0].action,'bounds');assert.equal(map.limitCalls[0].bounds,null);
+ assert.equal(map.limitCalls[1],'stop');assert.equal(map.limitCalls[2].action,'pan');
+ assert.equal(map.limitCalls[2].options.animate,false);
+ assert.equal(map.limitCalls[3].action,'bounds');
+ assert.equal(map.limitCalls[3].bounds,map.limitCalls[2].bounds);
+ api.destroy();
+});
+
+test('implicit bounds corrections do not animate past selected-card positioning',()=>{
+ const {map,api}=fixture();map.limitCalls=[];map.panInsideBounds({});
+ assert.equal(map.limitCalls[0].options.animate,false);api.destroy();
 });

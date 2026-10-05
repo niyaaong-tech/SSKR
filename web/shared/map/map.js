@@ -34,14 +34,20 @@
   function padding(){return safePadding({...sizing(),width:$('.spot-map-wrap').clientWidth,editing,insets});}
   function limits(){
    const wasOverview=Math.abs(map.getZoom()-map.getMinZoom())<.26;
+   // Disable the old moveend bounds handler before stopping its animation.
+   // Otherwise stop() can restart that pan with the previous viewport size.
+   map.setMaxBounds(null);
+   map.stop();
    map.setMinZoom(4);
    const overview=root.L.latLngBounds([[34.58,126.4],[37.9,129.52]]),pad=padding();
    const minimum=Math.max(4,map.getBoundsZoom(overview,false,root.L.point(pad.paddingTopLeft).add(pad.paddingBottomRight)));
-   map.setMaxBounds(root.L.latLngBounds([[33.05,124.26],[43.07,131.96]]));
+   const bounds=root.L.latLngBounds([[33.05,124.26],[43.07,131.96]]);
    // Apply layout-driven zoom before raising the limit: Leaflet's setMinZoom
    // otherwise starts an animation that invalidates the selected card position.
    if(wasOverview||map.getZoom()<minimum)map.setZoom(minimum,{animate:false});
    map.setMinZoom(minimum);
+   map.panInsideBounds(bounds,{animate:false});
+   map.setMaxBounds(bounds);
   }
   function clampPan(){
    if(!landRings.length||correctingPan||disposed)return false;
@@ -155,7 +161,12 @@
   function clearSelection(){selected=null;clearTimeout(revealTimer);renderCards();renderMarkers();}
   function fit(){if(!map||disposed)return;map.invalidateSize({pan:false});limits();if(editing)clearSelection();const bounds=routeLayer?.getBounds(),places=editing&&routeIds.length?routePlaces(catalog,routeIds):items;if(bounds?.isValid()){places.forEach(p=>bounds.extend([p.lat,p.lng]));map.fitBounds(bounds,{...padding(),maxZoom:12,animate:!reduced,duration:.35});}else if(places.length)map.fitBounds(places.map(p=>[p.lat,p.lng]),{...padding(),maxZoom:12,animate:!reduced,duration:.35});}
   if(root.L){
-   map=root.L.map($('.spot-map'),{zoomControl:false,attributionControl:false,scrollWheelZoom:false,minZoom:4,maxZoom:16,zoomSnap:.25,maxBoundsViscosity:1}).setView([36.5,127.8],7);layer=root.L.layerGroup().addTo(map);limits();
+   map=root.L.map($('.spot-map'),{zoomControl:false,attributionControl:false,scrollWheelZoom:false,minZoom:4,maxZoom:16,zoomSnap:.25,maxBoundsViscosity:1}).setView([36.5,127.8],7);
+   // Leaflet also enforces bounds from moveend, including stop() during selection.
+   // Keep those corrections synchronous so an old pan cannot finish after reveal.
+   const panInsideBounds=map.panInsideBounds;
+   map.panInsideBounds=function(bounds,options){return panInsideBounds.call(this,bounds,{animate:false,...options});};
+   layer=root.L.layerGroup().addTo(map);limits();
    const landPane=map.createPane('sskr-land');landPane.style.zIndex=450;landPane.style.pointerEvents='none';
    const routePane=map.createPane('sskr-routes');routePane.style.zIndex=460;routePane.style.pointerEvents='none';
    const landStyle=feature=>{const north=feature.properties.iso==='PRK',overview=map.getZoom()<6.5;return {color:north?'#94aa99':'#a6b9a7',weight:north||overview?1:0,opacity:north||overview?1:0,fillColor:'#d7e2d6',fillOpacity:north||overview?1:0};};

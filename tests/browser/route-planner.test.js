@@ -205,10 +205,14 @@ test('network failures use a readable message and preserve manual editing',async
 test('short screens reserve space for the complete selected card and mobile detail starts with its name',async()=>{
  for(const [width,height] of [[360,640],[390,664],[430,700],[844,390]]){
   const p=await page(width,height);await open(p);await p.locator('.rp-place-results .rp-place-view').first().click();await p.waitForTimeout(400);
+  // A previously queued bounds animation must not move the card after reveal.
+  for(const delay of [0,500]){
+  if(delay)await p.waitForTimeout(delay);
   const map=await p.locator('.spot-map').boundingBox(),head=await p.locator('.spot-map-controls').boundingBox();
   for(const selector of ['.spot-route-add','.spot-photo-card']){
    const box=await p.locator('.leaflet-tooltip '+selector+':visible').last().boundingBox();
    assert.ok(box.x>=map.x&&box.x+box.width<=map.x+map.width+1&&box.y>=map.y&&box.y+box.height<=map.y+map.height&&!(box.x<head.x+head.width&&box.x+box.width>head.x&&box.y<head.y+head.height&&box.y+box.height>head.y),JSON.stringify({width,height,map,head,box}));
+  }
   }
   assert.ok(await p.locator('.spot-planning-area').evaluate(e=>e.getBoundingClientRect().bottom<=innerHeight+1));
   const name=await p.locator('.rp-place-detail h3').boundingBox(),photo=await p.locator('.rp-detail-image').boundingBox();assert.ok(name.y<photo.y);

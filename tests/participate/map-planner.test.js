@@ -33,6 +33,7 @@ test('planner fit padding accounts for overlays without leaving a negative map a
  const input={width:1200,height:700,mobile:false,cardHeight:80,editing:true};
  assert.deepEqual(safePadding(input),{paddingTopLeft:[20,60],paddingBottomRight:[20,30]});
  assert.deepEqual(safePadding({...input,insets:{right:340,bottom:100}}),{paddingTopLeft:[20,60],paddingBottomRight:[360,130]});
+ assert.deepEqual(safePadding({...input,width:358,height:240,compact:true,insets:{bottom:32}}),{paddingTopLeft:[20,10],paddingBottomRight:[20,42]});
  const narrow=safePadding({...input,width:320,height:300,insets:{left:200,right:200,top:100,bottom:300}});
  assert.ok(narrow.paddingTopLeft[0]+narrow.paddingBottomRight[0]<=256);
  assert.ok(narrow.paddingTopLeft[1]+narrow.paddingBottomRight[1]<=236);

@@ -10,9 +10,9 @@
  const routeFailures=new Set(['pending','loading','unavailable','unreachable','error','failed','invalid']);
  function routeCoordinates(legs){return (Array.isArray(legs)?legs:[]).filter(leg=>!routeFailures.has(leg?.status)&&Array.isArray(leg?.coordinates)&&leg.coordinates.length>1&&leg.coordinates.every(p=>Array.isArray(p)&&p.length>=2&&Number.isFinite(p[0])&&Number.isFinite(p[1])&&Math.abs(p[0])<=90&&Math.abs(p[1])<=180)).map(leg=>leg.coordinates);}
  function routePlaces(catalog,ids=[]){let stop=0;return [...new Set(ids)].map(id=>catalog.get(id)).filter(Boolean).map(p=>({...p,number:p.kind==='start'?'출':p.kind==='finish'?'도':++stop}));}
- function safePadding({width,height,mobile,cardHeight,editing=false,insets={}}){
+ function safePadding({width,height,mobile,cardHeight,editing=false,compact=false,insets={}}){
   const side=editing?20:Math.min(172,Math.max(88,cardHeight*1.85))+20;
-  const base=editing?[20,height<230?10:60,20,height<230?10:30]:mobile?[20,Math.min(90,height*.14),20,Math.min(cardHeight*3+96,height*.43)]:[side,Math.min(115,height*.2),side,60];
+  const base=editing?(compact?[20,10,20,10]:[20,height<230?10:60,20,height<230?10:30]):mobile?[20,Math.min(90,height*.14),20,Math.min(cardHeight*3+96,height*.43)]:[side,Math.min(115,height*.2),side,60];
   const values=['left','top','right','bottom'].map((key,i)=>base[i]+Math.max(0,Number(insets[key])||0));
   for(const [a,b,size] of [[0,2,width],[1,3,height]]){const max=Math.max(0,size-64),sum=values[a]+values[b];if(sum>max){values[a]*=max/sum;values[b]*=max/sum;}}
   return {paddingTopLeft:values.slice(0,2),paddingBottomRight:values.slice(2)};
@@ -31,7 +31,7 @@
   creditObserver=new IntersectionObserver(entries=>{if(entries.some(e=>e.isIntersecting)){creditTimer=setTimeout(collapse,5000);creditObserver.disconnect();}},{threshold:.25});creditObserver.observe($('.spot-map-wrap'));
   root.SSKR_MAP_INTERACTION.bindWheel({getMap:()=>map,panel:()=>$('.spot-map'),signal:events.signal});
   function sizing(){const height=$('.spot-map-wrap').clientHeight,mobile=matchMedia('(max-width:700px)').matches,cardHeight=mobile?Math.min(74,Math.max(34,height*.105)):Math.min(104,Math.max(24,(height-146)/6));$('.spot-map-wrap').style.setProperty('--spot-card-height',cardHeight+'px');return {height,mobile,cardHeight};}
-  function padding(){return safePadding({...sizing(),width:$('.spot-map-wrap').clientWidth,editing,insets});}
+  function padding(){return safePadding({...sizing(),width:$('.spot-map-wrap').clientWidth,editing,compact:host.classList.contains('is-mobile-editor'),insets});}
   function limits(){
    const wasOverview=Math.abs(map.getZoom()-map.getMinZoom())<.26;
    // Disable the old moveend bounds handler before stopping its animation.

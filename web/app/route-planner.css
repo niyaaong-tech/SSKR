@@ -1,4 +1,4 @@
-/* Shared route editor: wide three-column workspace and compact map sheet. */
+/* Desktop editor uses panels; mobile uses document scrolling and a sticky map. */
 .spot-mode-switch{display:flex;gap:4px;padding:4px;border:1px solid #c5d0c4;border-radius:9px;width:max-content;background:#edf0e9;margin-bottom:18px}
 .spot-mode-switch button{min-height:44px;padding:8px 18px;border:0;border-radius:6px;background:transparent;color:#58715f;font:inherit;font-size:14px;font-weight:600;white-space:nowrap}
 .spot-mode-switch button[aria-pressed=true]{background:#294c3a;color:white}
@@ -123,3 +123,39 @@ body.route-editor-active #app-main{padding-bottom:0}
 .is-wide .rp-drive-time small{display:inline}
 
 @media(max-height:500px){.rp-drive-time small{display:none}}
+
+/* Mobile has one scroll owner. Only the map and its tabs remain sticky. */
+body.route-editor-mobile{position:static;height:auto;overflow:visible}
+.is-editing.is-mobile-editor{height:auto;min-height:0;isolation:auto;--rp-map-height:clamp(240px,36svh,300px)}
+.is-mobile-editor .rp-mobile-sticky{position:sticky;top:0;z-index:24;background:#edf2e8;border-radius:9px 9px 0 0}
+.is-mobile-editor .rp-mobile-sticky>.spot-map-host{position:relative;inset:auto;height:var(--rp-map-height);min-height:0;--rp-photo-height:clamp(60px,calc(var(--rp-map-height) - 180px),88px)}
+.is-mobile-editor .rp-mobile-sticky .spot-workspace{height:100%!important;min-height:0!important;border-radius:9px 9px 0 0}
+.is-mobile-editor .rp-tabs{margin:0;min-height:44px;background:#f7f8f3;padding:0 6px}
+.is-mobile-editor .rp-tabs button{min-height:44px;font:inherit;font-size:12px;color:#35563e;cursor:pointer}
+.is-mobile-editor .rp-tabs button:disabled{opacity:.45;cursor:default}
+.is-mobile-editor .rp-tabs button:focus-visible{outline:2px solid #aa7b37;outline-offset:-3px}
+.is-mobile-editor .route-planner{position:relative;inset:auto;height:auto;max-height:none;width:100%;display:flex;box-shadow:none;border-radius:0 0 8px 8px;border-top:0;min-height:calc(100svh - var(--rp-sticky-height,344px));overflow:visible;overflow-anchor:none;z-index:auto}
+.is-mobile-editor .route-planner .rp-header{padding:8px 10px;background:transparent}
+.rp-mobile-actions{display:flex;align-items:center;gap:8px}
+.rp-mobile-actions>[data-rp-action=save]{margin-left:auto;order:1;min-width:76px}
+.rp-mobile-actions>span{margin-right:auto;font-size:12px;color:#887044}
+.is-mobile-editor .rp-scroll,.is-mobile-editor .rp-route-pane,.is-mobile-editor .rp-discovery-pane{height:auto;max-height:none;min-height:0;overflow:visible;overscroll-behavior:auto;flex:none}
+.is-mobile-editor .rp-scroll{padding:8px 10px}
+.is-mobile-editor .route-planner button,.is-mobile-editor .route-planner input{scroll-margin-top:calc(var(--rp-sticky-height,344px) + 8px);scroll-margin-bottom:12px}
+.is-mobile-editor .rp-waypoint{min-height:64px}
+.is-mobile-editor .rp-waypoint:has(.rp-row-actions){min-height:92px}
+.is-mobile-editor .rp-route-footer,.is-mobile-editor .rp-footer{position:static;padding:8px 10px;background:transparent;flex:none}
+.is-mobile-editor .rp-notice{position:static;inset:auto;font-size:12px;margin:0 0 8px}
+.is-mobile-editor .rp-map-summary{position:absolute;left:0;right:0;bottom:0;height:32px;z-index:5;display:flex;align-items:center;justify-content:space-between;gap:6px;padding:3px 8px;background:#f2f3eff2;pointer-events:none;color:#294c3a;line-height:1.25}
+.rp-map-summary>span{font-size:10px;white-space:nowrap}
+.is-mobile-editor .rp-map-summary>div{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:flex-end;gap:2px 6px;margin:0;text-align:right}
+.rp-map-summary strong{font-size:13px;white-space:nowrap}
+.rp-map-summary .rp-drive-time{font-size:10px}
+.is-mobile-editor .rp-drive-time small,.is-mobile-editor .rp-destination{display:none}
+.is-mobile-editor .spot-attribution{bottom:36px}
+.is-mobile-editor .spot-tooltip.is-route-tooltip,.is-mobile-editor .spot-tooltip .spot-photo-card{width:136px!important;height:var(--rp-photo-height,60px)!important}
+.is-mobile-editor .rp-detail-head h3,.is-mobile-editor .rp-detail-head .rp-detail-region{display:none}
+.is-mobile-editor .rp-detail-head{margin-bottom:4px}
+.is-mobile-editor.has-keyboard .rp-mobile-sticky{position:static}
+.is-mobile-editor.has-keyboard .rp-tabs{position:sticky;top:0;z-index:24}
+@media(max-width:800px) and (orientation:landscape){.is-editing.is-mobile-editor{--rp-map-height:clamp(180px,45svh,220px)}.is-mobile-editor .rp-mobile-sticky>.spot-map-host{--rp-photo-height:56px}.is-mobile-editor .spot-list-head{display:none}}

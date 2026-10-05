@@ -167,11 +167,25 @@
    const panInsideBounds=map.panInsideBounds;
    map.panInsideBounds=function(bounds,options){return panInsideBounds.call(this,bounds,{animate:false,...options});};
    layer=root.L.layerGroup().addTo(map);limits();
+   // Keep terrain beneath the WebGL details, including below their minimum zoom
+   // and while tiles load or fail. The vector background must stay transparent.
+   const baseLandPane=map.createPane('sskr-base-land');baseLandPane.style.zIndex=190;baseLandPane.style.pointerEvents='none';
    const landPane=map.createPane('sskr-land');landPane.style.zIndex=450;landPane.style.pointerEvents='none';
    const routePane=map.createPane('sskr-routes');routePane.style.zIndex=460;routePane.style.pointerEvents='none';
    const landStyle=feature=>{const north=feature.properties.iso==='PRK',overview=map.getZoom()<6.5;return {color:north?'#94aa99':'#a6b9a7',weight:north||overview?1:0,opacity:north||overview?1:0,fillColor:'#d7e2d6',fillOpacity:north||overview?1:0};};
-   fetch('/web/shared/map/land.geojson',{signal:events.signal}).then(response=>{if(!response.ok)throw Error('Land silhouette unavailable');return response.json()}).then(data=>{if(disposed)return;landRings=data.features.flatMap(feature=>feature.geometry.coordinates.map(polygon=>polygon[0]));landLayer=root.L.geoJSON(data,{pane:'sskr-land',interactive:false,style:landStyle}).addTo(map);map.on('zoomend',()=>landLayer?.setStyle(landStyle));const islands=[['제주도',33.38,126.53],['울릉도',37.5,130.88],['독도',37.24078,131.86956]];islands.forEach(([name,lat,lng])=>root.L.marker([lat,lng],{interactive:false,keyboard:false,icon:root.L.divIcon({className:'sskr-land-label'+(name==='독도'?' is-dokdo':''),html:`${name==='독도'?'<i aria-hidden="true"></i>':''}<span>${name}</span>`,iconSize:name==='독도'?[48,24]:[48,18],iconAnchor:name==='독도'?[24,3]:[24,9]})}).addTo(map));clampPan();}).catch(error=>{if(error.name!=='AbortError'&&!disposed)console.warn(error);});
-   if(root.L.maplibreGL&&root.maplibregl){try{const backdrop=root.L.maplibreGL({style:'/web/shared/map/style.json',transformRequest:url=>({url:new URL(url,location.href).href}),interactive:false,attributionControl:false}).addTo(map);backdrop.getMaplibreMap().on('error',()=>{if(!disposed)$('.spot-map-status').textContent='지도 배경을 불러오지 못했습니다. 장소 카드는 계속 이용할 수 있습니다.';});backdrop.getMaplibreMap().on('idle',()=>{if(!disposed)$('.spot-map-status').textContent='';});}catch{$('.spot-map-status').textContent='지도 배경을 표시할 수 없습니다. 장소 카드는 계속 이용할 수 있습니다.';}}
+   fetch('/web/shared/map/land.geojson',{signal:events.signal}).then(response=>{if(!response.ok)throw Error('Land silhouette unavailable');return response.json()}).then(data=>{
+    if(disposed)return;
+    root.L.geoJSON(data,{pane:'sskr-base-land',interactive:false,filter:feature=>feature.properties.iso==='KOR',style:{stroke:false,fillColor:'#eff0e9',fillOpacity:1}}).addTo(map);
+    landRings=data.features.flatMap(feature=>feature.geometry.coordinates.map(polygon=>polygon[0]));landLayer=root.L.geoJSON(data,{pane:'sskr-land',interactive:false,style:landStyle}).addTo(map);map.on('zoomend',()=>landLayer?.setStyle(landStyle));
+    const islands=[['제주도',33.38,126.53],['울릉도',37.5,130.88],['독도',37.24078,131.86956]];islands.forEach(([name,lat,lng])=>root.L.marker([lat,lng],{interactive:false,keyboard:false,icon:root.L.divIcon({className:'sskr-land-label'+(name==='독도'?' is-dokdo':''),html:`${name==='독도'?'<i aria-hidden="true"></i>':''}<span>${name}</span>`,iconSize:name==='독도'?[48,24]:[48,18],iconAnchor:name==='독도'?[24,3]:[24,9]})}).addTo(map));clampPan();
+   }).catch(error=>{if(error.name!=='AbortError'&&!disposed)console.warn(error);});
+   if(root.L.maplibreGL&&root.maplibregl){try{
+    const backdrop=root.L.maplibreGL({style:'/web/shared/map/style.json',transformRequest:url=>({url:new URL(url,location.href).href}),interactive:false,attributionControl:false}).addTo(map),details=backdrop.getMaplibreMap();let failed=false;
+    details.on('error',()=>{failed=true;if(!disposed)$('.spot-map-status').textContent='상세 지도를 불러오지 못해 기본 지형을 표시하고 있습니다.';});
+    details.on('idle',()=>{if(disposed)return;const source=details.getStyle()?.sources?.openmaptiles,loaded=source&&details.querySourceFeatures('openmaptiles',{sourceLayer:'sskr_land'}).length>0;if(loaded)failed=false;if(!failed||details.getZoom()<(source?.minzoom??6))$('.spot-map-status').textContent='';});
+    // Failed tiles may stay cached as errors; explicitly retry after reconnection.
+    listen(root,'online',()=>{if(!disposed&&failed&&details.getSource('openmaptiles')){failed=false;details.refreshTiles('openmaptiles');}});
+   }catch{$('.spot-map-status').textContent='지도 배경을 표시할 수 없습니다. 장소 카드는 계속 이용할 수 있습니다.';}}
    else $('.spot-map-status').textContent='지도 배경을 불러오지 못했습니다. 장소 카드는 계속 이용할 수 있습니다.';
    if(options.route?.length)renderRoute();
    map.on('dragstart',()=>clearTimeout(revealTimer));

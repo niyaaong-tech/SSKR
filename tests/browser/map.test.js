@@ -21,6 +21,7 @@ async function page(width=1440,height=1000){const p=await browser.newPage({viewp
 async function open(p,url){await p.goto(base+url);await p.waitForSelector('.spot-mini-card');await p.waitForFunction(()=>window.__backdrop?.getMaplibreMap().isStyleLoaded()&&window.__backdrop?.getMaplibreMap().areTilesLoaded(),null,{timeout:60000});assert.equal(await p.locator('.spot-map-status').textContent(),'');assert.ok(await p.evaluate(()=>__backdrop.getMaplibreMap().querySourceFeatures('openmaptiles',{sourceLayer:'sskr_land'}).length));}
 const metrics=p=>p.locator('.spot-mini-select').first().evaluate(e=>{const s=getComputedStyle(e),caption=getComputedStyle(e.querySelector('strong'));return {width:s.width,height:s.height,radius:s.borderRadius,font:caption.fontSize,color:caption.color};});
 async function capture(p,name){if(!process.env.SSKR_QA_OUTPUT)return;fs.mkdirSync(process.env.SSKR_QA_OUTPUT,{recursive:true});await p.locator('.spot-workspace').screenshot({path:path.join(process.env.SSKR_QA_OUTPUT,name+'.png')});}
+async function terrainCovers(p,coordinates){return p.evaluate(([lat,lng])=>{const path=document.querySelector('.leaflet-sskr-base-land-pane path'),point=__map.latLngToContainerPoint([lat,lng]),box=document.querySelector('.spot-map').getBoundingClientRect();const local=new DOMPoint(box.left+point.x,box.top+point.y).matrixTransform(path.getScreenCTM().inverse());return path.isPointInFill(local)&&getComputedStyle(path).fillOpacity==='1';},coordinates);}
 test('spot, memorial and public explorer keep the same map style and card dimensions',async()=>{
  const p=await page(),memorial=fixture.memorials.find(m=>m.spotCount===12);let expected;
  for(const [name,url] of [['spots','/app/spots?scenario=guest'],['memorial','/app/memorials/'+memorial.id+'?scenario=guest'],['explore','/explore/']]){await open(p,url);const current=await metrics(p);if(expected)assert.deepEqual(current,expected);else expected=current;assert.equal(await p.locator('.spot-mini-card').count(),12);assert.equal(await p.evaluate(()=>__backdrop.getMaplibreMap().getStyle().name),'SSKR Korea');
@@ -59,4 +60,31 @@ test('overview zoom stops at the spot layout and panning stays within Korean ter
 
 test('coastal map details are preserved at high zoom',async()=>{
  const p=await page();for(const id of ['daecheon','haesindang-park','gyeongju','hupo','ganwolam','muchangpo']){await open(p,'/app/spots/'+id+'?scenario=guest');const place=require('../../web/app/spot-catalog').find(p=>p.id===id);await p.evaluate(p=>__map.setView([p.lat,p.lng],14,{animate:false}),place);await p.waitForTimeout(300);await p.waitForFunction(()=>__backdrop.getMaplibreMap().getZoom()>=13&&__backdrop.getMaplibreMap().areTilesLoaded(),null,{timeout:60000});assert.ok(await p.evaluate(p=>__map.getCenter().distanceTo([p.lat,p.lng])<100,place));const counts=await p.evaluate(()=>{const g=__backdrop.getMaplibreMap();return {water:g.querySourceFeatures('openmaptiles',{sourceLayer:'water'}).length,roads:g.querySourceFeatures('openmaptiles',{sourceLayer:'transportation'}).length};});assert.ok(counts.water>0,id+' water');assert.ok(counts.roads>0,id+' roads');if(id==='daecheon')await capture(p,'coast');}await p.close();assert.deepEqual(errors,[]);
+});
+
+test('South Korean terrain remains visible in the gap before vector tiles reach their minimum zoom',async()=>{
+ const p=await page(390,844);await p.goto(base+'/app/spots?scenario=guest');await p.waitForSelector('.leaflet-sskr-base-land-pane path');
+ await p.locator('[data-spot-mode="plan"]').click();
+ await p.evaluate(()=>__map.setZoom(6.75,{animate:false}));await p.waitForFunction(()=>__backdrop.getMaplibreMap().isStyleLoaded()&&__backdrop.getMaplibreMap().areTilesLoaded());
+ const gap=await p.evaluate(()=>{const gl=__backdrop.getMaplibreMap();return {leaflet:__map.getZoom(),vector:gl.getZoom(),minimum:gl.getStyle().sources.openmaptiles.minzoom,features:gl.querySourceFeatures('openmaptiles',{sourceLayer:'sskr_land'}).length};});
+ assert.equal(gap.leaflet,6.75);assert.ok(gap.vector<gap.minimum);assert.equal(gap.features,0,'the regression must exercise terrain without vector tiles');
+ for(const zoom of [6.5,6.75,7,8.25,6.75]){
+  await p.evaluate(zoom=>__map.setView([36.5,128],zoom,{animate:false}),zoom);await p.waitForTimeout(150);assert.ok(await terrainCovers(p,[36.5,128]),'projected inland coordinates must stay on visible terrain at zoom '+zoom);
+ }
+ const layers=await p.evaluate(()=>{const gl=__backdrop.getMaplibreMap(),land=document.querySelector('.leaflet-sskr-base-land-pane'),tiles=gl.getCanvas().closest('.leaflet-pane');return {land:+getComputedStyle(land).zIndex,tiles:+getComputedStyle(tiles).zIndex,background:gl.getPaintProperty('background','background-opacity'),sea:getComputedStyle(document.querySelector('.spot-map')).backgroundColor};});
+ assert.ok(layers.land<layers.tiles);assert.equal(layers.background,0);assert.equal(layers.sea,'rgb(188, 211, 212)');
+ await capture(p,'mobile-terrain-gap');await p.setViewportSize({width:1440,height:900});await p.waitForTimeout(300);assert.equal(await p.locator('.leaflet-sskr-base-land-pane path').getAttribute('fill-opacity'),'1');
+ assert.deepEqual(errors,[]);await p.close();
+});
+
+test('failed detail tiles preserve terrain and map actions, and reconnecting retries the failed view',async()=>{
+ const p=await page(390,844);let failed=0;await p.route('**/api/map-tile?*',route=>{failed++;return route.fulfill({status:502,contentType:'text/plain',body:'Map tile unavailable'});});
+ await p.goto(base+'/app/spots?scenario=guest');await p.waitForSelector('.leaflet-sskr-base-land-pane path');await p.locator('[data-spot-mode="plan"]').click();
+ await p.evaluate(()=>__map.setView([36.5,128],8.25,{animate:false}));await p.waitForTimeout(500);assert.ok(failed>0);
+ assert.match(await p.locator('.spot-map-status').textContent(),/기본 지형/);assert.ok(await terrainCovers(p,[36.5,128]));
+ assert.equal(await p.locator('.leaflet-sskr-base-land-pane path').getAttribute('fill-opacity'),'1');assert.equal(await p.evaluate(()=>__backdrop.getMaplibreMap().querySourceFeatures('openmaptiles',{sourceLayer:'sskr_land'}).length),0);
+ await p.locator('.rp-place-results .rp-place-view').first().click();await p.locator('.leaflet-tooltip .spot-route-add:visible').last().waitFor();await capture(p,'mobile-terrain-failed-tiles');
+ await p.unroute('**/api/map-tile?*');await p.evaluate(()=>dispatchEvent(new Event('online')));
+ await p.waitForFunction(()=>{const gl=__backdrop.getMaplibreMap();return gl.areTilesLoaded()&&gl.querySourceFeatures('openmaptiles',{sourceLayer:'sskr_land'}).length>0;},null,{timeout:60000});
+ assert.equal(await p.locator('.leaflet-sskr-base-land-pane path').getAttribute('fill-opacity'),'1');assert.equal(await p.locator('.spot-map-status').textContent(),'');await capture(p,'mobile-terrain-restored');assert.deepEqual(errors,[]);await p.close();
 });

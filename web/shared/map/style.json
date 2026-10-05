@@ -23,7 +23,8 @@
       "id": "background",
       "type": "background",
       "paint": {
-        "background-color": "#bcd3d4"
+        "background-color": "#bcd3d4",
+        "background-opacity": 0
       }
     },
     {

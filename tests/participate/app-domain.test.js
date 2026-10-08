@@ -10,7 +10,7 @@ test("APP current-event CTA follows only the current application relation", () =
   assert.equal(currentEventAction({ application: {}, surface: { step: "STEP_4" } }).label, "SSKR 참가비용 결제하기");
   assert.equal(currentEventAction({ payment: { state: "FAILED" } }).label, "SSKR 참가비용 결제하기");
   assert.equal(currentEventAction({ payment: { state: "PROCESSING" } }).label, "결제 상태 확인");
-  assert.equal(currentEventAction({ participation: { state: "ACTIVE" } }).href, "/app/current");
+  assert.equal(currentEventAction({ participation: { state: "ACTIVE" } }).href, "/app");
 });
 
 test("APP permissions keep public resources open and gate personal resources", () => {

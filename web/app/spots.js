@@ -91,6 +91,7 @@
     });
     listen($('.spot-search input'),'input',event=>{state.search=event.target.value;clearTimeout(searchTimer);searchTimer=setTimeout(()=>applyFilters(),160)});
     applyFilters();if(initial&&!editing)viewer.getMap()?.setView([initial.lat,initial.lng],Math.max(11,viewer.getMap().getMinZoom()),{animate:false});
+    if(query.get("mode")==="plan") { planner.setMode(true); if(query.get("tab")==="saved") planner.openSaved(); }
     return()=>{events.abort();clearTimeout(searchTimer);planner.destroy();viewer.destroy();host.classList.remove('spots-main')};
   }
   root.SSKR_APP_SPOTS={mount,filterPlaces,clusterPlaces};if(typeof module!=='undefined')module.exports={filterPlaces,clusterPlaces};

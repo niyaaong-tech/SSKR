@@ -138,5 +138,22 @@
     "api/map-tile.js": {
       "includeFiles": "server/map/cache/**"
     }
-  }
+  },
+  "redirects": [
+    {
+      "source": "/app/current",
+      "destination": "/participate?view=guide",
+      "permanent": true
+    },
+    {
+      "source": "/app/memorials/all",
+      "destination": "/app/memorials",
+      "permanent": true
+    },
+    {
+      "source": "/app/memorials/mine",
+      "destination": "/app/my",
+      "permanent": true
+    }
+  ]
 }

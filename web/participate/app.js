@@ -16,7 +16,8 @@
   const accountRoot = document.querySelector("#mode-account");
   const accountShell = document.querySelector("#account-shell");
   const entryParams = new URLSearchParams(window.location.search);
-  const resumePaymentOnEntry = entryParams.get("resumePayment") === "1";
+  const resumePaymentOnEntry = entryParams.get("resumePayment") === "1" && entryParams.get("view") !== "guide";
+  let guideOnly = entryParams.get("view") === "guide";
   let context = null;
   let surfaceMode = SURFACE_MODES.LOADING;
   let pending = false;
@@ -53,6 +54,7 @@
 
   function renderEvent(nextContext) {
     const { event, price } = nextContext;
+    document.title = `${event.publicTitle || 'SSKR'} 참가${guideOnly ? ' 안내' : ''}`;
     document.documentElement.dataset.eventState = event.registrationState.toLowerCase();
     document.querySelector("#event-season").textContent = event.editionLabel;
     document.querySelector("#event-status").textContent = event.registrationLabel;
@@ -109,7 +111,9 @@
     accountUI.update(context);
     primaryLabel.textContent = context.surface.primaryAction?.label || "신청 상태 확인";
     primaryAction.disabled = context.surface.primaryAction?.enabled === false;
-    if (context.surface.mode === SURFACE_MODES.REVIEW) showMode(SURFACE_MODES.REVIEW, options);
+    document.querySelector("#event-subtitle").textContent = guideOnly ? "참가 안내" : "참가 신청";
+    if (guideOnly) showMode(SURFACE_MODES.REVIEW, options);
+    else if (context.surface.mode === SURFACE_MODES.REVIEW) showMode(SURFACE_MODES.REVIEW, options);
     else if (context.surface.mode === SURFACE_MODES.APPLICATION) { modeB.render(applicationRoot, context, handlers); showMode(SURFACE_MODES.APPLICATION, options); }
     else if (context.surface.mode === SURFACE_MODES.LOBBY) { modeC.render(lobbyRoot, context, handlers); showMode(SURFACE_MODES.LOBBY, options); }
   }
@@ -163,6 +167,10 @@
 
   async function startApplication() {
     if (!context?.surface?.primaryAction?.enabled || pending) return;
+    if (guideOnly) {
+      guideOnly = false; const url = new URL(location.href); url.searchParams.delete('view'); history.replaceState(history.state,'',url);
+      if (context.surface.mode !== SURFACE_MODES.REVIEW) { renderContext(context); return; }
+    }
     if (context.surface.primaryAction.code === "OPEN_SSKR_APP") { window.location.href = "/app"; return; }
     if (!accountLink.isAccountLinked()) { showLogin(true); return; }
     await run(() => api.application("START"));

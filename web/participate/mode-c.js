@@ -5,7 +5,7 @@
     const waiting = context.surface.variant === "WAITLISTED";
     const participation = context.participation;
     const tier = context.tiers?.find((item) => paymentDeferred ? item.id === context.application?.priceTierId : item.code === participation?.registrationTierCode) || context.price;
-    const title = paymentDeferred ? "참가 신청이 저장되었습니다." : waiting ? "참가 대기 신청이 완료되었습니다." : "SSKR 2027 참가가 확정되었습니다.";
+    const title = paymentDeferred ? "참가 신청이 저장되었습니다." : waiting ? "참가 대기 신청이 완료되었습니다." : `${context.event?.publicTitle || 'SSKR'} 참가가 확정되었습니다.`;
     const description = paymentDeferred ? "신청 정보는 저장되었으며 결제만 남아 있습니다. SSKR 매니저 또는 이 화면에서 결제를 이어갈 수 있습니다." : waiting ? "참가 가능 인원이 확보되면 등록된 연락처로 안내해 드립니다." : "결제와 참가 등록이 모두 완료되었습니다. 이제 SSKR 매니저에서 이번 랠리를 준비할 수 있습니다.";
     const status = paymentDeferred ? "결제 대기" : waiting ? "참가 대기" : "참가 확정";
     const participantNumber = paymentDeferred ? "결제 후 배정" : participation?.participantNumber || "배정 대기";
@@ -14,7 +14,7 @@
       <div class="completion-shell ${paymentDeferred ? "completion-shell--payment-deferred" : ""}">
         <p class="completion-eyebrow">${paymentDeferred ? "APPLICATION SAVED" : "APPLICATION COMPLETE"}</p>
         <span class="completion-mark" aria-hidden="true">${paymentDeferred ? '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M12 7v5l3 2"/></svg>' : "✓"}</span>
-        <h2 id="participant-title" tabindex="-1">${title}</h2>
+        <h2 id="participant-title" tabindex="-1">${escapeHtml(title)}</h2>
         <p>${description}</p>
         <dl class="completion-summary">
           <div><dt>참가 상태</dt><dd>${status}</dd></div>

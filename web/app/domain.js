@@ -13,7 +13,7 @@
     return normalizePath(value);
   }
   function currentRelation(context = {}) {
-    if (context.participation?.state === "ACTIVE") return "ACTIVE";
+    if (context.participation?.state === "ACTIVE") return context.participation.slotAllocation === "WAITLISTED" ? "WAITLISTED" : "ACTIVE";
     if (["PENDING", "PROCESSING"].includes(context.payment?.state)) return "PROCESSING";
     if (context.payment?.state === "FAILED") return "FAILED";
     if (context.application?.paymentDeferredAt || context.surface?.variant === "PAYMENT_DEFERRED") return "PAYMENT";
@@ -31,14 +31,14 @@
       NONE: { label: "SSKR 참가하기", href: "/participate" }, DRAFT: { label: "참가 신청 이어하기", href: "/participate" },
       STEP_1: { label: "참가 신청 이어하기", href: "/participate" }, STEP_2: { label: "참가 신청 이어하기", href: "/participate" }, STEP_3: { label: "참가 신청 이어하기", href: "/participate" },
       PAYMENT: { label: "SSKR 참가비용 결제하기", href: "/participate?resumePayment=1" }, FAILED: { label: "SSKR 참가비용 결제하기", href: "/participate" },
-      PROCESSING: { label: "결제 상태 확인", href: "/participate" }, ACTIVE: { label: (context.event?.publicTitle || "SSKR") + " 보기", href: "/app/current" }
+      PROCESSING: { label: "결제 상태 확인", href: "/participate" }, WAITLISTED: { label: "참가 대기 내역 확인", href: "/participate" }, ACTIVE: { label: "참가 준비 확인", href: "/app" }
     };
     return { ...actions[relation], relation };
   }
   function canAccess(pathname, session = {}) {
     const path = normalizePath(pathname);
     if ((PERSONAL_ROUTES.has(path) || path.startsWith("/app/memorials/mine/")) && !session.linked) return { allowed: false, reason: "AUTH_REQUIRED", returnTo: path };
-    if (path === "/app/preparation" && session.relation !== "ACTIVE") return { allowed: false, reason: "ACTIVE_PARTICIPATION_REQUIRED", returnTo: "/app/current" };
+    if (path === "/app/preparation" && session.relation !== "ACTIVE") return { allowed: false, reason: "ACTIVE_PARTICIPATION_REQUIRED", returnTo: "/app" };
     return { allowed: true, reason: null, returnTo: null };
   }
   function memorialAccess(memorial, account = {}) {

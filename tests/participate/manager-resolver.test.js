@@ -1,73 +1,45 @@
-const test = require("node:test");
-const assert = require("node:assert/strict");
-const { resolveManager } = require("../../web/app/manager-resolver");
-
-const source = {
-  event: { title: "SSKR 2027" },
-  spots: [{ id: "one", public: true }],
-  memorials: [{ id: "public-one", publishStatus: "PUBLISHED", visibility: "PUBLIC", image: "/public.jpg" }],
-  manager: {
-    notices: [{ title: "운영 일정 업데이트" }, { title: "집결 안내 변경" }],
-    guide: { published: true, image: "/guide.jpg" }
-  }
-};
-
-const event = { publicTitle: "SSKR 2027", editionLabel: "2027 SEASON", resolvedStage: "SPOTS_CONFIRMED" };
-const account = (linked) => ({ id: "mock-rider-0271", linked, profile: { name: "김라이더" } });
-const active = {
-  event,
-  account: account(true),
-  participation: { state: "ACTIVE", participantNumber: "#0271", registrationTierCode: "PLATINUM" },
-  payment: { state: "SUCCEEDED" }
-};
-
-test("manager presents a useful public state for guests and logged-in non-participants", () => {
-  const guest = resolveManager({ event, account: account(false) }, source);
-  const logged = resolveManager({ event, account: account(true) }, source);
-  assert.equal(guest.primaryAction.label, "참가 안내 보기");
-  assert.equal(logged.primaryAction.label, "SSKR 참가하기");
-  assert.equal(logged.currentEvent.status[1].value, "참가 전");
-  assert.notEqual(logged.currentEvent.status[2].value, "NONE");
-  assert.equal(logged.preparation, null);
+const test=require('node:test'),assert=require('node:assert/strict');
+const {resolveManager}=require('../../web/app/manager-resolver');
+const {resolve}=require('../../web/app/event-view');
+const {handleParticipateRequest}=require('../../server/participate/request-handler');
+const {historyRows}=require('../../web/app/memorial-store');
+const {MockParticipateRepository}=require('../../server/participate/mock-repository');
+const event={id:'event',publicTitle:'SSKR 2030',registrationLabel:'모집 중'};
+test('manager invites guests to plan and reads linked nonparticipant saved routes without invented progress',()=>{
+ const guest=resolveManager({event,account:{linked:false}},{plans:[{id:'hidden'}]});
+ assert.equal(guest.primaryAction.href,'/app/spots?mode=plan');assert.equal(guest.plans.length,0);assert.deepEqual(guest.preparation,[]);
+ const linked=resolveManager({event,account:{linked:true}},{plans:[{id:'old',updatedAt:'2030-01-01'},{id:'recent',updatedAt:'2030-02-01'}]});
+ assert.equal(linked.primaryAction.href,'/app/spots?mode=plan&tab=saved');assert.equal(linked.plans[0].id,'recent');assert.equal(linked.banner.title,'SSKR 2030');
+ assert.equal(resolveManager({account:{linked:true}}).banner,null);
 });
-
-test("manager prioritizes application and payment recovery", () => {
-  const progress = resolveManager({ event, account: account(true), application: {}, surface: { step: "STEP_2" } }, source);
-  const payment = resolveManager({ event, account: account(true), application: {}, surface: { step: "STEP_4" }, payment: { state: "FAILED" } }, source);
-  assert.equal(progress.primaryAction.code, "CONTINUE_APPLICATION");
-  assert.match(progress.currentEvent.heroCopy, /필수 동의/);
-  assert.equal(payment.primaryAction.code, "RECOVER_PAYMENT");
+test('manager status and next action agree with event state across application, payment, waiting and completed states',async()=>{
+ for(const scenario of ['application-step2','c-payment-deferred','failed','processing','c-waitlisted','active','c-season-completed','blocked']){
+ const context=await handleParticipateRequest('context',{scenario,account:{linked:true,provider:'google'}});
+ const manager=resolveManager(context),status=resolve(context).status;
+ assert.equal(manager.label,status.label,scenario);assert.deepEqual(manager.primaryAction,status.action,scenario);
+ if(scenario==='c-waitlisted')assert.deepEqual(manager.preparation,[]);
+ if(scenario==='active'){assert.equal(manager.preparation[0].value,context.participation.participantNumber);assert.equal(manager.primaryAction.href,'/app/preparation');}
+ }
 });
-
-test("active manager exposes start selection, preparation, kit, notices and permission-safe curation", () => {
-  const model = resolveManager(active, source);
-  assert.equal(model.primaryAction.code, "SELECT_START");
-  assert.deepEqual([model.preparation.complete, model.preparation.total], [5, 7]);
-  assert.equal(model.kit.state, "준비 중");
-  assert.equal(model.notices.length, 2);
-  assert.equal(model.curation.length, 3);
-  assert.ok(model.curation.some((item) => item.id === "memorial"));
+test('cancelled and finalizing participants are never invited to pay again or shown confirmed preparation',()=>{
+ const base={event,account:{linked:true}};
+ const cancelled=resolveManager({...base,participation:{state:'CANCELLED'}});assert.equal(cancelled.label,'참가 취소');assert.deepEqual(cancelled.preparation,[]);
+ const pending=resolveManager({...base,payment:{state:'SUCCEEDED'}});assert.equal(pending.label,'참가권 발급 중');assert.doesNotMatch(pending.primaryAction.href,/resumePayment/);
 });
-
-test("waiting, important change and season-clear states have explicit presentations", () => {
-  const waiting = resolveManager(active, source, { variant: "waiting" });
-  const important = resolveManager(active, source, { variant: "important" });
-  const post = resolveManager({ ...active, event: { ...event, resolvedStage: "SEASON_CLEAR" } }, source);
-  assert.equal(waiting.preparation.complete, 7);
-  assert.match(waiting.currentEvent.heroTitle, /모두 마쳤습니다/);
-  assert.equal(important.alert.title, "집결 안내가 변경되었습니다.");
-  assert.equal(post.primaryAction.code, "VIEW_RESULT");
+test('history keeps participations without memorials and scopes both sources to the owner',()=>{
+ const account={id:'me',linked:true},rows=[{id:'a',ownerUserId:'me',eventDate:'2030-01-01'},{id:'b',ownerUserId:'me',eventDate:'2029-01-01'},{id:'other',ownerUserId:'other'}];
+ const items=[{id:'m',participationId:'a',ownerUserId:'me',publishStatus:'PUBLISHED',visibility:'PRIVATE'}];
+ const result=historyRows(rows,items,account);assert.equal(result.length,2);assert.equal(result[0].memorial.id,'m');assert.equal(result[1].memorial,null);
+ assert.deepEqual(historyRows(rows,items,{...account,linked:false}),[]);
 });
-
-test("curation never bypasses memorial publication or visibility permissions", () => {
-  const privateSource = {
-    ...source,
-    memorials: [{ id: "private", ownerUserId: "another", publishStatus: "PUBLISHED", visibility: "PRIVATE", image: "/private.jpg" }]
-  };
-  const draftSource = {
-    ...source,
-    memorials: [{ id: "draft", publishStatus: "DRAFT", visibility: "PUBLIC", image: "/draft.jpg" }]
-  };
-  assert.equal(resolveManager({ event, account: account(false) }, privateSource).curation.some((item) => item.id === "memorial"), false);
-  assert.equal(resolveManager(active, draftSource).curation.some((item) => item.id === "memorial"), false);
+test('history adapter returns owner participation even when no public memorial was created',()=>{
+ const fixture=require('../../data/fixtures/memorial-event.json'),participant=fixture.participations[35];
+ const repo=new MockParticipateRepository({account:{linked:true,id:participant.userId}});
+ assert.equal(repo.getParticipationHistory()[0].id,participant.id);
+ assert.equal(fixture.memorials.some(m=>m.participationId===participant.id),false);
+ repo.setAccount({linked:false,id:participant.userId});assert.deepEqual(repo.getParticipationHistory(),[]);
+});
+test('context does not disclose guest or other-user participation history',async()=>{
+ const guest=await handleParticipateRequest('context',{scenario:'guest',account:{linked:false}});assert.deepEqual(guest.pastParticipations,[]);
+ const linked=await handleParticipateRequest('context',{scenario:'logged-in-no-application',account:{linked:true,provider:'google'}});assert.ok(linked.pastParticipations.length);assert.ok(linked.pastParticipations.every(p=>p.ownerUserId===linked.account.id));
 });

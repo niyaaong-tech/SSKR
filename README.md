@@ -8,7 +8,7 @@ SSKR 웹의 현재 실행 결과를 관리하는 저장소입니다. 기획 문�
 
 - `/about/` — `web/about/`: SSKR 소개, 스크롤 연동 8개 장면과 읽기 모드
 - `/explore/` — `web/explore/`: 출발 11곳·경유 150곳·대천 도착지 공통 지도 탐색
-- `/app/*` — `web/app/`: 매니저·행사·스팟 탐색과 루트 만들기·메모리얼·내 기록
+- `/app/*` — `web/app/`: 매니저·스팟 탐색과 루트 만들기·공개 메모리얼·내 기록
 - `/tests/home-explore/` — `web/tests/home-explore/`: HOME 장소 탐색 인터랙션 검토 시안 (검색엔진 비노출)
 - `/` — `web/home/`: SSKR HOME
 - `/participate` — `web/participate/`: 참가 안내

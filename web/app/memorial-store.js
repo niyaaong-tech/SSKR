@@ -55,11 +55,18 @@
     for (let i = pool.length - 1; i > 0; i--) { const j = Math.floor(random() * (i + 1)); [pool[i], pool[j]] = [pool[j], pool[i]]; }
     return pool.slice(0, Math.max(0, count));
   }
-  function filterMemorials(items, { search = "", start = "all" } = {}, places = []) {
+  function filterMemorials(items, { search = "", start = "all", event = "all" } = {}, places = []) {
     const normalize = value => String(value).replace(/\s/g, "").toLowerCase();
     const names = new Map(places.map(place => [place.id, place.name]));
     const query = normalize(search);
-    return items.filter(item => item.publishStatus === "PUBLISHED" && item.visibility === "PUBLIC" && (start === "all" || item.startLocationId === start) && (!query || normalize([item.title, item.ownerName, ...(item.visitedLocationIds || []).map(id => names.get(id) || id)].join(" ")).includes(query)));
+    return items.filter(item => item.publishStatus === "PUBLISHED" && item.visibility === "PUBLIC" && (event === "all" || item.eventId === event) && (start === "all" || item.startLocationId === start) && (!query || normalize([item.title, item.ownerName, ...(item.visitedLocationIds || []).map(id => names.get(id) || id)].join(" ")).includes(query)));
+  }
+  function historyRows(participations, items, account = {}) {
+    if (!account.linked || !account.id) return [];
+    const mine = items.filter(item => isOwner(item, account) && item.publishStatus === 'PUBLISHED');
+    const rows = new Map((participations || []).filter(p=>p.ownerUserId===account.id).map(p=>[p.id,{...p, memorial:mine.find(m=>m.participationId===p.id)||null}]));
+    for (const item of mine) if (!rows.has(item.participationId || item.id)) rows.set(item.participationId || item.id,{id:item.participationId||item.id,ownerUserId:account.id,eventId:item.eventId,eventTitle:item.eventTitle,eventDate:item.startedAt,participantNumber:item.participantNumber,result:item.result,synthetic:item.synthetic,memorial:item});
+    return [...rows.values()].sort((a,b)=>String(b.eventDate||'').localeCompare(String(a.eventDate||''))||a.id.localeCompare(b.id));
   }
   function isPublicPhoto(photo) {
     return Boolean(photo?.url && photo.status === "READY" && photo.moderationStatus === "APPROVED" && photo.visibility === "PUBLIC");
@@ -82,5 +89,5 @@
     const selected = [middle[0], featured || middle[Math.floor((middle.length-1)/2)], middle.at(-1)].sort((a,b)=>a.sequence-b.sequence);
     return [ordered[0], ...selected, ordered.at(-1)];
   }
-  return { collections, create, isOwner, sample, filterMemorials, isPublicPhoto, selectPhoto, selectCover, thumbnailStops };
+  return { collections, create, isOwner, sample, filterMemorials, isPublicPhoto, selectPhoto, selectCover, thumbnailStops, historyRows };
 });

@@ -62,6 +62,12 @@ const server = http.createServer(async (request, response) => {
     response.writeHead(400, { "Content-Type": "text/plain; charset=utf-8" });
     return response.end("Invalid URL");
   }
+  const redirect = { '/app/current':'/participate?view=guide', '/app/memorials/all':'/app/memorials', '/app/memorials/mine':'/app/my' }[pathname.replace(/\/$/,'')];
+  if (redirect) {
+    const target = new URL(redirect, url.origin);
+    url.searchParams.forEach((v,k)=>{if (!target.searchParams.has(k)) target.searchParams.set(k,v);});
+    response.writeHead(308,{Location:target.pathname+target.search});return response.end();
+  }
   if (pathname === "/api/map-tile") return require("./map/tiles").handler(request,response);
   const apiMatch = pathname.match(/^\/api\/participate\/(context|application|checkout|payment|mock)$/);
   if (apiMatch) {

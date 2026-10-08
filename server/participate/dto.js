@@ -93,6 +93,7 @@ function buildContextDto(repository, options = {}) {
     paymentAttempts: paymentAttempts.map(({ id, state: paymentState, createdAt }) => ({ id, state: paymentState, createdAt })),
     checkoutHold,
     participation,
+    pastParticipations: account.linked ? [...repository.getParticipationHistory(), ...(participation && event.resolvedStage === "SEASON_CLEAR" ? [{ id: participation.id, ownerUserId: account.id, eventId: event.id, eventTitle: event.publicTitle, eventDate: event.eventStartAt, timezone: event.timezone, participantNumber: participation.participantNumber, runResult: participation.runResult, synthetic: true }] : [])] : [],
     surface,
     permissions,
     manager: null,

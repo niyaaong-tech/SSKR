@@ -11,6 +11,7 @@ class ParticipateRepository {
   saveCheckoutHold() { throw new Error("Not implemented"); }
   getPaymentAttempts() { throw new Error("Not implemented"); }
   savePaymentAttempt() { throw new Error("Not implemented"); }
+  getParticipationHistory() { throw new Error("Not implemented"); }
   getParticipation() { throw new Error("Not implemented"); }
   saveParticipation() { throw new Error("Not implemented"); }
 }

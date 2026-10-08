@@ -34,6 +34,16 @@ class MockParticipateRepository extends ParticipateRepository {
     else this.snapshot.paymentAttempts.push(clone(attempt));
     return clone(attempt);
   }
+  getParticipationHistory() {
+    const account = this.snapshot.account;
+    if (!account?.linked || !account.id) return [];
+    const fixture = require('../../data/fixtures/memorial-event.json');
+    return fixture.participations.filter(p => p.userId === account.id).map(p => ({
+      id: p.id, eventId: p.eventId, ownerUserId: p.userId, eventTitle: fixture.event.publicTitle,
+      eventDate: fixture.event.startsAt, timezone: fixture.event.timezone, runResult: p.runResult,
+      participantNumber: p.participantNumber, synthetic: fixture.synthetic
+    }));
+  }
   getParticipation() { return clone(this.snapshot.participation); }
   saveParticipation(participation) { this.snapshot.participation = clone(participation); return this.getParticipation(); }
   saveMock(mock) { this.snapshot.mock = clone(mock); return clone(mock); }

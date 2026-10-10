@@ -9,7 +9,7 @@ const evaluate = (event, extra = {}) => evaluateCheckoutEligibility({ applicatio
 test("checkout allocation follows registration and capacity", () => {
   assert.equal(evaluate({ registrationState: "OPEN", capacityState: "AVAILABLE" }).slotTarget, "CONFIRMED");
   assert.equal(evaluate({ registrationState: "OPEN", capacityState: "LIMITED" }).slotTarget, "CONFIRMED");
-  assert.equal(evaluate({ registrationState: "OPEN", capacityState: "FULL", waitlistEnabled: true }).slotTarget, "WAITLISTED");
+  assert.equal(evaluate({ registrationState: "OPEN", capacityState: "FULL", waitlistEnabled: true }).allowed, false);
   assert.equal(evaluate({ registrationState: "OPEN", capacityState: "FULL", waitlistEnabled: false }).reason.code, "CAPACITY_FULL");
   assert.equal(evaluate({ registrationState: "CLOSED", capacityState: "AVAILABLE" }).reason.code, "REGISTRATION_CLOSED");
   assert.equal(evaluate({ registrationState: "SUSPENDED", capacityState: "AVAILABLE" }).allowed, false);

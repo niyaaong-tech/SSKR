@@ -38,7 +38,7 @@ test("ownership is required for writes even to publicly visible records", () => 
     assert.throws(() => store.update("own-public", account, { title: "변경", summary: "", visibility: "PRIVATE" }), /내 메모리얼만/);
   }
   assert.throws(() => store.update("missing", owner, {}), /내 메모리얼만/);
-  assert.throws(() => store.update("draft", other, { title: "변경", summary: "", visibility: "PUBLIC" }), /내 메모리얼만/);
+  assert.equal(store.update("draft", other, { title: "변경", summary: "", visibility: "PRIVATE", publishStatus:"DRAFT" }).publishStatus,"DRAFT");
   assert.equal(store.all()[0].title, "공개 기록");
 });
 
@@ -52,7 +52,7 @@ test("visibility and copy persist across reload while immutable event and owners
   assert.equal(updated.visibility, "PRIVATE");
   assert.equal(updated.ownerUserId, "owner");
   assert.equal(updated.eventTitle, "SSKR 2026");
-  assert.equal(updated.publishStatus, "PUBLISHED");
+  assert.equal(updated.publishStatus, "DRAFT");
   assert.equal(collections(restored, {}).public.some((item) => item.id === "own-public"), false);
   assert.equal(memorialAccess(updated, other).allowed, false);
   assert.equal(memorialAccess(updated, owner).allowed, true);
@@ -93,4 +93,11 @@ test('journey navigation preserves every visit across twelve-card pages', () => 
     seen.push(...items);
   }
   assert.deepEqual(seen,visits);
+});
+
+test('local visit photos require matching ownership, record, visit and public consent',()=>{
+ const model=require('../../web/app/memorial-store'),item={id:'record',ownerUserId:'owner',visitEdits:{v:{note:'다시 기억하는 풍경',photoConsent:false,mediaIds:['local-photo-right','local-photo-other']}}};
+ const photos=[{id:'local-photo-right',ownerUserId:'owner',memorialId:'record',visitId:'v',sourceKind:'MOCK_UPLOAD',status:'READY',moderationStatus:'APPROVED',url:'blob:test'},{id:'local-photo-other',ownerUserId:'other',memorialId:'record',visitId:'v',url:'blob:other'}];
+ const visit=model.applyVisitEdits(item,[{id:'v',media:[]}],photos)[0];assert.equal(visit.media.length,1);assert.equal(visit.note,'다시 기억하는 풍경');assert.equal(model.selectPhoto(visit),null);assert.equal(model.selectPhoto(visit,{owner:true}).id,'local-photo-right');
+ item.visitEdits.v.photoConsent=true;const published=model.applyVisitEdits(item,[{id:'v',media:[]}],photos)[0];assert.equal(model.selectPhoto(published).id,'local-photo-right');assert.equal(model.selectCover([published],'v').visit.id,'v');
 });

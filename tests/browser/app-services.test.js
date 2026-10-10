@@ -15,6 +15,33 @@ after(async()=>{await browser?.close();server?.kill();});
 async function page(width=1440,height=1000){const p=await browser.newPage({viewport:{width,height},reducedMotion:'reduce'});p.on('pageerror',e=>errors.push(e.message));return p;}
 async function open(p,url,selector){await p.goto(base+url);await p.waitForSelector(selector||'.manager-dashboard');}
 async function capture(p,name){if(process.env.SSKR_QA_OUTPUT){fs.mkdirSync(process.env.SSKR_QA_OUTPUT,{recursive:true});await p.evaluate(async()=>{await Promise.all([...document.querySelectorAll('#app-main img')].map(img=>{img.loading='eager';return img.decode().catch(()=>{});}));});await p.screenshot({path:path.join(process.env.SSKR_QA_OUTPUT,name+'.png'),fullPage:true});}}
+
+test('a new guest completes mock payment and the four preparation forms without changing the official start implicitly',async()=>{
+ const p=await page(390,844);await open(p,'/participate?scenario=guest&view=guide','#mode-a.is-active');
+ assert.match(await p.locator('#public-event-guide').textContent(),/경유 10곳/);
+ await p.locator('#primary-action').click();await p.locator('[data-provider="google"]').click();await p.locator('#guide-acknowledgement').check();await p.locator('#acknowledgement-form button[type=submit]').click();
+ await p.waitForSelector('#agreement-form');for(const checkbox of await p.locator('input[name=agreement][data-required=true]').all())await checkbox.check();await p.locator('#agreement-form button[type=submit]').click();
+ await p.waitForSelector('#participant-form');await p.locator('.tier-card:not(.is-disabled)').first().click();assert.equal(await p.locator('#participant-form input[name=priceTierId]:not(:disabled)').first().isChecked(),true);await p.locator('#participant-form input[name=name]').fill('김하늘');await p.locator('#participant-form input[name=phone]').fill('010-1234-5678');await p.locator('#participant-form input[name=email]').fill('rider@example.com');await p.locator('#participant-form button[type=submit]').click();
+ await p.locator('#payment-action').click();await p.waitForSelector('#mode-c.is-active');
+ const confirmed=await p.evaluate(()=>SSKR_PARTICIPATE_API.context());assert.equal(confirmed.participation.slotAllocation,'CONFIRMED');assert.equal(confirmed.payment.state,'SUCCEEDED');
+ await p.locator('.completion-actions a[href="/app"]').click();await p.waitForSelector('.manager-dashboard');await p.goto(base+'/app/preparation');await p.waitForSelector('.prep-page');
+ for(const [name,value]of [['maker','Honda'],['model','CB500X'],['className','500cc']])await p.locator('#bike input[name='+name+']').fill(value);await p.locator('#bike button[type=submit]').click();await p.waitForFunction(()=>document.querySelector('#bike .prep-status')?.textContent==='저장했습니다.');
+ await p.locator('#start select').selectOption('gangneung');await p.locator('#start button[type=submit]').click();await p.waitForFunction(()=>document.querySelector('#start .prep-status')?.textContent==='저장했습니다.');
+ for(const [name,value]of [['name','김하늘'],['phone','010-1234-5678'],['postalCode','25501'],['address','강원특별자치도 강릉시 강릉대로 33']])await p.locator('#kit input[name='+name+']').fill(value);await p.locator('#kit button[type=submit]').click();await p.waitForFunction(()=>document.querySelector('#kit .prep-status')?.textContent==='저장했습니다.');
+ await p.locator('#notice button[type=submit]').click();await p.waitForFunction(()=>document.querySelector('#notice .prep-status')?.textContent==='저장했습니다.');assert.equal(await p.locator('.prep-card header span').filter({hasText:'확인 완료'}).count(),4);
+ const prepared=await p.evaluate(()=>SSKR_PARTICIPATE_API.context());assert.equal(prepared.participation.selectedStartLocationId,'gangneung');assert.equal(prepared.participation.kitRecipient.name,'김하늘');await capture(p,'participant-preparation');await p.close();
+});
+
+test('visit notes and local WebP photos survive preview and reload while an unpublished record stays private',async()=>{
+ const p=await page(390,844);await open(p,'/app/my?scenario=private-owner','.memorial-library');await p.locator('.memorial-record-actions a').filter({hasText:'관리'}).first().click();await p.waitForSelector('.memorial-form');
+ const id=await p.locator('.memorial-form').getAttribute('data-memorial-id'),row=p.locator('[data-edit-visit]').first();await row.locator('[data-visit-note]').fill('다리를 건너며 바람이 바뀌었다. 잠시 쉬어 오늘의 풍경을 기록했다.');
+ await row.locator('[data-visit-photo]').setInputFiles(path.resolve(__dirname,'../../web/about/assets/SSKR_info01.webp'));await p.waitForFunction(()=>document.querySelector('.memorial-save-status')?.textContent.includes('사진을 추가했습니다.'));
+ assert.equal(await row.locator('[data-photo-consent]').isChecked(),false);assert.equal(await row.locator('[data-remove-photo]').count(),1);
+ await p.locator('input[name=publishStatus][value=DRAFT]').check();await p.locator('[data-preview-record]').click();await p.waitForSelector('.memorial-detail');assert.match(await p.locator('.memorial-detail').textContent(),/잠시 쉬어 오늘의 풍경/);assert.match(await p.locator('.memorial-detail').textContent(),/미발행 초안/);
+ await p.locator('[data-editor-return]').click();await p.locator('.memorial-form button[type=submit]').click();await p.waitForFunction(()=>document.querySelector('.memorial-save-status')?.textContent.includes('저장했습니다.'));await p.reload();await p.waitForSelector('[data-remove-photo]');
+ assert.match(await p.locator('[data-visit-note]').first().inputValue(),/풍경을 기록/);const photo=await p.evaluate(()=>{const item=SSKR_MEMORIAL_MEDIA.all()[0];return {type:item.blob.type,sourceKind:item.sourceKind};});assert.equal(photo.type,'image/webp');assert.equal(photo.sourceKind,'MOCK_UPLOAD');
+ await open(p,'/app/memorials?scenario=private-owner','.memorial-archive');while(await p.locator('[data-load-more]').isVisible())await p.locator('[data-load-more]').click();assert.equal(await p.locator('a[href="/app/memorials/'+id+'"]').count(),0);await p.close();
+});
 test('legacy entry redirects retain scenarios and guide remains accessible to confirmed participants',async()=>{
  const p=await page();await open(p,'/app?scenario=active');await open(p,'/app/current?scenario=active','#mode-a.is-active');assert.match(p.url(),/view=guide/);assert.match(p.url(),/scenario=active/);
  assert.equal(await p.locator('#event-subtitle').textContent(),'참가 안내');await p.locator('#primary-action').click();await p.waitForSelector('#mode-c.is-active');assert.match(await p.locator('#mode-c').textContent(),/참가가 확정/);assert.doesNotMatch(p.url(),/view=guide/);
@@ -39,7 +66,7 @@ test('public gallery pagination, filters and reading position survive a detail r
  await p.locator('[data-load-more]').click();assert.equal(await p.locator('.memorial-thumbnail').count(),24);
  const card=p.locator('.memorial-thumbnail a').nth(14);await card.scrollIntoViewIfNeeded();const y=await p.evaluate(()=>scrollY);
  await card.click();await p.waitForSelector('.memorial-detail');await p.waitForSelector('.journey-visit-photo');
- assert.equal(await p.locator('.memorial-place-photos').count(),0);assert.equal(await p.locator('.journey-map-host .spot-map').count(),1);
+ assert.equal(await p.locator('.memorial-place-photos').count(),0);assert.equal(await p.locator('.journey-map-host .spot-map').count(),0);await p.getByText('여정 지도 보기',{exact:true}).click();await p.waitForSelector('.journey-map-host .spot-map');assert.equal(await p.locator('.journey-map-host .spot-map').count(),1);
  await p.locator('.memorial-back').click();await p.waitForSelector('.memorial-archive');await p.waitForTimeout(200);assert.equal(await p.locator('.memorial-thumbnail').count(),24);assert.ok(Math.abs((await p.evaluate(()=>scrollY))-y)<100);
  await p.locator('[data-memorial-search]').fill('없는기록검색');assert.match(await p.locator('.memorial-empty').textContent(),/검색 결과/);
  await p.locator('[data-memorial-search]').fill('');await p.locator('[data-memorial-start]').selectOption('gangneung');assert.ok(await p.locator('.memorial-thumbnail').count()>0);

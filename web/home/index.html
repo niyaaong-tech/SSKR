@@ -21,7 +21,7 @@
       <a href="/about">SSKR 알아보기</a>
       <a href="/explore/">스타팅 포인트 &amp; 경로 스팟</a>
       <span class="header-actions">
-        <a class="header-apply" href="/participate" aria-label="2027 참가 안내"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v5a2 2 0 0 0 0 4v5H4v-5a2 2 0 0 0 0-4V5Z"/><path d="M9 5v3m0 3v2m0 3v3"/></svg><span><span class="header-event">2027 </span>참가 안내</span></a>
+        <a class="header-apply" href="/participate" aria-label="참가 안내"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v5a2 2 0 0 0 0 4v5H4v-5a2 2 0 0 0 0-4V5Z"/><path d="M9 5v3m0 3v2m0 3v3"/></svg><span data-public-event="guide">참가 안내</span></a>
         <a class="header-apply" href="/app"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="6" height="6" rx="1"/><rect x="14" y="4" width="6" height="6" rx="1"/><rect x="4" y="14" width="6" height="6" rx="1"/><rect x="14" y="14" width="6" height="6" rx="1"/></svg><span>SSKR 매니저</span></a>
       </span>
     </nav>
@@ -73,7 +73,7 @@
         <nav class="gateway" id="gateway" aria-label="SSKR 서비스 바로가기">
           <a href="/about"><strong>SSKR 알아보기</strong><p>일출에서 일몰까지, SSKR의 하루를 만나보세요.</p><span>Read the story ↗</span></a>
           <a href="/explore/"><strong>스타팅 포인트 &amp; 경로 스팟</strong><p>어디서 출발하고, 어떤 장소를 지나갈지 살펴보세요.</p><span>Find your crossing ↗</span></a>
-          <a class="gateway-apply" href="/participate"><strong>2027 참가하기</strong><p>참가 조건을 확인하고 나의 SSKR를 준비하세요.</p><span>Application guide ↗</span></a>
+          <a class="gateway-apply" href="/participate"><strong data-public-event="apply">참가하기</strong><p>참가 조건을 확인하고 나의 SSKR를 준비하세요.</p><span>Application guide ↗</span></a>
         </nav>
 
         <div class="intro-scroll-cue" aria-hidden="true"><span>SCROLL TO EXPLORE</span><b>▼</b></div>
@@ -166,7 +166,7 @@
           <p>산길과 평원, 작은 도시 사이<br />마음 닿는 스팟을 골라 여정을 이어갑니다.</p>
         </div>
 
-        <div class="scene-copy scene-copy-checkin" data-scene="3"><span class="scene-no">ALONG THE WAY</span><h2>쉬어 가는 길에<br />쌓여가는 SSKR의 기록</h2><p>스팟에 멈춰 체크인할 때마다<br />하루의 여정이 기록으로 쌓여갑니다.</p></div>
+        <div class="scene-copy scene-copy-checkin" data-scene="3"><span class="scene-no">ALONG THE WAY</span><h2>쉬어 가는 길에<br />쌓여가는 SSKR의 기록</h2><p>스팟에 멈춰 체크인할 때마다<br />하루의 여정이 기록으로 쌓여갑니다.</p><small class="home-example-note" data-public-event="example">여정 연출은 예시입니다. 공식 도착지는 참가 안내에서 확인하세요.</small></div>
         <div class="scene-copy scene-copy-memory" data-scene="4">
           <span class="scene-no">JOURNEY TRACE</span>
           <h2>기억으로 남는 여정의 발자취</h2>
@@ -192,7 +192,7 @@
     <div class="footer-top">
       <p>FROM FIRST LIGHT<br />TO LAST LIGHT</p>
       <h2>YOUR ROAD.<br /><em>OUR SUNSET.</em></h2>
-      <a class="footer-cta" href="/participate"><span>SSKR 2027</span><strong>참가 안내 보기</strong><b>↗</b></a>
+      <a class="footer-cta" href="/participate"><span data-public-event="title">SSKR</span><strong>참가 안내 보기</strong><b>↗</b></a>
     </div>
     <div class="footer-bottom">
       <div class="footer-brand"><strong>SSKR</strong><span>SUNRISE SUNSET<br />KOREAN RALLY</span></div>
@@ -205,5 +205,7 @@
   </footer>
 
   <script src="./app.js?rev=home-motion"></script>
+<script src="/web/participate/mock-session.js"></script>
+<script src="/web/shared/public-event.js"></script>
 </body>
 </html>

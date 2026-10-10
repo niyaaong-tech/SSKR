@@ -16,7 +16,7 @@
   const nav = document.querySelector("#app-nav");
   const params = new URLSearchParams(location.search);
   const scenario = params.get("scenario") || "session";
-  const linkedScenarios = new Set(["logged-in-no-application", "application-step1", "application-step2", "application-step3", "application-payment", "processing", "failed", "active", "past-only", "current+past", "private-owner", "private-other", "blocked", "c-payment-deferred", "c-waitlisted", "c-confirmed-spots", "c-preparation", "c-ride-check", "c-countdown", "c-live-confirmed", "c-live-waitlisted", "c-season-completed", "c-season-no-show", "c-season-retired"]);
+  const linkedScenarios = new Set(["logged-in-no-application", "application-step1", "application-step2", "application-step3", "application-payment", "processing", "failed", "active", "past-only", "current+past", "private-owner", "private-other", "blocked", "c-payment-deferred", "c-confirmed-spots", "c-preparation", "c-ride-check", "c-countdown", "c-live-confirmed", "c-season-completed", "c-season-no-show", "c-season-retired"]);
   const publicScenarios = new Set(["guest", "public-memorial"]);
   let context = null;
   let pendingRoute = null;
@@ -73,8 +73,7 @@
   }
 
   function displayAccount() {
-    const nickname = data.memorials.find(item => item.ownerUserId === context.account.id)?.ownerName;
-    return nickname ? { ...context.account, profile: { ...context.account.profile, name: nickname } } : context.account;
+    return context.account;
   }
   function renderAccount() {
     accountControl.render(accountRoot, {
@@ -82,8 +81,8 @@
       showGuest: true,
       showReset: true,
       onLogin: () => renderAuth(domain.normalizePath(location.pathname)),
-      onProfile: () => route("/app/my"),
-      onSettings: () => route("/app/my"),
+      onProfile: () => route("/app/profile"),
+      onSettings: () => route("/app/profile"),
       onReset: async () => {
         if (!window.confirm("참가 신청, 결제 및 참가 확정 상태를 초기화하시겠습니까? 로그인 상태와 프로필은 유지됩니다.")) return;
         context = await api.mock("RESET", { scenario: "logged-in-no-application", snapshot: null });
@@ -115,7 +114,7 @@
     }
     const model = managerResolver.resolveManager(context, { plans, notices: data.notices });
     const appLink = (url,label,cls='manager-link') => '<a class="'+cls+'" href="'+esc(url.startsWith('/participate')?participateHref(url):url)+'"'+(url.startsWith('/app')?' data-app-link':'')+'>'+esc(label)+' <span aria-hidden="true">↗</span></a>';
-    const planCards = model.plans.map(item=>'<article class="manager-plan-card"><span>경유 '+item.stopIds.length+'곳 · '+(item.stopIds.length>=10?'최소 경유 수 충족':'초안')+'</span><h3>'+esc(item.title||'이름 없는 루트')+'</h3><p>'+esc(window.SSKR_MAP.formatPlaceText(window.SSKR_SPOT_CATALOG.find(p=>p.id===item.startId)?.name||'출발지 미정'))+' → '+esc(window.SSKR_SPOT_CATALOG.find(p=>p.id===item.finishId)?.name||'도착지 확인 필요')+'</p>'+appLink('/app/spots?mode=plan&tab=saved','저장 목록에서 열기')+'</article>').join('');
+    const planCards = model.plans.map(item=>'<article class="manager-plan-card"><span>경유 '+item.stopIds.length+'곳 · '+(item.stopIds.length>=window.SSKR_CHECKIN_RULES.minimumSpotCheckins(context.event)?'최소 경유 수 충족':'초안')+'</span><h3>'+esc(item.title||'이름 없는 루트')+'</h3><p>'+esc(window.SSKR_MAP.formatPlaceText(window.SSKR_SPOT_CATALOG.find(p=>p.id===item.startId)?.name||'출발지 미정'))+' → '+esc(window.SSKR_SPOT_CATALOG.find(p=>p.id===item.finishId)?.name||'도착지 확인 필요')+'</p>'+appLink('/app/spots?mode=plan&tab=saved','저장 목록에서 열기')+'</article>').join('');
     root.innerHTML = '<div class="manager-dashboard">'+
       (model.alert?'<aside class="manager-alert"><strong>'+esc(model.alert.title)+'</strong><p>'+esc(model.alert.body)+'</p>'+appLink('/app/notices','공지 확인')+'</aside>':'')+
       '<section class="manager-welcome"><div><p class="eyebrow">'+esc(model.label)+'</p><h2>'+esc(model.title)+'</h2><p>'+esc(model.copy)+'</p></div>'+(model.primaryAction?appLink(model.primaryAction.href,model.primaryAction.label,'manager-primary'):'')+'</section>'+
@@ -123,7 +122,7 @@
       '<div class="manager-columns"><div><section class="manager-section"><header><div><p class="eyebrow">MY ROUTES</p><h2>다음 여정</h2></div>'+appLink('/app/spots?mode=plan','루트 만들기')+'</header>'+
       (planError?'<p role="alert">'+esc(planError)+'</p>':planCards||'<div class="manager-empty"><h3>'+(model.linked?'아직 저장한 루트가 없어요.':'어떤 길로 달려볼까요?')+'</h3><p>'+(model.linked?'출발지와 마음에 드는 스팟을 골라 하루를 그려보세요.':'로그인 없이 루트를 만들어볼 수 있어요. 로그인하면 참가 신청 전에도 저장할 수 있습니다.')+'</p></div>')+
       (model.planCount>3?appLink('/app/spots?mode=plan&tab=saved','저장 루트 '+model.planCount+'개 보기'):'')+'</section>'+
-      (model.preparation.length?'<section class="manager-section"><header><h2>참가 준비</h2>'+appLink('/app/preparation','준비 확인')+'</header><dl class="manager-preparation-list">'+model.preparation.map(row=>'<div><dt>'+esc(row.label)+'</dt><dd>'+esc(row.value)+'</dd></div>').join('')+'</dl></section>':'')+'</div>'+
+      (model.preparation.length?'<section class="manager-section"><header><h2>참가 준비</h2>'+appLink('/app/preparation','준비 확인')+'</header><dl class="manager-preparation-list">'+model.preparation.map(row=>'<div><dt>'+esc(row.label)+'</dt><dd>'+esc(row.key==='start'?(window.SSKR_MAP.formatPlaceText(window.SSKR_SPOT_CATALOG.find(p=>p.id===row.value)?.name||row.value)):row.value)+'</dd></div>').join('')+'</dl></section>':'')+'</div>'+
       '<aside><section class="manager-section manager-notices"><header><h2>최근 공지</h2>'+appLink('/app/notices','전체 보기')+'</header>'+(model.notices.length?'<ul>'+model.notices.map(item=>'<li><time>'+esc(item.date)+'</time><a href="/app/notices" data-app-link>'+esc(item.title)+'</a></li>').join('')+'</ul>':'<p>새로운 공지가 등록되면 알려드릴게요.</p>')+'</section><a class="manager-discover" href="/app/memorials" data-app-link><span>RIDERS’ STORIES</span><h2>다른 라이더의 하루</h2><p>각자의 길에서 남긴 사진과 기록을 만나보세요.</p><b>메모리얼 둘러보기 ↗</b></a></aside></div></div>';
   }
 
@@ -131,6 +130,8 @@
     disposeSpots = window.SSKR_APP_SPOTS.mount(root, {
       id, participation: context.participation,
       getAccount: () => context.account,
+      getEvent: () => context.event,
+      getParticipation: () => context.participation,
       onLogin: async provider => {
         auth.linkAccount(provider);
         if (publicScenarios.has(scenario)) window.SSKR_MOCK_SESSION.replaceScenario("logged-in-no-application");
@@ -153,8 +154,7 @@
   function renderMy() { renderMemorials(); }
 
   function renderPreparation() {
-    const model=managerResolver.resolveManager(context);
-    root.innerHTML=pageHead('PREPARATION','참가 준비','확인된 참가 정보와 준비 사항입니다.')+'<section class="manager-section"><dl class="manager-preparation-list">'+model.preparation.map(row=>'<div><dt>'+esc(row.label)+'</dt><dd>'+esc(row.value)+'</dd></div>').join('')+'</dl><p>출발 전에 바이크와 안전 장비를 점검하고 최신 운영 공지를 확인해 주세요.</p><a class="manager-link" href="/app/notices" data-app-link>운영 공지 확인 →</a></section><a class="manager-link" href="/app" data-app-link>매니저로 돌아가기</a>';
+    window.SSKR_PREPARATION.mount(root,context,{notices:data.notices,onUpdate:next=>{context=next;renderChrome();}});
   }
 
   function renderNotices() {
@@ -205,6 +205,7 @@
       "/app/spots": "스팟",
       "/app/memorials": "메모리얼",
       "/app/my": "내 기록",
+      "/app/profile": "내 계정",
       "/app/preparation": "참가 준비",
       "/app/notices": "공지"
     };
@@ -224,6 +225,7 @@
     else if (path.startsWith("/app/memorials/")) renderMemorials();
     else if (path === "/app/my") renderMy();
     else if (path === "/app/preparation") renderPreparation();
+    else if (path === "/app/profile") window.SSKR_PREPARATION.profile(root,context,next=>{context=next;renderChrome();});
     else if (path === "/app/notices") renderNotices();
     else renderNotFound();
     root.insertAdjacentHTML("beforeend", `<span class="scenario-tag">MOCK · ${esc(scenario)}</span>`);
@@ -238,6 +240,7 @@
 
   async function load() {
     try {
+      try { await window.SSKR_MEMORIAL_MEDIA.read(); } catch { /* Reading existing records must work without upload storage. */ }
       if (linkedScenarios.has(scenario) && !auth.isAccountLinked()) auth.linkAccount("mock");
       if (publicScenarios.has(scenario) && auth.isAccountLinked()) auth.logout();
       if (scenario === "current+past") context = await api.mock("RESET", { scenario: "active", snapshot: null });
@@ -254,7 +257,7 @@
 
   document.querySelector("#mobile-nav-toggle").addEventListener("click", (event) => { const open = nav.classList.toggle("is-open"); event.currentTarget.setAttribute("aria-expanded", String(open)); event.currentTarget.setAttribute("aria-label", open ? "메뉴 닫기" : "메뉴 열기"); });
   document.querySelectorAll(".utility-button")[0]?.addEventListener("click", () => route("/app/notices"));
-  document.querySelectorAll(".utility-button")[1]?.addEventListener("click", () => route("/app/my"));
+  document.querySelectorAll(".utility-button")[1]?.addEventListener("click", () => route("/app/profile"));
   window.addEventListener("popstate", renderRouteSafely);
   document.addEventListener("click", handleAppLink);
   load();

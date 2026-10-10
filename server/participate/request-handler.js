@@ -5,8 +5,8 @@ const { DomainError, createTransactionService } = require("./transaction-service
 
 const allowedScenarios = new Set([
   "a-open-unlinked", "a-open-linked", "b-step1", "b-step2", "b-step2-partial-required", "b-step3", "b-step3-optional-unchecked", "b-step4", "b-processing",
-  "b-failed-open", "b-failed-closed", "b-finalizing", "c-payment-deferred", "c-waitlisted", "c-confirmed-spots",
-  "c-preparation", "c-ride-check", "c-countdown", "c-live-confirmed", "c-live-waitlisted",
+  "b-failed-open", "b-failed-closed", "b-finalizing", "c-payment-deferred", "c-confirmed-spots",
+  "c-preparation", "c-ride-check", "c-countdown", "c-live-confirmed",
   "c-season-completed", "c-season-no-show", "c-season-retired", "tier-early-ended", "tier-early-limit", "tier-standard-ended", "tier-platinum-extra",
   "guest", "logged-in-no-application", "application-step1", "application-step2", "application-step3", "application-payment", "processing", "failed", "active", "blocked"
 ]);
@@ -56,6 +56,9 @@ async function handleParticipateRequest(endpoint, body = {}, options = {}) {
       else if (body.action === "DEFER_PAYMENT") service.deferPayment();
       else if (body.action === "RESUME_PAYMENT") service.resumePayment();
       else if (body.action === "SAVE_BIKE_INFO") service.saveBikeInfo(body.bike);
+      else if (body.action === "SAVE_START_LOCATION") service.saveStartLocation(body.startLocationId);
+      else if (body.action === "SAVE_KIT_RECIPIENT") service.saveKitRecipient(body.recipient);
+      else if (body.action === "ACKNOWLEDGE_PREPARATION") service.acknowledgePreparation(body.version);
       else throw new DomainError("ACTION_NOT_SUPPORTED", "지원하지 않는 신청 동작입니다.");
     } else if (endpoint === "checkout") {
       if (body.action !== "PREPARE") throw new DomainError("ACTION_NOT_SUPPORTED", "지원하지 않는 결제 준비 동작입니다.");
@@ -72,8 +75,7 @@ async function handleParticipateRequest(endpoint, body = {}, options = {}) {
         resetRepository.setAccount(normalizeAccount(body.account, resetRepository.getUserContext().account));
         return respond(resetRepository, options);
       }
-      if (body.action === "PROMOTE_WAITLIST") service.promoteWaitlist();
-      else if (body.action === "UPDATE_ACCOUNT_PROFILE") service.updateAccountProfile(body.profile);
+      if (body.action === "UPDATE_ACCOUNT_PROFILE") service.updateAccountProfile(body.profile);
       else if (body.action === "ADVANCE_EVENT_STAGE") {
         const event = repository.getCurrentEvent();
         event.stageOverride = body.stage;
@@ -89,7 +91,6 @@ async function handleParticipateRequest(endpoint, body = {}, options = {}) {
           if (body.state === "FULL") event.capacityPolicy.baseUsed = event.capacityPolicy.baseCapacity;
           else if (body.state === "AVAILABLE" && event.capacityPolicy.baseUsed >= event.capacityPolicy.baseCapacity) event.capacityPolicy.baseUsed = Math.max(0, event.capacityPolicy.baseCapacity - 1);
         }
-        if (typeof body.waitlistEnabled === "boolean") event.waitlistEnabled = body.waitlistEnabled;
         repository.saveEvent(event);
       } else if (body.action === "SET_CAPACITY_POLICY") {
         const event = repository.getCurrentEvent();
@@ -118,7 +119,7 @@ async function handleParticipateRequest(endpoint, body = {}, options = {}) {
         if (!current || current.state !== "PROCESSING") throw new DomainError("PROCESSING_PAYMENT_NOT_FOUND", "처리 중인 결제가 없습니다.");
         current.mockResolution = body.result === "FAIL" ? "FAIL" : "SUCCESS";
         repository.savePaymentAttempt(current);
-      } else if (body.action !== "PROMOTE_WAITLIST") {
+      } else {
         throw new DomainError("ACTION_NOT_SUPPORTED", "지원하지 않는 목업 동작입니다.");
       }
     } else if (endpoint !== "context") {

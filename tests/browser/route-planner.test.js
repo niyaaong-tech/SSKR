@@ -5,7 +5,7 @@ const net=require('node:net'),path=require('node:path'),fs=require('node:fs');
 const {chromium}=require('playwright');
 let server,browser,base;
 // Browser-flow fixture only: production road validity is tested against generated route data.
-const providerFixture=`window.SSKR_ROUTE_PROVIDER={create(){return {version:'browser-fixture',async ready(){if(window.__providerFailure)throw new Error('도로 데이터를 불러오지 못했습니다.');},summary(a,b){const p=SSKR_SPOT_CATALOG.find(p=>p.id===a),q=SSKR_SPOT_CATALOG.find(p=>p.id===b);if(!p||!q)return null;const distanceMeters=Math.hypot((p.lat-q.lat)*111000,(p.lng-q.lng)*90000)*1.2;return {distanceMeters,durationSeconds:distanceMeters/12};},async route(ids,{signal}={}){await new Promise(r=>setTimeout(r,50));if(signal?.aborted)throw new DOMException('Aborted','AbortError');const legs=ids.slice(1).map((id,i)=>{const p=SSKR_SPOT_CATALOG.find(p=>p.id===ids[i]),q=SSKR_SPOT_CATALOG.find(p=>p.id===id);return {fromId:p.id,toId:q.id,coordinates:[[p.lat,p.lng],[q.lat,q.lng]],...this.summary(p.id,q.id),status:'ok'};});return {legs,distanceMeters:legs.reduce((s,l)=>s+l.distanceMeters,0),durationSeconds:legs.reduce((s,l)=>s+l.durationSeconds,0),valid:true,version:this.version};}};}};`;
+const providerFixture=`window.SSKR_ROUTE_PROVIDER={create(){return {version:'browser-fixture',async ready(){if(window.__providerFailure)throw new Error('도로 데이터를 불러오지 못했습니다.');},summary(a,b){const p=SSKR_SPOT_CATALOG.find(p=>p.id===a),q=SSKR_SPOT_CATALOG.find(p=>p.id===b);if(!p||!q)return null;const distanceMeters=Math.hypot((p.lat-q.lat)*111000,(p.lng-q.lng)*90000)*1.2;return {distanceMeters,durationSeconds:distanceMeters/12};},async route(ids,{signal}={}){await new Promise(r=>setTimeout(r,window.__roadDelay||50));if(signal?.aborted)throw new DOMException('Aborted','AbortError');if(window.__roadFailure)throw new Error('도로 정보를 불러오지 못했습니다.');const legs=ids.slice(1).map((id,i)=>{const p=SSKR_SPOT_CATALOG.find(p=>p.id===ids[i]),q=SSKR_SPOT_CATALOG.find(p=>p.id===id);return {fromId:p.id,toId:q.id,coordinates:[[p.lat,p.lng],[q.lat,q.lng]],...this.summary(p.id,q.id),status:'ready'};});return {legs,distanceMeters:legs.reduce((s,l)=>s+l.distanceMeters,0),durationSeconds:legs.reduce((s,l)=>s+l.durationSeconds,0),valid:true,version:this.version};}};}};`;
 before(async()=>{
  const port=await new Promise(resolve=>{const s=net.createServer();s.listen(0,'127.0.0.1',()=>{const port=s.address().port;s.close(()=>resolve(port));});});base='http://127.0.0.1:'+port;
  server=spawn(process.execPath,['server/dev-server.js'],{cwd:path.resolve(__dirname,'../..'),env:{...process.env,SSKR_DEV_PORT:String(port)},stdio:['ignore','pipe','pipe'],windowsHide:true});
@@ -31,6 +31,78 @@ async function start(p,id='songjeong'){await chooseStart(p,id);await p.waitForSe
 async function addFirstRecommendation(p){await p.locator('.rp-next .rp-place-view').first().click();await p.locator('.leaflet-tooltip .spot-route-add:visible').last().click();await settle(p);}
 async function save(p,title){await p.locator('[data-rp-action="save"]').click();if(title)await p.locator('#rp-title').fill(title);await p.locator('[data-save-confirm]').click();}
 async function savedTab(p){await p.locator('[data-rp-action="tab"][data-tab="saved"]:visible').first().click();}
+
+async function seedPlan(p,stopIds,insertion={mode:'auto',afterId:null}){
+ await p.addInitScript(({stopIds,insertion})=>{if(!sessionStorage.getItem('qa-insertion-seed'))return;sessionStorage.removeItem('qa-insertion-seed');const state=JSON.parse(sessionStorage.getItem('sskr.route-editor'));state.plan.stopIds=stopIds;state.insertion=insertion;state.anchorId=state.plan.startId;state.selectedId=state.plan.startId;sessionStorage.setItem('sskr.route-editor',JSON.stringify(state));},{stopIds,insertion});
+ await p.evaluate(()=>sessionStorage.setItem('qa-insertion-seed','1'));
+ await p.reload();await p.waitForSelector('.route-planner:not([hidden])');await settle(p);assert.deepEqual((await draft(p)).stopIds,stopIds);await p.locator('#rp-tab-places').click();await p.waitForSelector('.rp-next .rp-place');
+}
+
+test('automatic and manual additions use the displayed gap and exact totals while candidate clicks keep the mode',async()=>{
+ const p=await page();await open(p);await start(p,'gangneung');await seedPlan(p,['gangneung-market','byeongbangchi-skywalk','the-road-1423']);
+ for(const mode of ['auto','gangneung','gangneung-market']){
+  if(!await p.locator('.rp-next').count())await p.locator('[data-rp-action="back-detail"]').click();
+  await p.locator('#rp-insertion').selectOption(mode);
+  const before=await draft(p),id=await p.locator('.rp-next .rp-place').first().getAttribute('data-place-id');
+  const expected=await p.evaluate(({before,id,mode})=>{const provider=SSKR_ROUTE_PROVIDER.create();return {choice:SSKR_ROUTE_PLAN.bestInsertion(before,id,SSKR_SPOT_CATALOG,provider,{afterId:mode==='auto'?null:mode}),totals:SSKR_ROUTE_PLAN.status(before,SSKR_SPOT_CATALOG,provider)};},{before,id,mode});
+  await p.locator('.rp-next .rp-place-view').first().click();assert.equal(await p.locator('#rp-insertion').inputValue(),mode);
+  const description=await p.locator('.spot-route-context:visible').last().textContent();assert.match(description,/구간/);assert.match(description,/전체/);
+  assert.match(description,new RegExp((Math.abs(expected.choice.addedDistanceMeters)/1000).toFixed(1).replace('.','\\.')+'km'));
+  await p.locator('.spot-route-add:visible').last().click();await settle(p);
+  const after=await draft(p),stops=before.stopIds.slice();stops.splice(expected.choice.at,0,id);assert.deepEqual(after.stopIds,stops);
+  const totals=await p.evaluate(after=>SSKR_ROUTE_PLAN.status(after,SSKR_SPOT_CATALOG,SSKR_ROUTE_PROVIDER.create()),after);
+  assert.ok(Math.abs(totals.distanceMeters-expected.totals.distanceMeters-expected.choice.addedDistanceMeters)<.0001);
+  assert.ok(Math.abs(totals.durationSeconds-expected.totals.durationSeconds-expected.choice.addedDurationSeconds)<.0001);
+  assert.equal(await p.locator('#rp-insertion').inputValue(),mode==='auto'?'auto':id);
+  assert.match(await p.locator('.rp-notice').textContent(),/실행 취소/);
+ }
+ assert.deepEqual(p.errors,[]);await capture(p,'automatic-insertion');await p.close();
+});
+
+test('a failed road preflight and repeated clicks preserve the original route; later edits cancel stale insertions',async()=>{
+ const p=await page();await open(p);await start(p);await addFirstRecommendation(p);await addFirstRecommendation(p);
+ const before=await draft(p);await p.locator('.rp-next .rp-place-view').first().click();
+ await p.evaluate(()=>window.__roadFailure=true);await p.locator('.spot-route-add:visible').last().click();await settle(p);
+ assert.deepEqual((await draft(p)).stopIds,before.stopIds);assert.match(await p.locator('.rp-notice').textContent(),/불러오지 못했습니다/);
+ await p.evaluate(()=>{window.__roadFailure=false;window.__roadDelay=800;});
+ await p.locator('.spot-route-add:visible').last().dispatchEvent('click');await p.locator('.spot-route-add:visible').last().dispatchEvent('click');
+ assert.equal(await p.locator('.spot-route-add:visible').last().isDisabled(),true);
+ await p.locator(`[data-waypoint="${before.stopIds[0]}"] .rp-point-main`).click();await p.locator('[data-rp-action="remove"]').click();await settle(p);await p.waitForTimeout(850);
+ assert.deepEqual((await draft(p)).stopIds,before.stopIds.slice(1));
+ await p.locator('.rp-next .rp-place-view').first().click();const id=await p.locator('.rp-place-detail h3').textContent();
+ await p.locator('.spot-route-add:visible').last().dispatchEvent('click');await p.locator('.spot-route-add:visible').last().dispatchEvent('click');await settle(p);
+ assert.equal((await draft(p)).stopIds.length,before.stopIds.length);assert.equal(new Set((await draft(p)).stopIds).size,before.stopIds.length);
+ assert.match(await p.locator('.rp-notice').textContent(),new RegExp(id.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')));
+ await p.evaluate(()=>{window.__roadFailure=true;window.__roadDelay=50;});await p.locator('[data-rp-action="undo"]').click();await settle(p);await p.locator('.rp-next .rp-place-view').first().click();assert.equal(await p.locator('.spot-route-add:visible').last().isDisabled(),true);
+ assert.match(await p.locator('.spot-route-context:visible').last().textContent(),/현재 경로의 도로/);await p.evaluate(()=>window.__roadFailure=false);await p.locator('[data-rp-action="retry-route"]').click();await settle(p);assert.equal(await p.locator('.spot-route-add:visible').last().isDisabled(),false);
+ assert.deepEqual(p.errors,[]);await p.close();
+});
+
+test('manual mode survives detail and reload; deleting its anchor returns to automatic without changing saved format',async()=>{
+ const p=await page(390,844);await open(p,'logged-in-no-application');await start(p);await addFirstRecommendation(p);
+ const original=await draft(p),id=original.stopIds[0];await p.locator('#rp-insertion').selectOption(id);
+ await p.locator('.rp-next .rp-place-view').first().click();assert.equal(await p.locator('#rp-insertion').inputValue(),id);
+ await p.reload();await settle(p);await p.locator('#rp-tab-places').click();assert.equal(await p.locator('#rp-insertion').inputValue(),id);
+ await save(p,'자동 삽입 검토');await savedTab(p);
+ const saved=await p.evaluate(()=>JSON.parse(localStorage.getItem('sskr.mock.route-plans:'+encodeURIComponent(JSON.parse(sessionStorage.getItem('sskr.route-editor')).ownerId))).plans[0]);
+ assert.equal(saved.insertion,undefined);assert.equal(saved.afterId,undefined);
+ await p.locator('#rp-tab-route').click();await p.locator(`[data-waypoint="${id}"] .rp-point-main`).click();await p.locator('[data-rp-action="remove"]').click();await settle(p);
+ await p.locator('#rp-tab-places').click();assert.equal(await p.locator('#rp-insertion').inputValue(),'auto');
+ assert.deepEqual(p.errors,[]);await capture(p,'mobile-insertion');await p.close();
+});
+
+test('event minimum from the API controls summary, auto-fill, preview and applied route',async()=>{
+ const p=await page(390,844);
+ await p.route('**/api/participate/context',async route=>{const response=await route.fetch(),body=await response.json();body.event.minimumSpotCheckins=12;await route.fulfill({response,json:body});});
+ await open(p);assert.match(await p.locator('.rp-map-summary').textContent(),/최소 12곳/);
+ await start(p,'gangneung');assert.equal(await p.locator('[data-rp-action="auto-start"]').textContent(),'12곳 자동 완성');
+ await p.locator('[data-rp-action="auto-start"]').click();await p.waitForSelector('.rp-preview');
+ assert.match(await p.locator('.rp-map-summary').textContent(),/경유 12곳 충족/);
+ assert.equal(await p.locator('.rp-waypoints [data-waypoint]').count(),14);
+ await p.locator('[data-rp-action="apply-preview"]').click();await settle(p);
+ assert.equal((await draft(p)).stopIds.length,12);assert.match(await p.locator('.rp-map-summary').textContent(),/경유 12곳 충족/);
+ assert.deepEqual(p.errors,[]);await p.close();
+});
 
 test('route labels, side selection and floating map actions form one flow',async()=>{
  const p=await page();await open(p);assert.equal(await p.locator('#rp-tab-places').isDisabled(),true);assert.equal(await p.locator('#rp-tab-saved').isDisabled(),true);
@@ -63,7 +135,8 @@ test('mobile floating action remains inside the visible map above its panel',asy
  const action=p.locator('.leaflet-tooltip .spot-route-add:visible').last();await action.waitFor();
  const box=await action.boundingBox(),map=await p.locator('.spot-map-host').boundingBox(),head=await p.locator('.spot-list-head').boundingBox();assert.ok(box.y>=head.y+head.height+8&&box.y+box.height<=map.y+map.height);
  await action.click();await settle(p);assert.equal((await draft(p)).startId!==null,true);
- await p.locator('.rp-next .rp-place-view').first().click();const stop=p.locator('.leaflet-tooltip .spot-route-add:visible').last();await stop.waitFor();const nextBox=await stop.boundingBox();assert.ok(nextBox.y>=head.y+head.height+8&&nextBox.y+nextBox.height<=map.y+map.height);
+ await p.locator('.rp-next .rp-place-view').first().click();const stop=p.locator('.leaflet-tooltip .spot-route-add:visible').last();await stop.waitFor();await p.waitForTimeout(250);const nextBox=await stop.boundingBox(),summary=await p.locator('.rp-map-summary').boundingBox();assert.ok(nextBox.y>=map.y&&nextBox.y+nextBox.height<=summary.y,JSON.stringify({nextBox,head,map}));
+ const mapControls=await p.locator('.spot-map-controls').boundingBox();for(const other of [head,mapControls])assert.ok(nextBox.x+nextBox.width<=other.x||nextBox.x>=other.x+other.width||nextBox.y+nextBox.height<=other.y||nextBox.y>=other.y+other.height,JSON.stringify({nextBox,other}));
  await stop.click();await settle(p);assert.equal((await draft(p)).stopIds.length,1);
  await p.locator('#rp-tab-route').click();const row=p.locator('.rp-waypoint.is-active'),rowBox=await row.boundingBox(),controls=await row.locator('.rp-row-actions').boundingBox();assert.ok(controls.x>=rowBox.x&&controls.x+controls.width<=rowBox.x+rowBox.width&&controls.y>=rowBox.y&&controls.y+controls.height<=rowBox.y+rowBox.height);await row.scrollIntoViewIfNeeded();await capture(p,'mobile-selected-row');
  assert.deepEqual(p.errors,[]);await p.close();
@@ -123,8 +196,8 @@ test('desktop separates route, map and discovery; candidates never change the in
  await p.waitForFunction(()=>document.querySelectorAll('.leaflet-tooltip .spot-photo-card').length===1);await p.locator('.leaflet-tooltip .spot-photo-card').click();assert.equal(await p.locator('.rp-place-detail').count(),1);await p.locator('[data-rp-action="back-detail"]').click();
  const candidate=await p.locator('.rp-next .rp-place').first().getAttribute('data-place-id');await p.locator('.rp-next .rp-place-view').first().click();
  assert.equal(await p.locator('.rp-place-detail').count(),1);assert.equal(await p.evaluate(()=>JSON.parse(sessionStorage.getItem('sskr.route-editor')).anchorId),'songjeong');assert.equal((await draft(p)).stopIds.length,0);
- await p.locator('[data-rp-action="back-detail"]').click();assert.match(await p.locator('.rp-anchor').textContent(),/송정/);await addFirstRecommendation(p);await settle(p);assert.equal((await draft(p)).stopIds[0],candidate);assert.equal(await p.locator('.rp-place-detail').count(),0);
- await addFirstRecommendation(p);await p.locator('[data-waypoint="songjeong"] .rp-point-main').click();await addFirstRecommendation(p);await settle(p);assert.equal((await draft(p)).stopIds[1],candidate);
+ await p.locator('[data-rp-action="back-detail"]').click();assert.equal(await p.locator('#rp-insertion').inputValue(),'auto');await addFirstRecommendation(p);await settle(p);assert.equal((await draft(p)).stopIds[0],candidate);assert.equal(await p.locator('.rp-place-detail').count(),0);
+ await addFirstRecommendation(p);const before=(await draft(p)).stopIds;await p.locator('[data-waypoint="songjeong"] .rp-point-main').click();assert.equal(await p.locator('#rp-insertion').inputValue(),'auto');await p.locator('#rp-insertion').selectOption('songjeong');await addFirstRecommendation(p);await settle(p);assert.deepEqual((await draft(p)).stopIds.slice(1),before);
  assert.deepEqual(p.errors,[]);await capture(p,'workspace-desktop');await p.close();
 });
 
@@ -141,7 +214,7 @@ test('preview summary belongs to proposed route; guest name and route survive lo
 test('selected row edits support move, undo, remove and draft saving',async()=>{
  const p=await page();await open(p,'logged-in-no-application');await savedTab(p);await p.locator('[data-rp-action="route-tab"]').click();assert.equal(await p.locator('#rp-tab-search').getAttribute('aria-selected'),'true');await start(p);await addFirstRecommendation(p);await addFirstRecommendation(p);const two=(await draft(p)).stopIds;
  await p.locator(`[data-waypoint="${two[1]}"]`).dragTo(p.locator(`[data-waypoint="${two[0]}"]`));await settle(p);assert.deepEqual((await draft(p)).stopIds,[two[1],two[0]]);await p.locator('[data-rp-action="undo"]').click();await settle(p);
- assert.equal(await p.locator('.rp-row-actions').count(),1);await p.locator(`[data-rp-action="up"][data-id="${two[1]}"]`).click();await settle(p);assert.deepEqual((await draft(p)).stopIds,[two[1],two[0]]);await p.locator('[data-rp-action="undo"]').click();await settle(p);assert.deepEqual((await draft(p)).stopIds,two);
+ assert.equal(await p.locator('.rp-row-actions').count(),1);await p.locator(`[data-waypoint="${two[1]}"] .rp-point-main`).click();await p.locator(`[data-rp-action="up"][data-id="${two[1]}"]`).click();await settle(p);assert.deepEqual((await draft(p)).stopIds,[two[1],two[0]]);await p.locator('[data-rp-action="undo"]').click();await settle(p);assert.deepEqual((await draft(p)).stopIds,two);
  await p.locator(`[data-waypoint="${two[0]}"] .rp-point-main`).click();assert.equal(await p.locator('[data-rp-action="replace"]').count(),0);await p.locator('[data-rp-action="remove"]').click();await settle(p);assert.equal((await draft(p)).stopIds.length,1);
  await save(p,'초안');await savedTab(p);assert.match(await p.locator('.rp-saved').textContent(),/초안/);await p.locator('[data-rp-action="duplicate"]').click();assert.equal((await draft(p)).id,null);assert.deepEqual(p.errors,[]);await p.close();
 });
@@ -225,6 +298,19 @@ test('short screens keep the complete map card visible and mobile details omit d
  }
 });
 
+test('short mobile maps keep insertion context, photo and add button clear of controls and the route summary',async()=>{
+ for(const [width,height]of [[360,640],[390,664],[430,700]]){
+  const p=await page(width,height);await open(p);await start(p);await p.locator('.rp-next .rp-place-view').first().click();await p.waitForTimeout(650);
+  const map=await p.locator('.spot-map').boundingBox(),summary=await p.locator('.rp-map-summary').boundingBox(),controls=await p.locator('.spot-map-controls').boundingBox();
+  for(const selector of ['.spot-route-add','.spot-route-context','.spot-photo-card']){
+   const box=await p.locator('.leaflet-tooltip '+selector+':visible').last().boundingBox();
+   assert.ok(box.x>=map.x&&box.x+box.width<=map.x+map.width+1&&box.y>=map.y&&box.y+box.height<=summary.y,JSON.stringify({width,height,box,map,summary}));
+   assert.ok(box.x+box.width<=controls.x||box.x>=controls.x+controls.width||box.y+box.height<=controls.y||box.y>=controls.y+controls.height,JSON.stringify({width,height,box,controls}));
+  }
+  if(width===390)await capture(p,'mobile-insertion-card');assert.deepEqual(p.errors,[]);await p.close();
+ }
+});
+
 test('preview route rows match summary and cannot be edited until apply or cancel',async()=>{
  const p=await page();await open(p);await start(p);await addFirstRecommendation(p);const original=await draft(p);
  await p.locator('[data-rp-action="autofill"]').click();await p.locator('.rp-preview').waitFor();
@@ -238,8 +324,8 @@ test('preview route rows match summary and cannot be edited until apply or cance
 test('search is immediately editable and retains query and insertion anchor across detail and resizing',async()=>{
  const p=await page(390,844);await open(p);await start(p);await p.locator('#rp-tab-search').click();
  assert.equal(await p.locator('.spot-search input').isVisible(),true);assert.equal(await p.locator('.rp-filters').getAttribute('open'),null);
- await p.locator('.spot-search input').fill('김해');await p.waitForTimeout(300);const caption=await p.locator('.rp-anchor').textContent();
- await p.locator('.rp-place-results .rp-place-view').first().click();assert.equal(await p.locator('.rp-anchor').textContent(),caption);
+ await p.locator('.spot-search input').fill('김해');await p.waitForTimeout(300);const caption=await p.locator('#rp-insertion').inputValue();
+ await p.locator('.rp-place-results .rp-place-view').first().click();assert.equal(await p.locator('#rp-insertion').inputValue(),caption);
  await p.locator('[data-rp-action="back-detail"]').click();assert.equal(await p.locator('.spot-search input').inputValue(),'김해');
  await p.locator('#rp-tab-route').click();await p.setViewportSize({width:1440,height:900});await p.waitForTimeout(300);
  assert.equal(await p.locator('#rp-tab-places').getAttribute('aria-selected'),'true');assert.equal(await p.locator('.rp-next').isVisible(),true);
@@ -316,7 +402,7 @@ test('first choices, saved-place badges and preview composition make the route s
  assert.equal(await p.locator('[data-rp-action="auto-start"]').isVisible(),true);await p.locator('[data-rp-action="choose-stops"]').click();assert.equal(await p.locator('.rp-first-choice').count(),0);
  assert.match(await p.locator('.rp-summary').textContent(),/예상 주행.*정차·교통 제외/);
  assert.notEqual(await p.locator('.spot-pin.is-route-stop span').first().evaluate(e=>getComputedStyle(e).borderRadius),await p.locator('.spot-pin.spot:not(.is-route-stop) span').first().evaluate(e=>getComputedStyle(e).borderRadius));
- assert.match(await p.locator('.rp-next .rp-place').first().textContent(),/기준점부터.*이곳 추가 시 전체 경로/s);
+ assert.match(await p.locator('.rp-next .rp-place').first().textContent(),/구간.*전체 경로/s);
  await addFirstRecommendation(p);const selected=(await draft(p)).stopIds[0];await p.locator('#rp-tab-search').click();
  const name=await p.evaluate(id=>SSKR_SPOT_CATALOG.find(x=>x.id===id).name,selected);await p.locator('.spot-search input').fill(name);await p.waitForTimeout(300);
  assert.match(await p.locator(`.rp-place[data-place-id="${selected}"] .rp-included`).textContent(),/경로 포함 · 1번째/);

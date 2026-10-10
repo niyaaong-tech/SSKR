@@ -72,8 +72,8 @@ test("bike information can be changed only for an active participation before th
   active.service.saveBikeInfo({ maker: "BMW", model: "R 1250 GS", className: "Adventure" });
   assert.equal(active.repository.getParticipation().bikeInfo.model, "R 1250 GS");
 
-  const expired = make("c-confirmed-spots", "2027-06-01T15:00:00Z");
-  assert.throws(() => expired.service.saveBikeInfo({ maker: "BMW" }), { code: "BIKE_INFO_EDIT_UNAVAILABLE" });
+  const expired = make("c-confirmed-spots", "2027-06-12T15:00:00Z");
+  assert.throws(() => expired.service.saveBikeInfo({ maker: "BMW" }), { code: "PREPARATION_DEADLINE_PASSED" });
 });
 
 test("checkout requires a second confirmation when the selected tier price changes", () => {

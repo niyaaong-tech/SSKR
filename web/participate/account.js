@@ -94,7 +94,7 @@
     const application = context.application;
     const participation = context.participation;
     const tier = context.tiers?.find((item) => item.id === application?.priceTierId);
-    const relation = participation ? (participation.slotAllocation === "WAITLISTED" ? "참가 대기" : "참가 확정") : application ? `신청 ${context.surface.step?.replace("STEP_", "STEP ") || "진행 중"}` : "진행 중인 참가 없음";
+    const relation = participation ? (participation.slotAllocation === "WAITLISTED" ? "이전 내역 확인 필요" : "참가 확정") : application ? `신청 ${context.surface.step?.replace("STEP_", "STEP ") || "진행 중"}` : "진행 중인 참가 없음";
     const actionLabel = participation ? "참가 페이지로 돌아가기" : application ? "신청 계속하기" : "참가 신청 보기";
     root.innerHTML = `<div class="account-view">${accountHeader("마이페이지", "현재 Account에 연결된 SSKR 관계를 요약합니다.")}<section class="mypage-summary"><p>CURRENT RELATION</p><h3>${escapeHtml(relation)}</h3><dl><div><dt>참가 유형</dt><dd>${escapeHtml(tier?.displayName || participation?.registrationTierCode || "미선택")}</dd></div><div><dt>참가자</dt><dd>${escapeHtml(application?.participant?.name || context.account.profile?.name)}</dd></div><div><dt>Participation</dt><dd>${participation ? "ACTIVE" : "없음"}</dd></div><div><dt>다음 행동</dt><dd>${escapeHtml(context.manager?.primaryTask?.title || context.surface.title || "참가 정보 확인")}</dd></div></dl><button type="button" class="transaction-primary" id="mypage-action">${actionLabel}</button></section><section class="past-participation"><p>PAST SSKR</p><h3>지난 참가와 메모리얼</h3><span>현재 Mock Account에는 표시할 과거 참가 기록이 없습니다.</span></section></div>`;
     bindBack();

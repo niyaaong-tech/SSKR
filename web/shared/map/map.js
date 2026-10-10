@@ -99,7 +99,8 @@
    const marker=markers.get(id),tooltip=marker?.getTooltip?.()?.getElement?.(),panel=$('.spot-map');
    if(!tooltip||!panel)return;
    const bounds=panel.getBoundingClientRect(),pad=padding(),margin=10;
-   const safe={left:bounds.left+pad.paddingTopLeft[0]+margin,top:bounds.top+pad.paddingTopLeft[1]+margin,right:bounds.right-pad.paddingBottomRight[0]-margin,bottom:bounds.bottom-pad.paddingBottomRight[1]-margin};
+   const compact=host.classList.contains('is-mobile-editor');
+   const safe={left:bounds.left+(compact?8:pad.paddingTopLeft[0]+margin),top:bounds.top+(compact?8:pad.paddingTopLeft[1]+margin),right:bounds.right-(compact?8:pad.paddingBottomRight[0]+margin),bottom:bounds.bottom-(compact?(insets.bottom||0)+8:pad.paddingBottomRight[1]+margin)};
    const photo=tooltip.getBoundingClientRect(),button=tooltip.querySelector('.spot-route-add,.spot-route-state')?.getBoundingClientRect();
    const card={left:Math.min(photo.left,button?.left??photo.left),top:Math.min(photo.top,button?.top??photo.top),right:Math.max(photo.right,button?.right??photo.right),bottom:Math.max(photo.bottom,button?.bottom??photo.bottom)};
    const width=card.right-card.left,height=card.bottom-card.top;
@@ -124,7 +125,7 @@
    if(open){returnY=scrollY;options.onOpen?.(item);}
   }
   function renderMarkers(){
-   if(!map||disposed)return;layer.eachLayer(marker=>marker.unbindTooltip());layer.clearLayers();markers.clear();
+   if(!map||disposed)return;layer.eachLayer(marker=>{marker.getTooltip?.()?.getElement?.()?.remove();marker.unbindTooltip();});layer.clearLayers();markers.clear();
    const ordered=editing?routePlaces(catalog,routeIds):[],chosen=new Set(ordered.map(p=>p.id)),candidateIds=new Set(editing?candidates.map(p=>p.id):[]);
    const visible=new Map(items.map(p=>[p.id,p]));if(editing){candidates.forEach(p=>visible.set(p.id,p));ordered.forEach(p=>visible.set(p.id,p));}
    const pinned=editing?new Set([...chosen,...candidateIds]):new Set(pageItems.map(p=>p.id));
@@ -138,7 +139,9 @@
     else{
       const photo=document.createElement('button');photo.type='button';photo.className='spot-photo-card';photo.setAttribute('aria-label',formatPlaceText(p.name)+' 상세 보기');photo.innerHTML=photoCard(p,editing);photo.addEventListener('click',()=>select(p,{open:true}));tip.append(photo);
       if(editing&&selected?.id===p.id&&options.onRouteAdd&&(p.kind==='start'&&!planned||p.kind==='spot'&&!planned)){
-        const add=document.createElement('button');add.type='button';add.className='spot-route-add';add.textContent=p.kind==='start'?'출발지 설정':'경유지 추가';add.setAttribute('aria-label',`${formatPlaceText(p.name)} ${add.textContent}`);add.addEventListener('click',event=>{event.stopPropagation();options.onRouteAdd?.(p);});tip.prepend(add);
+        const state=options.routeActionState?.(p)||{},wrap=document.createElement('div');wrap.className='spot-route-action-wrap';
+        const add=document.createElement('button');add.type='button';add.className='spot-route-add';add.disabled=Boolean(state.disabled);add.textContent=state.label||(p.kind==='start'?'출발지 설정':'경유지 추가');add.setAttribute('aria-label',`${formatPlaceText(p.name)} ${add.textContent}`);add.addEventListener('click',event=>{event.stopPropagation();options.onRouteAdd?.(p);});wrap.append(add);
+        if(state.description){const context=document.createElement('span');context.className='spot-route-context';context.title=state.description;state.description.split('\n').forEach(line=>{const row=document.createElement('span');row.textContent=line;context.append(row);});wrap.append(context);}tip.prepend(wrap);
       }
       if(editing&&selected?.id===p.id&&p.kind==='start'&&planned){const status=document.createElement('span');status.className='spot-route-state';status.textContent='선택된 출발지';tip.prepend(status);}
       root.L.DomEvent.disableClickPropagation(tip);const img=tip.querySelector('img');if(img)img.onerror=()=>img.remove();

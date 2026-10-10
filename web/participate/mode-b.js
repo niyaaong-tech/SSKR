@@ -32,6 +32,7 @@
         <p class="step-label">STEP 1</p>
         <h2 id="application-title" tabindex="-1">참가 전에 꼭 확인해 주세요</h2>
         <p class="transaction-lead">SSKR의 하루를 안전하게 완성하기 위해 실제 진행 방식을 먼저 확인합니다.</p>
+        <p class="participation-core-rule">완주하려면 공식 출발 체크인, 서로 다른 경유 스팟 ${context.event.minimumSpotCheckins}곳 이상 체크인, 일몰 전 ${escapeHtml(context.event.finishLocationName)} 도착 체크인이 필요합니다. 출발·도착을 포함해 총 ${context.event.minimumSpotCheckins+2}곳 이상입니다.</p>
         <div class="notice-groups">${groups}</div>
         <form class="acknowledgement-form" id="acknowledgement-form">
           <label><input type="checkbox" id="guide-acknowledgement" ${acknowledged ? "checked" : ""} /><span>SSKR의 진행 방식과 위 내용을 확인했습니다.</span></label>
@@ -116,7 +117,8 @@
   function renderStep3(root, context, handlers) {
     const participant = context.application?.participant || context.account?.profile || {};
     const bike = context.application?.bike || {};
-    const selectedId = context.application?.priceTierId || "";
+    let preference='';try{preference=sessionStorage.getItem('sskr.participate.tier.'+context.event.id)||'';}catch{}
+    const selectedId = context.application?.priceTierId || preference;
     root.innerHTML = shell(context, `
       <section class="transaction-body" aria-labelledby="application-title">
         <p class="step-label">STEP 3</p>

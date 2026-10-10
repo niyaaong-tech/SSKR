@@ -62,8 +62,8 @@
     $('.spot-planning-area').before(filterParking);
     const filters=[$('.spot-toolbar'),$('.spot-categories')];filters.forEach(node=>filterParking.append(node));
     viewer=shared.mount($('.spot-map-host'),{items:entries,catalog:entries,initialId:selected?.id,initialZoom:initial?11:undefined,inView:true,
-      onRouteAdd:p=>planner?.addFromMap(p),onSelect:p=>{selected=p;if(editing){planner?.select(p);return;}syncURL(p);renderDetail(p)},onOpen:p=>{if(editing){planner?.openPlace(p);return;}$('.spot-detail').scrollIntoView({behavior:reduced.matches?'auto':'smooth',block:'start'});},onDeselect:()=>{selected=null;if(!editing){syncURL(null);renderDetail(null);}}});
-    planner=root.SSKR_ROUTE_PLANNER.mount($('.route-planner'),{catalog:entries,viewer,filters,filterParking,getAccount:options.getAccount,onLogin:options.onLogin,
+      onRouteAdd:p=>planner?.addFromMap(p),routeActionState:p=>planner?.routeActionState(p),onSelect:p=>{selected=p;if(editing){planner?.select(p);return;}syncURL(p);renderDetail(p)},onOpen:p=>{if(editing){planner?.openPlace(p);return;}$('.spot-detail').scrollIntoView({behavior:reduced.matches?'auto':'smooth',block:'start'});},onDeselect:()=>{selected=null;if(!editing){syncURL(null);renderDetail(null);}}});
+    planner=root.SSKR_ROUTE_PLANNER.mount($('.route-planner'),{catalog:entries,viewer,filters,filterParking,getAccount:options.getAccount,getEvent:options.getEvent,getParticipation:options.getParticipation,onLogin:options.onLogin,
       onModeChange:(value,startId)=>{clearTimeout(searchTimer);if(value&&!editing)browseFilters={...state};editing=value;if(!value)filters.forEach(node=>filterParking.append(node));routeStartId=value?startId:null;if(value){state.kind=startId?'spot':'start';state.category='all';state.search='';}else if(browseFilters){Object.assign(state,browseFilters);browseFilters=null;}$('.spot-search input').value=state.search;$('.spot-workbench').classList.toggle('is-planning',value);$('.spot-planning-area').classList.toggle('is-editing',value);host.querySelectorAll('[data-spot-mode]').forEach(b=>b.setAttribute('aria-pressed',String((b.dataset.spotMode==='plan')===value)));if(viewer)applyFilters();},
       onStartChange:id=>{routeStartId=id;state.kind=id?'spot':'start';state.category='all';state.search='';$('.spot-search input').value='';applyFilters();},
       onRoadReady:()=>{if(editing&&routeStartId)applyFilters();},
@@ -91,7 +91,7 @@
     });
     listen($('.spot-search input'),'input',event=>{state.search=event.target.value;clearTimeout(searchTimer);searchTimer=setTimeout(()=>applyFilters(),160)});
     applyFilters();if(initial&&!editing)viewer.getMap()?.setView([initial.lat,initial.lng],Math.max(11,viewer.getMap().getMinZoom()),{animate:false});
-    if(query.get("mode")==="plan") { planner.setMode(true); if(query.get("tab")==="saved") planner.openSaved(); }
+    if(query.get("mode")==="plan") { planner.setMode(true); if(query.get("tab")==="saved") planner.openSaved(); const incoming=query.get("fromExplore");if(incoming){planner.receivePlace(incoming);const url=new URL(location.href);url.searchParams.delete("fromExplore");history.replaceState(history.state,"",url);}}
     return()=>{events.abort();clearTimeout(searchTimer);planner.destroy();viewer.destroy();host.classList.remove('spots-main')};
   }
   root.SSKR_APP_SPOTS={mount,filterPlaces,clusterPlaces};if(typeof module!=='undefined')module.exports={filterPlaces,clusterPlaces};

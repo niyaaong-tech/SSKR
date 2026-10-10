@@ -248,7 +248,8 @@ function createTransactionService(repository, options = {}) {
     const existing = repository.getParticipation();
     if (existing?.state === PARTICIPATION.ACTIVE) return existing;
     const application = repository.getApplication();
-    const slotAllocation = hold.slotTarget || SLOT_ALLOCATION.CONFIRMED;
+    if (hold?.slotTarget !== SLOT_ALLOCATION.CONFIRMED) throw new DomainError("CONFIRMED_SLOT_REQUIRED", "확보된 참가 정원을 확인해야 합니다. 추가 결제를 진행하지 마세요.");
+    const slotAllocation = SLOT_ALLOCATION.CONFIRMED;
     if (slotAllocation === SLOT_ALLOCATION.CONFIRMED && event().capacityPolicy) {
       const currentEvent = event();
       if (hold.capacityPool === CAPACITY_POOL.PLATINUM_EXTRA) currentEvent.capacityPolicy.platinumExtraUsed = Number(currentEvent.capacityPolicy.platinumExtraUsed || 0) + 1;
@@ -271,6 +272,8 @@ function createTransactionService(repository, options = {}) {
       participantNumber: slotAllocation === SLOT_ALLOCATION.CONFIRMED ? deterministicNumber(user().mockUserId) : null,
       bikeInfo: application.bike && Object.values(application.bike).some(Boolean) ? application.bike : null,
       selectedStartLocationId: null,
+      kitRecipient: null,
+      acknowledgedNoticeVersion: null,
       fulfillmentState: FULFILLMENT.NOT_PREPARED,
       runResult: RUN_RESULT.NOT_STARTED,
       createdAt: nowIso(clock)
@@ -319,6 +322,7 @@ function createTransactionService(repository, options = {}) {
     if (existing) return existing;
     const hold = repository.getCheckoutHold();
     if (!hold || hold.state !== CHECKOUT_HOLD.HELD) throw new DomainError("CHECKOUT_HOLD_REQUIRED", "결제 가능 상태를 다시 확인해 주세요.", true);
+    if (hold.slotTarget !== SLOT_ALLOCATION.CONFIRMED) throw new DomainError("CONFIRMED_SLOT_REQUIRED", "확보된 참가 정원이 없습니다. 결제를 진행하지 않습니다.");
     const timestamp = nowIso(clock);
     const attempt = {
       id: `payment-attempt-${repository.getPaymentAttempts().length + 1}`,
@@ -357,16 +361,31 @@ function createTransactionService(repository, options = {}) {
     return current;
   }
 
-  function promoteWaitlist() {
-    const participation = repository.getParticipation();
-    if (!participation || participation.state !== PARTICIPATION.ACTIVE || participation.slotAllocation !== SLOT_ALLOCATION.WAITLISTED) {
-      throw new DomainError("WAITLIST_PROMOTION_UNAVAILABLE", "승격할 참가 대기 상태가 없습니다.");
-    }
-    participation.slotAllocation = SLOT_ALLOCATION.CONFIRMED;
-    participation.participantNumber = deterministicNumber(user().mockUserId);
-    repository.saveParticipation(participation);
-    log("WAITLIST_PROMOTED", { participationId: participation.id });
-    return participation;
+  function preparationParticipant(deadline) {
+    const p = repository.getParticipation();
+    if (!user().account?.linked || user().account?.blocked || p?.userId !== user().mockUserId || p?.eventId !== event().id || p?.state !== PARTICIPATION.ACTIVE || p?.slotAllocation !== SLOT_ALLOCATION.CONFIRMED) throw new DomainError("PREPARATION_UNAVAILABLE", "확정된 내 참가 정보만 수정할 수 있습니다.");
+    if (["LIVE","SEASON_CLEAR"].includes(event().resolvedStage || event().stageOverride) || (deadline && new Date(clock()).getTime() > Date.parse(deadline))) throw new DomainError("PREPARATION_DEADLINE_PASSED", "수정 기한이 지났습니다. 운영 안내를 확인해 주세요.");
+    return p;
+  }
+  function saveStartLocation(id) {
+    const p=preparationParticipant(event().startSelectionDeadlineAt);
+    const catalog=require('../../web/app/spot-catalog');
+    if(!catalog.some(place=>place.id===id&&place.kind==='start') || (event().startLocationIds && !event().startLocationIds.includes(id))) throw new DomainError("INVALID_START_LOCATION", "이 행사에서 선택 가능한 출발지를 골라 주세요.");
+    p.selectedStartLocationId=id;p.updatedAt=nowIso(clock);repository.saveParticipation(p);
+    log("OFFICIAL_START_UPDATED",{participationId:p.id,startLocationId:id});return p;
+  }
+  function saveKitRecipient(input={}) {
+    const p=preparationParticipant(event().kitAddressDeadlineAt);
+    if([FULFILLMENT.SHIPPED,FULFILLMENT.DELIVERED].includes(p.fulfillmentState))throw new DomainError("KIT_ALREADY_SHIPPED","발송된 키트의 배송지는 변경할 수 없습니다.");
+    const recipient={name:normalizeText(input.name),phone:digits(input.phone),postalCode:digits(input.postalCode),address:normalizeText(input.address),detail:normalizeText(input.detail)};
+    if(!recipient.name || !/^01\d{8,9}$/.test(recipient.phone) || !/^\d{5}$/.test(recipient.postalCode) || recipient.address.length<5)throw new DomainError("KIT_RECIPIENT_INVALID","수령인, 휴대전화, 우편번호와 배송 주소를 확인해 주세요.");
+    p.kitRecipient=recipient;p.updatedAt=nowIso(clock);repository.saveParticipation(p);log("KIT_RECIPIENT_UPDATED",{participationId:p.id});return p;
+  }
+  function acknowledgePreparation(version) {
+    const p=preparationParticipant();
+    const current=event().preparationNoticeVersion||event().participationGuideVersion;
+    if(version!==current)throw new DomainError("NOTICE_VERSION_CHANGED","운영 안내가 변경되었습니다. 최신 내용을 다시 확인해 주세요.");
+    p.acknowledgedNoticeVersion=current;p.noticeAcknowledgedAt=nowIso(clock);repository.saveParticipation(p);return p;
   }
 
   function updateAccountProfile(input = {}) {
@@ -388,11 +407,10 @@ function createTransactionService(repository, options = {}) {
   }
 
   function saveBikeInfo(input = {}) {
-    const participation = repository.getParticipation();
-    const deadline = event().bikeInfoDeadlineAt ? new Date(event().bikeInfoDeadlineAt).getTime() : Number.POSITIVE_INFINITY;
-    if (participation?.state !== PARTICIPATION.ACTIVE || new Date(clock()).getTime() > deadline) throw new DomainError("BIKE_INFO_EDIT_UNAVAILABLE", "현재 바이크 정보를 수정할 수 없습니다.");
+    const participation = preparationParticipant(event().bikeInfoDeadlineAt);
     const bike = { maker: normalizeText(input.maker), model: normalizeText(input.model), className: normalizeText(input.className) };
-    participation.bikeInfo = Object.values(bike).some(Boolean) ? bike : null;
+    if (!bike.maker || !bike.model || !bike.className) throw new DomainError("BIKE_INFO_INCOMPLETE", "제조사, 모델명과 배기량을 입력해 주세요.");
+    participation.bikeInfo = bike;
     repository.saveParticipation(participation);
     const application = repository.getApplication();
     if (application) { application.bike = bike; repository.saveApplication(application); }
@@ -400,7 +418,7 @@ function createTransactionService(repository, options = {}) {
     return participation;
   }
 
-  return { previousStep, cancelApplication, deferPayment, resumePayment, editParticipantInfo, prepareCheckout, promoteWaitlist, refreshPayment, retryPayment, saveAcknowledgement, saveAgreements, saveBikeInfo, saveParticipantInfo, startApplication, startPayment, updateAccountProfile };
+  return { previousStep, cancelApplication, deferPayment, resumePayment, editParticipantInfo, prepareCheckout, refreshPayment, retryPayment, saveAcknowledgement, saveAgreements, saveBikeInfo, saveStartLocation, saveKitRecipient, acknowledgePreparation, saveParticipantInfo, startApplication, startPayment, updateAccountProfile };
 }
 
 module.exports = { DomainError, createTransactionService, deterministicNumber };

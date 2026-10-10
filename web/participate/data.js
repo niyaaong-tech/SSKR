@@ -11,10 +11,10 @@ window.SSKR_PARTICIPATE_DATA = {
     {
       key: "navigation",
       number: "02",
-      title: "스팟\n내비게이션",
-      summary: "전용 앱과 가이드로\n스팟 탐색과 이동을 지원",
+      title: "스팟 탐색\n루트 계획",
+      summary: "웹에서 장소를 고르고\n실제 도로 연결을 검토",
       description: "정답 경로 대신, 가보고 싶은 장소와 지역을 발견하도록 돕습니다.",
-      details: "스팟 위치 · 지역 가이드 · 경유 정보 · 현장 안내"
+      details: "공개 스팟 탐색 · 개인 루트 저장 · 주차 정보 / 주행 안내는 외부 지도 이용"
     },
     {
       key: "finisher",
@@ -35,7 +35,7 @@ window.SSKR_PARTICIPATE_DATA = {
   ],
   manager: {
     title: "SSKR 매니저",
-    description: "참가 확정 후 준비와 운영 안내를 한곳에서 이어갑니다.",
+    description: "누구나 스팟과 메모리얼을 둘러보고 루트를 계획할 수 있습니다. 참가 확정 후에는 준비와 운영 안내가 추가됩니다.",
     steps: [
       { phase: "참가 준비", title: "내 정보와 바이크", note: "필요한 항목을 순서대로 확인", visual: "pin" },
       { phase: "운영 일정", title: "참가 키트와 출발", note: "확정된 시점에 맞춰 안내", visual: "box" },

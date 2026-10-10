@@ -17,7 +17,10 @@
     const all = store.all();
     const accountKey = JSON.stringify([account.id, account.linked]);
     if (path === '/app/my' || path === '/app/memorials') collectionPaths.set(accountKey, path);
-    let disposeJourney = null;
+    let disposeJourney = null;let editorDraft=null;
+    const uploading=form=>Number(form.dataset.uploads||0)>0;
+    const photoMarkup=photo=>'<figure data-local-photo="'+esc(photo.id)+'"><img src="'+esc(photo.url)+'" alt="추가한 방문 사진"><button type="button" data-remove-photo="'+esc(photo.id)+'" aria-label="추가 사진 삭제">×</button></figure>';
+    function editorPhotos(visit){const photo=model.selectPhoto(visit,{owner:true});return (photo&&photo.sourceKind!=='MOCK_UPLOAD'?'<img src="'+esc(photo.url)+'" alt="방문 사진">':'')+(visit.media||[]).filter(p=>p.sourceKind==='MOCK_UPLOAD').map(photoMarkup).join('');}
     const query = new URLSearchParams(location.search);
     const filters = { search: query.get('memorialQuery') || '', start: query.get('memorialStart') || 'all', event: query.get('memorialEvent') || 'all' };
     const cacheKey = () => JSON.stringify([account.id,account.linked,filters]);
@@ -32,7 +35,7 @@
     const placeName = id => window.SSKR_MAP.formatPlaceText(placeById.get(id)?.name || '장소 정보 없음');
     const routeSummary = item => `${journey.km(item.distanceMeters)}km · 스팟 ${item.spotCount}곳`;
     function thumbnail(item) {
-      const cover=model.selectCover(item.visits||[]),photo=cover?.photo;
+      const cover=model.selectCover(item.visits||[],item.coverVisitId,{owner:model.isOwner(item,account)}),photo=cover?.photo;
       return '<article class="memorial-thumbnail"><a href="'+href(item)+'" data-app-link><div class="memorial-thumbnail-media">'+(photo?'<img src="'+esc(photo.url)+'" alt="'+esc(placeName(cover.visit.locationId))+'" loading="lazy" />':'<span class="memorial-no-photo">등록된 사진이 없습니다</span>')+'</div><div class="memorial-thumbnail-copy"><span>'+esc(item.ownerName)+' · '+date(item.startedAt)+'</span><h3>'+esc(item.title)+'</h3><p>'+esc(placeName(item.startLocationId))+' → '+esc(placeName(item.finishLocationId))+'</p><footer><span>'+routeSummary(item)+'</span>'+testBadge(item)+'</footer></div></a></article>';
     }
     function archiveResults() {
@@ -60,19 +63,23 @@
     function renderDenied(title, copy) {
       root.innerHTML = '<section class="memorial-unavailable">' + back("/app/memorials", "메모리얼 둘러보기") + head(title, copy) + "</section>";
     }
-    function renderDetail(item) {
+    function renderDetail(item,{preview=false}={}) {
       const access=domain.memorialAccess(item,account);
       if(!access.allowed)return renderDenied(access.reason==='PRIVATE'?'비공개 메모리얼입니다.':'메모리얼을 찾을 수 없습니다.',access.reason==='PRIVATE'?'이 기록은 작성자만 확인할 수 있습니다.':'주소를 확인하고 다시 이동해 주세요.');
-      const owner=model.isOwner(item,account);
-      const returnPath=collectionPaths.get(accountKey) || (owner?'/app/my':'/app/memorials');
-      root.innerHTML='<div class="memorial-detail">'+back(returnPath,returnPath==='/app/my'?'내 기록':'메모리얼 목록')+'<article><header class="memorial-detail-head"><div><span class="memorial-event">'+esc(item.eventTitle)+' · '+date(item.startedAt)+' · '+esc(item.result)+' '+testBadge(item)+'</span><h2>'+esc(item.title)+'</h2><p>'+esc(item.ownerName)+'의 기록 · '+esc(placeName(item.startLocationId))+' → '+esc(placeName(item.finishLocationId))+'</p></div>'+(owner?link(editHref(item),'기록 관리',true):'')+'</header><p class="memorial-journey-intro">'+esc(item.summary)+'</p><dl class="memorial-journey-stats"><div><dt>달린 거리</dt><dd>'+journey.km(item.distanceMeters)+'<small> km</small></dd></div><div><dt>방문한 스팟</dt><dd>'+item.spotCount+'<small>곳</small></dd></div></dl><details class="memorial-time-details"><summary>주행 시간과 출발·도착</summary><p>주행 '+journey.duration(item.movingSeconds)+' · 정차 '+journey.duration(item.stoppedSeconds)+' · '+journey.time(item.startedAt)+' → '+journey.time(item.finishedAt)+'</p></details><div class="memorial-journey-host"></div></article></div>';
-      disposeJourney=journey.mount(root.querySelector('.memorial-journey-host'),item,places);
+      const owner=model.isOwner(item,account),cover=model.selectCover(item.visits||[],item.coverVisitId,{owner});
+      const returnPath=collectionPaths.get(accountKey)||(owner?'/app/my':'/app/memorials');
+      root.innerHTML='<div class="memorial-detail">'+(preview?'<button class="memorial-back" type="button" data-editor-return>← 편집으로 돌아가기</button><p class="memorial-preview-note">저장 전 미리보기</p>':back(returnPath,returnPath==='/app/my'?'내 기록':'메모리얼 목록'))+'<article>'+(cover?'<figure class="memorial-story-cover"><img src="'+esc(cover.photo.url)+'" alt="'+esc(placeName(cover.visit.locationId))+'" />'+(cover.photo.sourceUrl?'<figcaption><a href="'+esc(cover.photo.sourceUrl)+'" target="_blank" rel="noreferrer">'+esc(cover.photo.credit||'사진 출처')+' ↗</a></figcaption>':'')+'</figure>':'')+'<header class="memorial-detail-head"><div><span class="memorial-event">'+esc(item.eventTitle)+' · '+date(item.startedAt)+' · '+esc(item.result)+' '+testBadge(item)+(item.publishStatus==='DRAFT'?' · 미발행 초안':'')+'</span><h2>'+esc(item.title)+'</h2><p>'+esc(item.ownerName)+'의 기록</p></div>'+(owner&&!preview?link(editHref(item),'기록 관리',true):'')+'</header><p class="memorial-journey-intro">'+esc(item.summary)+'</p><div class="memorial-journey-host"></div></article></div>';
+      disposeJourney=journey.mount(root.querySelector('.memorial-journey-host'),item,places,{account,preview});
     }
     function renderEditor(item) {
-      if (!item || !model.isOwner(item, account) || item.publishStatus !== "PUBLISHED") return renderDenied("관리할 수 없는 메모리얼입니다.", "내가 작성한 메모리얼만 수정할 수 있습니다.");
-      root.innerHTML = '<div class="memorial-editor">' + back("/app/my", "내 기록") + head("메모리얼 관리", "기록의 이름과 소개를 다듬고, 공개할 범위를 선택하세요.") + '<div class="memorial-editor-grid"><aside class="memorial-edit-preview" aria-label="메모리얼 미리보기"><img src="' + esc(item.image) + '" alt="" /><div><span class="memorial-event">' + esc(item.eventTitle) + ' · ' + esc(item.result) + '</span><h3 id="memorial-preview-title">' + esc(item.title) + '</h3><p id="memorial-preview-summary">' + esc(item.summary) + '</p><div id="memorial-preview-visibility">' + badge(item) + '</div></div></aside><form class="memorial-form" data-memorial-form data-memorial-id="' + esc(item.id) + '"><label for="memorial-title">제목 <span>최대 60자</span></label><input id="memorial-title" name="title" value="' + esc(item.title) + '" maxlength="60" required /><label for="memorial-summary">소개 <span>최대 300자</span></label><textarea id="memorial-summary" name="summary" maxlength="300" rows="4">' + esc(item.summary) + '</textarea><fieldset><legend>공개 범위</legend><label class="memorial-radio"><input type="radio" name="visibility" value="PUBLIC"' + (item.visibility === "PUBLIC" ? " checked" : "") + ' /><span><strong>공개</strong><small>다른 라이더도 목록에서 내 기록을 볼 수 있습니다.</small></span></label><label class="memorial-radio"><input type="radio" name="visibility" value="PRIVATE"' + (item.visibility === "PRIVATE" ? " checked" : "") + ' /><span><strong>나만 보기</strong><small>공개 목록에서 숨기고 나만 확인합니다.</small></span></label></fieldset><p class="memorial-preview-note">현재는 미리보기 단계로, 변경 내용은 이 브라우저에만 저장됩니다.</p><div class="memorial-form-actions"><button class="memorial-button" type="submit">변경 내용 저장</button><a class="memorial-button is-secondary" href="/app/my" data-app-link>취소</a></div><p class="memorial-save-status" role="status" aria-live="polite"></p></form></div></div>';
+      if(!item||!model.isOwner(item,account))return renderDenied('관리할 수 없는 메모리얼입니다.','내가 작성한 메모리얼만 수정할 수 있습니다.');
+      const working=editorDraft||item,cover=model.selectCover(working.visits||[],working.coverVisitId,{owner:true});
+      root.innerHTML='<div class="memorial-editor">'+back('/app/my','내 기록')+head('메모리얼 관리','사진과 메모로 여정을 다듬고, 공개할 범위를 선택하세요.')+'<div class="memorial-editor-grid"><aside class="memorial-edit-preview" aria-label="메모리얼 미리보기">'+(cover?'<img src="'+esc(cover.photo.url)+'" alt="" />':'')+'<div><span class="memorial-event">'+esc(item.eventTitle)+'</span><h3 id="memorial-preview-title">'+esc(working.title)+'</h3><p id="memorial-preview-summary">'+esc(working.summary)+'</p><div id="memorial-preview-visibility">'+badge(working)+'</div></div></aside><form class="memorial-form" data-memorial-form data-memorial-id="'+esc(item.id)+'"><label for="memorial-title">제목 <span>최대 60자</span></label><input id="memorial-title" name="title" value="'+esc(working.title)+'" maxlength="60" required /><label for="memorial-summary">소개 <span>최대 300자</span></label><textarea id="memorial-summary" name="summary" maxlength="300" rows="4">'+esc(working.summary)+'</textarea><fieldset><legend>공개 범위</legend>'+['PUBLIC','PRIVATE'].map(value=>'<label class="memorial-radio"><input type="radio" name="visibility" value="'+value+'"'+(working.visibility===value?' checked':'')+' /><span><strong>'+(value==='PUBLIC'?'공개':'나만 보기')+'</strong></span></label>').join('')+'</fieldset><fieldset><legend>발행 상태</legend><label class="memorial-radio"><input type="radio" name="publishStatus" value="DRAFT"'+(working.publishStatus==='DRAFT'?' checked':'')+'><span>초안 · 나만 열람</span></label><label class="memorial-radio"><input type="radio" name="publishStatus" value="PUBLISHED"'+(working.publishStatus==='PUBLISHED'?' checked':'')+'><span>발행 · 선택한 공개 범위 적용</span></label></fieldset><section class="memorial-visit-editor"><h3>방문 사진과 메모</h3><p>대표 사진을 선택하고, 방문마다 최대 5장의 사진과 메모를 남길 수 있습니다.</p>'+working.visits.map(visit=>{const photo=model.selectPhoto(visit,{owner:true}),edit=working.visitEdits?.[visit.id];return '<article data-edit-visit="'+esc(visit.id)+'" data-media-ids="'+esc(JSON.stringify(edit?.mediaIds||[]))+'"><header><h4>'+esc(placeName(visit.locationId))+'</h4><label><input type="radio" name="coverVisitId" value="'+esc(visit.id)+'"'+(working.coverVisitId===visit.id?' checked':'')+'> 대표 사진</label></header><div class="memorial-edit-photos">'+editorPhotos(visit)+'</div><label>방문 메모<textarea data-visit-note maxlength="1000" rows="3">'+esc(visit.note||'')+'</textarea></label><label>사진 추가<input type="file" data-visit-photo accept="image/jpeg,image/png,image/webp"></label><label class="memorial-photo-consent"><input type="checkbox" data-photo-consent '+(visit.photoConsent?'checked':'')+'> 이 방문 사진을 공개하는 데 동의합니다.</label></article>';}).join('')+'</section><p class="memorial-preview-note">변경 내용과 추가 사진은 이 브라우저에만 저장됩니다. 업로드·공개 검수·기기 간 동기화는 운영 서버 연결 후 제공됩니다.</p><div class="memorial-form-actions"><button class="memorial-button" type="submit">변경 내용 저장</button><button class="memorial-button is-secondary" type="button" data-preview-record>미리보기</button><a class="memorial-button is-secondary" href="/app/my" data-app-link>취소</a></div><p class="memorial-save-status" role="status" aria-live="polite"></p></form></div></div>';
     }
     function onClick(event) {
+      const remove=event.target.closest('[data-remove-photo]');if(remove){const row=remove.closest('[data-edit-visit]');if(uploading(row.closest('form')))return;row.dataset.mediaIds=JSON.stringify(JSON.parse(row.dataset.mediaIds||'[]').filter(id=>id!==remove.dataset.removePhoto));remove.closest('figure').remove();return;}
+      if(event.target.closest('[data-preview-record]')){if(uploading(root.querySelector('[data-memorial-form]'))){root.querySelector('.memorial-save-status').textContent='사진 처리가 끝난 뒤 미리보기를 열어 주세요.';return;}const form=root.querySelector('[data-memorial-form]'),item=all.find(i=>i.id===form.dataset.memorialId);editorDraft={...item,...formValues(form)};editorDraft.visits=model.applyVisitEdits(editorDraft,item.visits,window.SSKR_MEMORIAL_MEDIA.all(),account);disposeJourney?.();renderDetail(editorDraft,{preview:true});window.scrollTo({top:0,behavior:'instant'});return;}
+      if(event.target.closest('[data-editor-return]')){disposeJourney?.();renderEditor(all.find(i=>i.id===editorDraft.id));return;}
       if (event.target.closest("[data-load-more]")) { visibleCount += 12; archiveResults(); }
     }
     function updateFilters(event) {
@@ -97,7 +104,7 @@
       if (event.target.tagName === "IMG") { event.target.classList.add("is-unavailable"); event.target.alt = "사진을 불러오지 못했습니다"; }
     }
     function formValues(form) {
-      return Object.fromEntries(new FormData(form));
+      const values=Object.fromEntries(new FormData(form));const visitEdits={};form.querySelectorAll('[data-edit-visit]').forEach(row=>{visitEdits[row.dataset.editVisit]={note:row.querySelector('[data-visit-note]').value,photoConsent:row.querySelector('[data-photo-consent]').checked,mediaIds:JSON.parse(row.dataset.mediaIds||'[]')};});return {...values,visitEdits};
     }
     function onInput(event) {
       updateFilters(event);
@@ -114,8 +121,9 @@
       if (!form) return;
       event.preventDefault();
       const status = form.querySelector(".memorial-save-status");
+      if(uploading(form)){status.textContent='사진 처리가 끝난 뒤 저장해 주세요.';return;}
       try {
-        store.update(form.dataset.memorialId, account, formValues(form));
+        const updated=store.update(form.dataset.memorialId, account, formValues(form));editorDraft=null;const index=all.findIndex(item=>item.id===updated.id);if(index>=0)all[index]=store.all().find(item=>item.id===updated.id);
         status.textContent = "변경 내용을 이 브라우저에 저장했습니다.";
         status.dataset.error = "false";
       } catch (error) {
@@ -123,6 +131,7 @@
         status.dataset.error = "true";
       }
     }
+    async function onPhoto(event){const input=event.target;if(!input.matches('[data-visit-photo]')||!input.files[0])return;const form=input.closest('form'),row=input.closest('[data-edit-visit]'),ids=JSON.parse(row.dataset.mediaIds||'[]'),status=form.querySelector('.memorial-save-status');if(ids.length>=5){status.textContent='방문당 최대 5장의 사진을 추가할 수 있습니다.';input.value='';return;}input.disabled=true;form.dataset.uploads=String(Number(form.dataset.uploads||0)+1);try{const item=all.find(i=>i.id===form.dataset.memorialId),photo=await window.SSKR_MEMORIAL_MEDIA.add(input.files[0],{account,item,visitId:row.dataset.editVisit});if(!row.isConnected)return;ids.push(photo.id);row.dataset.mediaIds=JSON.stringify(ids);row.querySelector('[data-photo-consent]').checked=false;row.querySelector('.memorial-edit-photos').insertAdjacentHTML('afterbegin',photoMarkup(photo));status.textContent='사진을 추가했습니다. 공개 동의와 변경 내용 저장을 확인해 주세요.';}catch(error){status.textContent=error.message;}finally{input.value='';input.disabled=false;form.dataset.uploads=String(Math.max(0,Number(form.dataset.uploads||0)-1));}}
     if (path === "/app/memorials") renderArchive();
     else if (path === "/app/my") renderMine();
     else if (path.startsWith("/app/memorials/mine/")) renderEditor(all.find((item) => editHref(item) === path));
@@ -130,14 +139,14 @@
     root.addEventListener("click", onClick);
     root.addEventListener("input", onInput);
     root.addEventListener("submit", onSubmit);
-    root.addEventListener("change", updateFilters);
+    root.addEventListener("change", updateFilters);root.addEventListener("change",onPhoto);
     root.addEventListener("error", onImageError, true);
     root.addEventListener("load", onImageLoad, true);
     return () => {
       if(path === "/app/memorials") archivePositions.set(cacheKey(),{count:visibleCount,y:window.scrollY});
       cancelAnimationFrame(restoreFrame);
       disposeJourney?.();
-      root.removeEventListener("change", updateFilters);
+      root.removeEventListener("change", updateFilters);root.removeEventListener("change",onPhoto);
       root.removeEventListener("error", onImageError, true);
       root.removeEventListener("load", onImageLoad, true);
       root.removeEventListener("click", onClick);

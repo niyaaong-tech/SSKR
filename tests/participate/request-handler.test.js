@@ -2,12 +2,23 @@ const test = require("node:test");
 const assert = require("node:assert/strict");
 const { handleParticipateRequest } = require("../../server/participate/request-handler");
 
+test("context exposes the event minimum and retains an explicitly configured value",async()=>{
+  const result=await handleParticipateRequest("context",{scenario:"guest"});
+  assert.equal(result.event.minimumSpotCheckins,10);
+  result.mockSnapshot.event.minimumSpotCheckins=12;
+  const configured=await handleParticipateRequest("context",{snapshot:result.mockSnapshot});
+  assert.equal(configured.event.minimumSpotCheckins,12);
+  assert.equal(configured.mockSnapshot.event.minimumSpotCheckins,12);
+  delete result.mockSnapshot.event.minimumSpotCheckins;
+  assert.equal((await handleParticipateRequest("context",{snapshot:result.mockSnapshot})).event.minimumSpotCheckins,10);
+});
+
 test("context scenario DTO resolves mode and permissions", async () => {
   const confirmed = await handleParticipateRequest("context", { scenario: "c-live-confirmed", account: { linked: true, provider: "kakao" } });
   assert.equal(confirmed.surface.mode, "MODE_C");
   assert.equal(confirmed.permissions.canOpenRideDay, true);
-  const waitlisted = await handleParticipateRequest("context", { scenario: "c-live-waitlisted", account: { linked: true, provider: "kakao" } });
-  assert.equal(waitlisted.surface.mode, "MODE_C");
+  const waitlisted = await handleParticipateRequest("context", { scenario: "guest", account: { linked: true, provider: "kakao" } });
+  assert.equal(waitlisted.surface.mode, "MODE_A");
   assert.equal(waitlisted.permissions.canOpenRideDay, false);
 });
 

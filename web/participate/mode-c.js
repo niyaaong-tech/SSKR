@@ -2,12 +2,12 @@
   const escapeHtml = (value) => String(value ?? "").replace(/[&<>'"]/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "'": "&#39;", '"': "&quot;" })[char]);
   function render(root, context, handlers) {
     const paymentDeferred = context.surface.variant === "PAYMENT_DEFERRED";
-    const waiting = context.surface.variant === "WAITLISTED";
+    const legacy = context.surface.variant === "LEGACY_SLOT_REVIEW";
     const participation = context.participation;
     const tier = context.tiers?.find((item) => paymentDeferred ? item.id === context.application?.priceTierId : item.code === participation?.registrationTierCode) || context.price;
-    const title = paymentDeferred ? "참가 신청이 저장되었습니다." : waiting ? "참가 대기 신청이 완료되었습니다." : `${context.event?.publicTitle || 'SSKR'} 참가가 확정되었습니다.`;
-    const description = paymentDeferred ? "신청 정보는 저장되었으며 결제만 남아 있습니다. SSKR 매니저 또는 이 화면에서 결제를 이어갈 수 있습니다." : waiting ? "참가 가능 인원이 확보되면 등록된 연락처로 안내해 드립니다." : "결제와 참가 등록이 모두 완료되었습니다. 이제 SSKR 매니저에서 이번 랠리를 준비할 수 있습니다.";
-    const status = paymentDeferred ? "결제 대기" : waiting ? "참가 대기" : "참가 확정";
+    const title = paymentDeferred ? "참가 신청이 저장되었습니다." : legacy ? "이전 참가 내역의 확인이 필요합니다." : `${context.event?.publicTitle || 'SSKR'} 참가가 확정되었습니다.`;
+    const description = paymentDeferred ? "신청 정보는 저장되었으며 결제만 남아 있습니다. SSKR 매니저 또는 이 화면에서 결제를 이어갈 수 있습니다." : legacy ? "이전 슬롯 대기 내역은 운영 확인이 필요합니다. 추가 결제 없이 신청 내역을 확인해 주세요." : "결제와 참가 등록이 모두 완료되었습니다. 이제 SSKR 매니저에서 이번 랠리를 준비할 수 있습니다.";
+    const status = paymentDeferred ? "결제 대기" : legacy ? "내역 확인 필요" : "참가 확정";
     const participantNumber = paymentDeferred ? "결제 후 배정" : participation?.participantNumber || "배정 대기";
     const paymentStatus = paymentDeferred ? "결제 전" : "결제 완료";
     root.innerHTML = `

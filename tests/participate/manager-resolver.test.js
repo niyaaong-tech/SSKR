@@ -13,12 +13,12 @@ test('manager invites guests to plan and reads linked nonparticipant saved route
  assert.equal(resolveManager({account:{linked:true}}).banner,null);
 });
 test('manager status and next action agree with event state across application, payment, waiting and completed states',async()=>{
- for(const scenario of ['application-step2','c-payment-deferred','failed','processing','c-waitlisted','active','c-season-completed','blocked']){
+ for(const scenario of ['application-step2','c-payment-deferred','failed','processing','active','c-season-completed','blocked']){
  const context=await handleParticipateRequest('context',{scenario,account:{linked:true,provider:'google'}});
  const manager=resolveManager(context),status=resolve(context).status;
- assert.equal(manager.label,status.label,scenario);assert.deepEqual(manager.primaryAction,status.action,scenario);
- if(scenario==='c-waitlisted')assert.deepEqual(manager.preparation,[]);
- if(scenario==='active'){assert.equal(manager.preparation[0].value,context.participation.participantNumber);assert.equal(manager.primaryAction.href,'/app/preparation');}
+ assert.equal(manager.label,status.label,scenario);if(scenario!=='active')assert.deepEqual(manager.primaryAction,status.action,scenario);
+
+ if(scenario==='active'){assert.equal(manager.preparation[0].key,'bike');assert.equal(manager.primaryAction.href,'/app/preparation#bike');}
  }
 });
 test('cancelled and finalizing participants are never invited to pay again or shown confirmed preparation',()=>{

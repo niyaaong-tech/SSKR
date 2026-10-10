@@ -21,6 +21,7 @@ const baseEvent = {
   seasonYear: 2027,
   name: "SUNRISE SUNSET KOREAN RALLY 2027",
   publicTitle: "SSKR 2027",
+  minimumSpotCheckins: 10,
   editionLabel: "2027 SEASON",
   category: "대한민국 대표 모터사이클 로드 랠리",
   description: "아름다운 라이딩 코스와 스팟을 연결하며\n다양한 미션을 수행하는 로드 랠리 이벤트",
@@ -35,14 +36,21 @@ const baseEvent = {
   seasonClearUntil: "2027-06-18T21:00:00+09:00",
   applicationOpenAt: "2027-04-01T09:00:00+09:00",
   applicationCloseAt: "2027-06-11T23:59:59+09:00",
-  bikeInfoDeadlineAt: "2027-05-31T23:59:59+09:00",
+  bikeInfoDeadlineAt: "2027-06-12T12:00:00+09:00",
+  startSelectionDeadlineAt: "2027-06-12T12:00:00+09:00",
+  kitAddressDeadlineAt: "2027-06-12T12:00:00+09:00",
+  kitDispatchAt: "2027-06-12T15:00:00+09:00",
+  kitDeliveryMode: "PRE_SHIPPING",
+  finishLocationId: "daecheon",
+  finishLocationName: "대천해수욕장",
+  eligibilitySummary: "이륜차 운전 자격과 유효한 보험을 갖추고, 본인의 바이크로 안전하게 주행할 수 있는 분",
+  refundPolicy: { status: "DRAFT", beforeShipping: "발송 전 취소·환불 가능", afterShipping: "발송 후 굿즈·배송 비용 등을 제외한 부분환불 검토", notice: "현재 개발용 정책입니다. 운영 전 환불 금액·기한과 행사 중단 기준을 확정해 공개합니다." },
   participationGuideVersion: "2027.1",
   agreementVersions: { TERMS: "2027.1", PRIVACY: "2027.1", LOCATION: "2027.1", MARKETING: "2027.1" },
   requiresThirdPartyAgreement: false,
   earlyAccessEnabled: true,
   registrationState: REGISTRATION.OPEN,
   capacityState: CAPACITY.AVAILABLE,
-  waitlistEnabled: true,
   capacityPolicy: { baseCapacity: 300, platinumExtraCapacity: 60, baseUsed: 218, platinumExtraUsed: 0 },
   stageOverride: EVENT_STAGE.SPOTS_CONFIRMED,
   isCurrent: true,
@@ -68,7 +76,7 @@ const priceTiers = Object.freeze([
   {
     id: "price-sskr-2027-platinum", eventId: "sskr-2027", code: REGISTRATION_TIER.PLATINUM, displayName: "플래티넘",
     amount: 190000, currency: "KRW", salesStartAt: "2027-04-15T00:00:00+09:00", salesEndAt: "2027-06-11T23:59:59+09:00",
-    capacityPoolId: "pool-platinum", benefitSetId: "benefit-platinum", benefits: ["기본 참가 서비스", "기념 T셔츠", "시즌 사진집", "메모리얼 웹서비스"], isActive: true, priority: 10
+    capacityPoolId: "pool-platinum", benefitSetId: "benefit-platinum", benefits: ["기본 참가 서비스", "시즌 굿즈 패키지", "기념 T셔츠", "시즌 사진집"], isActive: true, priority: 10
   }
 ]);
 
@@ -203,13 +211,11 @@ function createScenario(name = "a-open-unlinked") {
     case "tier-standard-ended": linked(); snapshot.mock.now = "2027-05-16T10:00:00+09:00"; snapshot.application = makeApplication({ acknowledgement: true, agreements: true }); break;
     case "tier-platinum-extra": linked(); snapshot.event.capacityPolicy.baseUsed = 300; snapshot.mock.now = "2027-05-16T10:00:00+09:00"; snapshot.application = makeApplication({ acknowledgement: true, agreements: true }); break;
     case "c-payment-deferred": linked(); snapshot.application = completeApplication(); snapshot.application.paymentDeferred = true; snapshot.application.paymentDeferredAt = snapshot.mock.now; break;
-    case "c-waitlisted": paid(SLOT_ALLOCATION.WAITLISTED); break;
     case "c-confirmed-spots": paid(SLOT_ALLOCATION.CONFIRMED); break;
     case "c-preparation": paid(SLOT_ALLOCATION.CONFIRMED, EVENT_STAGE.RIDE_PREPARATION); break;
     case "c-ride-check": paid(SLOT_ALLOCATION.CONFIRMED, EVENT_STAGE.RIDE_CHECK); break;
     case "c-countdown": paid(SLOT_ALLOCATION.CONFIRMED, EVENT_STAGE.COUNTDOWN); break;
     case "c-live-confirmed": paid(SLOT_ALLOCATION.CONFIRMED, EVENT_STAGE.LIVE); break;
-    case "c-live-waitlisted": paid(SLOT_ALLOCATION.WAITLISTED, EVENT_STAGE.LIVE); break;
     case "c-season-completed": paid(SLOT_ALLOCATION.CONFIRMED, EVENT_STAGE.SEASON_CLEAR, RUN_RESULT.COMPLETED); break;
     case "c-season-no-show": paid(SLOT_ALLOCATION.CONFIRMED, EVENT_STAGE.SEASON_CLEAR, RUN_RESULT.NO_SHOW); break;
     case "c-season-retired": paid(SLOT_ALLOCATION.CONFIRMED, EVENT_STAGE.SEASON_CLEAR, RUN_RESULT.RETIRED); break;

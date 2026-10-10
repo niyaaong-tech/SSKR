@@ -12,7 +12,7 @@ test('event display follows server timestamps and changed event records without 
  assert.equal(model.tiers.length,next.tiers.length);assert.equal(model.tiers[0].amount,next.tiers[0].displayAmount);
 });
 test('event page distinguishes saved, processing, waiting, confirmed and finished states',async()=>{
- const cases=[['c-payment-deferred','결제 대기','/participate?resumePayment=1'],['processing','결제 확인 중','/participate'],['c-waitlisted','참가 대기','/participate'],['active','참가 확정','/app/preparation'],['c-season-completed','완주','/app/my']];
+ const cases=[['c-payment-deferred','결제 대기','/participate?resumePayment=1'],['processing','결제 확인 중','/participate'],['active','참가 확정','/app/preparation'],['c-season-completed','완주','/app/my']];
  for(const [scenario,label,href] of cases){const dto=await handleParticipateRequest('context',{scenario,account:{linked:true,provider:'google'}}),model=resolve(dto);assert.equal(model.status.label,label,scenario);assert.equal(model.status.action.href,href,scenario);}
 });
 test('successful payment without a participant offers recovery, never payment again',()=>{

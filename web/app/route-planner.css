@@ -47,6 +47,10 @@ body.route-editor-active #app-main{padding-bottom:0}
 .rp-search-slot .spot-search{width:100%;min-width:0;margin:0}
 .rp-search-slot .spot-search input{width:100%;min-width:0;font-size:16px}
 .rp-place-detail h3{font-size:18px;margin:0 0 4px}
+.rp-insertion-control{display:grid;gap:4px;margin-bottom:10px;font-size:12px;color:var(--rp-muted)}
+.rp-insertion-control select{box-sizing:border-box;min-width:0;width:100%;min-height:44px;padding:6px 8px;background:#fff;border:1px solid #b8c9ae;border-radius:6px;color:#29432e;font:inherit;font-size:13px}
+.rp-insertion-preview{padding:8px;border-left:3px solid #668861;background:#edf3e7;font-size:12px}
+.rp-insertion-gap{overflow-wrap:anywhere}
 .rp-place-detail .rp-detail-region{margin:0 0 8px}
 .rp-place-detail>p{margin:8px 0;line-height:1.55}
 .rp-start-change{position:absolute;right:6px;top:9px;padding:4px 8px!important;font-size:12px!important}
@@ -159,3 +163,5 @@ body.route-editor-mobile{position:static;height:auto;overflow:visible}
 .is-mobile-editor.has-keyboard .rp-mobile-sticky{position:static}
 .is-mobile-editor.has-keyboard .rp-tabs{position:sticky;top:0;z-index:24}
 @media(max-width:800px) and (orientation:landscape){.is-editing.is-mobile-editor{--rp-map-height:clamp(180px,45svh,220px)}.is-mobile-editor .rp-mobile-sticky>.spot-map-host{--rp-photo-height:56px}.is-mobile-editor .spot-list-head{display:none}}
+
+.rp-event-context{font-size:12px;line-height:1.6;padding:12px;background:#f0f4eb;border-left:3px solid #b78841;margin:8px 0 14px}.rp-event-context p{margin:6px 0}.rp-schedule-status{background:none;border:0;color:#365849;text-align:left;min-height:44px;font:inherit;font-weight:700;cursor:pointer}.rp-route-tools{flex-wrap:wrap}.rp-route-tools button{min-height:32px}dialog input[type=time],dialog input[type=number]{min-height:44px}

@@ -12,7 +12,7 @@ const { resolveApplicationStep } = require("./application-step-resolver");
 function resolveModeAAction(event) {
   if (event.registrationState === REGISTRATION.OPEN) {
     if (event.capacityState === CAPACITY.FULL) {
-      if (event.waitlistEnabled) return { code: "START_APPLICATION", label: "참가 대기 신청하기", enabled: true };
+      if (event.capacityPolicy && event.capacityPolicy.platinumExtraUsed < event.capacityPolicy.platinumExtraCapacity) return { code: "START_APPLICATION", label: "참가 유형 확인", enabled: true };
       return { code: "NONE", label: "모집 마감", enabled: false };
     }
     return { code: "START_APPLICATION", label: "신청 계속하기", enabled: true };
@@ -39,7 +39,7 @@ function resolveSurface(context) {
     };
   }
   if (participation?.state === PARTICIPATION.ACTIVE) {
-    const variant = participation.slotAllocation === SLOT_ALLOCATION.WAITLISTED ? "WAITLISTED" : "CONFIRMED";
+    const variant = participation.slotAllocation === "WAITLISTED" ? "LEGACY_SLOT_REVIEW" : "CONFIRMED";
     return {
       mode: SURFACE_MODE.MODE_C,
       gate: null,

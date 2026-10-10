@@ -11,6 +11,8 @@
     $('detail-description').textContent=place.description; $('detail-region').textContent=place.region;
     $('detail-note').textContent=place.note; $('detail-source').href=place.source;
     $('detail-map').href=place.parking?`https://www.google.com/maps/search/?api=1&query=${place.parking.lat},${place.parking.lng}`:'https://map.naver.com/p/search/'+encodeURIComponent(place.region.split(' · ')[1]+' '+place.name);
+    $('detail-plan').href='/app/spots?mode=plan&fromExplore='+encodeURIComponent(place.id);
+    $('detail-plan').textContent=place.kind==='start'?'이 출발지로 루트 계획 →':'이 장소를 루트에서 검토 →';
     $('detail-map').innerHTML=(place.parking?'주차장 GPS로 안내':'지도에서 위치 확인')+' <span aria-hidden="true">↗</span>';
     $('detail-parking-row').hidden=!place.parking;
     $('detail-parking').textContent=place.parking?`${place.parking.lat.toFixed(6)}, ${place.parking.lng.toFixed(6)}`:'';

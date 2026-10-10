@@ -17,7 +17,7 @@ function validateState(context) {
   if (!participation && context.slotAllocation === SLOT_ALLOCATION.CONFIRMED) {
     push("CONFIRMED_SLOT_WITHOUT_PARTICIPATION", "참가권 없이 확정 Slot이 존재합니다.");
   }
-  if (participation?.slotAllocation === SLOT_ALLOCATION.WAITLISTED && participation.runResult === RUN_RESULT.STARTED) {
+  if (participation?.slotAllocation === "WAITLISTED" && participation.runResult === RUN_RESULT.STARTED) {
     push("WAITLISTED_RUN_STARTED", "참가 대기 상태에서 Run이 시작되었습니다.");
   }
 

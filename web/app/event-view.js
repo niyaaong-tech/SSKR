@@ -16,7 +16,7 @@
     if(relation==='PROCESSING')status={label:'결제 확인 중',title:'결제 결과를 확인하고 있습니다.',copy:'처리가 끝날 때까지 다시 결제하지 마세요. 현재 결제 상태를 확인할 수 있습니다.',action:action('결제 상태 확인')};
     if(payment?.state==='SUCCEEDED'&&!participation)status={label:'참가권 발급 중',title:'결제는 완료됐습니다.',copy:'참가권 발급 상태를 확인하고 있습니다. 추가 결제 없이 진행됩니다.',action:action('발급 상태 확인')};
     if(participation?.state==='ACTIVE')status={label:'참가 확정',title:title+' 참가가 확정됐습니다.',copy:'참가 정보와 출발 전 준비 사항을 확인해 주세요.',action:action('참가 준비 확인','/app/preparation')};
-    if(participation?.state==='ACTIVE'&&participation.slotAllocation==='WAITLISTED')status={label:'참가 대기',title:'참가 배정을 기다리고 있습니다.',copy:'아직 참가가 확정되지 않았습니다. 배정 상태와 안내를 확인해 주세요.',action:action('참가 대기 내역 확인')};
+    if(participation?.state==='ACTIVE'&&participation.slotAllocation==='WAITLISTED')status={label:'내역 확인 필요',title:'이전 참가 내역을 확인해 주세요.',copy:'이전 슬롯 대기 내역은 운영 확인이 필요합니다. 추가 결제를 진행하지 마세요.',action:action('이전 내역 확인')};
     if(participation?.state==='ACTIVE'&&participation.slotAllocation!=='WAITLISTED'&&event.resolvedStage==='SEASON_CLEAR'){
       const result=({COMPLETED:'완주',NO_SHOW:'미참가',RETIRED:'주행 중단',INVALIDATED:'기록 무효'})[participation.runResult]||'결과 확인 중';
       status={label:result,title:'행사가 종료됐습니다.',copy:'참가 결과와 남긴 기록을 내 기록에서 확인할 수 있습니다.',action:action('내 기록 보기','/app/my')};

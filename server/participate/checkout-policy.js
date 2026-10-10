@@ -33,11 +33,11 @@ function evaluateCheckoutEligibility({ application, event, participation, price,
     return { allowed: true, slotTarget: SLOT_ALLOCATION.CONFIRMED, capacityPool: tier.capacityPool, tier, closeApplication: false, reason: null, warnings: [] };
   }
 
-  if (event.capacityState === CAPACITY.FULL && !event.waitlistEnabled) return deny(CLOSE_REASON.CAPACITY_FULL, "모집 정원이 모두 찼습니다.");
+  if (event.capacityState === CAPACITY.FULL) return deny(CLOSE_REASON.CAPACITY_FULL, "모집 정원이 모두 찼습니다. 결제를 진행하지 않습니다.");
 
   return {
     allowed: true,
-    slotTarget: event.capacityState === CAPACITY.FULL ? SLOT_ALLOCATION.WAITLISTED : SLOT_ALLOCATION.CONFIRMED,
+    slotTarget: SLOT_ALLOCATION.CONFIRMED,
     capacityPool: null,
     tier: null,
     closeApplication: false,

@@ -25,6 +25,79 @@ function memoryStorage() {
 }
 const account = { id: 'rider-1', linked: true, participant: false };
 
+test('automatic insertion chooses first, middle and last gaps without moving existing stops',()=>{
+  const {catalog,provider,plan}=fixture();plan.stopIds=['spot-5','spot-12'];
+  for(const [id,at] of [['spot-1',0],['spot-8',1],['spot-15',2]]){
+    const before=structuredClone(plan),choice=planner.bestInsertion(plan,id,catalog,provider);
+    assert.equal(choice.at,at);const next=structuredClone(plan);next.stopIds.splice(choice.at,0,id);
+    assert.deepEqual(next.stopIds.filter(x=>x!==id),plan.stopIds);assert.deepEqual(plan,before);
+    const a=planner.status(plan,catalog,provider),b=planner.status(next,catalog,provider);
+    assert.ok(Math.abs(b.distanceMeters-a.distanceMeters-choice.addedDistanceMeters)<1e-6);
+    assert.ok(Math.abs(b.durationSeconds-a.durationSeconds-choice.addedDurationSeconds)<1e-6);
+  }
+});
+
+test('directed insertion ties use time then the earlier gap, never reverse road costs',()=>{
+  const {catalog,plan}=fixture(3);plan.stopIds=['spot-1','spot-3'];
+  const times=new Map(),distances=new Map([['spot-2:start',1],['spot-1:spot-2',500]]);
+  const provider={summary(a,b){return {distanceMeters:distances.get(a+':'+b)??100,durationSeconds:times.get(a+':'+b)??10};}};
+  assert.equal(planner.bestInsertion(plan,'spot-2',catalog,provider).at,0);
+  times.set('start:spot-2',40);assert.equal(planner.bestInsertion(plan,'spot-2',catalog,provider).at,2);
+  distances.clear();times.clear();assert.equal(planner.bestInsertion(plan,'spot-2',catalog,provider).at,0);
+  times.set('start:spot-2',40);assert.equal(planner.bestInsertion(plan,'spot-2',catalog,provider).at,1);
+  assert.equal(planner.bestInsertion(plan,'spot-2',catalog,provider,{afterId:'spot-3'}).at,2);
+});
+
+test('insertion rejects invalid anchors, duplicates, fixed endpoints and unavailable roads',()=>{
+  const {catalog,provider,blocked,plan}=fixture();plan.stopIds=['spot-3','spot-7'];
+  for(const id of ['spot-3','start','finish','removed'])assert.equal(planner.bestInsertion(plan,id,catalog,provider),null);
+  for(const afterId of ['finish','removed','spot-1'])assert.equal(planner.bestInsertion(plan,'spot-4',catalog,provider,{afterId}),null);
+  assert.equal(planner.bestInsertion({...plan,startId:null},'spot-4',catalog,provider),null);
+  blocked.add('spot-4:spot-7');assert.equal(planner.bestInsertion(plan,'spot-4',catalog,provider,{afterId:'spot-3'}),null);
+  assert.notEqual(planner.bestInsertion(plan,'spot-4',catalog,provider),null);
+  blocked.add('spot-3:spot-7');assert.equal(planner.bestInsertion(plan,'spot-4',catalog,provider),null);
+});
+
+test('route-wide and manual recommendations report the same exact deltas used for insertion',()=>{
+  const {catalog,provider,plan}=fixture();
+  assert.deepEqual(planner.insertionRecommendations(plan,catalog,provider).map(x=>x.placeId),planner.nextRecommendations(plan,'start',catalog,provider).map(x=>x.placeId));
+  plan.stopIds=['spot-3','spot-7','spot-14'];const before=planner.status(plan,catalog,provider);
+  for(const afterId of [null,'start','spot-3','spot-7','spot-14']){
+    const choices=planner.insertionRecommendations(plan,catalog,provider,{afterId,limit:30});assert.ok(choices.length);
+    for(const choice of choices){
+      assert.deepEqual(planner.bestInsertion(plan,choice.placeId,catalog,provider,{afterId}),Object.fromEntries(Object.entries(choice).filter(([key])=>key!=='reason')));
+      const next=structuredClone(plan);next.stopIds.splice(choice.at,0,choice.placeId);const after=planner.status(next,catalog,provider);
+      assert.ok(Math.abs(after.distanceMeters-before.distanceMeters-choice.addedDistanceMeters)<1e-6);
+      assert.ok(Math.abs(after.durationSeconds-before.durationSeconds-choice.addedDurationSeconds)<1e-6);
+    }
+  }
+});
+
+test('the bundled directed road matrix inserts Auraji near Gangneung instead of after the last stop',()=>{
+  const catalog=require('../../web/app/spot-catalog'),manifest=require('../../web/shared/routes/manifest.json'),run=require('../../web/app/data/routes/run-001.json');
+  const indices=new Map(manifest.placeIds.map((id,i)=>[id,i])),provider={summary(a,b){const i=indices.get(a),j=indices.get(b);if(i===undefined||j===undefined)return null;return {distanceMeters:manifest.distances[i][j],durationSeconds:manifest.durations[i][j]};}};
+  const ids=[run.legs[0].fromLocationId,...run.legs.map(leg=>leg.toLocationId)],plan={...planner.createEmpty(catalog),startId:ids[0],stopIds:ids.slice(1,-1)};
+  const best=planner.bestInsertion(plan,'auraji',catalog,provider),last=planner.bestInsertion(plan,'auraji',catalog,provider,{afterId:plan.stopIds.at(-1)});
+  assert.ok(best.addedDistanceMeters<5000);assert.ok(last.addedDistanceMeters>400000);assert.equal(best.fromId,'gangneung-market');
+  const next=structuredClone(plan);next.stopIds.splice(best.at,0,'auraji');
+  assert.deepEqual(next.stopIds.filter(id=>id!=='auraji'),plan.stopIds);
+  assert.equal(planner.status(next,catalog,provider).distanceMeters-planner.status(plan,catalog,provider).distanceMeters,best.addedDistanceMeters);
+});
+
+test('event minimum changes auto-fill and completion without counting the endpoints',()=>{
+  const {catalog,provider,plan}=fixture();
+  for(const minimumSpotCheckins of [3,12]){
+    const event={minimumSpotCheckins},filled=planner.autoFill(plan,catalog,provider,{event});
+    assert.equal(filled.stopIds.length,minimumSpotCheckins);
+    assert.equal(planner.status(filled,catalog,provider,event).complete,true);
+    assert.equal(planner.status({...filled,stopIds:filled.stopIds.slice(1)},catalog,provider,event).complete,false);
+    assert.equal(planner.orderedIds(filled).length,minimumSpotCheckins+2);
+  }
+  const close=planner.nextRecommendations(plan,plan.startId,catalog,provider,{event:{minimumSpotCheckins:12}})[0];
+  const farther=planner.nextRecommendations(plan,plan.startId,catalog,provider,{event:{minimumSpotCheckins:3}})[0];
+  assert.ok(close.fromDistanceMeters<farther.fromDistanceMeters);
+});
+
 test('saved drafts retain their road-data version without copying road geometry', () => {
   const {catalog,plan}=fixture(),store=planner.createStore(memoryStorage(),catalog);
   const saved=store.save({...plan,routingVersion:'road-snapshot-123'},account);

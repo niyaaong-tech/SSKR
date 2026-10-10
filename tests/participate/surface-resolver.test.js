@@ -10,7 +10,7 @@ test("surface resolver prioritizes participation and transactions", () => {
   assert.equal(resolveSurface({ event, application: draft }).mode, "MODE_B");
   assert.equal(resolveSurface({ event, application: { ...draft, state: "SUBMITTED" } }).mode, "MODE_B");
   assert.equal(resolveSurface({ event, application: draft, payment: { state: "PROCESSING" } }).step, "STEP_4");
-  assert.equal(resolveSurface({ event, participation: { state: "ACTIVE", slotAllocation: "WAITLISTED" } }).variant, "WAITLISTED");
+  assert.equal(resolveSurface({ event, participation: { state: "ACTIVE", slotAllocation: "WAITLISTED" } }).variant, "LEGACY_SLOT_REVIEW");
   assert.equal(resolveSurface({ event, participation: { state: "ACTIVE", slotAllocation: "CONFIRMED" } }).variant, "CONFIRMED");
 });
 

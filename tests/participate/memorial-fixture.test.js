@@ -7,6 +7,7 @@ const vm=require('node:vm');
 const root=path.resolve(__dirname,'../..');
 const data=require('../../data/fixtures/memorial-event.json');
 const catalog=require('../../web/app/spot-catalog');
+const {checkinRequirement}=require('../../web/shared/checkin-rules');
 const historicalCatalog=[...catalog,...(globalThis.SSKR_SPOT_LEGACY||[])];
 const {decode,gpx}=require('../../web/app/memorial-journey');
 const {collections,sample,filterMemorials}=require('../../web/app/memorial-store');
@@ -29,7 +30,7 @@ test('price snapshots and application-payment-participation relationships reconc
   assert.equal(data.payments.reduce((n,p)=>n+p.amount,0),20500000);
 });
 test('30 distinct road journeys use existing five starts, actual catalog spots and the same finish',()=>{
-  const locations=new Map(historicalCatalog.map(p=>[p.id,p]));assert.equal(new Set(data.memorials.map(m=>m.visitedLocationIds.join(','))).size,30);
+  const locations=new Map(catalog.map(p=>[p.id,p]));assert.equal(new Set(data.memorials.map(m=>m.visitedLocationIds.join(','))).size,30);
   assert.equal(new Set(routes.map(r=>crypto.createHash('sha256').update(r.legs.map(l=>l.shape).join('|')).digest('hex'))).size,30);
   assert.equal(new Set(data.memorials.map(m=>m.startLocationId)).size,5);
   for(const m of data.memorials){assert.equal(locations.get(m.startLocationId).kind,'start');assert.equal(m.finishLocationId,'daecheon');assert.ok(m.visitedLocationIds.every(id=>locations.has(id)));assert.equal(m.spotCount,m.visitedLocationIds.length-2);assert.equal(m.coverLocationId&&m.visitedLocationIds.includes(m.coverLocationId),true);}
@@ -61,10 +62,17 @@ test('GPX exports contain route samples, UTC times and explicit synthetic proven
   const r=routes[0],xml=gpx(r,'<테스트 & 기록>');assert.match(xml,/SYNTHETIC TEST DATA/);assert.match(xml,/Not recorded GPS/);assert.match(xml,/&lt;테스트 &amp; 기록&gt;/);assert.equal((xml.match(/<trkpt /g)||[]).length,r.sampleCount);assert.equal((xml.match(/<trkseg>/g)||[]).length,r.legs.length);assert.ok(xml.includes(r.startedAt));assert.ok(xml.includes(r.finishedAt));
 });
 
-test('nicknames are unique and all visit counts from three through twelve are represented',()=>{
+test('all completed memorials meet their event minimum with distinct intermediate check-ins',()=>{
   assert.equal(new Set(data.users.map(u=>u.displayName)).size,200);
   assert.ok(data.users.every(u=>!u.displayName.includes('테스트 라이더')));
-  for(let n=3;n<=12;n++)assert.ok(data.memorials.some(m=>m.spotCount===n));
+  assert.equal(data.event.minimumSpotCheckins,10);
+  for(let n=10;n<=12;n++)assert.ok(data.memorials.some(m=>m.spotCount===n));
+  for(const m of data.memorials){
+    const requirement=checkinRequirement(data.event,m.visits,{startId:m.startLocationId,finishId:m.finishLocationId});
+    assert.equal(requirement.met,true);assert.equal(requirement.spotCount,m.spotCount);assert.ok(requirement.totalCheckins>=12);
+    assert.equal(m.result,'완주');assert.equal(new Set(m.visitedLocationIds).size,m.visitedLocationIds.length);
+    assert.equal(data.participations.find(p=>p.id===m.participationId).runResult,'COMPLETED');
+  }
 });
 test('unified visits, event locations and media keep relational integrity and mixed photo cases',()=>{
   const {selectPhoto,selectCover}=require('../../web/app/memorial-store');

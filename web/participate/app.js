@@ -21,6 +21,14 @@
   let context = null;
   let surfaceMode = SURFACE_MODES.LOADING;
   let pending = false;
+  const esc=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  function renderPublicGuide(nextContext) {
+    const e=nextContext.event,tiers=nextContext.tiers||[],policy=e.refundPolicy;
+    let preferred='';try{preferred=sessionStorage.getItem('sskr.participate.tier.'+e.id)||'';}catch{}
+    document.querySelector('#public-event-guide').innerHTML=`<h2>${esc(e.publicTitle)} 참가 안내</h2><p><strong>공식 출발 → 경유 ${e.minimumSpotCheckins}곳 이상 → ${esc(e.finishLocationName)}</strong></p><p>출발·도착을 포함해 총 ${e.minimumSpotCheckins+2}곳 이상 체크인합니다. 일출 이후 출발하고 일몰 전에 도착해야 합니다. 루트 계획의 선택 수는 실제 체크인과 별개입니다.</p><p>${esc(e.eligibilitySummary)}</p><a href="/explore/">출발지와 스팟 미리 보기 →</a><h3>참가 유형과 혜택</h3><p>모든 참가 유형에서 메모리얼을 남길 수 있습니다. 공개 탐색·루트 체험은 무료이며, 로그인하면 참가 신청 전에도 루트를 저장할 수 있습니다.</p><div class="public-tier-grid">${tiers.map(t=>`<label class="public-tier ${t.availability.selectable?'':'is-disabled'}"><input type="radio" name="publicTier" value="${esc(t.id)}" ${preferred===t.id?'checked':''} ${t.availability.selectable?'':'disabled'}><strong>${esc(t.displayName)}</strong><b>${esc(t.displayAmount)}</b><span>${esc(t.availability.label)}</span><ul>${t.benefits.map(b=>`<li>${esc(b)}</li>`).join('')}</ul></label>`).join('')}</div><p>선택한 유형은 신청 단계로 이어집니다. 정원을 먼저 확보한 뒤 결제하며, 정원이 없으면 결제를 진행하지 않습니다.</p><details><summary>취소·환불 안내</summary><p>${esc(policy?.beforeShipping||'운영 정책 공개 예정')}</p><p>${esc(policy?.afterShipping||'운영 정책 공개 예정')}</p><p>${esc(policy?.notice||'확정된 정책은 신청 전 안내합니다.')}</p></details>`;
+    const chosen=tiers.find(t=>t.id===preferred);if(chosen)document.querySelector('#event-facts dd').innerHTML=esc(chosen.displayAmount)+'<small>1인 기준 · 부가세 포함</small>';
+    document.querySelectorAll('input[name="publicTier"]').forEach(input=>input.addEventListener('change',()=>{try{sessionStorage.setItem('sskr.participate.tier.'+e.id,input.value);}catch{}const chosen=tiers.find(t=>t.id===input.value);if(chosen){const fact=document.querySelector('#event-facts dd');fact.innerHTML=esc(chosen.displayAmount)+'<small>1인 기준 · 부가세 포함</small>';}}));
+  }
 
   function renderMarketing() {
     const benefitGrid = document.querySelector("#benefit-grid");
@@ -68,7 +76,8 @@
       { icon: "⚑", label: "행사 일시", value: event.eventDateDisplay, note: "당일 행사" },
       { icon: "◎", label: "모집 정원", value: event.capacityDisplay, note: event.capacityNote }
     ];
-    document.querySelector("#event-facts").innerHTML = facts.map((fact) => `<div class="event-fact"><dt><i aria-hidden="true">${fact.icon}</i>${fact.label}</dt><dd>${fact.value}<small>${fact.note}</small></dd></div>`).join("");
+    document.querySelector("#event-facts").innerHTML = facts.map((fact) => `<div class="event-fact"><dt><i aria-hidden="true">${fact.icon}</i>${fact.label}</dt><dd>${esc(fact.value)}<small>${esc(fact.note)}</small></dd></div>`).join("");
+    renderPublicGuide(nextContext);
   }
 
   function focusActive(view, shouldFocus) {

@@ -1,10 +1,11 @@
 (function (root, factory) {
-  const api = factory();
+  const api = factory(typeof module === 'object' && module.exports ? require('../shared/checkin-rules') : root.SSKR_CHECKIN_RULES);
   if (typeof module === 'object' && module.exports) module.exports = api;
   else root.SSKR_ROUTE_PLAN = Object.freeze(api);
-})(typeof globalThis !== 'undefined' ? globalThis : this, () => {
+})(typeof globalThis !== 'undefined' ? globalThis : this, rules => {
   'use strict';
-  const MIN_STOPS = 10;
+  const MIN_STOPS = rules.DEFAULT_MINIMUM_SPOT_CHECKINS;
+  const minimumStops = event => rules.minimumSpotCheckins(event);
   const STORE_VERSION = 1;
   const clone = value => JSON.parse(JSON.stringify(value));
   const listPlaces = catalog => Array.isArray(catalog) ? catalog : catalog?.places || [];
@@ -73,11 +74,12 @@
     }
     return { distanceMeters, durationSeconds };
   }
-  function status(value, catalog, provider) {
+  function status(value, catalog, provider, event = {}) {
     const plan = normalize(value, catalog), issues = referenceIssues(plan, catalog), index = catalogIndex(catalog);
     const spotCount = new Set(plan.stopIds.filter(id => index.get(id)?.kind === 'spot')).size;
     if (!plan.startId) issues.unshift({ code: 'START_REQUIRED', message: '출발지를 선택해 주세요.' });
-    if (spotCount < MIN_STOPS) issues.push({ code: 'MIN_STOPS', message: `경유 스팟 ${MIN_STOPS - spotCount}곳을 더 고르면 루트가 완성됩니다.` });
+    const minimum = minimumStops(event);
+    if (spotCount < minimum) issues.push({ code: 'MIN_STOPS', message: `경유 스팟 ${minimum - spotCount}곳을 더 고르면 루트가 완성됩니다.` });
     const ids = orderedIds(plan);
     for (let i = 1; i < ids.length; i++) {
       if (!leg(provider, ids[i - 1], ids[i])) issues.push({ code: 'UNREACHABLE', fromId: ids[i - 1], toId: ids[i], message: `${index.get(ids[i - 1])?.name || '이전 장소'}에서 ${index.get(ids[i])?.name || '다음 장소'}까지의 도로를 확인할 수 없습니다. 스팟이나 순서를 바꿔 주세요.` });
@@ -90,17 +92,54 @@
     const selected = plan.stopIds.indexOf(anchorId);
     return selected >= 0 ? selected + 1 : plan.stopIds.length;
   }
+  function insertionOptions(value, placeId, catalog, provider, { afterId = null } = {}) {
+    const plan = normalize(value, catalog), index = catalogIndex(catalog);
+    if (!plan.startId || referenceIssues(plan, catalog).length || !totals(orderedIds(plan), provider) || index.get(placeId)?.kind !== 'spot' || orderedIds(plan).includes(placeId)) return [];
+    if (afterId !== null && afterId !== plan.startId && !plan.stopIds.includes(afterId)) return [];
+    const positions = afterId === null ? Array.from({length:plan.stopIds.length + 1}, (_,i)=>i) : [insertionIndex(plan, afterId)];
+    return positions.flatMap(at => {
+      const fromId = at ? plan.stopIds[at-1] : plan.startId, toId = plan.stopIds[at] || plan.finishId;
+      const baseline = leg(provider, fromId, toId), incoming = leg(provider, fromId, placeId), outgoing = leg(provider, placeId, toId);
+      if (!baseline || !incoming || !outgoing) return [];
+      return [{placeId,at,fromId,toId,fromDistanceMeters:incoming.distanceMeters,durationSeconds:incoming.durationSeconds,
+        addedDistanceMeters:incoming.distanceMeters+outgoing.distanceMeters-baseline.distanceMeters,
+        addedDurationSeconds:incoming.durationSeconds+outgoing.durationSeconds-baseline.durationSeconds}];
+    });
+  }
+  function bestInsertion(value, placeId, catalog, provider, options) {
+    return insertionOptions(value,placeId,catalog,provider,options).sort((a,b)=>a.addedDistanceMeters-b.addedDistanceMeters || a.addedDurationSeconds-b.addedDurationSeconds || a.at-b.at)[0] || null;
+  }
+  function insertionRecommendations(value, catalog, provider, { afterId = null, limit = 3, event = {} } = {}) {
+    const plan=normalize(value,catalog), index=catalogIndex(catalog), trip=totals(orderedIds(plan),provider);
+    if(!plan.startId || !trip || referenceIssues(plan,catalog).length)return [];
+    if(!plan.stopIds.length)return nextRecommendations(plan,plan.startId,catalog,provider,{limit,event}).flatMap(candidate=>{
+      const insertion=bestInsertion(plan,candidate.placeId,catalog,provider,{afterId});return insertion?[{...candidate,...insertion}]:[];
+    });
+    const scale=Math.max(5000,trip.distanceMeters/(minimumStops(event)+1)),counts=categoryCounts(plan,index),selected=[];
+    const candidates=listPlaces(catalog).flatMap(place=>{
+      const insertion=bestInsertion(plan,place.id,catalog,provider,{afterId});if(!insertion)return [];
+      const nearest=Math.min(...plan.stopIds.map(id=>leg(provider,id,place.id)?.distanceMeters??Infinity));
+      const repetition=(counts.get(place.category)||0)*scale*.23,crowding=Math.max(0,scale*.5-nearest)*.7;
+      return [{...insertion,score:insertion.addedDistanceMeters+repetition+crowding,reason:afterId===null?'루트 전체에 추가':'지정 구간에 추가'}];
+    });
+    while(candidates.length&&selected.length<Math.max(0,Math.floor(Number(limit)||0))){
+      const penalty=entry=>selected.reduce((sum,item)=>sum+(index.get(item.placeId)?.category===index.get(entry.placeId)?.category?7500:0)+Math.max(0,7000-(leg(provider,item.placeId,entry.placeId)?.distanceMeters??Infinity)),0);
+      candidates.sort((a,b)=>a.score+penalty(a)-b.score-penalty(b)||a.addedDurationSeconds-b.addedDurationSeconds||a.placeId.localeCompare(b.placeId));
+      const {score,...candidate}=candidates.shift();selected.push(candidate);
+    }
+    return selected;
+  }
   function categoryCounts(plan, index) {
     const counts = new Map();
     for (const id of plan.stopIds) { const category = index.get(id)?.category; if (category) counts.set(category, (counts.get(category) || 0) + 1); }
     return counts;
   }
-  function rankedCandidates(plan, at, catalog, provider, variant, fillMode) {
+  function rankedCandidates(plan, at, catalog, provider, variant, fillMode, minimum = MIN_STOPS) {
     const index = catalogIndex(catalog), used = new Set(orderedIds(plan)), counts = categoryCounts(plan, index);
     const from = at ? plan.stopIds[at - 1] : plan.startId, to = plan.stopIds[at] || plan.finishId;
     const baseline = leg(provider, from, to), fromFinish = leg(provider, from, plan.finishId);
     const trip = totals(orderedIds(plan), provider);
-    const scale = Math.max(5000, (trip?.distanceMeters || baseline?.distanceMeters || 150000) / (MIN_STOPS + 1));
+    const scale = Math.max(5000, (trip?.distanceMeters || baseline?.distanceMeters || 150000) / (minimum + 1));
     return listPlaces(catalog).filter(p => p.kind === 'spot' && !used.has(p.id)).flatMap(place => {
       const incoming = leg(provider, from, place.id), outgoing = leg(provider, place.id, to), remaining = leg(provider, place.id, plan.finishId);
       if (!incoming || !outgoing || !remaining) return [];
@@ -115,10 +154,10 @@
       return [{ placeId: place.id, fromDistanceMeters: incoming.distanceMeters, addedDistanceMeters: Math.round(added), durationSeconds: incoming.durationSeconds, reason, at, score: added + backtrack * 0.65 + repetition + crowding - spread + variation }];
     }).sort((a, b) => a.score - b.score || a.placeId.localeCompare(b.placeId));
   }
-  function recommendations(value, anchorId, catalog, provider, { limit = 3, variant = 0 } = {}) {
+  function recommendations(value, anchorId, catalog, provider, { limit = 3, variant = 0, event = {} } = {}) {
     const plan = normalize(value, catalog);
     if (!plan.startId || referenceIssues(plan, catalog).length) return [];
-    const index = catalogIndex(catalog), candidates = rankedCandidates(plan, insertionIndex(plan, anchorId), catalog, provider, variant, false), selected = [];
+    const index = catalogIndex(catalog), candidates = rankedCandidates(plan, insertionIndex(plan, anchorId), catalog, provider, variant, false, minimumStops(event)), selected = [];
     const count = Math.max(0, Math.min(listPlaces(catalog).length, Math.floor(Number(limit) || 0)));
     while (candidates.length && selected.length < count) {
       candidates.sort((a, b) => {
@@ -129,14 +168,14 @@
     }
     return selected;
   }
-  function nextRecommendations(value, currentId, catalog, provider, { limit = 3 } = {}) {
+  function nextRecommendations(value, currentId, catalog, provider, { limit = 3, event = {} } = {}) {
     const plan = normalize(value, catalog), current = currentId || plan.stopIds.at(-1) || plan.startId;
     if (!plan.startId || !current || referenceIssues(plan, catalog).length) return [];
     const used = new Set(orderedIds(plan)), position = insertionIndex(plan, current);
     const next = plan.stopIds[position] || plan.finishId;
     const baseline = leg(provider, current, next), finish = leg(provider, current, plan.finishId);
     if (!baseline || !finish) return [];
-    const target = next === plan.finishId ? finish.distanceMeters / Math.max(2, 10 - plan.stopIds.length) : baseline.distanceMeters / 2;
+    const target = next === plan.finishId ? finish.distanceMeters / Math.max(2, minimumStops(event) - plan.stopIds.length) : baseline.distanceMeters / 2;
     return listPlaces(catalog).filter(place => place.kind === 'spot' && !used.has(place.id) && place.id !== current)
       .flatMap(place => {
         const incoming = leg(provider, current, place.id), outgoing = leg(provider, place.id, next);
@@ -153,13 +192,14 @@
       .slice(0, Math.max(0, Math.floor(Number(limit) || 0)))
       .map(({ score, ...entry }) => entry);
   }
-  function autoFill(value, catalog, provider, { variant = 0 } = {}) {
+  function autoFill(value, catalog, provider, { variant = 0, event = {} } = {}) {
     const plan = normalize(value, catalog);
     if (!plan.startId || referenceIssues(plan, catalog).length) return plan;
-    while (plan.stopIds.length < MIN_STOPS) {
+    const minimum = minimumStops(event);
+    while (plan.stopIds.length < minimum) {
       let best = null;
       for (let at = 0; at <= plan.stopIds.length; at++) {
-        const candidate = rankedCandidates(plan, at, catalog, provider, variant, true)[0];
+        const candidate = rankedCandidates(plan, at, catalog, provider, variant, true, minimum)[0];
         if (candidate && (!best || candidate.score < best.score || candidate.score === best.score && candidate.placeId < best.placeId)) best = candidate;
       }
       if (!best) break;
@@ -236,5 +276,5 @@
     }
     return { list, get, save, remove };
   }
-  return { MIN_STOPS, createEmpty, normalize, orderedIds, status, recommendations, nextRecommendations, autoFill, optimize, createStore };
+  return { MIN_STOPS, minimumStops, createEmpty, normalize, orderedIds, status, insertionOptions, bestInsertion, insertionRecommendations, recommendations, nextRecommendations, autoFill, optimize, createStore };
 });

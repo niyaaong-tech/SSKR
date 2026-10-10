@@ -11,8 +11,8 @@ test('About keeps eight scenes and all requested background and inset assets',()
   const ids=[...html.matchAll(/<section[^>]+id="(chapter-\d+)"/g)].map(m=>m[1]);
   assert.equal(ids.length,8);assert.equal(new Set(ids).size,8);
   const images=[...html.matchAll(/<img[^>]+src="([^"]+)"/g)].map(m=>m[1]);
-  assert.equal(images.length,15);
-  for(const url of images){assert.ok(fs.existsSync(path.join(root,'web'+url)),url);}
+  assert.equal(images.filter(url=>url.startsWith('/about/assets/')).length,15);
+  for(const url of images){assert.ok(fs.existsSync(path.join(root,url.startsWith('/web/')?url.slice(1):'web'+url)),url);}
   for(const name of ['SSKR_info02.webp','SSKR_info11.webp','sskr_sp1.webp','sskr_sp2.webp','sskr_sp3.webp','sskr_memorial.webp','SSKR_info12.webp','SSKR_info13.webp','SSKR_info14.webp','sskr_web1.webp'])assert.ok(images.includes('/about/assets/'+name),name);
   assert.doesNotMatch(html,/class="eyebrow"|신청 방법 알아보기|신청 후에는 매니저에서 준비 상태를 확인하세요/);
   assert.doesNotMatch(html,/<img[^>]+src="[^"]+\.png"|class="reading-controls"/);

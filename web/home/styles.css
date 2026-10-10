@@ -136,3 +136,27 @@ html{scrollbar-width:none}html::-webkit-scrollbar{display:none}.scene-rail{displ
 .intro-deck{grid-template-columns:1fr}
 
 .home-example-note{display:block;max-width:36em;font-size:12px;line-height:1.6;margin-top:16px;color:#edf2ec}.home-example-note a{color:inherit}
+
+/* Keep the memorial copy clear of all eight photographs without dimming the gallery. */
+.scene-copy-memory p{color:rgba(255,255,255,.9)}
+.scene-copy-memory :is(h2,p){text-shadow:0 2px 14px rgba(4,9,12,.8)}
+.story-index.is-memory{padding:8px 12px;border-radius:10px;background:rgba(9,16,18,.82)}
+@media(min-width:901px) and (prefers-reduced-motion:no-preference){
+ .scene-copy-memory{top:max(96px,12svh);width:min(28vw,440px);max-width:none}
+ .scene-copy-memory p{margin-top:18px}
+ .memory-layer .memory-card{width:min(13vw,220px);right:auto;top:23svh;bottom:auto}
+ .memory-layer .memory-card div{height:clamp(90px,9vw,140px)}
+ .memory-card-8,.memory-card-6{left:38%}
+ .memory-card-7,.memory-card-4{left:53%}
+ .memory-card-5,.memory-card-2{left:68%}
+ .memory-card-3,.memory-card-1{left:83%}
+ .memory-layer :is(.memory-card-6,.memory-card-4,.memory-card-2,.memory-card-1){top:auto;bottom:4svh}
+}
+@media(max-width:900px) and (prefers-reduced-motion:no-preference){
+ .memory-layer .memory-card{width:min(21.5vw,130px);right:auto;top:max(38svh,var(--memory-copy-bottom,300px));bottom:auto}
+ .memory-card-8,.memory-card-6{left:4%}
+ .memory-card-7,.memory-card-4{left:27%}
+ .memory-card-5,.memory-card-2{left:50%}
+ .memory-card-3,.memory-card-1{left:73%}
+ .memory-layer :is(.memory-card-6,.memory-card-4,.memory-card-2,.memory-card-1){top:auto;bottom:6svh}
+}

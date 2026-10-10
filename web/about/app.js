@@ -165,6 +165,11 @@
   document.querySelectorAll('a[href^="#chapter-"]').forEach(link=>link.addEventListener('click',event=>{
     const index=scenes.findIndex(scene=>'#'+scene.id===link.getAttribute('href'));
     if(index<0)return;
+    if(link.classList.contains('skip-link')){
+      event.preventDefault();history.replaceState(null,'','#'+scenes[index].id);goTo(index,false);
+      if(cinematic){current=target=index+.14;render();}
+      const targetElement=scenes[index].querySelector('h1,h2')||scenes[index];targetElement.tabIndex=-1;targetElement.focus({preventScroll:true});return;
+    }
     if(cinematic){event.preventDefault();history.replaceState(null,'','#'+scenes[index].id);goTo(index);}
   }));
   previous.addEventListener('click',()=>goTo(active-1));next.addEventListener('click',()=>goTo(active+1));

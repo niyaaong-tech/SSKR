@@ -14,7 +14,50 @@ before(async()=>{
 after(async()=>{await browser?.close();server?.kill();});
 async function page(width=1440,height=1000){const p=await browser.newPage({viewport:{width,height},reducedMotion:'reduce'});p.on('pageerror',e=>errors.push(e.message));return p;}
 async function open(p,url,selector){await p.goto(base+url);await p.waitForSelector(selector||'.manager-dashboard');}
-async function capture(p,name){if(process.env.SSKR_QA_OUTPUT){fs.mkdirSync(process.env.SSKR_QA_OUTPUT,{recursive:true});await p.evaluate(async()=>{await Promise.all([...document.querySelectorAll('#app-main img')].map(img=>{img.loading='eager';return img.decode().catch(()=>{});}));});await p.screenshot({path:path.join(process.env.SSKR_QA_OUTPUT,name+'.png'),fullPage:true});}}
+async function capture(p,name,fullPage=true){if(process.env.SSKR_QA_OUTPUT){fs.mkdirSync(process.env.SSKR_QA_OUTPUT,{recursive:true});await p.evaluate(async()=>{await Promise.all([...document.querySelectorAll('#app-main img')].map(img=>{img.loading='eager';return img.decode().catch(()=>{});}));});await p.screenshot({path:path.join(process.env.SSKR_QA_OUTPUT,name+'.png'),fullPage});}}
+
+test('participant guide sections stay separate and reachable on short desktop and mobile screens',async()=>{
+ for(const [width,height]of [[360,640],[390,844],[768,740],[1180,757],[1280,640],[1920,900]]){
+  const p=await page(width,height);await open(p,'/participate?scenario=guest&view=guide','#mode-a.is-active');
+  const boxes=await p.evaluate(()=>{const box=s=>{const r=document.querySelector(s).getBoundingClientRect();return {top:r.top,bottom:r.bottom,left:r.left,right:r.right}};return {guide:box('#public-event-guide h2'),tiers:box('.public-tier-grid'),benefits:box('.benefit-area'),manager:box('.manager-area'),panel:box('.service-panel'),overflow:document.documentElement.scrollWidth>innerWidth};});
+  assert.ok(boxes.tiers.bottom<=boxes.benefits.top,`${width}: pricing overlaps benefits`);assert.ok(boxes.benefits.bottom<=boxes.manager.top,`${width}: benefits overlap manager`);assert.ok(boxes.guide.left>=boxes.panel.left+18);assert.ok(boxes.guide.right<=boxes.panel.right);assert.equal(boxes.overflow,false);
+  await p.locator('.manager-promises').scrollIntoViewIfNeeded();assert.ok(await p.locator('.manager-promises').isVisible());await capture(p,'guide-'+width);await p.close();
+ }
+});
+
+test('late preparation success or failure preserves the screen and an independently reopened form',async()=>{
+ for(const outcome of ['success','failure']){
+  const p=await page(1180,757);await open(p,'/app/preparation?scenario=c-preparation','.prep-page');let release,entered;const pending=new Promise(resolve=>entered=resolve),gate=new Promise(resolve=>release=resolve);
+  await p.route('**/api/participate/application',async route=>{const response=outcome==='success'?await route.fetch():null;entered();await gate;if(response)await route.fulfill({response});else await route.fulfill({status:503,contentType:'application/json',body:JSON.stringify({error:{code:'TEMPORARY_FAILURE',message:'잠시 후 다시 시도해 주세요.'}})});});
+  for(const [name,value]of [['maker','Honda'],['model','CB500X'],['className','500cc']])await p.locator('#bike input[name='+name+']').fill(value);
+  await p.locator('#bike button[type=submit]').click();await pending;assert.equal(await p.locator('#start button[type=submit]').isDisabled(),true);
+  await p.locator('a[href="/app/notices"][data-app-link]').first().click();await p.waitForFunction(()=>location.pathname==='/app/notices');const noticeMarkup=await p.locator('#app-main').innerHTML();
+  if(outcome==='failure'){await p.goBack();await p.waitForSelector('.prep-page');await p.locator('#bike input[name=model]').fill('이동 후 새 입력');}
+  const responseDone=p.waitForResponse('**/api/participate/application');release();await responseDone;await p.waitForTimeout(150);
+  if(outcome==='success'){assert.equal(new URL(p.url()).pathname,'/app/notices');assert.equal(await p.locator('#app-main').innerHTML(),noticeMarkup);assert.equal(await p.locator('#app-section-title').textContent(),'공지');const current=await p.evaluate(()=>SSKR_PARTICIPATE_API.context());assert.equal(current.participation.bikeInfo.model,'CB500X');}
+  else {assert.equal(await p.locator('#bike input[name=model]').inputValue(),'이동 후 새 입력');assert.equal(await p.locator('#bike .prep-status').textContent(),'');}
+  await p.close();
+ }
+ assert.deepEqual(errors,[]);
+});
+
+test('collapsed app navigation keeps each destination name',async()=>{
+ for(const width of [900,1180,1365]){const p=await page(width,757);await open(p,'/app?scenario=guest');for(const name of ['SSKR 매니저','스팟','메모리얼','내 기록'])assert.equal(await p.locator('#app-nav').getByRole('link',{name,exact:true}).count(),1);assert.match(await p.locator('.manager-discover').textContent(),/같은 하루/);await p.close();}
+});
+
+test('About skip navigation transfers focus into the visible chapter in both reading modes',async()=>{
+ for(const [width,height,motion]of [[1180,757,'no-preference'],[1180,757,'reduce'],[390,844,'no-preference']]){const p=await page(width,height);await p.emulateMedia({reducedMotion:motion});await p.goto(base+'/about/');await p.keyboard.press('Tab');assert.equal(await p.evaluate(()=>document.activeElement.className),'skip-link');await p.keyboard.press('Enter');assert.equal(await p.evaluate(()=>!!document.activeElement.closest('#chapter-01')),true);assert.equal(await p.evaluate(()=>document.activeElement.closest('.scene').inert),false);await p.keyboard.press('Tab');assert.equal(await p.evaluate(()=>document.activeElement.classList.contains('brand')),false);await p.close();}
+});
+
+test('HOME memorial text remains outside photographs at the completed chapter target',async()=>{
+ for(const [width,height]of [[360,640],[390,844],[768,740],[1180,757],[1280,640],[1440,900],[1920,1080]]){
+  const p=await page(width,height);await p.emulateMedia({reducedMotion:'no-preference'});await p.goto(base+'/');
+  await p.locator('[data-chapter="memorial"]').evaluate(button=>button.click());await p.waitForFunction(()=>!document.querySelector('#storyIndex').classList.contains('is-travelling')&&+getComputedStyle(document.querySelector('.scene-copy-memory')).opacity>.95&&(innerWidth<=900||+getComputedStyle(document.querySelector('#storyIndex')).opacity>.95));
+  const state=await p.evaluate(()=>{const text=document.querySelector('.scene-copy-memory').getBoundingClientRect(),line=document.querySelector('#journeyLine'),point=line.getPointAtLength(line.getTotalLength()*.95),lineY=new DOMPoint(point.x,point.y).matrixTransform(line.getScreenCTM()).y;const cards=[...document.querySelectorAll('.memory-card')];return {textBottom:text.bottom,lineY,visible:cards.filter(e=>+getComputedStyle(e).opacity>.5).length,overlaps:cards.filter(e=>{const r=e.getBoundingClientRect();return +getComputedStyle(e).opacity>.5&&r.left<text.right&&r.right>text.left&&r.top<text.bottom&&r.bottom>text.top;}).map(e=>e.className),indexClass:document.querySelector('#storyIndex').className,overflow:document.documentElement.scrollWidth>innerWidth};});
+  assert.equal(state.visible,8);assert.deepEqual(state.overlaps,[],width+' photograph overlap');if(width>900)assert.ok(state.textBottom+12<=state.lineY,width+' route overlaps text');assert.ok(state.indexClass.includes('is-memory'));assert.equal(state.overflow,false);if(width===1180||width===390)await capture(p,'home-memorial-'+width,false);await p.close();
+ }
+ assert.deepEqual(errors,[]);
+});
 
 test('a new guest completes mock payment and the four preparation forms without changing the official start implicitly',async()=>{
  const p=await page(390,844);await open(p,'/participate?scenario=guest&view=guide','#mode-a.is-active');

@@ -23,6 +23,7 @@
   let disposeSpots = null;
   let disposeMemorials = null;
   let disposeAuth = null;
+  let disposePreparation = null;
   let memorialStorage;
   try { memorialStorage = window.localStorage; } catch { /* Restricted browser storage. */ }
   const memorialStore = window.SSKR_MEMORIAL_STORE.create(data.memorials, memorialStorage);
@@ -123,7 +124,7 @@
       (planError?'<p role="alert">'+esc(planError)+'</p>':planCards||'<div class="manager-empty"><h3>'+(model.linked?'아직 저장한 루트가 없어요.':'어떤 길로 달려볼까요?')+'</h3><p>'+(model.linked?'출발지와 마음에 드는 스팟을 골라 하루를 그려보세요.':'로그인 없이 루트를 만들어볼 수 있어요. 로그인하면 참가 신청 전에도 저장할 수 있습니다.')+'</p></div>')+
       (model.planCount>3?appLink('/app/spots?mode=plan&tab=saved','저장 루트 '+model.planCount+'개 보기'):'')+'</section>'+
       (model.preparation.length?'<section class="manager-section"><header><h2>참가 준비</h2>'+appLink('/app/preparation','준비 확인')+'</header><dl class="manager-preparation-list">'+model.preparation.map(row=>'<div><dt>'+esc(row.label)+'</dt><dd>'+esc(row.key==='start'?(window.SSKR_MAP.formatPlaceText(window.SSKR_SPOT_CATALOG.find(p=>p.id===row.value)?.name||row.value)):row.value)+'</dd></div>').join('')+'</dl></section>':'')+'</div>'+
-      '<aside><section class="manager-section manager-notices"><header><h2>최근 공지</h2>'+appLink('/app/notices','전체 보기')+'</header>'+(model.notices.length?'<ul>'+model.notices.map(item=>'<li><time>'+esc(item.date)+'</time><a href="/app/notices" data-app-link>'+esc(item.title)+'</a></li>').join('')+'</ul>':'<p>새로운 공지가 등록되면 알려드릴게요.</p>')+'</section><a class="manager-discover" href="/app/memorials" data-app-link><span>RIDERS’ STORIES</span><h2>다른 라이더의 하루</h2><p>각자의 길에서 남긴 사진과 기록을 만나보세요.</p><b>메모리얼 둘러보기 ↗</b></a></aside></div></div>';
+      '<aside><section class="manager-section manager-notices"><header><h2>최근 공지</h2>'+appLink('/app/notices','전체 보기')+'</header>'+(model.notices.length?'<ul>'+model.notices.map(item=>'<li><time>'+esc(item.date)+'</time><a href="/app/notices" data-app-link>'+esc(item.title)+'</a></li>').join('')+'</ul>':'<p>새로운 공지가 등록되면 알려드릴게요.</p>')+'</section><a class="manager-discover" href="/app/memorials" data-app-link><span>RIDERS’ STORIES</span><h2>다른 라이더의 하루</h2><p>같은 하루에 남긴 서로 다른 사진과 기록을 만나보세요.</p><b>메모리얼 둘러보기 ↗</b></a></aside></div></div>';
   }
 
   function renderSpots(id) {
@@ -154,7 +155,12 @@
   function renderMy() { renderMemorials(); }
 
   function renderPreparation() {
-    window.SSKR_PREPARATION.mount(root,context,{notices:data.notices,onUpdate:next=>{context=next;renderChrome();}});
+    disposePreparation=window.SSKR_PREPARATION.mount(root,context,{notices:data.notices,onUpdate:contextUpdater()});
+  }
+
+  function contextUpdater() {
+    const accountId=context.account.id,linked=context.account.linked,participationId=context.participation?.id;
+    return next=>{if(context.account.id!==accountId||context.account.linked!==linked||auth.isAccountLinked()!==linked||context.participation?.id!==participationId)return false;context=next;renderChrome();return true;};
   }
 
   function renderNotices() {
@@ -187,6 +193,7 @@
   function renderNotFound() { renderDenied("페이지를 찾을 수 없습니다.", "주소를 확인하거나 SSKR 매니저에서 다시 이동해 주세요."); }
 
   function renderFailure(error) {
+    disposePreparation?.(); disposePreparation = null;
     disposeSpots?.(); disposeSpots = null;
     disposeMemorials?.(); disposeMemorials = null;
     root.innerHTML = `<section class="access-denied"><p class="eyebrow">SSKR MANAGER</p><h1>화면을 표시하지 못했습니다.</h1><p>${esc(error?.message || "현재 상태를 다시 확인해 주세요.")}</p><button class="primary-link" id="app-retry" type="button">다시 시도</button></section>`;
@@ -194,6 +201,7 @@
   }
 
   function renderRoute() {
+    disposePreparation?.(); disposePreparation = null;
     disposeAuth?.(); disposeAuth = null;
     disposeSpots?.(); disposeSpots = null;
     disposeMemorials?.(); disposeMemorials = null;
@@ -225,7 +233,7 @@
     else if (path.startsWith("/app/memorials/")) renderMemorials();
     else if (path === "/app/my") renderMy();
     else if (path === "/app/preparation") renderPreparation();
-    else if (path === "/app/profile") window.SSKR_PREPARATION.profile(root,context,next=>{context=next;renderChrome();});
+    else if (path === "/app/profile") disposePreparation=window.SSKR_PREPARATION.profile(root,context,contextUpdater());
     else if (path === "/app/notices") renderNotices();
     else renderNotFound();
     root.insertAdjacentHTML("beforeend", `<span class="scenario-tag">MOCK · ${esc(scenario)}</span>`);

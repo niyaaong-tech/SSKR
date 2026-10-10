@@ -614,9 +614,12 @@
       copy.style.opacity=opacity.toFixed(3);
       copy.style.transform=`translate3d(0,${mix(28,0,ease(opacity))}px,0)`;
     });
+    const memoryCopy=sceneCopies[sceneCopies.length-1];
+    if(memoryCopy)brochureStage.style.setProperty('--memory-copy-bottom',`${memoryCopy.offsetTop+memoryCopy.offsetHeight+24}px`);
     setOpacity(firstLightStamp,firstCopyOpacity);
     renderMultiRoutes(motionFrame,p);
     const scene = motionFrame < 168 ? 0 : motionFrame < 295 ? 1 : motionFrame < 515 ? 2 : motionFrame < 753 ? 3 : motionFrame < 1080 ? 4 : 5;
+    storyIndex?.classList.toggle('is-memory',scene===4);
     if (scene !== lastScene) {
       lastScene = scene;
       if (sceneCurrent) sceneCurrent.textContent = String(scene + 1).padStart(2, '0');

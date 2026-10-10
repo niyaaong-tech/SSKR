@@ -16,7 +16,7 @@ after(async()=>{await browser?.close();server?.kill();});
 const errors=[];
 async function page(width=1440,height=1000){const p=await browser.newPage({viewport:{width,height},reducedMotion:'reduce'});p.on('pageerror',e=>errors.push(e.message));
  // Observe map state without adding test globals to production code.
- await p.route('**/web/shared/map/map.js*',async r=>{const response=await r.fetch();await r.fulfill({response,body:(await response.text()).replace('layer=root.L.layerGroup().addTo(map);','window.__map=map;layer=root.L.layerGroup().addTo(map);').replace('const backdrop=root.L.maplibreGL','const backdrop=window.__backdrop=root.L.maplibreGL')});});return p;
+ await p.route('**/web/shared/map/map.js*',async r=>{const response=await r.fetch();await r.fulfill({response,body:(await response.text()).replace('layer=root.L.layerGroup().addTo(map);','window.__map=map;layer=root.L.layerGroup().addTo(map);').replace('backdrop=root.L.maplibreGL','backdrop=window.__backdrop=root.L.maplibreGL')});});return p;
 }
 async function open(p,url){await p.goto(base+url);if(url.startsWith('/app/memorials/')){await p.waitForSelector('.memorial-detail');await p.getByText('여정 지도 보기',{exact:true}).click();}await p.waitForSelector('.spot-mini-card');await p.waitForFunction(()=>window.__backdrop?.getMaplibreMap().isStyleLoaded()&&window.__backdrop?.getMaplibreMap().areTilesLoaded(),null,{timeout:60000});assert.equal(await p.locator('.spot-map-status').textContent(),'');assert.ok(await p.evaluate(()=>__backdrop.getMaplibreMap().querySourceFeatures('openmaptiles',{sourceLayer:'sskr_land'}).length));}
 const metrics=p=>p.locator('.spot-mini-select').first().evaluate(e=>{const s=getComputedStyle(e),caption=getComputedStyle(e.querySelector('strong'));return {width:s.width,height:s.height,radius:s.borderRadius,font:caption.fontSize,color:caption.color};});
@@ -87,4 +87,17 @@ test('failed detail tiles preserve terrain and map actions, and reconnecting ret
  await p.unroute('**/api/map-tile?*');await p.evaluate(()=>dispatchEvent(new Event('online')));
  await p.waitForFunction(()=>{const gl=__backdrop.getMaplibreMap();return gl.areTilesLoaded()&&gl.querySourceFeatures('openmaptiles',{sourceLayer:'sskr_land'}).length>0;},null,{timeout:60000});
  assert.equal(await p.locator('.leaflet-sskr-base-land-pane path').getAttribute('fill-opacity'),'1');assert.equal(await p.locator('.spot-map-status').textContent(),'');await capture(p,'mobile-terrain-restored');assert.deepEqual(errors,[]);await p.close();
+});
+
+test('a failed WebGL initialization leaves a usable explorer, route planner and navigation',async()=>{
+ for(const [width,height]of [[1180,757],[390,664]]){
+  const p=await page(width,height);
+  await p.addInitScript(()=>{const original=HTMLCanvasElement.prototype.getContext;HTMLCanvasElement.prototype.getContext=function(type,...args){return /webgl/i.test(type)?null:original.call(this,type,...args);};});
+  await p.goto(base+'/explore/#gangneung');await p.waitForSelector('.spot-mini-card');await p.waitForSelector('.leaflet-sskr-base-land-pane path');
+  await p.getByRole('link',{name:/이 출발지로 루트 계획/}).click();
+  await p.waitForSelector('.route-planner');assert.match(await p.locator('.spot-map-status').textContent(),/기본 지형/);assert.equal(await p.locator('.leaflet-maplibre-gl').count(),0);
+  await p.locator('[data-action="zoom-in"]').click();await p.locator('[data-action="fit"]').click();await p.locator('.rp-place-view').first().click();await p.waitForSelector('.spot-route-action-wrap');
+  await p.evaluate(()=>{const link=document.querySelector('#app-nav a[href="/app"]');link.click();});await p.waitForSelector('.manager-dashboard');await p.evaluate(()=>document.querySelector('#app-nav a[href="/app/spots"]').click());await p.waitForSelector('.spot-map');
+  assert.ok(await p.locator('.leaflet-sskr-base-land-pane path').count());assert.deepEqual(errors,[]);await p.close();
+ }
 });

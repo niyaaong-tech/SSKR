@@ -151,3 +151,39 @@ test('context failure can recover and guide viewing preserves a saved applicatio
  await open(p,'/app?scenario=application-step2');await p.locator('.manager-event-banner').click();await p.waitForSelector('#mode-a.is-active');assert.match(await p.title(),/참가 안내/);
  await p.locator('#primary-action').click();await p.waitForSelector('#mode-b.is-active');assert.match(await p.locator('#mode-b').textContent(),/동의/);assert.doesNotMatch(p.url(),/view=guide/);await p.close();assert.deepEqual(errors,[]);
 });
+
+test('removing a saved local photo stays removed through preview, return, save and reload',async()=>{
+ const p=await page(390,844);await open(p,'/app/my?scenario=private-owner','.memorial-library');
+ await p.locator('.memorial-record-actions a').filter({hasText:'관리'}).first().click();await p.waitForSelector('.memorial-form');
+ const row=p.locator('[data-edit-visit]').first();
+ await row.locator('[data-visit-photo]').setInputFiles(path.resolve(__dirname,'../../web/about/assets/SSKR_info01.webp'));await p.waitForSelector('[data-remove-photo]');
+ await p.locator('.memorial-form button[type=submit]').click();await p.waitForFunction(()=>document.querySelector('.memorial-save-status').textContent.includes('저장했습니다.'));
+ await p.reload();await p.waitForSelector('[data-remove-photo]');await p.locator('[data-remove-photo]').click();
+ for(let i=0;i<2;i++){await p.locator('[data-preview-record]').click();await p.waitForSelector('.memorial-detail');assert.equal(await p.locator('.memorial-detail img[src^="blob:"]').count(),0);await p.locator('[data-editor-return]').click();assert.equal(await p.locator('[data-remove-photo]').count(),0);}
+ await p.locator('.memorial-form button[type=submit]').click();await p.waitForFunction(()=>document.querySelector('.memorial-save-status').textContent.includes('저장했습니다.'));await p.reload();await p.waitForSelector('.memorial-form');assert.equal(await p.locator('[data-remove-photo]').count(),0);assert.ok(await p.locator('.memorial-edit-photos img').count()>0);await p.close();
+});
+
+test('chosen private local cover is consistent for its owner and is not exposed to gallery visitors',async()=>{
+ const p=await page();await open(p,'/app/my?scenario=logged-in-no-application','.memorial-library');await p.locator('.memorial-record-actions a').filter({hasText:'관리'}).first().click();await p.waitForSelector('.memorial-form');
+ const id=await p.locator('.memorial-form').getAttribute('data-memorial-id'),row=p.locator('[data-edit-visit]').nth(1);
+ await row.locator('[data-visit-photo]').setInputFiles(path.resolve(__dirname,'../../web/about/assets/SSKR_info01.webp'));await p.waitForSelector('[data-remove-photo]');await row.locator('input[name=coverVisitId]').check();
+ await p.locator('.memorial-form button[type=submit]').click();await p.waitForFunction(()=>document.querySelector('.memorial-save-status').textContent.includes('저장했습니다.'));
+ await p.locator('.memorial-back').click();await p.waitForSelector('.memorial-library');assert.match(await p.locator('.memorial-record-photo img').first().getAttribute('src'),/^blob:/);
+ await p.locator('.memorial-record-photo').first().click();await p.waitForSelector('.memorial-story-cover img');assert.match(await p.locator('.memorial-story-cover img').getAttribute('src'),/^blob:/);
+ await open(p,'/app/memorials/'+id+'?scenario=guest','.memorial-story-cover img');assert.doesNotMatch(await p.locator('.memorial-story-cover img').getAttribute('src'),/^blob:/);await p.close();
+});
+
+test('invalid memorial URL filters normalize without discarding valid search and start filters',async()=>{
+ const p=await page();await open(p,'/app/memorials?scenario=guest&memorialStart=invalid&memorialEvent=invalid','.memorial-archive');
+ assert.equal(await p.locator('[data-memorial-start]').inputValue(),'all');assert.match(await p.locator('.memorial-archive-count').textContent(),/30개/);assert.equal(new URL(p.url()).searchParams.has('memorialStart'),false);assert.equal(new URL(p.url()).searchParams.has('memorialEvent'),false);
+ await p.locator('[data-memorial-start]').selectOption('gangneung');await p.locator('[data-memorial-search]').fill('능선');const count=await p.locator('.memorial-archive-count').textContent();await p.reload();await p.waitForSelector('.memorial-archive');assert.equal(await p.locator('[data-memorial-start]').inputValue(),'gangneung');assert.equal(await p.locator('[data-memorial-search]').inputValue(),'능선');assert.equal(await p.locator('.memorial-archive-count').textContent(),count);
+ await p.locator('[data-memorial-search]').fill('존재하지않는기록');assert.match(await p.locator('.memorial-empty').textContent(),/검색 결과/);await p.close();
+});
+
+test('ordinary app links use the SPA while modified, download and new-window links retain native behavior',async()=>{
+ const p=await page();await open(p,'/app?scenario=guest');await p.evaluate(()=>window.qaSameDocument=true);
+ const link=p.locator('#app-nav a[href="/app/memorials"]');
+ const popupPromise=p.context().waitForEvent('page');await link.click({modifiers:['Control']});const popup=await popupPromise;await popup.waitForLoadState();assert.equal(new URL(p.url()).pathname,'/app');assert.equal(new URL(popup.url()).pathname,'/app/memorials');await popup.close();
+ const rules=await link.evaluate(a=>{const outcomes=[];for(const attrs of [{target:'_blank'},{download:'records'},{href:'https://example.com/app' }]){const copy=a.cloneNode(true);for(const [key,value]of Object.entries(attrs))copy.setAttribute(key,value);a.after(copy);const e=new MouseEvent('click',{bubbles:true,cancelable:true,button:0});document.addEventListener('click',event=>{outcomes.push(event.defaultPrevented);event.preventDefault();},{once:true});copy.dispatchEvent(e);copy.remove();}return outcomes;});assert.deepEqual(rules,[false,false,false]);
+ await link.click();await p.waitForSelector('.memorial-archive');assert.equal(await p.evaluate(()=>window.qaSameDocument),true);await p.close();
+});

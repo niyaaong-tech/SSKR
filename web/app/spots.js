@@ -39,6 +39,8 @@
       state.search?url.searchParams.set('spotSearch',state.search):url.searchParams.delete('spotSearch');
       state.kind==='spot'?url.searchParams.delete('spotKind'):url.searchParams.set('spotKind',state.kind);
       state.category==='all'?url.searchParams.delete('spotCategory'):url.searchParams.set('spotCategory',state.category);
+      if(editing)url.searchParams.set('mode','plan');
+      else ['mode','tab','fromExplore'].forEach(key=>url.searchParams.delete(key));
       history.replaceState(history.state,'',url.pathname+url.search);
     }
     function renderDetail(place) {
@@ -64,7 +66,8 @@
     viewer=shared.mount($('.spot-map-host'),{items:entries,catalog:entries,initialId:selected?.id,initialZoom:initial?11:undefined,inView:true,
       onRouteAdd:p=>planner?.addFromMap(p),routeActionState:p=>planner?.routeActionState(p),onSelect:p=>{selected=p;if(editing){planner?.select(p);return;}syncURL(p);renderDetail(p)},onOpen:p=>{if(editing){planner?.openPlace(p);return;}$('.spot-detail').scrollIntoView({behavior:reduced.matches?'auto':'smooth',block:'start'});},onDeselect:()=>{selected=null;if(!editing){syncURL(null);renderDetail(null);}}});
     planner=root.SSKR_ROUTE_PLANNER.mount($('.route-planner'),{catalog:entries,viewer,filters,filterParking,getAccount:options.getAccount,getEvent:options.getEvent,getParticipation:options.getParticipation,onLogin:options.onLogin,
-      onModeChange:(value,startId)=>{clearTimeout(searchTimer);if(value&&!editing)browseFilters={...state};editing=value;if(!value)filters.forEach(node=>filterParking.append(node));routeStartId=value?startId:null;if(value){state.kind=startId?'spot':'start';state.category='all';state.search='';}else if(browseFilters){Object.assign(state,browseFilters);browseFilters=null;}$('.spot-search input').value=state.search;$('.spot-workbench').classList.toggle('is-planning',value);$('.spot-planning-area').classList.toggle('is-editing',value);host.querySelectorAll('[data-spot-mode]').forEach(b=>b.setAttribute('aria-pressed',String((b.dataset.spotMode==='plan')===value)));if(viewer)applyFilters();},
+      onModeChange:(value,startId)=>{clearTimeout(searchTimer);if(value&&!editing)browseFilters={...state};editing=value;if(!value)filters.forEach(node=>filterParking.append(node));routeStartId=value?startId:null;if(value){state.kind=startId?'spot':'start';state.category='all';state.search='';}else if(browseFilters){Object.assign(state,browseFilters);browseFilters=null;}$('.spot-search input').value=state.search;$('.spot-workbench').classList.toggle('is-planning',value);$('.spot-planning-area').classList.toggle('is-editing',value);host.querySelectorAll('[data-spot-mode]').forEach(b=>b.setAttribute('aria-pressed',String((b.dataset.spotMode==='plan')===value)));if(viewer)applyFilters();syncURL(selected);},
+      onTabChange:tab=>{if(!editing)return;const url=new URL(location.href);tab==='saved'?url.searchParams.set('tab','saved'):url.searchParams.delete('tab');history.replaceState(history.state,'',url.pathname+url.search);},
       onStartChange:id=>{routeStartId=id;state.kind=id?'spot':'start';state.category='all';state.search='';$('.spot-search input').value='';applyFilters();},
       onRoadReady:()=>{if(editing&&routeStartId)applyFilters();},
       onFindPlaces:()=>{state.kind=routeStartId?'spot':'start';state.category='all';applyFilters();}

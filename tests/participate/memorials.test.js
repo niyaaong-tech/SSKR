@@ -101,3 +101,17 @@ test('local visit photos require matching ownership, record, visit and public co
  const visit=model.applyVisitEdits(item,[{id:'v',media:[]}],photos)[0];assert.equal(visit.media.length,1);assert.equal(visit.note,'다시 기억하는 풍경');assert.equal(model.selectPhoto(visit),null);assert.equal(model.selectPhoto(visit,{owner:true}).id,'local-photo-right');
  item.visitEdits.v.photoConsent=true;const published=model.applyVisitEdits(item,[{id:'v',media:[]}],photos)[0];assert.equal(model.selectPhoto(published).id,'local-photo-right');assert.equal(model.selectCover([published],'v').visit.id,'v');
 });
+
+test('repeated previews replace local selections and removing a saved photo retains original media',()=>{
+ const model=require('../../web/app/memorial-store'),original={id:'upload-original',sourceKind:'USER_UPLOAD',status:'READY',moderationStatus:'APPROVED',visibility:'PUBLIC',url:'original.webp'};
+ const local={id:'local-photo-kept',ownerUserId:'owner',memorialId:'record',visitId:'v',sourceKind:'MOCK_UPLOAD',status:'READY',moderationStatus:'APPROVED',url:'blob:local'};
+ const item={id:'record',ownerUserId:'owner',visitEdits:{v:{note:'메모',photoConsent:false,mediaIds:[local.id]}}},base=[{id:'v',media:[original],placePhoto:{id:'place',status:'READY',moderationStatus:'APPROVED',visibility:'PUBLIC',url:'place.webp'}}];
+ const saved=model.applyVisitEdits(item,base,[local]);
+ assert.deepEqual(model.applyVisitEdits(item,saved,[local]),saved);
+ assert.equal(model.selectCover(saved,'v',{owner:true}).photo.id,local.id);
+ assert.equal(model.selectCover(saved,'v').photo.id,'place');
+ item.visitEdits.v.mediaIds=[];
+ const removed=model.applyVisitEdits(item,saved,[local]);
+ assert.deepEqual(removed[0].media,[original]);assert.deepEqual(base[0].media,[original]);
+ assert.equal(model.selectCover(removed,'missing',{owner:true}).photo.id,original.id);
+});

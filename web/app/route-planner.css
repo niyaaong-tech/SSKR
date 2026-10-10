@@ -44,7 +44,7 @@ body.route-editor-active{position:fixed;inset:0;width:100%;height:100dvh;overflo
 body.route-editor-active #app-main{padding-bottom:0}
 .rp-search-slot .spot-toolbar{display:flex;flex-direction:column;gap:0;margin:0 0 8px}
 .rp-search-slot .spot-kind{display:none}
-.rp-search-slot .spot-search{width:100%;min-width:0;margin:0}
+.rp-search-slot .spot-search{width:100%;min-width:0;margin:0;flex:0 0 auto;min-height:44px}
 .rp-search-slot .spot-search input{width:100%;min-width:0;font-size:16px}
 .rp-place-detail h3{font-size:18px;margin:0 0 4px}
 .rp-insertion-control{display:grid;gap:4px;margin-bottom:10px;font-size:12px;color:var(--rp-muted)}
@@ -165,3 +165,16 @@ body.route-editor-mobile{position:static;height:auto;overflow:visible}
 @media(max-width:800px) and (orientation:landscape){.is-editing.is-mobile-editor{--rp-map-height:clamp(180px,45svh,220px)}.is-mobile-editor .rp-mobile-sticky>.spot-map-host{--rp-photo-height:56px}.is-mobile-editor .spot-list-head{display:none}}
 
 .rp-event-context{font-size:12px;line-height:1.6;padding:12px;background:#f0f4eb;border-left:3px solid #b78841;margin:8px 0 14px}.rp-event-context p{margin:6px 0}.rp-schedule-status{background:none;border:0;color:#365849;text-align:left;min-height:44px;font:inherit;font-weight:700;cursor:pointer}.rp-route-tools{flex-wrap:wrap}.rp-route-tools button{min-height:32px}dialog input[type=time],dialog input[type=number]{min-height:44px}
+
+/* Desktop keeps route, map and discovery in the same positions at narrower widths. */
+.is-editing.is-wide{--rp-route-width:clamp(176px,20vw,260px);--rp-discovery-width:clamp(220px,23vw,300px)}
+.is-editing.is-wide>.spot-map-host{left:calc(var(--rp-route-width) + 10px);right:calc(var(--rp-discovery-width) + 10px);bottom:0}
+.is-wide .route-planner{grid-template-columns:var(--rp-route-width) minmax(0,1fr) var(--rp-discovery-width)}
+.is-wide .rp-notice{left:calc(var(--rp-route-width) + 20px);right:calc(var(--rp-discovery-width) + 20px)}
+.rp-event-context details>summary{min-height:36px;display:list-item;cursor:pointer;padding:7px 0}
+.rp-schedule-overview{font-size:12px;line-height:1.5;overflow-wrap:anywhere}
+.rp-schedule-overview>strong,.rp-schedule-overview>small{display:block}
+.rp-schedule-overview .rp-schedule-status{width:100%;padding:6px 0;background:none;border:0;text-align:left;white-space:normal}
+.rp-schedule-overview .rp-schedule-status:disabled{opacity:1;color:inherit}
+.rp-schedule-overview.is-warning{color:#8d432a}
+.rp-schedule-overview>small{font-size:11px;font-weight:400;color:#63755e}

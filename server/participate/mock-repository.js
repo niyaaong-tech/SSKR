@@ -9,12 +9,12 @@ class MockParticipateRepository extends ParticipateRepository {
     // Upgrade only the known preview event. Preserve user-edited prices and rules.
     const { baseEvent } = require('./mock-scenarios');
     for (const event of [this.snapshot.event, ...(this.snapshot.events || [])]) {
-      if (!event || event.id !== baseEvent.id || event.mockContractVersion === 2) continue;
-      for (const key of ['finishLocationId','finishLocationName','eligibilitySummary','refundPolicy','kitDeliveryMode','kitAddressDeadlineAt','kitDispatchAt','startSelectionDeadlineAt','preparationNoticeVersion']) {
+      if (!event || event.id !== baseEvent.id || event.mockContractVersion === 3) continue;
+      for (const key of ['finishLocationId','finishLocationName','eligibilitySummary','refundPolicy','kitDeliveryMode','kitAddressDeadlineAt','kitDispatchAt','startSelectionDeadlineAt','preparationNoticeVersion','sunlightMode']) {
         if (event[key] == null) event[key] = clone(baseEvent[key]);
       }
       if (event.bikeInfoDeadlineAt === '2027-05-31T23:59:59+09:00') event.bikeInfoDeadlineAt = baseEvent.bikeInfoDeadlineAt;
-      event.mockContractVersion = 2;
+      event.mockContractVersion = 3;
     }
     this.snapshot.paymentAttempts ||= [];
     this.snapshot.logs ||= [];

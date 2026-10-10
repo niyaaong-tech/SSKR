@@ -25,6 +25,17 @@ function memoryStorage() {
 }
 const account = { id: 'rider-1', linked: true, participant: false };
 
+test('auto-fill respects the driving budget while preserving chosen stops and the minimum rule',()=>{
+ const {catalog,provider,plan}=fixture(18);plan.stopIds=['spot-8'];const before=structuredClone(plan),direct=planner.status(plan,catalog,provider).durationSeconds;
+ const enough=planner.autoFill(plan,catalog,provider,{drivingBudgetSeconds:direct});assert.equal(enough.stopIds.length,10);assert.ok(planner.status(enough,catalog,provider).durationSeconds<=direct);assert.ok(enough.stopIds.includes('spot-8'));
+ const limited=planner.autoFill(plan,catalog,provider,{drivingBudgetSeconds:direct-1});assert.deepEqual(limited.stopIds,plan.stopIds);assert.equal(planner.status(limited,catalog,provider).complete,false);assert.deepEqual(plan,before);
+});
+
+test('time-limited auto-fill skips a shorter-distance but slower candidate',()=>{
+ const catalog=[{id:'s',kind:'start'},{id:'slow',kind:'spot'},{id:'fast',kind:'spot'},{id:'f',kind:'finish'}],provider={summary(a,b){if(a===b)return {distanceMeters:0,durationSeconds:0};return {distanceMeters:a==='slow'||b==='slow'?5:10,durationSeconds:a==='slow'||b==='slow'?100:10};}},plan={...planner.createEmpty(catalog),startId:'s'};
+ assert.deepEqual(planner.autoFill(plan,catalog,provider,{event:{minimumSpotCheckins:1},drivingBudgetSeconds:25}).stopIds,['fast']);
+});
+
 test('automatic insertion chooses first, middle and last gaps without moving existing stops',()=>{
   const {catalog,provider,plan}=fixture();plan.stopIds=['spot-5','spot-12'];
   for(const [id,at] of [['spot-1',0],['spot-8',1],['spot-15',2]]){

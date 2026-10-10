@@ -192,14 +192,19 @@
       .slice(0, Math.max(0, Math.floor(Number(limit) || 0)))
       .map(({ score, ...entry }) => entry);
   }
-  function autoFill(value, catalog, provider, { variant = 0, event = {} } = {}) {
+  function autoFill(value, catalog, provider, { variant = 0, event = {}, drivingBudgetSeconds = null } = {}) {
     const plan = normalize(value, catalog);
     if (!plan.startId || referenceIssues(plan, catalog).length) return plan;
     const minimum = minimumStops(event);
     while (plan.stopIds.length < minimum) {
       let best = null;
       for (let at = 0; at <= plan.stopIds.length; at++) {
-        const candidate = rankedCandidates(plan, at, catalog, provider, variant, true, minimum)[0];
+        const candidate = rankedCandidates(plan, at, catalog, provider, variant, true, minimum).find(entry=>{
+          if(!Number.isFinite(drivingBudgetSeconds))return true;
+          const stops=plan.stopIds.slice();stops.splice(entry.at,0,entry.placeId);
+          const duration=totals([plan.startId,...stops,plan.finishId],provider)?.durationSeconds;
+          return Number.isFinite(duration)&&duration<=drivingBudgetSeconds;
+        });
         if (candidate && (!best || candidate.score < best.score || candidate.score === best.score && candidate.placeId < best.placeId)) best = candidate;
       }
       if (!best) break;

@@ -65,8 +65,11 @@
   }
 
   function handleAppLink(event) {
+    if (event.defaultPrevented || event.button !== 0 || event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return;
     const link = event.target.closest("[data-app-link]");
-    if (!link) return;
+    if (!link || link.hasAttribute('download') || link.target && link.target.toLowerCase() !== '_self') return;
+    const destination = new URL(link.href, location.href);
+    if (destination.origin !== location.origin || !/^\/app(?:\/|$)/.test(destination.pathname)) return;
     event.preventDefault();
     route(link.getAttribute("href"));
     nav.classList.remove("is-open");

@@ -49,6 +49,10 @@
     function renderArchive() {
       const events=[...new Map(publicItems.map(item=>[item.eventId,item.eventTitle])).entries()];
       const starts=[...new Set(publicItems.map(item=>item.startLocationId))];
+      if(!starts.includes(filters.start))filters.start='all';
+      if(!events.some(([id])=>id===filters.event))filters.event='all';
+      syncFilterURL();
+      visibleCount=archivePositions.get(cacheKey())?.count||12;
       root.innerHTML='<div class="memorial-archive"><header class="memorial-gallery-head"><div>'+head('라이더들의 메모리얼','같은 하루, 서로 다른 길. 사진과 기록으로 여정을 만나보세요.')+'</div>'+link('/app/my','내 기록',true)+'</header><div class="memorial-archive-controls"><label>기록 검색<input type="search" data-memorial-search value="'+esc(filters.search)+'" placeholder="라이더, 제목, 방문 스팟" /></label>'+(events.length>1?'<label>행사<select data-memorial-event><option value="all">모든 행사</option>'+events.map(([id,title])=>'<option value="'+esc(id)+'"'+(filters.event===id?' selected':'')+'>'+esc(title)+'</option>').join('')+'</select></label>':'')+'<label>출발지<select data-memorial-start><option value="all">모든 출발지</option>'+starts.map(id=>'<option value="'+esc(id)+'"'+(filters.start===id?' selected':'')+'>'+esc(placeName(id))+'</option>').join('')+'</select></label></div><output class="memorial-archive-count" aria-live="polite"></output><div class="memorial-archive-results"></div><div class="memorial-load-more"><button class="memorial-button is-secondary" type="button" data-load-more></button></div></div>';
       archiveResults();
       const saved=archivePositions.get(cacheKey());
@@ -58,7 +62,7 @@
       const rows=model.historyRows(history,all,account),groups=new Map();
       rows.forEach(row=>{if(!groups.has(row.eventId))groups.set(row.eventId,[]);groups.get(row.eventId).push(row);});
       const result=row=>row.result||({COMPLETED:'완주',NO_SHOW:'미참가',RETIRED:'주행 중단',INVALIDATED:'기록 무효'})[row.runResult]||'결과 확인 중';
-      root.innerHTML='<div class="memorial-library">'+head('내 기록','달렸던 길과 머물렀던 순간을 모았습니다.')+'<div class="memorial-library-summary"><strong>지난 참가 '+rows.length+'회</strong><span>메모리얼 '+rows.filter(row=>row.memorial).length+'개</span></div>'+(rows.length?[...groups.values()].map(group=>'<section class="memorial-season"><h3>'+esc(group[0].eventTitle)+'</h3><div class="memorial-records">'+group.map(row=>{const item=row.memorial;return '<article class="memorial-record">'+(item?'<a class="memorial-record-photo" href="'+href(item)+'" data-app-link><img src="'+esc(model.selectCover(item.visits||[])?.photo?.url||item.image)+'" alt="'+esc(item.title)+'" loading="lazy" /></a>':'<div class="memorial-no-photo">메모리얼 없음</div>')+'<div class="memorial-record-copy"><div class="memorial-record-meta"><span>'+date(row.eventDate)+' · '+esc(result(row))+'</span>'+testBadge(row)+'</div><h4>'+esc(item?.title||row.eventTitle)+'</h4><p>'+esc(item?.summary||'참가 결과가 보관되어 있습니다. 등록된 메모리얼은 없습니다.')+'</p>'+(item?badge(item):'')+'</div><div class="memorial-record-actions">'+(item?link(href(item),'기록 보기')+link(editHref(item),'관리',true):'<span>'+esc(row.participantNumber||'')+'</span>')+'</div></article>';}).join('')+'</div></section>').join(''):empty('아직 남겨진 여정이 없어요.','지난 참가와 메모리얼이 생기면 이곳에 모입니다.')+link('/app/memorials','메모리얼 둘러보기',true))+'</div>';
+      root.innerHTML='<div class="memorial-library">'+head('내 기록','달렸던 길과 머물렀던 순간을 모았습니다.')+'<div class="memorial-library-summary"><strong>지난 참가 '+rows.length+'회</strong><span>메모리얼 '+rows.filter(row=>row.memorial).length+'개</span></div>'+(rows.length?[...groups.values()].map(group=>'<section class="memorial-season"><h3>'+esc(group[0].eventTitle)+'</h3><div class="memorial-records">'+group.map(row=>{const item=row.memorial;return '<article class="memorial-record">'+(item?'<a class="memorial-record-photo" href="'+href(item)+'" data-app-link><img src="'+esc(model.selectCover(item.visits||[],item.coverVisitId,{owner:model.isOwner(item,account)})?.photo?.url||item.image)+'" alt="'+esc(item.title)+'" loading="lazy" /></a>':'<div class="memorial-no-photo">메모리얼 없음</div>')+'<div class="memorial-record-copy"><div class="memorial-record-meta"><span>'+date(row.eventDate)+' · '+esc(result(row))+'</span>'+testBadge(row)+'</div><h4>'+esc(item?.title||row.eventTitle)+'</h4><p>'+esc(item?.summary||'참가 결과가 보관되어 있습니다. 등록된 메모리얼은 없습니다.')+'</p>'+(item?badge(item):'')+'</div><div class="memorial-record-actions">'+(item?link(href(item),'기록 보기')+link(editHref(item),'관리',true):'<span>'+esc(row.participantNumber||'')+'</span>')+'</div></article>';}).join('')+'</div></section>').join(''):empty('아직 남겨진 여정이 없어요.','지난 참가와 메모리얼이 생기면 이곳에 모입니다.')+link('/app/memorials','메모리얼 둘러보기',true))+'</div>';
     }
     function renderDenied(title, copy) {
       root.innerHTML = '<section class="memorial-unavailable">' + back("/app/memorials", "메모리얼 둘러보기") + head(title, copy) + "</section>";
@@ -92,12 +96,15 @@
       filters.search = nextSearch;
       filters.start = nextStart;
       visibleCount = 12;
-      const url = new URL(location.href);
-      filters.search ? url.searchParams.set("memorialQuery", filters.search) : url.searchParams.delete("memorialQuery");
-      filters.start !== "all" ? url.searchParams.set("memorialStart", filters.start) : url.searchParams.delete("memorialStart");
-      filters.event !== 'all' ? url.searchParams.set('memorialEvent',filters.event) : url.searchParams.delete('memorialEvent');
-      window.history.replaceState(window.history.state, "", url.pathname + url.search);
+      syncFilterURL();
       archiveResults();
+    }
+    function syncFilterURL() {
+      const url=new URL(location.href);
+      filters.search?url.searchParams.set('memorialQuery',filters.search):url.searchParams.delete('memorialQuery');
+      filters.start!=='all'?url.searchParams.set('memorialStart',filters.start):url.searchParams.delete('memorialStart');
+      filters.event!=='all'?url.searchParams.set('memorialEvent',filters.event):url.searchParams.delete('memorialEvent');
+      window.history.replaceState(window.history.state,'',url.pathname+url.search+url.hash);
     }
     function onImageLoad(event) { if (event.target.tagName === "IMG" && event.target.naturalWidth) event.target.classList.add("is-loaded"); }
     function onImageError(event) {

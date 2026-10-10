@@ -38,6 +38,46 @@ async function seedPlan(p,stopIds,insertion={mode:'auto',afterId:null}){
  await p.reload();await p.waitForSelector('.route-planner:not([hidden])');await settle(p);assert.deepEqual((await draft(p)).stopIds,stopIds);await p.locator('#rp-tab-places').click();await p.waitForSelector('.rp-next .rp-place');
 }
 
+test('planner and browse URLs reload into the chosen mode and preserve browse filters',async()=>{
+ const p=await page();await p.goto(base+'/app/spots?scenario=logged-in-no-application&spotKind=start&spotSearch=망');await p.waitForSelector('.spot-toolbar');
+ await p.locator('[data-spot-mode=plan]').click();assert.equal(new URL(p.url()).searchParams.get('mode'),'plan');await savedTab(p);assert.equal(new URL(p.url()).searchParams.get('tab'),'saved');
+ await p.locator('[data-spot-mode=browse]').click();let url=new URL(p.url());assert.equal(url.searchParams.has('mode'),false);assert.equal(url.searchParams.has('tab'),false);assert.equal(url.searchParams.get('spotSearch'),'망');assert.equal(url.searchParams.get('spotKind'),'start');
+ await p.reload();await p.waitForSelector('[data-spot-mode=browse][aria-pressed=true]');assert.equal(await p.locator('.spot-search input').inputValue(),'망');
+ await p.locator('[data-spot-mode=plan]').click();await p.reload();await p.waitForSelector('.spot-workbench.is-planning');assert.equal(new URL(p.url()).searchParams.get('mode'),'plan');assert.deepEqual(p.errors,[]);await p.close();
+});
+
+test('first save followed by undo and resave updates the same route; explicit duplication creates a new one',async()=>{
+ const p=await page();await open(p,'logged-in-no-application');await start(p);await addFirstRecommendation(p);await save(p,'바닷길');const saved=await draft(p);assert.ok(saved.id);
+ await p.locator('[data-rp-action=undo]').click();await settle(p);const undone=await draft(p);assert.equal(undone.id,saved.id);assert.equal(undone.createdAt,saved.createdAt);assert.deepEqual(undone.stopIds,[]);
+ await save(p,'바닷길 다시 준비');await savedTab(p);assert.equal(await p.locator('.rp-saved').count(),1);await p.locator('[data-rp-action=duplicate]').click();await settle(p);await save(p,'바닷길 복사');await savedTab(p);assert.equal(await p.locator('.rp-saved').count(),2);assert.notEqual((await draft(p)).id,saved.id);await p.close();
+});
+
+test('schedule write failure reports partial success and retry retains one saved route',async()=>{
+ const p=await page();await open(p,'logged-in-no-application');await start(p);await p.locator('[data-rp-action=schedule]').first().click();await p.locator('input[name=departureTime]').fill('07:00');await p.locator('input[name=breakMinutes]').fill('90');await p.locator('[data-schedule] button[type=submit]').click();
+ await p.evaluate(()=>{window.qaSetItem=Storage.prototype.setItem;Storage.prototype.setItem=function(key,value){if(key.startsWith('sskr.route.schedule.'))throw new DOMException('Quota exceeded','QuotaExceededError');return window.qaSetItem.call(this,key,value);};});
+ await save(p,'휴식을 넣은 경로');await p.waitForSelector('.rp-notice.is-error');assert.match(await p.locator('.rp-notice').textContent(),/루트는 저장했지만 일정 검토는 저장하지 못/);const id=(await draft(p)).id;assert.ok(id);
+ await p.evaluate(()=>Storage.prototype.setItem=window.qaSetItem);await save(p);assert.equal((await draft(p)).id,id);await savedTab(p);assert.equal(await p.locator('.rp-saved').count(),1);const savedSchedule=await p.evaluate(id=>JSON.parse(localStorage.getItem('sskr.route.schedule.mock-rider-0271.'+id)),id);assert.equal(savedSchedule.breakMinutes,'90');await p.close();
+});
+
+test('narrow and wide desktops keep route, map and discovery positions with a compact search field',async()=>{
+ const p=await page(1180,757);await open(p);await start(p);await p.locator('#rp-tab-search').click();
+ for(const width of [844,960,1180,1280,1440,1920]){await p.setViewportSize({width,height:757});await p.waitForTimeout(120);const route=await p.locator('.rp-route-pane').boundingBox(),map=await p.locator('.spot-map-host').boundingBox(),discovery=await p.locator('.rp-discovery-pane').boundingBox(),search=await p.locator('.spot-search').boundingBox();assert.ok(route.x+route.width<=map.x+1&&map.x+map.width<=discovery.x+1,JSON.stringify({width,route,map,discovery}));assert.ok(search.height>=44&&search.height<=64,JSON.stringify({width,search}));assert.ok(await p.locator('.rp-place-results').isVisible());assert.equal(await p.locator('.rp-expand').isVisible(),false);}
+ await capture(p,'route-desktop-panels');assert.deepEqual(p.errors,[]);await p.close();
+});
+
+test('late next-day arrival remains visible through time-limited auto-fill, another proposal and apply',async()=>{
+ const p=await page(390,844);await open(p);await start(p);
+ const stops=await p.evaluate(()=>{const plan=JSON.parse(sessionStorage.getItem('sskr.route-editor')).plan;return SSKR_ROUTE_PLAN.autoFill(plan,SSKR_SPOT_CATALOG,SSKR_ROUTE_PROVIDER.create()).stopIds.slice(0,9);});await seedPlan(p,stops);await p.locator('#rp-tab-route').click();
+ await p.locator('[data-rp-action=schedule]').click();await p.locator('input[name=departureTime]').fill('14:00');await p.locator('input[name=breakMinutes]').fill('180');assert.match(await p.locator('[data-schedule-result]').textContent(),/다음 날/);assert.match(await p.locator('[data-schedule-result]').textContent(),/늦습니다/);await p.locator('[data-schedule] button[type=submit]').click();
+ await p.locator('[data-rp-action=autofill]').click();await p.waitForSelector('[data-rp-action=apply-preview]:not(:disabled)');
+ for(let i=0;i<2;i++){assert.equal(await p.locator('.rp-route-pane [data-waypoint]').count(),11);assert.match(await p.locator('.rp-preview .rp-schedule-overview').textContent(),/다음 날/);assert.match(await p.locator('.rp-preview .rp-schedule-overview').textContent(),/늦습니다/);assert.match(await p.locator('.rp-preview .rp-error').textContent(),/경유 10곳 조건/);if(i===0){await p.locator('[data-rp-action=another]').click();await p.waitForSelector('[data-rp-action=apply-preview]:not(:disabled)');}}
+ await p.locator('[data-rp-action=apply-preview]').click();await settle(p);await p.locator('#rp-tab-route').click();assert.match(await p.locator('.rp-schedule-overview').textContent(),/다음 날/);assert.equal((await draft(p)).stopIds.length,9);assert.deepEqual(p.errors,[]);await p.close();
+});
+
+test('failed preview roads remain unconfirmed and cannot replace the original draft',async()=>{
+ const p=await page();await open(p);await start(p);const before=await draft(p);await p.evaluate(()=>window.__roadFailure=true);await p.locator('[data-rp-action=autofill]').click();await p.waitForSelector('.rp-preview .rp-error');assert.equal(await p.locator('[data-rp-action=apply-preview]').isDisabled(),true);assert.match(await p.locator('.rp-preview .rp-schedule-overview').textContent(),/미확인/);await p.locator('[data-rp-action=cancel-preview]').click();assert.deepEqual((await draft(p)).stopIds,before.stopIds);await p.close();
+});
+
 test('automatic and manual additions use the displayed gap and exact totals while candidate clicks keep the mode',async()=>{
  const p=await page();await open(p);await start(p,'gangneung');await seedPlan(p,['gangneung-market','byeongbangchi-skywalk','the-road-1423']);
  for(const mode of ['auto','gangneung','gangneung-market']){

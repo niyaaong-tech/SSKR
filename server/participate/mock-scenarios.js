@@ -22,6 +22,7 @@ const baseEvent = {
   name: "SUNRISE SUNSET KOREAN RALLY 2027",
   publicTitle: "SSKR 2027",
   minimumSpotCheckins: 10,
+  sunlightMode: 'CALCULATED_MOCK',
   editionLabel: "2027 SEASON",
   category: "대한민국 대표 모터사이클 로드 랠리",
   description: "아름다운 라이딩 코스와 스팟을 연결하며\n다양한 미션을 수행하는 로드 랠리 이벤트",

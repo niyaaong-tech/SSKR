@@ -100,7 +100,13 @@
     return [ordered[0], ...selected, ordered.at(-1)];
   }
   function applyVisitEdits(item,visits,photos=[],account={}) {
-    return visits.map(visit=>{const edit=item.visitEdits?.[visit.id];if(!edit)return {...visit};const media=(edit.mediaIds||[]).map(id=>photos.find(photo=>photo.id===id&&photo.ownerUserId===item.ownerUserId&&photo.memorialId===item.id&&photo.visitId===visit.id)).filter(Boolean).map(photo=>({...photo,visibility:edit.photoConsent?'PUBLIC':'PRIVATE'}));return {...visit,note:edit.note,photoConsent:edit.photoConsent,media:[...media,...(visit.media||[])]};});
+    return visits.map(visit=>{
+      const edit=item.visitEdits?.[visit.id];if(!edit)return {...visit};
+      const media=[...new Set(edit.mediaIds||[])].map(id=>photos.find(photo=>photo.id===id&&photo.ownerUserId===item.ownerUserId&&photo.memorialId===item.id&&photo.visitId===visit.id)).filter(Boolean).map(photo=>({...photo,visibility:edit.photoConsent?'PUBLIC':'PRIVATE'}));
+      // Replace edit-managed local photos even when applying edits to an earlier preview.
+      const originalMedia=(visit.media||[]).filter(photo=>!(photo.sourceKind==='MOCK_UPLOAD'&&/^local-photo-/.test(photo.id||'')));
+      return {...visit,note:edit.note,photoConsent:edit.photoConsent,media:[...media,...originalMedia]};
+    });
   }
   return { collections, create, isOwner, sample, filterMemorials, isPublicPhoto, selectPhoto, selectCover, thumbnailStops, historyRows,applyVisitEdits };
 });

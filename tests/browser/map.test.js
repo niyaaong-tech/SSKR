@@ -101,3 +101,11 @@ test('a failed WebGL initialization leaves a usable explorer, route planner and 
   assert.ok(await p.locator('.leaflet-sskr-base-land-pane path').count());assert.deepEqual(errors,[]);await p.close();
  }
 });
+
+test('leaving an actively zooming map never updates its removed pane',async()=>{
+ for(const motion of ['no-preference','reduce'])for(const [width,height]of [[1180,757],[390,664]]){
+  const p=await page(width,height);await p.emulateMedia({reducedMotion:motion});await p.goto(base+'/app/spots?scenario=guest');await p.waitForSelector('.leaflet-sskr-base-land-pane path');await p.waitForFunction(()=>window.__map&&!__map._animatingZoom);
+  // Begin Leaflet's real transition synchronously so fast navigation cannot miss it.
+  await p.evaluate(()=>__map._animateZoom(__map.getCenter(),Math.min(__map.getMaxZoom(),__map.getZoom()+1),true));await p.evaluate(()=>document.querySelector('#app-nav a[href="/app"]').click());await p.waitForSelector('.manager-dashboard');await p.waitForTimeout(350);assert.deepEqual(errors,[],`${width} ${motion}: removed zoom callbacks`);await p.close();
+ }
+});

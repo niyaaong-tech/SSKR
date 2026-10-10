@@ -165,6 +165,10 @@
   function fit(){if(!map||disposed)return;map.invalidateSize({pan:false});limits();if(editing)clearSelection();const bounds=routeLayer?.getBounds(),places=editing&&routeIds.length?routePlaces(catalog,routeIds):items;if(bounds?.isValid()){places.forEach(p=>bounds.extend([p.lat,p.lng]));map.fitBounds(bounds,{...padding(),maxZoom:12,animate:!reduced,duration:.35});}else if(places.length)map.fitBounds(places.map(p=>[p.lat,p.lng]),{...padding(),maxZoom:12,animate:!reduced,duration:.35});}
   if(root.L){
    map=root.L.map($('.spot-map'),{zoomControl:false,attributionControl:false,scrollWheelZoom:false,minZoom:4,maxZoom:16,zoomSnap:.25,maxBoundsViscosity:1}).setView([36.5,127.8],7);
+   // Leaflet 1.9.4 keeps a 250ms zoom-completion callback after remove().
+   // Guard this instance so it cannot move a pane that has already been removed.
+   const finishZoom=map._onZoomTransitionEnd;
+   if(finishZoom)map._onZoomTransitionEnd=function(...args){if(!disposed)return finishZoom.apply(this,args);};
    // Leaflet also enforces bounds from moveend, including stop() during selection.
    // Keep those corrections synchronous so an old pan cannot finish after reveal.
    const panInsideBounds=map.panInsideBounds;

@@ -25,3 +25,9 @@
 
 
 .sskr-social-auth{color:#111816}.sskr-social-auth *{box-sizing:border-box}.social-button:disabled{opacity:.55;cursor:wait}.sskr-social-auth .auth-error{color:#993b2b;font-size:13px;margin:16px 0 0}
+.social-button.social-button--unavailable,
+.social-button.social-button--unavailable:hover,
+.social-button.social-button--unavailable:active { border: 1px solid #d8ddd9; background: #edf0ed; color: #717973; opacity: 1; cursor: not-allowed; filter: none; transform: none; }
+.social-button--unavailable img { filter: grayscale(1); opacity: .65; }
+.social-button--unavailable svg path { fill: currentColor; }
+.social-provider-status { flex: 0 0 auto; padding: 4px 6px; border: 1px solid #c9d0ca; border-radius: 4px; font-size: 11px; font-weight: 500; white-space: nowrap; }

@@ -252,7 +252,7 @@
   async function load() {
     try {
       try { await window.SSKR_MEMORIAL_MEDIA.read(); } catch { /* Reading existing records must work without upload storage. */ }
-      if (linkedScenarios.has(scenario) && !auth.isAccountLinked()) auth.linkAccount("mock");
+      if (linkedScenarios.has(scenario) && !auth.isAccountLinked()) auth.linkAccount("google");
       if (publicScenarios.has(scenario) && auth.isAccountLinked()) auth.logout();
       if (scenario === "current+past") context = await api.mock("RESET", { scenario: "active", snapshot: null });
       else if (["past-only", "private-owner", "private-other"].includes(scenario)) context = await api.mock("RESET", { scenario: "logged-in-no-application", snapshot: null });

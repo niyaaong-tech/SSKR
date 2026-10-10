@@ -14,9 +14,9 @@
   <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@5.24.0/dist/maplibre-gl.css" />
   <link rel="stylesheet" href="/web/shared/map/map.css?v=route-planner-01" />
   <link rel="stylesheet" href="/web/app/spots.css?v=patch-058" />
-  <link rel="stylesheet" href="/web/app/route-planner.css?v=route-planner-01" />
+  <link rel="stylesheet" href="/web/app/route-planner.css?v=route-editor-actions" />
   <link rel="stylesheet" href="/web/app/memorials.css?v=patch-058" />
-  <link rel="stylesheet" href="/web/shared/auth/social-auth.css?v=patch-057">
+  <link rel="stylesheet" href="/web/shared/auth/social-auth.css?v=google-only">
 </head>
 <body>
   <a class="skip-link" href="#app-main">본문으로 바로가기</a>
@@ -50,7 +50,8 @@
       <div class="app-loading" aria-label="화면을 불러오는 중"><i></i><i></i><i></i></div>
     </main>
   </div>
-  <script src="/participate/mock-auth.js?v=patch-032b"></script>
+  <script src="/web/shared/auth/providers.js"></script>
+  <script src="/participate/mock-auth.js?v=google-only"></script>
   <script src="/participate/mock-session.js?v=patch-032b"></script>
   <script src="/participate/api-client.js?v=patch-032b"></script>
   <script src="/web/shared/account-control.js?v=patch-034"></script>
@@ -68,17 +69,17 @@
   <script src="/web/shared/map/interaction.js?v=patch-058"></script>
   <script src="https://unpkg.com/maplibre-gl@5.24.0/dist/maplibre-gl.js"></script>
   <script src="https://unpkg.com/@maplibre/maplibre-gl-leaflet@0.1.4/leaflet-maplibre-gl.js"></script>
-  <script src="/web/shared/map/map.js?v=route-planner-01"></script>
+  <script src="/web/shared/map/map.js?v=route-editor-actions"></script>
   <script src="/web/shared/checkin-rules.js"></script>
   <script src="/web/app/route-plan.js?v=route-planner-01"></script>
   <script src="/web/app/route-provider.js?v=route-planner-01"></script>
-  <script src="/web/app/route-planner.js?v=route-planner-01"></script>
-  <script src="/web/app/spots.js?v=parking-01"></script>
+  <script src="/web/app/route-planner.js?v=route-editor-actions"></script>
+  <script src="/web/app/spots.js?v=route-editor-actions"></script>
   <script src="/web/app/memorial-store.js?v=patch-049"></script>
   <script src="/web/app/memorial-media.js"></script>
   <script src="/web/app/memorial-journey.js?v=patch-058"></script>
   <script src="/web/app/memorials.js?v=parking-01"></script>
-  <script src="/web/shared/auth/social-auth.js?v=patch-057"></script>
+  <script src="/web/shared/auth/social-auth.js?v=google-only"></script>
   <script src="/web/app/preparation.js"></script>
   <script src="/web/app/app.js?v=route-planner-01"></script>
 </body>

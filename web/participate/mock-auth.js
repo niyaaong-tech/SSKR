@@ -43,6 +43,7 @@
     },
 
     linkAccount(provider) {
+      window.SSKR_AUTH_PROVIDERS.assertEnabled(provider);
       accountOverride = "linked";
       write(STORAGE_KEY, "true");
       write(PROVIDER_KEY, provider);

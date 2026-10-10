@@ -16,6 +16,57 @@ async function page(width=1440,height=1000){const p=await browser.newPage({viewp
 async function open(p,url,selector){await p.goto(base+url);await p.waitForSelector(selector||'.manager-dashboard');}
 async function capture(p,name,fullPage=true){if(process.env.SSKR_QA_OUTPUT){fs.mkdirSync(process.env.SSKR_QA_OUTPUT,{recursive:true});await p.evaluate(async()=>{await Promise.all([...document.querySelectorAll('#app-main img')].map(img=>{img.loading='eager';return img.decode().catch(()=>{});}));});await p.screenshot({path:path.join(process.env.SSKR_QA_OUTPUT,name+'.png'),fullPage});}}
 
+test('participation and account gates expose Google only on desktop and mobile',async()=>{
+ for(const [width,height] of [[1440,900],[390,844]]) for(const target of ['participate','my']) {
+  const p=await page(width,height);
+  if(target==='participate'){await open(p,'/participate?scenario=guest','#primary-action');await p.locator('#primary-action').click();}
+  else await open(p,'/app/my?scenario=guest','.sskr-social-auth');
+  const gate=p.locator('.sskr-social-auth');
+  await gate.waitFor({state:'visible'});
+  await gate.evaluate(el=>Promise.all(el.parentElement.getAnimations().map(animation=>animation.finished)));
+  assert.equal(await gate.locator('[data-provider="google"]').isEnabled(),true);
+  for(const id of ['naver','kakao','apple']) {
+   const button=gate.locator(`[data-provider="${id}"]`);
+   assert.equal(await button.isDisabled(),true);assert.match(await button.textContent(),/준비 중/);
+   assert.equal(await button.evaluate(el=>getComputedStyle(el).cursor),'not-allowed');
+  }
+  assert.equal(await p.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);
+  await capture(p,`auth-${target}-${width}`);
+  await gate.locator('[data-provider="google"]').focus();await p.keyboard.press('Enter');
+  await p.waitForFunction(()=>SSKR_ACCOUNT_LINK.isAccountLinked());
+  await p.waitForFunction(()=>!document.querySelector('.sskr-social-auth')||document.querySelector('#mode-b.is-active'));
+  assert.equal(await p.evaluate(()=>SSKR_ACCOUNT_LINK.getLinkedProvider()),'google');await p.close();
+ }
+});
+
+test('login retry and synthetic clicks never enable or invoke unavailable providers',async()=>{
+ const p=await page();await open(p,'/app/my?scenario=guest','.sskr-social-auth');
+ await p.evaluate(()=>{const old=document.querySelector('#app-social-auth');old.replaceWith(old.cloneNode(false));window.__authCalls=[];window.__disposeAuth=SSKR_SOCIAL_AUTH.mount(document.querySelector('#app-social-auth'),{onSelect:provider=>{__authCalls.push(provider);return new Promise((resolve,reject)=>{window.__authResolve=resolve;window.__authReject=reject;});}});});
+ for(const result of ['failure','success']) {
+  await p.locator('[data-provider="google"]').click();assert.equal(await p.locator('[data-provider]:disabled').count(),4);
+  await p.evaluate(()=>{for(const button of document.querySelectorAll('[data-provider]'))button.dispatchEvent(new MouseEvent('click',{bubbles:true}));});
+  assert.equal(await p.evaluate(()=>__authCalls.length),result==='failure'?1:2);
+  await p.evaluate(result=>result==='failure'?__authReject(new Error('테스트 연결 실패')):__authResolve(),result);
+  await p.waitForFunction(()=>!document.querySelector('[data-provider="google"]').disabled);
+  assert.equal(await p.locator('[data-provider]:disabled').count(),3);
+  assert.equal(await p.locator('.auth-error').isVisible(),result==='failure');
+ }
+ await p.evaluate(()=>{const button=document.querySelector('[data-provider="naver"]');button.disabled=false;button.dispatchEvent(new MouseEvent('click',{bubbles:true}));});
+ assert.deepEqual(await p.evaluate(()=>__authCalls),['google','google']);await p.close();
+});
+
+test('a completed login from a disposed component cannot clear a new pending login',async()=>{
+ const p=await page();await open(p,'/app/my?scenario=guest','.sskr-social-auth');
+ await p.evaluate(()=>{const old=document.querySelector('#app-social-auth');old.replaceWith(old.cloneNode(false));const host=document.querySelector('#app-social-auth');window.__oldDispose=SSKR_SOCIAL_AUTH.mount(host,{onSelect:()=>new Promise(resolve=>window.__oldResolve=resolve)});});
+ await p.locator('[data-provider="google"]').click();
+ await p.evaluate(()=>{__oldDispose();SSKR_SOCIAL_AUTH.mount(document.querySelector('#app-social-auth'),{onSelect:()=>new Promise(resolve=>window.__newResolve=resolve)});});
+ await p.locator('[data-provider="google"]').click();await p.evaluate(async()=>{__oldResolve();await Promise.resolve();});
+ assert.equal(await p.locator('#app-social-auth').getAttribute('aria-busy'),'true');
+ assert.equal(await p.locator('[data-provider]:disabled').count(),4);
+ await p.evaluate(()=>__newResolve());await p.waitForFunction(()=>!document.querySelector('[data-provider="google"]').disabled);
+ assert.equal(await p.locator('[data-provider]:disabled').count(),3);await p.close();
+});
+
 test('participant guide sections stay separate and reachable on short desktop and mobile screens',async()=>{
  for(const [width,height]of [[360,640],[390,844],[768,740],[1180,757],[1280,640],[1920,900]]){
   const p=await page(width,height);await open(p,'/participate?scenario=guest&view=guide','#mode-a.is-active');
@@ -98,11 +149,11 @@ test('manager responsive layouts have four navigation destinations and a compact
  for(const w of [360,390,430,768,1280,1440,1920]){await p.setViewportSize({width:w,height:900});assert.ok(await p.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),String(w));assert.ok((await p.locator('.manager-event-banner').boundingBox()).height<110,String(w));if(w===390||w===1440)await capture(p,'manager-'+w);}
  await p.locator('.manager-welcome .manager-primary').click();await p.waitForSelector('.spot-workbench.is-planning');assert.equal(await p.locator('[data-spot-mode="plan"]').getAttribute('aria-pressed'),'true');await p.close();
 });
-test('linked nonparticipant manager reads actual saved routes and opens the saved tab',async()=>{
+test('linked nonparticipant manager reads actual saved routes and opens route management',async()=>{
  const p=await page(390,844);await open(p,'/app?scenario=logged-in-no-application');
  await p.evaluate(()=>{const account={id:'mock-rider-0271',linked:true};const d=SSKR_ROUTE_PLAN;d.createStore(localStorage,SSKR_SPOT_CATALOG).save({...d.createEmpty(SSKR_SPOT_CATALOG),title:'다음 주의 바닷길'},account);});
  await p.reload();await p.waitForSelector('.manager-plan-card');assert.match(await p.locator('.manager-plan-card').textContent(),/다음 주의 바닷길/);
- await p.locator('.manager-welcome .manager-primary').click();await p.waitForSelector('#rp-tab-saved[aria-selected="true"]');assert.match(await p.locator('.rp-saved').textContent(),/다음 주의 바닷길/);await p.close();
+ await p.locator('.manager-welcome .manager-primary').click();await p.waitForSelector('dialog[data-management]');assert.match(await p.locator('.rp-saved').textContent(),/다음 주의 바닷길/);await p.close();
 });
 test('public gallery pagination, filters and reading position survive a detail roundtrip',async()=>{
  const p=await page();await open(p,'/app/memorials?scenario=guest','.memorial-archive');assert.equal(await p.locator('.memorial-thumbnail').count(),12);

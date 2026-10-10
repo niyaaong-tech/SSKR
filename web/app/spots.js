@@ -19,6 +19,7 @@
     const state={kind:kind==='all'||Object.hasOwn(labels,kind)?kind:initial?.kind||'spot',category:Object.hasOwn(categories,category)?category:'all',search:query.get('spotSearch')||''};
     if(state.kind==='start'||state.kind==='finish')state.category='all';
     let selected=initial||places.find(p=>p.kind==='spot'),visible=[],searchTimer,viewer,planner,editing=false,browseFilters=null,routeStartId=null;
+    try{const saved=JSON.parse(root.sessionStorage.getItem('sskr.route-editor')||'null'),filters=saved?.active?saved.browseFilters:null;if(filters&&(filters.kind==='all'||Object.hasOwn(labels,filters.kind))&&Object.hasOwn(categories,filters.category)&&typeof filters.search==='string')browseFilters={kind:filters.kind,category:filters.category,search:filters.search};}catch{}
     const events=new AbortController(),reduced=matchMedia('(prefers-reduced-motion:reduce)');
     const numbers=new Map(places.filter(p=>p.kind==='spot').map((p,i)=>[p.id,i+1]));
     const entries=places.map(p=>({...p,number:p.kind==='start'?'출':p.kind==='finish'?'도':numbers.get(p.id)}));
@@ -65,8 +66,8 @@
     const filters=[$('.spot-toolbar'),$('.spot-categories')];filters.forEach(node=>filterParking.append(node));
     viewer=shared.mount($('.spot-map-host'),{items:entries,catalog:entries,initialId:selected?.id,initialZoom:initial?11:undefined,inView:true,
       onRouteAdd:p=>planner?.addFromMap(p),routeActionState:p=>planner?.routeActionState(p),onSelect:p=>{selected=p;if(editing){planner?.select(p);return;}syncURL(p);renderDetail(p)},onOpen:p=>{if(editing){planner?.openPlace(p);return;}$('.spot-detail').scrollIntoView({behavior:reduced.matches?'auto':'smooth',block:'start'});},onDeselect:()=>{selected=null;if(!editing){syncURL(null);renderDetail(null);}}});
-    planner=root.SSKR_ROUTE_PLANNER.mount($('.route-planner'),{catalog:entries,viewer,filters,filterParking,getAccount:options.getAccount,getEvent:options.getEvent,getParticipation:options.getParticipation,onLogin:options.onLogin,
-      onModeChange:(value,startId)=>{clearTimeout(searchTimer);if(value&&!editing)browseFilters={...state};editing=value;if(!value)filters.forEach(node=>filterParking.append(node));routeStartId=value?startId:null;if(value){state.kind=startId?'spot':'start';state.category='all';state.search='';}else if(browseFilters){Object.assign(state,browseFilters);browseFilters=null;}$('.spot-search input').value=state.search;$('.spot-workbench').classList.toggle('is-planning',value);$('.spot-planning-area').classList.toggle('is-editing',value);host.querySelectorAll('[data-spot-mode]').forEach(b=>b.setAttribute('aria-pressed',String((b.dataset.spotMode==='plan')===value)));if(viewer)applyFilters();syncURL(selected);},
+    planner=root.SSKR_ROUTE_PLANNER.mount($('.route-planner'),{catalog:entries,viewer,filters,filterParking,getBrowseFilters:()=>browseFilters,getAccount:options.getAccount,getEvent:options.getEvent,getParticipation:options.getParticipation,onLogin:options.onLogin,
+      onModeChange:(value,startId)=>{clearTimeout(searchTimer);if(value&&!editing&&!browseFilters)browseFilters={...state};editing=value;if(!value)filters.forEach(node=>filterParking.append(node));routeStartId=value?startId:null;if(value){state.kind=startId?'spot':'start';state.category='all';state.search='';}else if(browseFilters){Object.assign(state,browseFilters);browseFilters=null;}$('.spot-search input').value=state.search;$('.spot-workbench').classList.toggle('is-planning',value);$('.spot-planning-area').classList.toggle('is-editing',value);host.querySelectorAll('[data-spot-mode]').forEach(b=>b.setAttribute('aria-pressed',String((b.dataset.spotMode==='plan')===value)));if(viewer)applyFilters();syncURL(selected);},
       onTabChange:tab=>{if(!editing)return;const url=new URL(location.href);tab==='saved'?url.searchParams.set('tab','saved'):url.searchParams.delete('tab');history.replaceState(history.state,'',url.pathname+url.search);},
       onStartChange:id=>{routeStartId=id;state.kind=id?'spot':'start';state.category='all';state.search='';$('.spot-search input').value='';applyFilters();},
       onRoadReady:()=>{if(editing&&routeStartId)applyFilters();},
@@ -82,7 +83,7 @@
       host.querySelectorAll('[data-kind]').forEach(b=>{b.setAttribute('aria-pressed',String(b.dataset.kind===state.kind));b.disabled=editing&&b.dataset.kind!==(routeStartId?'spot':'start');});
       host.querySelectorAll('[data-category]').forEach(b=>{b.setAttribute('aria-pressed',String(b.dataset.category===state.category));b.disabled=state.kind==='start'||state.kind==='finish'});
       const counts=filterPlaces(entries,{...state,category:'all'});host.querySelectorAll('[data-count]').forEach(n=>n.textContent=counts.filter(p=>n.dataset.count==='all'||p.category===n.dataset.count).length);
-      $('[data-action="clear"]').hidden=!state.search;viewer.setItems(visible,{selectedId:editing?undefined:selected?.id,reset,fit:!editing});planner?.setFilters(visible,Boolean(state.search||state.category!=='all'));if(!editing)renderDetail(selected);
+      $('[data-action="clear"]').hidden=!state.search;viewer.setItems(visible,{selectedId:editing?undefined:selected?.id,reset,fit:!editing});planner?.setFilters(visible,{query:state.search,category:state.category});if(!editing)renderDetail(selected);
     }
     listen(host,'click',event=>{
       const mode=event.target.closest('[data-spot-mode]');if(mode){planner.setMode(mode.dataset.spotMode==='plan');if(editing&&!routeStartId)viewer.fitRoute?.();return;}

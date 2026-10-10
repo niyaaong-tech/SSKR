@@ -238,3 +238,42 @@ test('ordinary app links use the SPA while modified, download and new-window lin
  const rules=await link.evaluate(a=>{const outcomes=[];for(const attrs of [{target:'_blank'},{download:'records'},{href:'https://example.com/app' }]){const copy=a.cloneNode(true);for(const [key,value]of Object.entries(attrs))copy.setAttribute(key,value);a.after(copy);const e=new MouseEvent('click',{bubbles:true,cancelable:true,button:0});document.addEventListener('click',event=>{outcomes.push(event.defaultPrevented);event.preventDefault();},{once:true});copy.dispatchEvent(e);copy.remove();}return outcomes;});assert.deepEqual(rules,[false,false,false]);
  await link.click();await p.waitForSelector('.memorial-archive');assert.equal(await p.evaluate(()=>window.qaSameDocument),true);await p.close();
 });
+
+test('narrow participation login controls never cover auth content while scrolling or zoomed',async()=>{
+ for(const [width,height,zoom]of [[400,605,1],[360,640,1],[400,605,2]]){
+  const p=await page(width,height);await open(p,'/participate?scenario=guest','#primary-action');
+  await p.locator('#primary-action').click();await p.locator('.auth-brand').waitFor({state:'visible'});
+  await p.evaluate(z=>document.documentElement.style.zoom=String(z),zoom);
+  for(const selector of ['.auth-brand','.sskr-social-auth h2','[data-provider="google"]'])for(const offset of [20,48,120]){
+   await p.locator(selector).evaluate((el,y)=>scrollTo({top:scrollY+el.getBoundingClientRect().top-y,behavior:'instant'}),offset);
+   await p.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));
+   const covered=await p.locator(selector).evaluate(el=>{
+    const a=el.getBoundingClientRect(),b=document.querySelector('#participate-utilities').getBoundingClientRect();
+    return a.top<innerHeight&&a.bottom>0&&b.top<innerHeight&&b.bottom>0&&a.left<b.right&&a.right>b.left&&a.top<b.bottom&&a.bottom>b.top;
+   });assert.equal(covered,false,`${width}px zoom ${zoom}: controls overlap ${selector} at ${offset}`);
+  }
+  const google=p.locator('[data-provider="google"]');await google.focus();await google.scrollIntoViewIfNeeded();
+  assert.equal(await google.evaluate(el=>{const r=el.getBoundingClientRect();return el.contains(document.elementFromPoint(r.left+r.width/2,r.top+r.height/2));}),true);
+  await capture(p,`auth-flow-${width}-${zoom}`,false);await p.close();
+ }
+});
+
+test('compact app rails reuse the original lettering and expanded menus retain the subtitle',async()=>{
+ const crypto=require('node:crypto');
+ const svg=fs.readFileSync(path.resolve(__dirname,'../../web/shared/brand/wordmark.svg'),'utf8').replace(/\r\n/g,'\n');
+ assert.equal(crypto.createHash('sha256').update(svg).digest('hex'),'77dda6e4813e24d43b4c59ba2f93e494017f3ebc631037e2ea274de4cd3ac6df');
+ for(const width of [900,1180,1365,1440,390]){
+  const p=await page(width,900);await open(p,'/app?scenario=guest');
+  if(width===390){await p.locator('#mobile-nav-toggle').click();await p.waitForFunction(()=>document.querySelector('#mobile-nav-toggle').getAttribute('aria-expanded')==='true');}
+  const compact=p.locator('.app-brand .sskr-wordmark--compact'),full=p.locator('.app-brand .sskr-wordmark--full');
+  const collapsed=width>=900&&width<=1365;
+  assert.equal(await compact.isVisible(),collapsed);assert.equal(await full.isVisible(),!collapsed);
+  if(collapsed){
+   await p.waitForFunction(()=>document.querySelector('.app-brand use').getBBox().width>600);
+   assert.equal(await compact.locator('use').getAttribute('href'),'/web/shared/brand/wordmark.svg#sskr-custom-wordmark');
+   assert.equal(await compact.evaluate(el=>getComputedStyle(el).fillRule),'evenodd');
+   const fits=await compact.evaluate(el=>{const r=el.getBoundingClientRect(),rail=el.closest('.app-sidebar').getBoundingClientRect();return rail.width===84&&r.left>=rail.left&&r.right<=rail.right;});assert.equal(fits,true);
+  }else{await full.evaluate(img=>img.decode());assert.equal(await full.evaluate(img=>img.naturalWidth),628);}
+  await p.getByRole('link',{name:'SSKR 홈',exact:true}).click();await p.waitForURL(base+'/');await p.close();
+ }
+});

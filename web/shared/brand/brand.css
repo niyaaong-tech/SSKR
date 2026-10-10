@@ -1,4 +1,4 @@
-/* One outlined wordmark for every page; retain the complete 628:141 artwork. */
+/* Compact uses reference the original lettering path; the full asset stays intact. */
 .sskr-wordmark {
   display: block;
   width: 176px;
@@ -9,6 +9,13 @@
   flex-shrink: 0;
 }
 .sskr-wordmark--light { filter: brightness(0) invert(1); }
+.sskr-wordmark--compact {
+  display: none;
+  aspect-ratio: 628 / 104;
+  fill: #0F3B33;
+  fill-rule: evenodd;
+  stroke: none;
+}
 .brand:has(.sskr-wordmark) { flex-shrink: 0; min-height: 44px; }
 .app-brand .sskr-wordmark { width: 172px; }
 .footer-brand .sskr-wordmark,
@@ -16,11 +23,14 @@ footer .brand .sskr-wordmark { width: 196px; }
 .auth-brand .sskr-wordmark { width: 196px; margin-inline: auto; }
 .rp-dialog .auth-brand .sskr-wordmark { width: 176px; }
 @media (min-width: 900px) and (max-width: 1365px) {
-  .app-brand .sskr-wordmark { width: 72px; }
+  .app-brand .sskr-wordmark--full { display: none; }
+  .app-brand .sskr-wordmark--compact { display: block; width: 72px; }
 }
 @media (max-width: 900px) {
   .site-header .brand .sskr-wordmark { width: 140px; }
   .site-header .brand .sskr-wordmark--home { width: clamp(72px, calc(100vw - 290px), 140px); }
+  .site-header .brand .sskr-wordmark--home.sskr-wordmark--full { display: none; }
+  .site-header .brand .sskr-wordmark--home.sskr-wordmark--compact { display: block; }
 }
 @media (max-width: 430px) {
   .site-header:has(.sskr-wordmark--home) { gap: 8px; }

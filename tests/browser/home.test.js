@@ -84,3 +84,17 @@ test('all mobile route labels enlarge and Iksan stays clear of Gunsan',async()=>
  assert.ok(a.x>=b.x+b.width||b.x>=a.x+a.width||a.y>=b.y+b.height||b.y>=a.y+a.height);
  assert.equal(await p.getByText('2027 가을',{exact:true}).count(),0);await p.close();
 });
+
+test('narrow HOME headers show original lettering without crowding the navigation',async()=>{
+ for(const width of [360,390,430,820,900,1440]){
+  const p=await browser.newPage({viewport:{width,height:844},reducedMotion:'reduce'});await p.goto(base);
+  const compact=p.locator('.site-header .sskr-wordmark--compact'),full=p.locator('.site-header .sskr-wordmark--full');
+  assert.equal(await compact.isVisible(),width<=900);assert.equal(await full.isVisible(),width>900);
+  if(width<=900){await p.waitForFunction(()=>document.querySelector('.site-header use').getBBox().width>600);assert.equal(await compact.locator('use').getAttribute('href'),'/web/shared/brand/wordmark.svg#sskr-custom-wordmark');}
+  else await full.evaluate(img=>img.decode());
+  assert.equal(await p.evaluate(()=>{const logo=document.querySelector('.site-header .brand').getBoundingClientRect(),actions=document.querySelector('.header-actions').getBoundingClientRect();return logo.left>=0&&logo.right<=actions.left&&actions.right<=innerWidth&&document.documentElement.scrollWidth<=innerWidth;}),true,`${width}px: header must fit`);
+  assert.equal(await p.getByRole('link',{name:'SSKR 홈',exact:true}).count(),1);
+  await p.evaluate(()=>scrollTo({top:400,behavior:'instant'}));await p.getByRole('link',{name:'SSKR 홈',exact:true}).click();
+  await p.waitForFunction(()=>scrollY===0);await p.close();
+ }
+});

@@ -469,7 +469,7 @@ html[data-reduce-motion="true"] *::after { scroll-behavior: auto !important; tra
   .completion-summary { grid-template-columns: 1fr 1fr; }
   .completion-summary > div:nth-child(2) { border-right: 0; }
   .completion-summary > div:nth-child(-n+2) { border-bottom: 1px solid var(--line); }
-  .participate-utilities { position: sticky; top: 8px; right: auto; width: max-content; height: 48px; justify-content: flex-end; margin: 8px 14px -56px auto; padding: 4px 6px; border-radius: 10px; background: rgba(252,252,251,.5); backdrop-filter: blur(8px); }
+  .participate-utilities { position: relative; top: auto; right: auto; width: max-content; max-width: calc(100% - 28px); min-height: 48px; height: auto; flex-wrap: wrap; justify-content: flex-end; margin: 8px 14px 0 auto; padding: 4px 6px; border-radius: 10px; background: rgba(252,252,251,.5); backdrop-filter: blur(8px); }
   .account-menu { top: 48px; right: 0; }
   .benefit-area { padding: 32px 20px 42px; gap: 24px; }
   .benefit-heading { align-items: flex-start; padding-right: 0; }

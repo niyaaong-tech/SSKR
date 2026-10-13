@@ -80,7 +80,7 @@ HOME 헤더에서 Journey Presentation 링크를 제거했습니다. 기존 `/jo
 
 스팟·메모리얼·공개 탐색은 `web/shared/map/`을 공유합니다. `npm test`는 국내 장소 보존·해외 좌표 제외·공통 스타일 범위·캐시 무결성을 검사합니다. `npm run test:maps`는 개발 서버를 임시 포트에서 실행해 세 화면과 모바일 배열·휠·해안 지도를 브라우저로 검증합니다. Windows에서는 Edge를 사용하며, 다른 환경에서는 먼저 `npx playwright install chromium`을 실행합니다. `BROWSER_CHANNEL`로 브라우저를 지정할 수 있습니다.
 
-대한민국 표시 범위는 OpenStreetMap 행정 경계(`web/shared/map/korea.geojson`)를 사용하고, 실제 해안선은 원본 지도 타일의 water 레이어로 표시합니다. 6·7·8배율 타일은 `npm run map:cache`로 `server/map/cache/`에 생성합니다. 캐시는 경계 해시와 파일 해시로 검증하며, 확대 타일만 요청 시 변환합니다. 경계가 변경되면 배포 전에 캐시를 다시 생성해야 합니다. 지도 데이터는 © OpenStreetMap contributors, ODbL-1.0입니다.
+대한민국 표시 범위는 OpenStreetMap 행정 경계(`web/shared/map/korea.geojson`)를 사용하고, 실제 해안선은 원본 지도 타일의 water 레이어로 표시합니다. 5·6·7·8배율 타일은 `npm run map:cache`로 `server/map/cache/`에 생성합니다. 캐시는 경계 해시와 파일 해시로 검증하며, 확대 타일만 요청 시 변환합니다. 경계가 변경되면 배포 전에 캐시를 다시 생성해야 합니다. 지도 데이터는 © OpenStreetMap contributors, ODbL-1.0입니다.
 
 ### 스팟 주행 루트 편집
 

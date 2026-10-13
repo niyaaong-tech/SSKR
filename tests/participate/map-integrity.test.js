@@ -9,7 +9,7 @@ test('all 162 curated places fit the Korean map extent',()=>{
 });
 test('bundled overview tiles match the active boundary and can be served without upstream requests',async()=>{
  const dir=path.join(__dirname,'../../server/map/cache'),manifest=JSON.parse(fs.readFileSync(path.join(dir,'manifest.json'),'utf8'));
- assert.equal(manifest.boundarySha256,boundaryHash);assert.deepEqual(manifest.zooms,[6,7,8]);
+ assert.equal(manifest.boundarySha256,boundaryHash);assert.deepEqual(manifest.zooms,[5,6,7,8]);
  const saved=global.fetch;global.fetch=()=>{throw Error('Overview must not fetch upstream');};
  try{for(const [key,entry] of Object.entries(manifest.tiles)){const data=fs.readFileSync(path.join(dir,entry.file));assert.equal(createHash('sha256').update(data).digest('hex'),entry.sha256);assert.ok((await tile(...key.split('/').map(Number))).length);}}finally{global.fetch=saved;}
 });

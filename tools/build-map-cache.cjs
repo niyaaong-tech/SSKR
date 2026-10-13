@@ -5,7 +5,7 @@ const {tileMask,clipTile,boundaryHash}=require('../server/map/tiles');
  const output=path.resolve(process.argv[2]||path.join(__dirname,'../server/map/cache'));
  fs.mkdirSync(output,{recursive:true});
  const response=await fetch('https://tiles.openfreemap.org/planet',{signal:AbortSignal.timeout(15000)});if(!response.ok)throw Error('Map source unavailable');
- const source=await response.json(),manifest={schemaVersion:1,boundarySha256:boundaryHash,source:source.tiles[0],generatedAt:new Date().toISOString(),zooms:[6,7,8],tiles:{}};
+ const source=await response.json(),manifest={schemaVersion:1,boundarySha256:boundaryHash,source:source.tiles[0],generatedAt:new Date().toISOString(),zooms:[5,6,7,8],tiles:{}};
  const hash=b=>createHash('sha256').update(b).digest('hex');let bytes=0;
  for(const z of manifest.zooms){const n=2**z,merc=lat=>(.5-Math.log(Math.tan(Math.PI/4+lat*Math.PI/360))/(2*Math.PI))*n;
   for(let x=Math.floor((124+180)/360*n);x<=Math.floor((132.5+180)/360*n);x++)for(let y=Math.floor(merc(39));y<=Math.floor(merc(32.5));y++){

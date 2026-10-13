@@ -28,7 +28,7 @@
     if(animate&&!reduced){const panel=$('place-detail');panel.classList.remove('entering');void panel.offsetWidth;panel.classList.add('entering');}
   }
 
-  const viewer=SSKR_MAP.mount($('explore-map'),{items:places,catalog,initialId:selected.id,inView:true,onSelect:p=>{setDetail(p);history.replaceState(null,'','#'+p.id);},onOpen:()=>{$('place-detail').scrollIntoView({behavior:reduced?'auto':'smooth',block:'start'});}});
+  const viewer=SSKR_MAP.mount($('explore-map'),{items:places,catalog,overview:true,initialId:location.hash?selected.id:undefined,inView:true,onSelect:p=>{setDetail(p);history.replaceState(null,'','#'+p.id);},onOpen:()=>{$('place-detail').scrollIntoView({behavior:reduced?'auto':'smooth',block:'start'});}});
   function render(){visible=places.filter(p=>kind==='all'||p.kind===kind);selected=visible.includes(selected)?selected:visible[0];viewer.setItems(visible,{selectedId:selected?.id});$('place-detail').hidden=!visible.length;$('previous-place').disabled=$('next-place').disabled=visible.length<2;if(selected)setDetail(selected,false);}
   document.querySelectorAll('[data-kind]').forEach(button=>button.addEventListener('click',()=>{kind=button.dataset.kind;document.querySelectorAll('[data-kind]').forEach(n=>{n.classList.toggle('active',n===button);n.setAttribute('aria-pressed',String(n===button));});render();}));
   function cycle(direction){if(!visible.length)return;const i=visible.indexOf(selected);viewer.select(visible[(i+direction+visible.length)%visible.length].id);}

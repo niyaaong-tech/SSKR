@@ -39,7 +39,7 @@ test('mobile cards fill bottom rows; wheel gestures retain their original owner'
  await capture(p,'mobile');await p.close();assert.deepEqual(errors,[]);
 });
 test('overview zoom stops at the spot layout and panning stays within Korean territory',async()=>{
- for(const [width,height,name,floor] of [[1440,1000,'overview-desktop',7],[390,844,'overview-mobile',6.5]]){
+ for(const [width,height,name,floor] of [[1440,1000,'overview-desktop',6],[390,844,'overview-mobile',5]]){
   const p=await page(width,height);await p.goto(base+'/app/spots?scenario=guest');await p.waitForSelector('.spot-mini-card');
   await p.waitForSelector('.leaflet-sskr-land-pane path');
   const min=await p.evaluate(()=>__map.getMinZoom());
@@ -63,12 +63,12 @@ test('coastal map details are preserved at high zoom',async()=>{
 });
 
 test('South Korean terrain remains visible in the gap before vector tiles reach their minimum zoom',async()=>{
- const p=await page(390,844);await p.goto(base+'/app/spots?scenario=guest');await p.waitForSelector('.leaflet-sskr-base-land-pane path');
+ const p=await page(390,430);await p.goto(base+'/app/spots?scenario=guest');await p.waitForSelector('.leaflet-sskr-base-land-pane path');
  await p.locator('[data-spot-mode="plan"]').click();
- await p.evaluate(()=>__map.setZoom(6.75,{animate:false}));await p.waitForFunction(()=>__backdrop.getMaplibreMap().isStyleLoaded()&&__backdrop.getMaplibreMap().areTilesLoaded());
+ await p.evaluate(()=>__map.setZoom(5.75,{animate:false}));await p.waitForFunction(()=>__backdrop.getMaplibreMap().isStyleLoaded()&&__backdrop.getMaplibreMap().areTilesLoaded());
  const gap=await p.evaluate(()=>{const gl=__backdrop.getMaplibreMap();return {leaflet:__map.getZoom(),vector:gl.getZoom(),minimum:gl.getStyle().sources.openmaptiles.minzoom,features:gl.querySourceFeatures('openmaptiles',{sourceLayer:'sskr_land'}).length};});
- assert.equal(gap.leaflet,6.75);assert.ok(gap.vector<gap.minimum);assert.equal(gap.features,0,'the regression must exercise terrain without vector tiles');
- for(const zoom of [6.5,6.75,7,8.25,6.75]){
+ assert.equal(gap.leaflet,5.75);assert.ok(gap.vector<gap.minimum);assert.equal(gap.features,0,'the regression must exercise terrain without vector tiles');
+ for(const zoom of [5.5,5.75,6,8.25,5.75]){
   await p.evaluate(zoom=>__map.setView([36.5,128],zoom,{animate:false}),zoom);await p.waitForTimeout(150);assert.ok(await terrainCovers(p,[36.5,128]),'projected inland coordinates must stay on visible terrain at zoom '+zoom);
  }
  const layers=await p.evaluate(()=>{const gl=__backdrop.getMaplibreMap(),land=document.querySelector('.leaflet-sskr-base-land-pane'),tiles=gl.getCanvas().closest('.leaflet-pane');return {land:+getComputedStyle(land).zIndex,tiles:+getComputedStyle(tiles).zIndex,background:gl.getPaintProperty('background','background-opacity'),sea:getComputedStyle(document.querySelector('.spot-map')).backgroundColor};});

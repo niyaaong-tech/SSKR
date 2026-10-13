@@ -72,7 +72,7 @@ async function handler(req,res){
  if(!['GET','HEAD'].includes(req.method)){res.writeHead(405);return res.end();}
  const u=new URL(req.url,'http://localhost'),values=['z','x','y'].map(k=>u.searchParams.get(k));
  if(values.some(v=>!/^\d{1,5}$/.test(v||''))){res.writeHead(400);return res.end('Invalid tile');}
- const [z,x,y]=values.map(Number);if(z<6||z>14||x>=2**z||y>=2**z){res.writeHead(400);return res.end('Invalid tile');}
+ const [z,x,y]=values.map(Number);if(z<5||z>14||x>=2**z||y>=2**z){res.writeHead(400);return res.end('Invalid tile');}
  try{const bytes=await tile(z,x,y);res.setHeader('Cache-Control','public, max-age=86400, s-maxage=604800');res.setHeader('Vary','Accept-Encoding');res.setHeader('Content-Type','application/vnd.mapbox-vector-tile');if(!bytes.length){res.statusCode=204;return res.end();}
   const gzip=(req.headers['accept-encoding']||'').includes('gzip');if(gzip)res.setHeader('Content-Encoding','gzip');res.statusCode=200;res.end(req.method==='HEAD'?undefined:gzip?gzipSync(bytes):bytes);
  }catch(error){console.error('Korea tile failed:',error.message);res.writeHead(502,{'Cache-Control':'no-store'});res.end('Map tile unavailable');}

@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 260" width="480" height="260">
+ <rect width="480" height="260" fill="#edf2e7"/><path d="M312 0q-65 85-12 151t-27 109h207V0Z" fill="#d4e1d2"/><path d="M335 37q43 52 1 92t27 103" fill="none" stroke="#bacfba" stroke-width="3" stroke-dasharray="7 8"/>
+ <rect x="60" y="30" width="260" height="200" rx="12" fill="#fcfcf7" stroke="#bacbb2" stroke-width="2"/>
+ <text x="78" y="55" fill="#294c3a" font-family="sans-serif" font-size="16" font-weight="700">내 경로</text>
+ <rect x="80" y="75" width="218" height="42" rx="7" fill="#edf3e7" stroke="#c6d3bd"/><circle cx="103" cy="96" r="11" fill="#31583f"/><text x="103" y="100" text-anchor="middle" fill="#fff" font-family="sans-serif" font-size="12">1</text><path d="M126 96h100" stroke="#9eb29a" stroke-width="5" stroke-linecap="round"/>
+ <rect x="80" y="130" width="218" height="42" rx="7" fill="#edf3e7" stroke="#c6d3bd"/><circle cx="103" cy="151" r="11" fill="#31583f"/><text x="103" y="155" text-anchor="middle" fill="#fff" font-family="sans-serif" font-size="12">3</text><path d="M126 151h86" stroke="#9eb29a" stroke-width="5" stroke-linecap="round"/>
+ <g transform="rotate(-5 218 184)"><rect x="110" y="163" width="218" height="45" rx="7" fill="#fff" stroke="#bc9250" stroke-width="2"/><circle cx="133" cy="185" r="11" fill="#bc9250"/><text x="133" y="189" text-anchor="middle" fill="#fff" font-family="sans-serif" font-size="12">2</text><path d="M156 185h90" stroke="#c0b9a5" stroke-width="5" stroke-linecap="round"/><path d="M302 178h.1m-7 0h.1m7 7h.1m-7 0h.1m7 7h.1m-7 0h.1" stroke="#31583f" stroke-width="3" stroke-linecap="round"/></g>
+ <path d="M344 184V113m-10 12 10-12 10 12" stroke="#bc9250" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+ <circle cx="385" cy="73" r="27" fill="#fff" stroke="#bacbb2" stroke-width="2"/><path d="m377 61-10 9 10 9m-9-9h16q14 0 14 13" fill="none" stroke="#31583f" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+ <text x="385" y="118" text-anchor="middle" fill="#536e51" font-family="sans-serif" font-size="12">실행 취소</text>
+</svg>

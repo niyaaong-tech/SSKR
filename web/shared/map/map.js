@@ -1,5 +1,6 @@
 (function(root,factory){const api=factory(root);if(typeof module==='object'&&module.exports)module.exports=api;else root.SSKR_MAP=Object.freeze(api);})(typeof globalThis!=='undefined'?globalThis:this,root=>{
  'use strict';
+ const southKoreaView=[[33.08,124.5],[38.64,132.02]];
  const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
  function cardSlots(count,mobile){const first=count%4||4,split=Math.ceil(count/2);return Array.from({length:count},(_,i)=>mobile?{row:i<first?1:2+Math.floor((i-first)/4),column:i<first?i+1:1+(i-first)%4}:{side:i<split?0:1,row:i<split?i:i-split});}
  function clusterPlaces(places,project,size=50,selectedId='',pinnedIds=new Set()){
@@ -20,7 +21,7 @@
  function mount(host,options={}){
   const events=new AbortController(),reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
   let items=options.items||[],selected=items.find(p=>p.id===options.initialId)||null,inView=options.inView??true,page=0,pageItems=[],map,layer,routeLayer,highlight,landLayer,observer,resizeTimer,revealTimer,creditTimer,creditObserver,creditPinned=false,disposed=false,returnY=0;
-  let markers=new Map(),landRings=[],correctingPan=false,editing=false,plannerLegs=[],routeIds=[],activeId='',candidates=[],insets={};
+  let markers=new Map(),landRings=[],correctingPan=false,applyingLimits=false,fittingOverview=false,overviewActive=false,editing=false,plannerLegs=[],routeIds=[],activeId='',candidates=[],insets={};
   const catalog=new Map((options.catalog||items).map(p=>[p.id,p])),remember=places=>places.forEach(p=>catalog.set(p.id,p));remember(items);
   host.classList.add('sskr-map');
   host.innerHTML=`<div class="spot-workspace"><div class="spot-map-wrap"><div class="spot-map" tabindex="0" role="region" aria-label="대한민국 SSKR 장소 지도"></div><div class="spot-list-head"><h3><span data-result-label></span> <span data-result-count></span></h3>${options.inViewControl===false?'':`<label><input type="checkbox" data-in-view ${inView?'checked':''}> 지도 안에서만</label>`}</div><div class="spot-map-controls" role="group" aria-label="지도 제어"><button type="button" data-action="zoom-in" aria-label="지도 확대">+</button><button type="button" data-action="zoom-out" aria-label="지도 축소">−</button><button type="button" data-action="fit" aria-label="${options.route?'전체 경로':'전체 장소'} 보기" title="전체 보기"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M8 3H3v5m13-5h5v5M3 16v5h5m13-5v5h-5"/></svg></button></div><div class="spot-list" aria-label="지도 장소 목록"></div><div class="spot-card-pages"><button type="button" data-action="previous-cards" aria-label="이전 장소 목록">‹</button><span data-card-page aria-live="polite"></span><button type="button" data-action="next-cards" aria-label="다음 장소 목록">›</button></div><p class="spot-map-status" role="status"></p><details class="spot-attribution" open><summary>지도 출처</summary><div><a href="https://openfreemap.org/" target="_blank" rel="noopener">OpenFreeMap</a> · <a href="https://www.openmaptiles.org/" target="_blank" rel="noopener">OpenMapTiles</a><br>© <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap contributors</a><br>남북한 육지 윤곽: <a href="https://www.geoboundaries.org/" target="_blank" rel="noopener">geoBoundaries</a> (남한 Natural Earth, 북한 WFP·OCHA / CC BY 3.0 IGO)<br>도로·지역: <a href="https://www.openstreetmap.org/relation/307756" target="_blank" rel="noopener">OpenStreetMap</a></div></details></div></div>`;
@@ -32,22 +33,29 @@
   root.SSKR_MAP_INTERACTION.bindWheel({getMap:()=>map,panel:()=>$('.spot-map'),signal:events.signal});
   function sizing(){const height=$('.spot-map-wrap').clientHeight,mobile=matchMedia('(max-width:700px)').matches,cardHeight=mobile?Math.min(74,Math.max(34,height*.105)):Math.min(104,Math.max(24,(height-146)/6));$('.spot-map-wrap').style.setProperty('--spot-card-height',cardHeight+'px');return {height,mobile,cardHeight};}
   function padding(){return safePadding({...sizing(),width:$('.spot-map-wrap').clientWidth,editing,compact:host.classList.contains('is-mobile-editor'),insets});}
+  function panBounds(){return options.overview&&(overviewActive||Math.abs(map.getZoom()-map.getMinZoom())<.26)?null:root.L.latLngBounds([[33.05,124.26],[43.07,131.96]]);}
   function limits(){
+   applyingLimits=true;
    const wasOverview=Math.abs(map.getZoom()-map.getMinZoom())<.26;
    // Disable the old moveend bounds handler before stopping its animation.
    // Otherwise stop() can restart that pan with the previous viewport size.
    map.setMaxBounds(null);
    map.stop();
    map.setMinZoom(4);
-   const overview=root.L.latLngBounds([[34.58,126.4],[37.9,129.52]]),pad=padding();
+   const overview=root.L.latLngBounds(options.overview?southKoreaView:[[34.58,126.4],[37.9,129.52]]),pad=padding();
    const minimum=Math.max(4,map.getBoundsZoom(overview,false,root.L.point(pad.paddingTopLeft).add(pad.paddingBottomRight)));
-   const bounds=root.L.latLngBounds([[33.05,124.26],[43.07,131.96]]);
+   // Overview padding needs sea around Jeju and Dokdo. The former hard edge
+   // at 33.05N pushed a fitted southern overview north before it settled.
+   // clampPan still rejects views with no Korean land inside the usable area.
    // Apply layout-driven zoom before raising the limit: Leaflet's setMinZoom
    // otherwise starts an animation that invalidates the selected card position.
-   if(wasOverview||map.getZoom()<minimum)map.setZoom(minimum,{animate:false});
+   if(wasOverview||overviewActive||map.getZoom()<minimum)map.setZoom(minimum,{animate:false});
    map.setMinZoom(minimum);
-   map.panInsideBounds(bounds,{animate:false});
+   if(overviewActive)map.fitBounds(southKoreaView,{...pad,maxZoom:12,animate:false});
+   const bounds=panBounds();
+   if(bounds)map.panInsideBounds(bounds,{animate:false});
    map.setMaxBounds(bounds);
+   applyingLimits=false;
   }
   function clampPan(){
    if(!landRings.length||correctingPan||disposed)return false;
@@ -119,7 +127,7 @@
    if(Math.abs(dx)>.5||Math.abs(dy)>.5)map.panBy([-dx,-dy],{animate:false});
   }
   function select(item,{open=false,fly=false,reveal=true}={}){
-   selected=item;renderCards(true);renderMarkers();options.onSelect?.(item);
+   overviewActive=false;selected=item;renderCards(true);renderMarkers();options.onSelect?.(item);
    if(fly&&map){if(reveal)map.once('moveend',()=>requestAnimationFrame(()=>revealSelected(item.id)));map.flyTo([item.lat,item.lng],Math.max(map.getZoom(),11),{animate:!reduced,duration:.4});}
    else if(reveal)requestAnimationFrame(()=>revealSelected(item.id));
    if(open){returnY=scrollY;options.onOpen?.(item);}
@@ -162,7 +170,16 @@
    $('[data-action="fit"]').setAttribute('aria-label',editing||options.route?'전체 경로 보기':'전체 장소 보기');
   }
   function clearSelection(){selected=null;clearTimeout(revealTimer);renderCards();renderMarkers();}
-  function fit(){if(!map||disposed)return;map.invalidateSize({pan:false});limits();if(editing)clearSelection();const bounds=routeLayer?.getBounds(),places=editing&&routeIds.length?routePlaces(catalog,routeIds):items;if(bounds?.isValid()){places.forEach(p=>bounds.extend([p.lat,p.lng]));map.fitBounds(bounds,{...padding(),maxZoom:12,animate:!reduced,duration:.35});}else if(places.length)map.fitBounds(places.map(p=>[p.lat,p.lng]),{...padding(),maxZoom:12,animate:!reduced,duration:.35});}
+  function fit(){
+   if(!map||disposed)return;map.invalidateSize({pan:false});limits();if(editing)clearSelection();
+   const bounds=routeLayer?.getBounds(),places=editing&&routeIds.length?routePlaces(catalog,routeIds):items;
+   const fullKind=places.length>1&&['start','spot','finish'].some(kind=>places.every(p=>p.kind===kind)&&places.length===[...catalog.values()].filter(p=>p.kind===kind).length);
+   const overview=options.overview&&!options.route&&!routeIds.length&&(places.length===catalog.size||fullKind);
+   const settings={...padding(),maxZoom:12,animate:!reduced,duration:.35};overviewActive=overview&&!selected;
+   if(bounds?.isValid()){places.forEach(p=>bounds.extend([p.lat,p.lng]));map.fitBounds(bounds,settings);}
+   else if(overview){fittingOverview=true;map.fitBounds(southKoreaView,{...settings,animate:false});fittingOverview=false;}
+   else if(places.length)map.fitBounds(places.map(p=>[p.lat,p.lng]),settings);
+  }
   if(root.L){
    map=root.L.map($('.spot-map'),{zoomControl:false,attributionControl:false,scrollWheelZoom:false,minZoom:4,maxZoom:16,zoomSnap:.25,maxBoundsViscosity:1}).setView([36.5,127.8],7);
    // Leaflet 1.9.4 keeps a 250ms zoom-completion callback after remove().
@@ -173,13 +190,15 @@
    // Keep those corrections synchronous so an old pan cannot finish after reveal.
    const panInsideBounds=map.panInsideBounds;
    map.panInsideBounds=function(bounds,options){return panInsideBounds.call(this,bounds,{animate:false,...options});};
+   map.on('zoomstart',()=>{if(!applyingLimits&&!fittingOverview)overviewActive=false;});
+   map.on('zoomend',()=>{if(!applyingLimits&&!disposed)map.setMaxBounds(panBounds());});
    layer=root.L.layerGroup().addTo(map);limits();
    // Keep terrain beneath the WebGL details, including below their minimum zoom
    // and while tiles load or fail. The vector background must stay transparent.
    const baseLandPane=map.createPane('sskr-base-land');baseLandPane.style.zIndex=190;baseLandPane.style.pointerEvents='none';
    const landPane=map.createPane('sskr-land');landPane.style.zIndex=450;landPane.style.pointerEvents='none';
    const routePane=map.createPane('sskr-routes');routePane.style.zIndex=460;routePane.style.pointerEvents='none';
-   const landStyle=feature=>{const north=feature.properties.iso==='PRK',overview=map.getZoom()<6.5;return {color:north?'#94aa99':'#a6b9a7',weight:north||overview?1:0,opacity:north||overview?1:0,fillColor:'#d7e2d6',fillOpacity:north||overview?1:0};};
+   const landStyle=feature=>{const north=feature.properties.iso==='PRK',overview=map.getZoom()<6.5;return {color:north?'#94aa99':'#a6b9a7',weight:north||overview?1:0,opacity:north||overview?1:0,fillColor:'#d7e2d6',fillOpacity:north?1:0};};
    fetch('/web/shared/map/land.geojson',{signal:events.signal}).then(response=>{if(!response.ok)throw Error('Land silhouette unavailable');return response.json()}).then(data=>{
     if(disposed)return;
     root.L.geoJSON(data,{pane:'sskr-base-land',interactive:false,filter:feature=>feature.properties.iso==='KOR',style:{stroke:false,fillColor:'#eff0e9',fillOpacity:1}}).addTo(map);
@@ -187,7 +206,7 @@
     const islands=[['제주도',33.38,126.53],['울릉도',37.5,130.88],['독도',37.24078,131.86956]];islands.forEach(([name,lat,lng])=>root.L.marker([lat,lng],{interactive:false,keyboard:false,icon:root.L.divIcon({className:'sskr-land-label'+(name==='독도'?' is-dokdo':''),html:`${name==='독도'?'<i aria-hidden="true"></i>':''}<span>${name}</span>`,iconSize:name==='독도'?[48,24]:[48,18],iconAnchor:name==='독도'?[24,3]:[24,9]})}).addTo(map));clampPan();
    }).catch(error=>{if(error.name!=='AbortError'&&!disposed)console.warn(error);});
    if(root.L.maplibreGL&&root.maplibregl){let backdrop;try{
-    backdrop=root.L.maplibreGL({style:'/web/shared/map/style.json',transformRequest:url=>({url:new URL(url,location.href).href}),interactive:false,attributionControl:false});
+    backdrop=root.L.maplibreGL({style:'/web/shared/map/style.json?v=southern-overview',transformRequest:url=>({url:new URL(url,location.href).href}),interactive:false,attributionControl:false});
     backdrop.addTo(map);const details=backdrop.getMaplibreMap();let failed=false;
     details.on('error',()=>{failed=true;if(!disposed)$('.spot-map-status').textContent='상세 지도를 불러오지 못해 기본 지형을 표시하고 있습니다.';});
     details.on('idle',()=>{if(disposed)return;const source=details.getStyle()?.sources?.openmaptiles,loaded=source&&details.querySourceFeatures('openmaptiles',{sourceLayer:'sskr_land'}).length>0;if(loaded)failed=false;if(!failed||details.getZoom()<(source?.minzoom??6))$('.spot-map-status').textContent='';});
@@ -204,7 +223,7 @@
    }}
    else $('.spot-map-status').textContent='지도 배경을 불러오지 못했습니다. 장소 카드는 계속 이용할 수 있습니다.';
    if(options.route?.length)renderRoute();
-   map.on('dragstart',()=>clearTimeout(revealTimer));
+   map.on('dragstart',()=>{overviewActive=false;clearTimeout(revealTimer);});
    map.on('moveend',()=>{if(clampPan())return;renderCards();renderMarkers()});map.on('click',()=>{if(editing)return;selected=null;highlight?.setStyle({opacity:0});renderCards();renderMarkers();options.onDeselect?.();});
    observer=new ResizeObserver(()=>{clearTimeout(resizeTimer);resizeTimer=setTimeout(()=>{if(disposed)return;map.invalidateSize({pan:false});limits();if(!clampPan()){renderCards();renderMarkers();if(selected){const id=selected.id;requestAnimationFrame(()=>revealSelected(id));}}},100)});observer.observe($('.spot-map'));
   }else{$('.spot-map-status').textContent='지도 연결을 확인해 주세요. 장소 카드는 계속 이용할 수 있습니다.';host.querySelectorAll('.spot-map-controls button,[data-in-view]').forEach(b=>b.disabled=true);}
@@ -212,9 +231,9 @@
   listen($('[data-in-view]'),'change',e=>{inView=e.target.checked;page=0;renderCards();renderMarkers();});
   renderCards();renderMarkers();fit();if(selected&&options.initialZoom&&map)map.setView([selected.lat,selected.lng],Math.max(map.getMinZoom(),options.initialZoom),{animate:false});
   return {getMap:()=>map,setItems(next,{selectedId,reset=false,fit:refit=true}={}){if(disposed)return;items=next;remember(items);page=0;if(reset){inView=true;if($('[data-in-view]'))$('[data-in-view]').checked=true;}const id=selectedId??selected?.id;selected=items.find(p=>p.id===id)||(editing?catalog.get(id):null)||null;renderCards(true);renderMarkers();if(refit)fit();},
-   setRoute(legs,{selectedIds=[],activeId:nextActiveId='',places=[],fit:refit=false}={}){if(disposed)return;remember(places);plannerLegs=Array.isArray(legs)?legs:[];routeIds=[...new Set(selectedIds)];activeId=nextActiveId;renderRoute();renderMarkers();if(refit)fit();},
+   setRoute(legs,{selectedIds=[],activeId:nextActiveId='',places=[],fit:refit=false}={}){if(disposed)return;remember(places);plannerLegs=Array.isArray(legs)?legs:[];routeIds=[...new Set(selectedIds)];if(routeIds.length)overviewActive=false;activeId=nextActiveId;renderRoute();renderMarkers();if(refit)fit();},
    setCandidates(next=[]){if(disposed)return;candidates=next;remember(candidates);renderMarkers();},
-   setEditing(value){if(disposed||editing===Boolean(value))return;editing=Boolean(value);host.classList.toggle('is-route-editing',editing);if(editing)credits.open=false;selected=null;renderRoute();renderCards();renderMarkers();if(map){limits();clampPan();}},
+   setEditing(value){if(disposed||editing===Boolean(value))return;editing=Boolean(value);if(editing&&options.overview&&!routeIds.length)overviewActive=true;host.classList.toggle('is-route-editing',editing);if(editing)credits.open=false;selected=null;renderRoute();renderCards();renderMarkers();if(map){limits();clampPan();}},
    setInsets(next={}){if(disposed)return;insets=Object.fromEntries(['left','top','right','bottom'].map(key=>[key,Math.max(0,Number(next[key])||0)]));for(const [key,value] of Object.entries(insets))host.style.setProperty('--map-inset-'+key,value+'px');if(map){limits();clampPan();}},
    fitRoute:fit,clearSelection,select(id,opts){if(disposed)return;const p=items.find(p=>p.id===id)||(editing?catalog.get(id):null);if(p)select(p,opts)},revealSelected,highlight(coords){if(!disposed)highlight?.setLatLngs(coords).setStyle({opacity:1});},returnToMap(){if(disposed)return;scrollTo({top:returnY,behavior:reduced?'auto':'smooth'});$('.spot-map').focus({preventScroll:true});},locate(id){if(disposed)return;host.scrollIntoView({behavior:reduced?'auto':'smooth',block:'center'});this.select(id,{fly:true});},destroy(){disposed=true;events.abort();clearTimeout(resizeTimer);clearTimeout(revealTimer);clearTimeout(creditTimer);observer?.disconnect();creditObserver?.disconnect();map?.remove();markers.clear();catalog.clear();plannerLegs=[];routeIds=[];candidates=[];host.classList.remove('sskr-map','is-route-editing');for(const key of ['left','top','right','bottom'])host.style.removeProperty('--map-inset-'+key);}};
  }

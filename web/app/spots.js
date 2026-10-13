@@ -18,7 +18,7 @@
     const kind=query.get('spotKind'),category=query.get('spotCategory');
     const state={kind:kind==='all'||Object.hasOwn(labels,kind)?kind:initial?.kind||'spot',category:Object.hasOwn(categories,category)?category:'all',search:query.get('spotSearch')||''};
     if(state.kind==='start'||state.kind==='finish')state.category='all';
-    let selected=initial||places.find(p=>p.kind==='spot'),visible=[],searchTimer,viewer,planner,editing=false,browseFilters=null,routeStartId=null;
+    let selected=initial||null,visible=[],searchTimer,viewer,planner,editing=false,browseFilters=null,routeStartId=null;
     try{const saved=JSON.parse(root.sessionStorage.getItem('sskr.route-editor')||'null'),filters=saved?.active?saved.browseFilters:null;if(filters&&(filters.kind==='all'||Object.hasOwn(labels,filters.kind))&&Object.hasOwn(categories,filters.category)&&typeof filters.search==='string')browseFilters={kind:filters.kind,category:filters.category,search:filters.search};}catch{}
     const events=new AbortController(),reduced=matchMedia('(prefers-reduced-motion:reduce)');
     const numbers=new Map(places.filter(p=>p.kind==='spot').map((p,i)=>[p.id,i+1]));
@@ -28,7 +28,7 @@
       <header class="spot-heading"><div><p>MY DAY, MY STOPS</p><h2>어디에 들를까요?</h2><span>동해안과 부산의 출발점부터 대천까지, 나의 하루에 어울리는 장소를 골라보세요.</span></div></header>
       <div class="spot-mode-switch" role="group" aria-label="스팟 페이지 모드"><button type="button" data-spot-mode="browse" aria-pressed="true">스팟 탐색</button><button type="button" data-spot-mode="plan" aria-pressed="false">루트 만들기</button></div>
       <div class="spot-toolbar"><div class="spot-kind" role="group" aria-label="장소 구분">${[['spot','스팟'],['start','출발지'],['finish','도착지'],['all','전체']].map(([key,label])=>`<button type="button" data-kind="${key}" aria-pressed="${key===state.kind}">${label}</button>`).join('')}</div><label class="spot-search">${icon('search')}<input type="search" aria-label="장소 이름 또는 지역 검색" placeholder="장소 이름 또는 지역 검색" value="${esc(state.search)}" autocomplete="off"><button type="button" data-action="clear" aria-label="검색어 지우기">×</button></label></div>
-      <div class="spot-categories" role="group" aria-label="스팟 주제">${Object.entries(categories).map(([key,label])=>`<button type="button" data-category="${key}" aria-pressed="${key==='all'}">${key==='all'?'':icon(key)}${label}<span data-count="${key}"></span></button>`).join('')}</div>
+      <div class="spot-categories" role="group" aria-label="스팟 주제">${Object.entries(categories).map(([key,label])=>`<button type="button" id="spot-category-${key}" data-category="${key}" aria-pressed="${key==='all'}">${key==='all'?'':icon(key)}<span data-category-label>${label}</span><span data-count="${key}"></span></button>`).join('')}</div>
       <div class="spot-planning-area"><div class="spot-map-host"></div><aside class="route-planner" aria-label="주행 루트 편집" hidden></aside></div>
       <section class="spot-detail" aria-label="선택한 장소 상세"></section>
       <p class="spot-map-note">경유 스팟은 지도에 등록된 주차 구역을 가리킵니다. 현장 주차 운영과 이륜차 이용 조건은 방문 전 확인해 주세요.</p>
@@ -64,7 +64,7 @@
     const filterParking=document.createElement('div');filterParking.className='spot-filter-parking';
     $('.spot-planning-area').before(filterParking);
     const filters=[$('.spot-toolbar'),$('.spot-categories')];filters.forEach(node=>filterParking.append(node));
-    viewer=shared.mount($('.spot-map-host'),{items:entries,catalog:entries,initialId:selected?.id,initialZoom:initial?11:undefined,inView:true,
+    viewer=shared.mount($('.spot-map-host'),{items:entries,catalog:entries,overview:true,initialId:selected?.id,initialZoom:initial?11:undefined,inView:true,
       onRouteAdd:p=>planner?.addFromMap(p),routeActionState:p=>planner?.routeActionState(p),onSelect:p=>{selected=p;if(editing){planner?.select(p);return;}syncURL(p);renderDetail(p)},onOpen:p=>{if(editing){planner?.openPlace(p);return;}$('.spot-detail').scrollIntoView({behavior:reduced.matches?'auto':'smooth',block:'start'});},onDeselect:()=>{selected=null;if(!editing){syncURL(null);renderDetail(null);}}});
     planner=root.SSKR_ROUTE_PLANNER.mount($('.route-planner'),{catalog:entries,viewer,filters,filterParking,getBrowseFilters:()=>browseFilters,getAccount:options.getAccount,getEvent:options.getEvent,getParticipation:options.getParticipation,onLogin:options.onLogin,
       onModeChange:(value,startId)=>{clearTimeout(searchTimer);if(value&&!editing&&!browseFilters)browseFilters={...state};editing=value;if(!value)filters.forEach(node=>filterParking.append(node));routeStartId=value?startId:null;if(value){state.kind=startId?'spot':'start';state.category='all';state.search='';}else if(browseFilters){Object.assign(state,browseFilters);browseFilters=null;}$('.spot-search input').value=state.search;$('.spot-workbench').classList.toggle('is-planning',value);$('.spot-planning-area').classList.toggle('is-editing',value);host.querySelectorAll('[data-spot-mode]').forEach(b=>b.setAttribute('aria-pressed',String((b.dataset.spotMode==='plan')===value)));if(viewer)applyFilters();syncURL(selected);},
@@ -79,9 +79,15 @@
         const origin=entries.find(p=>p.id===routeStartId),approx=p=>Math.hypot((p.lat-origin.lat)*111000,(p.lng-origin.lng)*90000);
         visible.sort((a,b)=>(planner?.distanceFromStart(a.id)??approx(a))-(planner?.distanceFromStart(b.id)??approx(b)));
       }
-      if(!editing&&!visible.some(p=>p.id===selected?.id))selected=visible[0];if(!editing)syncURL(selected);
+      if(!editing&&selected&&!visible.some(p=>p.id===selected.id))selected=null;if(!editing)syncURL(selected);
       host.querySelectorAll('[data-kind]').forEach(b=>{b.setAttribute('aria-pressed',String(b.dataset.kind===state.kind));b.disabled=editing&&b.dataset.kind!==(routeStartId?'spot':'start');});
-      host.querySelectorAll('[data-category]').forEach(b=>{b.setAttribute('aria-pressed',String(b.dataset.category===state.category));b.disabled=state.kind==='start'||state.kind==='finish'});
+      $('.spot-categories').setAttribute('role',editing?'tablist':'group');
+      host.querySelectorAll('[data-category]').forEach(b=>{
+        const chosen=b.dataset.category===state.category;b.disabled=state.kind==='start'||state.kind==='finish';
+        b.querySelector('[data-category-label]').textContent=editing?({all:'모두',cafe:'카페',food:'맛집',nature:'자연',culture:'역사'}[b.dataset.category]):categories[b.dataset.category];
+        if(editing){b.setAttribute('role','tab');b.setAttribute('aria-selected',String(chosen));b.setAttribute('aria-controls','rp-category-results');b.tabIndex=chosen?0:-1;b.removeAttribute('aria-pressed');}
+        else{b.removeAttribute('role');b.removeAttribute('aria-selected');b.removeAttribute('aria-controls');b.removeAttribute('tabindex');b.setAttribute('aria-pressed',String(chosen));}
+      });
       const counts=filterPlaces(entries,{...state,category:'all'});host.querySelectorAll('[data-count]').forEach(n=>n.textContent=counts.filter(p=>n.dataset.count==='all'||p.category===n.dataset.count).length);
       $('[data-action="clear"]').hidden=!state.search;viewer.setItems(visible,{selectedId:editing?undefined:selected?.id,reset,fit:!editing});planner?.setFilters(visible,{query:state.search,category:state.category});if(!editing)renderDetail(selected);
     }
@@ -94,6 +100,12 @@
       if(action==='clear'||action==='reset'){state.search='';$('.spot-search input').value='';if(action==='reset'){state.kind=editing&&!routeStartId?'start':'spot';state.category='all';}applyFilters(action==='reset');}
     });
     listen($('.spot-search input'),'input',event=>{state.search=event.target.value;clearTimeout(searchTimer);searchTimer=setTimeout(()=>applyFilters(),160)});
+    listen($('.spot-categories'),'keydown',event=>{
+      const current=event.target.closest('[data-category]');if(!editing||!current||!['ArrowLeft','ArrowRight','Home','End'].includes(event.key))return;
+      const tabs=[...host.querySelectorAll('[data-category]:not(:disabled)')];if(!tabs.length)return;event.preventDefault();
+      const at=tabs.indexOf(current),index=event.key==='Home'?0:event.key==='End'?tabs.length-1:(at+(event.key==='ArrowRight'?1:-1)+tabs.length)%tabs.length;
+      state.category=tabs[index].dataset.category;applyFilters();tabs[index].focus({preventScroll:true});tabs[index].scrollIntoView({block:'nearest',inline:'nearest'});
+    });
     applyFilters();if(initial&&!editing)viewer.getMap()?.setView([initial.lat,initial.lng],Math.max(11,viewer.getMap().getMinZoom()),{animate:false});
     if(query.get("mode")==="plan") { planner.setMode(true); if(query.get("tab")==="saved") planner.openSaved(); const incoming=query.get("fromExplore");if(incoming){planner.receivePlace(incoming);const url=new URL(location.href);url.searchParams.delete("fromExplore");history.replaceState(history.state,"",url);}}
     return()=>{events.abort();clearTimeout(searchTimer);planner.destroy();viewer.destroy();host.classList.remove('spots-main')};

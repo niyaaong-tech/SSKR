@@ -102,7 +102,7 @@
    $('.spot-list').innerHTML=cards.length?(mobile?cards.join(''):`<div class="spot-card-column">${cards.slice(0,split).join('')}</div><div class="spot-card-column">${cards.slice(split).join('')}</div>`):`<div class="spot-list-empty">${items.length?'현재 지도 안에는 장소가 없습니다.<button type="button" data-action="fit">전체 장소 보기</button>':'조건에 맞는 장소가 없습니다.'}</div>`;
    $('.spot-list').style.setProperty('--spot-rows',Math.max(1,Math.ceil(cards.length/4)));
    const countItems=editing?[...new Map([...items,...candidates,...routePlaces(catalog,routeIds)].map(p=>[p.id,p])).values()].filter(p=>map?.getBounds().contains([p.lat,p.lng])):list;
-   $('[data-result-label]').textContent=editing?'화면 안 장소':inView?'지도 안':options.route?'방문 장소':'검색 결과';$('[data-result-count]').textContent=countItems.length+'곳';const filterLabel=$('[data-in-view]')?.closest('label');if(filterLabel)filterLabel.hidden=editing;
+   $('.spot-list-head').hidden=editing;$('[data-result-label]').textContent=editing?'화면 안 장소':inView?'지도 안':options.route?'방문 장소':'검색 결과';$('[data-result-count]').textContent=countItems.length+'곳';const filterLabel=$('[data-in-view]')?.closest('label');if(filterLabel)filterLabel.hidden=editing;
    $('.spot-card-pages').hidden=list.length<=12;$('.spot-map-wrap').classList.toggle('has-pages',list.length>12);
    $('[data-card-page]').textContent=list.length?`${page*12+1}–${page*12+cards.length} / ${list.length}`:'0 / 0';
    $('[data-action="previous-cards"]').disabled=page===0;$('[data-action="next-cards"]').disabled=(page+1)*12>=list.length;

@@ -16,7 +16,7 @@ test('spring and autumn mock daylight approximations stay near the independent K
 
 test('schedule retains simultaneous early and late conditions and explicitly labels a next-day arrival',()=>{
  const value=reviewSchedule({event:event('2027-10-16'),start,finish,departureTime:'05:00',breakMinutes:'180',drivingSeconds:20*3600});
- assert.equal(value.state,'EARLY_LATE');assert.equal(value.warnings.length,2);assert.match(value.label,/출발 가능 시각 전/);assert.match(value.label,/늦습니다/);assert.match(value.arrivalLabel,/다음 날 04:00/);assert.ok(value.remainingMinutes<0);
+ assert.equal(value.state,'EARLY_LATE');assert.equal(value.warnings.length,2);assert.match(value.label,/출발 시각을 .* 이후로 조정해 주세요/);assert.match(value.label,/늦습니다/);assert.match(value.arrivalLabel,/다음 날 04:00/);assert.ok(value.remainingMinutes<0);
  const budget=reviewSchedule({event:event('2027-10-16'),start,finish,departureTime:'07:00',breakMinutes:'120',drivingSeconds:0});
  assert.equal(budget.drivingBudgetSeconds,(Date.parse(budget.deadlineAt)-Date.parse(budget.departureAt))/1000-7200);assert.ok(Date.parse(budget.deadlineAt)<Date.parse(event('2027-10-16').eventEndAt));
 });
@@ -44,4 +44,12 @@ test('schedule defaults use the event sunrise in its timezone and 120 minutes of
  const {scheduleDefaults}=require('../../web/shared/event-rules');assert.deepEqual(scheduleDefaults({event:{...e,sunlight:data},start,finish}),{departureTime:'06:33',breakMinutes:'120'});assert.deepEqual(scheduleDefaults({event:{...e,sunlight:data,configVersion:2},start,finish}),{departureTime:'',breakMinutes:'120'});
  assert.equal(scheduleDefaults({event:{...e,sunlight:{...data,starts:[{...data.starts[0],sunriseAt:'2027-10-15T21:33:30.000Z'}]}},start,finish}).departureTime,'06:34');
  const calculated=scheduleDefaults({event:e,start,finish});assert.match(calculated.departureTime,/^06:3[0-9]$/);assert.equal(calculated.breakMinutes,'120');assert.equal(scheduleDefaults({event:{...e,sunlightMode:null},start,finish}).departureTime,'');
+});
+
+
+test('automatic departure never precedes the event start when sunrise is earlier',()=>{
+ const {scheduleDefaults}=require('../../web/shared/event-rules'),e=event('2027-06-14');
+ const defaults=scheduleDefaults({event:e,start,finish});assert.equal(defaults.departureTime,'06:00');assert.equal(defaults.breakMinutes,'120');
+ assert.equal(reviewSchedule({event:e,start,finish,...defaults,drivingSeconds:3600}).state,'WITHIN');
+ const early=reviewSchedule({event:e,start,finish,departureTime:'05:00',breakMinutes:'120',drivingSeconds:3600});assert.equal(early.state,'EARLY');assert.equal(early.label,'출발 시각을 06:00 이후로 조정해 주세요');
 });

@@ -266,7 +266,7 @@ test('linked nonparticipants can save empty and partial drafts; guests cannot pe
   const { catalog, plan } = fixture(), storage = memoryStorage(), store = planner.createStore(storage, catalog);
   for (const guest of [null, {}, { id: 'rider-1' }, { id: 'rider-1', linked: false }]) assert.throws(() => store.save(plan, guest), /로그인/);
   const empty = store.save(planner.createEmpty(catalog), account);
-  assert.equal(empty.ownerUserId, account.id); assert.equal(empty.title, '나의 루트'); assert.equal(empty.startId, null);
+  assert.equal(empty.ownerUserId, account.id); assert.equal(empty.title, '루트 01'); assert.equal(empty.startId, null);
   assert.deepEqual(empty.stopIds, []);
   const draft = store.save({ ...plan, stopIds: ['spot-1'] }, account);
   assert.ok(draft.id); assert.equal(store.list(account).length, 2); assert.equal(store.get(draft.id, account).stopIds.length, 1);
@@ -423,4 +423,28 @@ test('current real road data rebuilds between pinned anchors with connected road
  const catalog=require('../../web/app/spot-catalog'),manifest=require('../../web/shared/routes/manifest.json'),indices=new Map(manifest.placeIds.map((id,i)=>[id,i])),provider={summary(a,b){const i=indices.get(a),j=indices.get(b);if(i===undefined||j===undefined)return null;return {distanceMeters:manifest.distances[i][j],durationSeconds:manifest.durations[i][j]};}};const plan={...planner.createEmpty(catalog),startId:'gangneung',stopIds:['auraji','cheongpung','munui'],pinnedStopIds:['auraji','munui']};
  const anchor={...plan,stopIds:['auraji','munui']},baseline=planner.status(anchor,catalog,provider),next=planner.rebuild(plan,catalog,provider),stats=planner.status(next,catalog,provider);
  assert.equal(next.stopIds.length,10);assert.deepEqual(next.stopIds.filter(id=>plan.pinnedStopIds.includes(id)),['auraji','munui']);assert.ok(!next.stopIds.includes('cheongpung'));assert.equal(stats.complete,true);assert.ok(stats.distanceMeters<baseline.distanceMeters*2);
+});
+
+
+test('automatic route names reserve existing numbers and reuse only free names',()=>{
+ const {catalog,plan}=fixture(),store=planner.createStore(memoryStorage(),catalog);
+ const first=store.save({...plan,title:''},account);assert.equal(first.title,'루트 01');
+ const second=store.save({...plan,title:'루트 2'},account),third=store.save({...plan,title:''},account);assert.equal(third.title,'루트 03');
+ const again=store.save({...third,title:''},account);assert.equal(again.id,third.id);assert.equal(again.title,'루트 03');assert.equal(store.list(account).length,3);
+ store.remove(first.id,account);const replacement=store.save({...plan,title:''},account);assert.equal(replacement.title,'루트 01');assert.notEqual(replacement.id,first.id);
+ assert.equal(store.get(second.id,account).title,'루트 2');
+});
+test('route storage caps new identities per account, preserving overwrites and failed drafts',()=>{
+ const {catalog,plan}=fixture(),storage=memoryStorage(),store=planner.createStore(storage,catalog),saved=[];
+ for(let i=0;i<10;i++)saved.push(store.save({...plan,title:''},account));assert.equal(store.list(account).length,10);assert.equal(store.maxSavedRoutes,10);
+ const before=JSON.stringify(store.list(account)),draft={...plan,title:''};assert.throws(()=>store.save(draft,account),error=>error.code==='ROUTE_LIMIT_REACHED');assert.equal(JSON.stringify(store.list(account)),before);assert.equal(draft.title,'');
+ assert.equal(store.save({...saved[0],title:'수정한 루트'},account).id,saved[0].id);assert.equal(store.list(account).length,10);
+ assert.equal(store.save({...plan,title:''},{id:'another-rider',linked:true}).title,'루트 01');
+ store.remove(saved[1].id,account);assert.equal(store.save({...plan,title:''},account).title,'루트 01');assert.equal(store.list(account).length,10);
+});
+test('a lowered configurable route cap preserves old records and allows their updates',()=>{
+ const {catalog,plan}=fixture(),storage=memoryStorage(),old=planner.createStore(storage,catalog,{maxSavedRoutes:12}),items=[];
+ for(let i=0;i<11;i++)items.push(old.save({...plan,title:''},account));const current=planner.createStore(storage,catalog);
+ assert.equal(current.list(account).length,11);assert.throws(()=>current.save({...plan,title:''},account),error=>error.code==='ROUTE_LIMIT_REACHED');assert.equal(current.save({...items[0],title:'이전 루트 수정'},account).id,items[0].id);assert.equal(current.list(account).length,11);
+ assert.throws(()=>planner.createStore(storage,catalog,{maxSavedRoutes:0}),/저장 상한/);assert.equal(planner.DEFAULT_MAX_SAVED_ROUTES,10);
 });

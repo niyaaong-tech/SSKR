@@ -15,7 +15,7 @@
   function scheduleDefaults({event={},start,finish}={}) {
     const sunlight=solar.windowFor(event,start,finish),value=sunlight.sunriseAt;
     let departureTime='';
-    if(validDate(value)){try{departureTime=new Intl.DateTimeFormat('en-GB',{timeZone:event.timezone||'Asia/Seoul',hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).format(new Date(Math.ceil(Date.parse(value)/60000)*60000));}catch{}}
+    if(validDate(value)){try{departureTime=new Intl.DateTimeFormat('en-GB',{timeZone:event.timezone||'Asia/Seoul',hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).format(new Date(Math.ceil(Math.max(Date.parse(value),validDate(event.eventStartAt)?Date.parse(event.eventStartAt):-Infinity)/60000)*60000));}catch{}}
     return {departureTime,breakMinutes:'120'};
   }
   function reviewSchedule({event={},departureTime,breakMinutes,drivingSeconds=0,date=event.eventStartAt,start,finish}) {
@@ -35,7 +35,7 @@
     const deadline=Math.min(Date.parse(event.eventEndAt),validDate(sunlight.sunsetAt)?Date.parse(sunlight.sunsetAt):Infinity);
     const clock=value=>new Date(value).toLocaleTimeString('ko-KR',{timeZone:timezone,hour:'2-digit',minute:'2-digit',hour12:false});
     const beforeStart=departureAt<earliest,late=arrivalAt>deadline,remainingMinutes=Math.floor((deadline-arrivalAt)/60000),warnings=[];
-    if(beforeStart)warnings.push(`${clock(earliest)} 출발 가능 시각 전입니다`);
+    if(beforeStart)warnings.push(`출발 시각을 ${clock(earliest)} 이후로 조정해 주세요`);
     if(late)warnings.push(`도착 마감 ${clock(deadline)}보다 ${Math.abs(remainingMinutes)}분 늦습니다`);
     const arrivalDay=solar.dateKey(new Date(arrivalAt).toISOString(),timezone),days=Math.round((Date.parse(arrivalDay)-Date.parse(calendar))/86400000);
     const arrivalLabel=(days===1?'다음 날 ':days>1?`${days}일 후 `:'')+clock(arrivalAt)+' 도착 예상';

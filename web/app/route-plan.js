@@ -7,6 +7,7 @@
   const MIN_STOPS = rules.DEFAULT_MINIMUM_SPOT_CHECKINS;
   const minimumStops = event => rules.minimumSpotCheckins(event);
   const STORE_VERSION = 1;
+  const DEFAULT_MAX_SAVED_ROUTES = 10;
   const clone = value => JSON.parse(JSON.stringify(value));
   const listPlaces = catalog => Array.isArray(catalog) ? catalog : catalog?.places || [];
   const catalogIndex = catalog => new Map(listPlaces(catalog).map(place => [place.id, place]));
@@ -243,7 +244,8 @@
     return plan;
   }
   // Mock browser adapter. A production adapter must derive account identity on the server.
-  function createStore(storage, catalog) {
+  function createStore(storage, catalog, { maxSavedRoutes = DEFAULT_MAX_SAVED_ROUTES } = {}) {
+    if (!Number.isInteger(maxSavedRoutes) || maxSavedRoutes < 1) throw new Error('루트 저장 상한은 1 이상의 정수여야 합니다.');
     function accountId(account) {
       if (!account || account.linked !== true || typeof account.id !== 'string' || !account.id.trim()) throw new Error('로그인 후 루트를 저장할 수 있습니다.');
       return account.id;
@@ -281,9 +283,13 @@
       if (plan.ownerUserId && plan.ownerUserId !== id) throw new Error('내 루트만 수정할 수 있습니다. 복제한 뒤 저장해 주세요.');
       const existing = plan.id ? saved.plans.find(item => item.id === plan.id) : null;
       if (plan.id && !existing) throw new Error('수정할 루트를 찾을 수 없습니다. 내 루트에서 다시 열어 주세요.');
+      if (!existing && saved.plans.length >= maxSavedRoutes) {const error=new Error('루트는 최대 '+maxSavedRoutes+'개까지 저장할 수 있습니다. 루트 관리에서 기존 루트를 삭제한 뒤 저장해 주세요.');error.code='ROUTE_LIMIT_REACHED';throw error;}
+      const usedNumbers=new Set(saved.plans.filter(item=>item.id!==existing?.id).flatMap(item=>{const match=String(item.title||'').trim().match(/^루트\s+(\d+)$/);return match?[Number(match[1])]:[];}));
+      let number=1;while(usedNumbers.has(number))number++;
+      const defaultTitle='루트 '+String(number).padStart(2,'0');
       const now = new Date().toISOString();
       const routeId = existing?.id || `route-${typeof globalThis.crypto?.randomUUID === 'function' ? globalThis.crypto.randomUUID() : `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 12)}`}`;
-      const result = { ...plan, id: routeId, ownerUserId: id, title: plan.title || `${catalogIndex(catalog).get(plan.startId)?.name || '나의'} 루트`, catalogVersion: catalogVersion(catalog), createdAt: existing?.createdAt || now, updatedAt: now };
+      const result = { ...plan, id: routeId, ownerUserId: id, title: plan.title || defaultTitle, catalogVersion: catalogVersion(catalog), createdAt: existing?.createdAt || now, updatedAt: now };
       saved.plans = [...saved.plans.filter(item => item.id !== routeId), result]; write(account, saved);
       return clone(result);
     }
@@ -292,7 +298,7 @@
       if (next.length === saved.plans.length) return false;
       write(account, { ...saved, plans: next }); return true;
     }
-    return { list, get, save, remove };
+    return { list, get, save, remove, maxSavedRoutes };
   }
-  return { MIN_STOPS, minimumStops, createEmpty, normalize, orderedIds, status, insertionOptions, bestInsertion, insertionRecommendations, recommendations, nextRecommendations, autoFill, rebuild, optimize, createStore };
+  return { MIN_STOPS, DEFAULT_MAX_SAVED_ROUTES, minimumStops, createEmpty, normalize, orderedIds, status, insertionOptions, bestInsertion, insertionRecommendations, recommendations, nextRecommendations, autoFill, rebuild, optimize, createStore };
 });

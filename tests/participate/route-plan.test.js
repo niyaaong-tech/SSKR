@@ -143,7 +143,7 @@ test('invalid IDs, place roles, fixed finish changes and duplicates remain expli
   assert.equal(result.spotCount, 1);
   for (const code of ['INVALID_START', 'INVALID_FINISH', 'INVALID_STOP', 'DUPLICATE_STOP']) assert.ok(result.issues.some(issue => issue.code === code));
   assert.equal(result.distanceMeters, null);
-  assert.throws(() => planner.normalize({ stopIds: 'spot-1' }, catalog), /경유지/);
+  assert.throws(() => planner.normalize({ stopIds: 'spot-1' }, catalog), /스팟/);
 });
 
 test('missing or malformed routing data never produces synthetic distance totals', () => {

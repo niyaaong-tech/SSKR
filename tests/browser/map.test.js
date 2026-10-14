@@ -58,6 +58,16 @@ test('overview zoom stops at the spot layout and panning stays within Korean ter
  assert.deepEqual(errors,[]);
 });
 
+test('cluster badges share the catalog shape, use spot counts, and expand without route state',async()=>{
+ for(const [width,height]of [[1440,900],[390,844]]){
+  const p=await page(width,height);await open(p,'/app/spots?scenario=guest');const grouped=p.locator('.spot-pin.cluster').first();await grouped.waitFor();
+  assert.match(await grouped.textContent(),/^\d+스팟$/);assert.match(await grouped.getAttribute('aria-label'),/스팟 묶음 확대$/);assert.equal(await p.locator('.spot-pin.is-route-stop').count(),0);
+  const plain=p.locator('.spot-pin.spot:not(.cluster)').first(),styles=await Promise.all([plain,grouped].map(e=>e.locator('span').evaluate(el=>{const s=getComputedStyle(el),r=el.getBoundingClientRect(),range=document.createRange();range.selectNodeContents(el);return {radius:s.borderRadius,background:s.backgroundColor,color:s.color,textWidth:range.getBoundingClientRect().width,width:r.width};})));
+  assert.ok(styles.every(s=>s.radius!=='50%'&&s.textWidth<=s.width-2));assert.notEqual(styles[0].background,styles[1].background);const lum=color=>color.match(/[\d.]+/g).slice(0,3).map(v=>{v=Number(v)/255;return v<=.04045?v/12.92:((v+.055)/1.055)**2.4;}).reduce((sum,v,i)=>sum+v*[.2126,.7152,.0722][i],0);assert.ok(styles.every(s=>(lum(s.background)+.05)/(lum(s.color)+.05)>=4.5));
+  const zoom=await p.evaluate(()=>__map.getZoom());await grouped.click();await p.waitForFunction(z=>__map.getZoom()>z&&!__map._animatingZoom,zoom);assert.equal(await p.locator('.spot-pin.is-route-stop').count(),0);assert.deepEqual(errors,[]);await p.close();
+ }
+});
+
 test('one, two and three digit markers and photo badges keep their text centered',async()=>{
  const spots=require('../../web/app/spot-catalog').filter(p=>p.kind==='spot');
  for(const [width,height] of [[1440,1000],[390,844],[360,540]]){

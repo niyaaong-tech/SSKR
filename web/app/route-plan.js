@@ -31,7 +31,7 @@
   // Invalid references are reported by status and rejected by the write adapter.
   function normalize(plan, catalog) {
     if (!plan || typeof plan !== 'object' || Array.isArray(plan)) throw new Error('루트 정보를 읽을 수 없습니다.');
-    if (plan.stopIds != null && (!Array.isArray(plan.stopIds) || plan.stopIds.some(id => typeof id !== 'string' || !id))) throw new Error('경유지 목록을 읽을 수 없습니다.');
+    if (plan.stopIds != null && (!Array.isArray(plan.stopIds) || plan.stopIds.some(id => typeof id !== 'string' || !id))) throw new Error('스팟 목록을 읽을 수 없습니다.');
     if (plan.pinnedStopIds != null && (!Array.isArray(plan.pinnedStopIds) || plan.pinnedStopIds.some(id => typeof id !== 'string' || !id))) throw new Error('핀고정 목록을 읽을 수 없습니다.');
     if (plan.startId != null && typeof plan.startId !== 'string') throw new Error('출발지 정보를 읽을 수 없습니다.');
     if (plan.finishId != null && typeof plan.finishId !== 'string') throw new Error('도착지 정보를 읽을 수 없습니다.');

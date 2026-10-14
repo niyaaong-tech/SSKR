@@ -2,9 +2,9 @@
   const groups = [
     {
       key: "route-information",
-      title: "제공되는 경유지와 경로 정보를 사전에 확인해야 합니다.",
+      title: "제공되는 스팟과 경로 정보를 사전에 확인해야 합니다.",
       items: [
-        { key: "STEP1_1_1", asset: "./assets/SSKR_pic1-1.png", caption: "경유지 스팟 정보를 제공합니다" },
+        { key: "STEP1_1_1", asset: "./assets/SSKR_pic1-1.png", caption: "스팟 정보를 제공합니다" },
         { key: "STEP1_1_2", asset: "./assets/SSKR_pic1-2.png", caption: "정해진 주행 루트는 없습니다" },
         { key: "STEP1_1_3", asset: "./assets/SSKR_pic1-3.png", caption: "내비게이션은 별도 서비스를 이용하세요" },
         { key: "STEP1_1_4", asset: "./assets/SSKR_pic1-4.png", caption: "현장 도로상황 변수에 유의해야 합니다" }
@@ -35,7 +35,7 @@
       title: "무엇보다 안전이 최우선입니다.",
       items: [
         { key: "STEP1_4_1", asset: "./assets/SSKR_pic4-1.png", caption: "스팟 체크인은 주행을 멈춘 상태에서만 가능합니다" },
-        { key: "STEP1_4_2", asset: "./assets/SSKR_pic4-2.png", caption: "사전 예정 경유지를 임의로 변경해서 주행해도 됩니다" },
+        { key: "STEP1_4_2", asset: "./assets/SSKR_pic4-2.png", caption: "사전에 계획한 방문 스팟은 주행 중 변경할 수 있습니다" },
         { key: "STEP1_4_3", asset: "./assets/SSKR_pic4-3.png", caption: "GPS나 체크인 기기에 문제가 있어도 차후 기록을 보완할 수 있습니다" },
         { key: "STEP1_4_4", asset: "./assets/SSKR_pic4-4.png", caption: "사정상 주행을 중단해도 괜찮습니다." }
       ]

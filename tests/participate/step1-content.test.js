@@ -21,7 +21,7 @@ test("step 1 contains four groups and sixteen uniquely addressed illustrations",
 
 test("step 1 content keeps the canonical group titles", () => {
   assert.deepEqual(groups.map((group) => group.title), [
-    "제공되는 경유지와 경로 정보를 사전에 확인해야 합니다.",
+    "제공되는 스팟과 경로 정보를 사전에 확인해야 합니다.",
     "하루의 주행은 스스로 완성해야 합니다.",
     "목적지에 더 빨리 도착하거나 더 많은 스팟을 경유하는 것은 SSKR의 목표가 아닙니다.",
     "무엇보다 안전이 최우선입니다."

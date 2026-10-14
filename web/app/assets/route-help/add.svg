@@ -2,7 +2,7 @@
  <rect width="480" height="260" fill="#e4ede3"/><path d="M0 52Q61 85 80 132T171 242H0Z" fill="#bfd5d6"/><path d="m109 0 47 79-20 62 91 59 24 60M411 0l-31 71 37 82-20 107" fill="none" stroke="#cbd9c8" stroke-width="20"/>
  <path d="m88 215 73-38 55 13 56-75 58-55" fill="none" stroke="#fff" stroke-width="12" stroke-linejoin="round"/><path d="m88 215 73-38 55 13 56-75 58-55" fill="none" stroke="#bc9250" stroke-width="4" stroke-linejoin="round"/>
  <g fill="#31583f" stroke="#fff" stroke-width="3"><circle cx="88" cy="215" r="13"/><circle cx="330" cy="60" r="13"/></g><g fill="#e7b966" stroke="#fff" stroke-width="3"><circle cx="161" cy="177" r="9"/><circle cx="216" cy="190" r="9"/><circle cx="272" cy="115" r="9"/></g>
- <rect x="235" y="28" width="188" height="38" rx="7" fill="#294c3a"/><text x="329" y="52" text-anchor="middle" fill="white" font-family="sans-serif" font-size="15" font-weight="700">＋ 경유지 추가</text>
+ <rect x="235" y="28" width="188" height="38" rx="7" fill="#294c3a"/><text x="329" y="52" text-anchor="middle" fill="white" font-family="sans-serif" font-size="15" font-weight="700">＋ 스팟 추가</text>
  <rect x="235" y="74" width="188" height="146" rx="8" fill="#fcfcf7" stroke="#a9bfaa" stroke-width="2"/><path d="M236 135 275 100l44 28 41-34 61 40v27H236Z" fill="#a9c3a4"/><path d="M236 146 285 125l54 25 42-18 41 16v13H236Z" fill="#86a485"/><circle cx="388" cy="99" r="13" fill="#e4bf6c"/>
  <text x="249" y="185" fill="#294c3a" font-family="sans-serif" font-size="14" font-weight="700">가보고 싶은 스팟</text><text x="249" y="205" fill="#74816c" font-family="sans-serif" font-size="11">지도에서 확인하고 담아요</text>
  <path d="m366 50 11 35 7-11 12-2Z" fill="#fff" stroke="#294c3a" stroke-width="2" stroke-linejoin="round"/>

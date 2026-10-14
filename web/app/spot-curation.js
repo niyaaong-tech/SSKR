@@ -5,10 +5,14 @@
     "abai-village",
     "allride",
     "aviation-museum",
+    "baekje",
     "baekseoktan",
     "bangdong-spring",
+    "bukpyeong-market",
     "bunhwangsa",
     "buryeongsa",
+    "busan-maritime-museum",
+    "byeongbangchi-skywalk",
     "cafe-299",
     "cafe-sann",
     "changwon-house",
@@ -17,28 +21,38 @@
     "daegwallyeong",
     "daksil",
     "damyang-market",
+    "dansan",
+    "danyang-market",
     "domaryeong-viewpoint",
     "donghae-market",
     "g-rider",
+    "gameunsa-site",
     "gangcheonsan",
+    "gangneung-market",
     "gangneung-seongyojang",
+    "geumdangsa",
+    "gochang-dolmen-museum",
     "gongju-market",
     "gubongsan-observatory",
     "gyeongcheondae",
     "gyeonggijeon",
     "gyeongju-gyochon",
+    "haesindang-park",
     "hapcheon-film-park",
     "harleywood",
-    "hoeryongpo",
+    "heonhwa",
     "hongseong-sky-tower",
     "hue-cafe-138",
     "huinnyeoul",
+    "hwasodam",
     "hwasun-red-cliff",
     "hwawangsan",
     "hwayang",
     "imgo",
+    "jangneung",
     "jeokbyeokgang",
     "jinju-market",
+    "jukseoru",
     "junam-reservoir",
     "jusanji",
     "kim-satgat-museum",
@@ -48,21 +62,30 @@
     "museom",
     "namaste",
     "neumanjang",
+    "neungsan-tombs",
+    "nongol",
     "okjeongho",
+    "poseokjeong",
     "rc79",
     "rest-garden",
+    "road-66",
     "road-runner",
     "route7",
     "royce",
     "rpm-moto",
     "sabuk-coal-village",
-    "sanmagi",
+    "sangseonam",
     "seondol",
     "seongjusa",
+    "seongryu",
+    "seosan-birdland",
     "sokcho-joyang-site",
     "two-stroke",
+    "uirim-forest",
     "uirim-museum",
-    "upo-wetland",
+    "uljin-market",
+    "ulsan-bridge-viewpoint",
+    "un-memorial-cemetery",
     "walking-stone",
     "yeongwol-market"
   ],
@@ -836,6 +859,918 @@
       "osm": "https://www.openstreetmap.org/way/1213587885",
       "distanceToPlaceMeters": 121,
       "evidence": "OSM amenity=parking, access not restricted, motorcycle road snap verified 2026-09-28"
+    },
+    "hwaseong-fortress": {
+      "lat": 37.286535400000005,
+      "lng": 127.01427882572122,
+      "osm": "https://www.openstreetmap.org/way/1164818521",
+      "distanceToPlaceMeters": 253,
+      "placeCoordinate": [
+        37.2867876,
+        127.0114366
+      ],
+      "evidence": "OSM amenity=parking, explicit access restrictions excluded; Valhalla kr-motorcycle-1 road approach verified 2026-10-14",
+      "placeSource": "https://www.openstreetmap.org/node/1791243454"
+    },
+    "yunggeolleung": {
+      "lat": 37.207558000000006,
+      "lng": 126.98972332497164,
+      "osm": "https://www.openstreetmap.org/way/311231801",
+      "distanceToPlaceMeters": 104,
+      "placeCoordinate": [
+        37.208282049999994,
+        126.98897959405065
+      ],
+      "evidence": "OSM amenity=parking, explicit access restrictions excluded; Valhalla kr-motorcycle-1 road approach verified 2026-10-14",
+      "placeSource": "https://www.openstreetmap.org/way/311231812"
+    },
+    "silleuksa": {
+      "lat": 37.29291535,
+      "lng": 127.66024560757947,
+      "osm": "https://www.openstreetmap.org/way/471377055",
+      "distanceToPlaceMeters": 537,
+      "placeCoordinate": [
+        37.2976273,
+        127.6615659
+      ],
+      "evidence": "OSM amenity=parking, explicit access restrictions excluded; Valhalla kr-motorcycle-1 road approach verified 2026-10-14",
+      "placeSource": "https://www.openstreetmap.org/node/2632031838"
+    },
+    "seolbong-park": {
+      "lat": 37.2754815,
+      "lng": 127.4279328231874,
+      "osm": "https://www.openstreetmap.org/way/337559192",
+      "distanceToPlaceMeters": 193,
+      "placeCoordinate": [
+        37.2757201,
+        127.42576799270593
+      ],
+      "evidence": "OSM amenity=parking, explicit access restrictions excluded; Valhalla kr-motorcycle-1 road approach verified 2026-10-14",
+      "placeSource": "https://www.openstreetmap.org/way/337569806"
+    },
+    "dumulmeori": {
+      "lat": 37.53419585,
+      "lng": 127.31643189645725,
+      "osm": "https://www.openstreetmap.org/way/584506152",
+      "distanceToPlaceMeters": 347,
+      "placeCoordinate": [
+        37.534660450000004,
+        127.31253972902519
+      ],
+      "evidence": "OSM amenity=parking, explicit access restrictions excluded; Valhalla kr-motorcycle-1 road approach verified 2026-10-14",
+      "placeSource": "https://www.openstreetmap.org/way/832185825"
+    },
+    "anseong-cheongryongsa": {
+      "lat": 36.912726449999994,
+      "lng": 127.29134015150053,
+      "osm": "https://www.openstreetmap.org/way/1356599108",
+      "distanceToPlaceMeters": 251,
+      "placeCoordinate": [
+        36.913553699999994,
+        127.2887092110604
+      ],
+      "evidence": "OSM amenity=parking, explicit access restrictions excluded; Valhalla kr-motorcycle-1 road approach verified 2026-10-14",
+      "placeSource": "https://www.openstreetmap.org/way/1282402749"
+    },
+    "chiljangsa": {
+      "lat": 37.026104450000005,
+      "lng": 127.3984496646121,
+      "osm": "https://www.openstreetmap.org/way/1395618051",
+      "distanceToPlaceMeters": 124,
+      "placeCoordinate": [
+        37.026257,
+        127.39706638464365
+      ],
+      "evidence": "OSM amenity=parking, explicit access restrictions excluded; Valhalla kr-motorcycle-1 road approach verified 2026-10-14",
+      "placeSource": "https://www.openstreetmap.org/way/821742400"
+    },
+    "namhansanseong": {
+      "lat": 37.4768561,
+      "lng": 127.18364733695186,
+      "osm": "https://www.openstreetmap.org/way/872191524",
+      "distanceToPlaceMeters": 399,
+      "placeCoordinate": [
+        37.4791368,
+        127.1801588
+      ],
+      "evidence": "OSM amenity=parking, explicit access restrictions excluded; Valhalla kr-motorcycle-1 road approach verified 2026-10-14",
+      "placeSource": "https://www.openstreetmap.org/node/2668229479"
+    },
+    "railroad-museum": {
+      "lat": 37.3140767,
+      "lng": 126.94965771189817,
+      "osm": "https://www.openstreetmap.org/way/829939492",
+      "distanceToPlaceMeters": 104,
+      "placeCoordinate": [
+        37.314017899999996,
+        126.95082720956259
+      ],
+      "evidence": "OSM amenity=parking, explicit access restrictions excluded; Valhalla kr-motorcycle-1 road approach verified 2026-10-14",
+      "placeSource": "https://www.openstreetmap.org/way/60819387"
+    },
+    "samsung-transport": {
+      "lat": 37.3000447,
+      "lng": 127.21774219079107,
+      "osm": "https://www.openstreetmap.org/way/824027912",
+      "distanceToPlaceMeters": 120,
+      "placeCoordinate": [
+        37.30110185,
+        127.21747135361949
+      ],
+      "evidence": "OSM amenity=parking, explicit access restrictions excluded; Valhalla kr-motorcycle-1 road approach verified 2026-10-14",
+      "placeSource": "https://www.openstreetmap.org/way/824027913"
+    },
+    "pungsuwon": {
+      "lat": 37.52839205,
+      "lng": 127.81742879493764,
+      "osm": "https://www.openstreetmap.org/way/1055946408",
+      "distanceToPlaceMeters": 146,
+      "placeCoordinate": [
+        37.529210500000005,
+        127.81872615
+      ],
+      "evidence": "OSM amenity=parking, explicit access restrictions excluded; Valhalla kr-motorcycle-1 road approach verified 2026-10-14",
+      "placeSource": "https://www.openstreetmap.org/way/1055946406"
+    },
+    "sutasa": {
+      "lat": 37.69770785,
+      "lng": 127.95549356067193,
+      "osm": "https://www.openstreetmap.org/way/1056348515",
+      "distanceToPlaceMeters": 332,
+      "placeCoordinate": [
+        37.6984994,
+        127.9591262
+      ],
+      "evidence": "OSM amenity=parking, explicit access restrictions excluded; Valhalla kr-motorcycle-1 road approach verified 2026-10-14",
+      "placeSource": "https://www.openstreetmap.org/node/8547300068"
+    },
+    "parksugeun": {
+      "lat": 38.097529699999996,
+      "lng": 127.98527426884608,
+      "osm": "https://www.openstreetmap.org/way/1190193249",
+      "distanceToPlaceMeters": 142,
+      "placeCoordinate": [
+        38.0974539,
+        127.9836522
+      ],
+      "evidence": "OSM amenity=parking, explicit access restrictions excluded; Valhalla kr-motorcycle-1 road approach verified 2026-10-14",
+      "placeSource": "https://www.openstreetmap.org/node/7477671685"
+    },
+    "kimyujeong": {
+      "lat": 37.81731905,
+      "lng": 127.71368491046083,
+      "osm": "https://www.openstreetmap.org/way/1528325575",
+      "distanceToPlaceMeters": 121,
+      "placeCoordinate": [
+        37.817,
+        127.715
+      ],
+      "evidence": "OSM amenity=parking, explicit access restrictions excluded; Valhalla kr-motorcycle-1 road approach verified 2026-10-14",
+      "placeSource": "https://www.openstreetmap.org/way/1528325575"
+    },
+    "daegwallyeong-sheep": {
+      "lat": 37.684445249999996,
+      "lng": 128.75454608014772,
+      "osm": "https://www.openstreetmap.org/way/469371491",
+      "distanceToPlaceMeters": 576,
+      "placeCoordinate": [
+        37.6895278,
+        128.75329572609584
+      ],
+      "evidence": "OSM amenity=parking, explicit access restrictions excluded; Valhalla kr-motorcycle-1 road approach verified 2026-10-14",
+      "placeSource": "https://www.openstreetmap.org/way/257727875"
+    },
+    "gossi-cave": {
+      "lat": 37.12987035,
+      "lng": 128.53507015073055,
+      "osm": "https://www.openstreetmap.org/way/546658013",
+      "distanceToPlaceMeters": 203,
+      "placeCoordinate": [
+        37.1293151,
+        128.5328946
+      ],
+      "evidence": "OSM amenity=parking, explicit access restrictions excluded; Valhalla kr-motorcycle-1 road approach verified 2026-10-14",
+      "placeSource": "https://www.openstreetmap.org/node/368662146"
+    },
+    "hwangji": {
+      "lat": 37.174396099999996,
+      "lng": 128.99241565831846,
+      "osm": "https://www.openstreetmap.org/way/679364449",
+      "distanceToPlaceMeters": 186,
+      "placeCoordinate": [
+        37.17313865,
+        128.9910362865
+      ],
+      "evidence": "OSM amenity=parking, explicit access restrictions excluded; Valhalla kr-motorcycle-1 road approach verified 2026-10-14",
+      "placeSource": "https://www.openstreetmap.org/way/676857655"
+    },
+    "pohang-jukdo": {
+      "lat": 36.034978300000006,
+      "lng": 129.3714761612852,
+      "osm": "https://www.openstreetmap.org/way/471696796",
+      "distanceToPlaceMeters": 335,
+      "placeCoordinate": [
+        36.0350097,
+        129.3677505867912
+      ],
+      "evidence": "OSM amenity=parking, explicit access restrictions excluded; Valhalla kr-motorcycle-1 road approach verified 2026-10-14",
+      "placeSource": "https://www.openstreetmap.org/way/172241993"
+    },
+    "guryongpo-history": {
+      "lat": 35.99007,
+      "lng": 129.5605689802186,
+      "osm": "https://www.openstreetmap.org/way/1479639570",
+      "distanceToPlaceMeters": 106,
+      "placeCoordinate": [
+        35.9905475,
+        129.5615858
+      ],
+      "evidence": "OSM amenity=parking, explicit access restrictions excluded; Valhalla kr-motorcycle-1 road approach verified 2026-10-14",
+      "placeSource": "https://www.openstreetmap.org/node/13572893483"
+    },
+    "daejeonsa": {
+      "lat": 36.39060445,
+      "lng": 129.1412752372145,
+      "osm": "https://www.openstreetmap.org/way/671200385",
+      "distanceToPlaceMeters": 790,
+      "placeCoordinate": [
+        36.39686665,
+        129.14544048730252
+      ],
+      "evidence": "OSM amenity=parking, explicit access restrictions excluded; Valhalla kr-motorcycle-1 road approach verified 2026-10-14",
+      "placeSource": "https://www.openstreetmap.org/way/376622632"
+    },
+    "seoseokji": {
+      "lat": 36.611430600000006,
+      "lng": 129.0694824716013,
+      "osm": "https://www.openstreetmap.org/way/691141024",
+      "distanceToPlaceMeters": 45,
+      "placeCoordinate": [
+        36.6118173,
+        129.0696123
+      ],
+      "evidence": "OSM amenity=parking, explicit access restrictions excluded; Valhalla kr-motorcycle-1 road approach verified 2026-10-14",
+      "placeSource": "https://www.openstreetmap.org/node/12763453000"
+    },
+    "hoeryongpo": {
+      "lat": 36.57624075,
+      "lng": 128.32554096431517,
+      "osm": "https://www.openstreetmap.org/way/925514937",
+      "distanceToPlaceMeters": 117,
+      "placeCoordinate": [
+        36.577202799999995,
+        128.3250137911998
+      ],
+      "evidence": "OSM amenity=parking, explicit access restrictions excluded; Valhalla kr-motorcycle-1 road approach verified 2026-10-14",
+      "placeSource": "https://www.openstreetmap.org/way/469319216"
+    },
+    "baekdudaegan-arboretum": {
+      "lat": 37.00331095,
+      "lng": 128.80147145702273,
+      "osm": "https://www.openstreetmap.org/way/1225869218",
+      "distanceToPlaceMeters": 850,
+      "placeCoordinate": [
+        37.005054599999994,
+        128.8107959268902
+      ],
+      "evidence": "OSM amenity=parking, explicit access restrictions excluded; Valhalla kr-motorcycle-1 road approach verified 2026-10-14",
+      "placeSource": "https://www.openstreetmap.org/way/1055885827"
+    },
+    "munmu-tomb": {
+      "lat": 35.739371500000004,
+      "lng": 129.48359407396322,
+      "osm": "https://www.openstreetmap.org/way/1510419636",
+      "distanceToPlaceMeters": 327,
+      "placeCoordinate": [
+        35.7381286,
+        129.4868756
+      ],
+      "evidence": "OSM amenity=parking, explicit access restrictions excluded; Valhalla kr-motorcycle-1 road approach verified 2026-10-14",
+      "placeSource": "https://www.openstreetmap.org/node/1503595843"
+    },
+    "golgulsa": {
+      "lat": 35.80633355,
+      "lng": 129.41356363182058,
+      "osm": "https://www.openstreetmap.org/way/376784134",
+      "distanceToPlaceMeters": 744,
+      "placeCoordinate": [
+        35.8034058,
+        129.4061416309268
+      ],
+      "evidence": "OSM amenity=parking, explicit access restrictions excluded; Valhalla kr-motorcycle-1 road approach verified 2026-10-14",
+      "placeSource": "https://www.openstreetmap.org/way/567460087"
+    },
+    "beopjusa": {
+      "lat": 36.5407592,
+      "lng": 127.83320867457257,
+      "osm": "https://www.openstreetmap.org/way/1413444632",
+      "distanceToPlaceMeters": 375,
+      "placeCoordinate": [
+        36.543822500000005,
+        127.83496625815403
+      ],
+      "evidence": "OSM amenity=parking, explicit access restrictions excluded; Valhalla kr-motorcycle-1 road approach verified 2026-10-14",
+      "placeSource": "https://www.openstreetmap.org/way/58586419"
+    },
+    "bogangcheon": {
+      "lat": 36.789189750000006,
+      "lng": 127.57811381276812,
+      "osm": "https://www.openstreetmap.org/way/1456800558",
+      "distanceToPlaceMeters": 231,
+      "placeCoordinate": [
+        36.78711895,
+        127.57834154198902
+      ],
+      "evidence": "OSM amenity=parking, explicit access restrictions excluded; Valhalla kr-motorcycle-1 road approach verified 2026-10-14",
+      "placeSource": "https://www.openstreetmap.org/way/471368147"
+    },
+    "jincheon-nongdari": {
+      "lat": 36.82959365,
+      "lng": 127.49378143933541,
+      "osm": "https://www.openstreetmap.org/way/1037384856",
+      "distanceToPlaceMeters": 400,
+      "placeCoordinate": [
+        36.8260137,
+        127.4934014
+      ],
+      "evidence": "OSM amenity=parking, explicit access restrictions excluded; Valhalla kr-motorcycle-1 road approach verified 2026-10-14",
+      "placeSource": "https://www.openstreetmap.org/node/9560157002"
+    },
+    "yeongguksa": {
+      "lat": 36.15759505,
+      "lng": 127.62076592709178,
+      "osm": "https://www.openstreetmap.org/way/1555020402",
+      "distanceToPlaceMeters": 885,
+      "placeCoordinate": [
+        36.157980550000005,
+        127.61091511591842
+      ],
+      "evidence": "OSM amenity=parking, explicit access restrictions excluded; Valhalla kr-motorcycle-1 road approach verified 2026-10-14",
+      "placeSource": "https://www.openstreetmap.org/way/1555020403"
+    },
+    "sanmagi": {
+      "lat": 36.7605503,
+      "lng": 127.83732495464135,
+      "osm": "https://www.openstreetmap.org/way/1089965010",
+      "distanceToPlaceMeters": 118,
+      "placeCoordinate": [
+        36.7596041,
+        127.8367156
+      ],
+      "evidence": "OSM amenity=parking, explicit access restrictions excluded; Valhalla kr-motorcycle-1 road approach verified 2026-10-14",
+      "placeSource": "https://www.openstreetmap.org/node/11158630159"
+    },
+    "uirimji": {
+      "lat": 37.176128750000004,
+      "lng": 128.21130133964854,
+      "osm": "https://www.openstreetmap.org/way/1565320992",
+      "distanceToPlaceMeters": 326,
+      "placeCoordinate": [
+        37.17324515,
+        128.21062924206336
+      ],
+      "evidence": "OSM amenity=parking, explicit access restrictions excluded; Valhalla kr-motorcycle-1 road approach verified 2026-10-14",
+      "placeSource": "https://www.openstreetmap.org/way/471709902"
+    },
+    "independence-hall": {
+      "lat": 36.778852799999996,
+      "lng": 127.2229026143583,
+      "osm": "https://www.openstreetmap.org/way/1447618667",
+      "distanceToPlaceMeters": 498,
+      "placeCoordinate": [
+        36.783045,
+        127.224876
+      ],
+      "evidence": "OSM amenity=parking, explicit access restrictions excluded; Valhalla kr-motorcycle-1 road approach verified 2026-10-14",
+      "placeSource": "https://www.openstreetmap.org/node/368635603"
+    },
+    "hyeonchungsa": {
+      "lat": 36.8046287,
+      "lng": 127.0297165758278,
+      "osm": "https://www.openstreetmap.org/way/119129481",
+      "distanceToPlaceMeters": 395,
+      "placeCoordinate": [
+        36.80715385,
+        127.03284452609338
+      ],
+      "evidence": "OSM amenity=parking, explicit access restrictions excluded; Valhalla kr-motorcycle-1 road approach verified 2026-10-14",
+      "placeSource": "https://www.openstreetmap.org/way/633128879"
+    },
+    "gwanchoksa": {
+      "lat": 36.1915608,
+      "lng": 127.11384355000001,
+      "osm": "https://www.openstreetmap.org/way/1552760715",
+      "distanceToPlaceMeters": 354,
+      "placeCoordinate": [
+        36.1884477,
+        127.11302457258759
+      ],
+      "evidence": "OSM amenity=parking, explicit access restrictions excluded; Valhalla kr-motorcycle-1 road approach verified 2026-10-14",
+      "placeSource": "https://www.openstreetmap.org/way/807186103"
+    },
+    "donam-seowon": {
+      "lat": 36.211083,
+      "lng": 127.18162983871196,
+      "osm": "https://www.openstreetmap.org/way/1559875181",
+      "distanceToPlaceMeters": 241,
+      "placeCoordinate": [
+        36.20909605,
+        127.18054801916924
+      ],
+      "evidence": "OSM amenity=parking, explicit access restrictions excluded; Valhalla kr-motorcycle-1 road approach verified 2026-10-14",
+      "placeSource": "https://www.openstreetmap.org/way/1566967143"
+    },
+    "boseoksa": {
+      "lat": 36.0518349,
+      "lng": 127.47686922959917,
+      "osm": "https://www.openstreetmap.org/way/1103331190",
+      "distanceToPlaceMeters": 303,
+      "placeCoordinate": [
+        36.0544668,
+        127.47599771520214
+      ],
+      "evidence": "OSM amenity=parking, explicit access restrictions excluded; Valhalla kr-motorcycle-1 road approach verified 2026-10-14",
+      "placeSource": "https://www.openstreetmap.org/way/1103329175"
+    },
+    "janggoksa": {
+      "lat": 36.417137350000004,
+      "lng": 126.85885545686831,
+      "osm": "https://www.openstreetmap.org/way/1278348988",
+      "distanceToPlaceMeters": 58,
+      "placeCoordinate": [
+        36.4173485,
+        126.8594428
+      ],
+      "evidence": "OSM amenity=parking, explicit access restrictions excluded; Valhalla kr-motorcycle-1 road approach verified 2026-10-14",
+      "placeSource": "https://www.openstreetmap.org/node/9777426439"
+    },
+    "haeinsa": {
+      "lat": 35.8006189,
+      "lng": 128.09837020000003,
+      "osm": "https://www.openstreetmap.org/way/1512014446",
+      "distanceToPlaceMeters": 56,
+      "placeCoordinate": [
+        35.801041600000005,
+        128.09803832230688
+      ],
+      "evidence": "OSM amenity=parking, explicit access restrictions excluded; Valhalla kr-motorcycle-1 road approach verified 2026-10-14",
+      "placeSource": "https://www.openstreetmap.org/way/404193034"
+    },
+    "upo-wetland": {
+      "lat": 35.560789299999996,
+      "lng": 128.4116484768071,
+      "osm": "https://www.openstreetmap.org/way/1216364353",
+      "distanceToPlaceMeters": 910,
+      "placeCoordinate": [
+        35.55302105,
+        128.41482266764348
+      ],
+      "evidence": "OSM amenity=parking, explicit access restrictions excluded; Valhalla kr-motorcycle-1 road approach verified 2026-10-14",
+      "placeSource": "https://www.openstreetmap.org/way/37220944"
+    },
+    "namhae-german-village": {
+      "lat": 34.80055875,
+      "lng": 128.03809248495762,
+      "osm": "https://www.openstreetmap.org/way/158003436",
+      "distanceToPlaceMeters": 237,
+      "placeCoordinate": [
+        34.7992332,
+        128.0401294
+      ],
+      "evidence": "OSM amenity=parking, explicit access restrictions excluded; Valhalla kr-motorcycle-1 road approach verified 2026-10-14",
+      "placeSource": "https://www.openstreetmap.org/node/2487576879"
+    },
+    "daeheungsa": {
+      "lat": 34.483264500000004,
+      "lng": 126.61425540610024,
+      "osm": "https://www.openstreetmap.org/way/1306062724",
+      "distanceToPlaceMeters": 783,
+      "placeCoordinate": [
+        34.4763626,
+        126.61595429679214
+      ],
+      "evidence": "OSM amenity=parking, explicit access restrictions excluded; Valhalla kr-motorcycle-1 road approach verified 2026-10-14",
+      "placeSource": "https://www.openstreetmap.org/way/616559205"
+    },
+    "usuyoung": {
+      "lat": 34.5731116,
+      "lng": 126.31004561667106,
+      "osm": "https://www.openstreetmap.org/way/1347901906",
+      "distanceToPlaceMeters": 296,
+      "placeCoordinate": [
+        34.574,
+        126.307
+      ],
+      "evidence": "OSM amenity=parking, explicit access restrictions excluded; Valhalla kr-motorcycle-1 road approach verified 2026-10-14",
+      "placeSource": "https://www.openstreetmap.org/way/1347901906"
+    },
+    "gokseong-rail-village": {
+      "lat": 35.2786906,
+      "lng": 127.30669735208888,
+      "osm": "https://www.openstreetmap.org/way/654986729",
+      "distanceToPlaceMeters": 155,
+      "placeCoordinate": [
+        35.27898415,
+        127.3083654754171
+      ],
+      "evidence": "OSM amenity=parking, explicit access restrictions excluded; Valhalla kr-motorcycle-1 road approach verified 2026-10-14",
+      "placeSource": "https://www.openstreetmap.org/way/286359314"
+    },
+    "jeoksang-records": {
+      "lat": 35.9488737,
+      "lng": 127.69363988984891,
+      "osm": "https://www.openstreetmap.org/way/1057231294",
+      "distanceToPlaceMeters": 101,
+      "placeCoordinate": [
+        35.94851465,
+        127.69466762090885
+      ],
+      "evidence": "OSM amenity=parking, explicit access restrictions excluded; Valhalla kr-motorcycle-1 road approach verified 2026-10-14",
+      "placeSource": "https://www.openstreetmap.org/way/1057223207"
+    },
+    "seonyudo": {
+      "lat": 35.807431949999994,
+      "lng": 126.41504387791687,
+      "osm": "https://www.openstreetmap.org/way/1263145771",
+      "distanceToPlaceMeters": 418,
+      "placeCoordinate": [
+        35.810778049999996,
+        126.41715615001581
+      ],
+      "evidence": "OSM amenity=parking, explicit access restrictions excluded; Valhalla kr-motorcycle-1 road approach verified 2026-10-14",
+      "placeSource": "https://www.openstreetmap.org/way/554668863"
+    },
+    "silsangsa": {
+      "lat": 35.416193050000004,
+      "lng": 127.6357261568551,
+      "osm": "https://www.openstreetmap.org/way/1383677386",
+      "distanceToPlaceMeters": 109,
+      "placeCoordinate": [
+        35.4170943,
+        127.6352638
+      ],
+      "evidence": "OSM amenity=parking, explicit access restrictions excluded; Valhalla kr-motorcycle-1 road approach verified 2026-10-14",
+      "placeSource": "https://www.openstreetmap.org/node/1047433245"
+    },
+    "maisantapsa": {
+      "lat": 35.76656885,
+      "lng": 127.41471137962478,
+      "osm": "https://www.openstreetmap.org/way/1163244846",
+      "distanceToPlaceMeters": 922,
+      "placeCoordinate": [
+        35.75861965,
+        127.41178731264422
+      ],
+      "evidence": "OSM amenity=parking, explicit access restrictions excluded; Valhalla kr-motorcycle-1 road approach verified 2026-10-14",
+      "placeSource": "https://www.openstreetmap.org/way/158176940"
+    },
+    "donghwasa": {
+      "lat": 35.9925061,
+      "lng": 128.70277719903316,
+      "osm": "https://www.openstreetmap.org/way/814581049",
+      "distanceToPlaceMeters": 175,
+      "placeCoordinate": [
+        35.99271315,
+        128.70470542738215
+      ],
+      "evidence": "OSM amenity=parking, explicit access restrictions excluded; Valhalla kr-motorcycle-1 road approach verified 2026-10-14",
+      "placeSource": "https://www.openstreetmap.org/way/660080732"
+    },
+    "jangtaesan": {
+      "lat": 36.221412,
+      "lng": 127.34000247345986,
+      "osm": "https://www.openstreetmap.org/way/1221913111",
+      "distanceToPlaceMeters": 240,
+      "placeCoordinate": [
+        36.219296,
+        127.3394828
+      ],
+      "evidence": "OSM amenity=parking, explicit access restrictions excluded; Valhalla kr-motorcycle-1 road approach verified 2026-10-14",
+      "placeSource": "https://www.openstreetmap.org/node/368975476"
+    },
+    "ulsan-taehwa": {
+      "lat": 35.54475095,
+      "lng": 129.29341671348703,
+      "osm": "https://www.openstreetmap.org/way/827162213",
+      "distanceToPlaceMeters": 189,
+      "placeCoordinate": [
+        35.546,
+        129.292
+      ],
+      "evidence": "OSM amenity=parking, explicit access restrictions excluded; Valhalla kr-motorcycle-1 road approach verified 2026-10-14",
+      "placeSource": "https://www.openstreetmap.org/way/827162213"
+    },
+    "hanhyeong-view": {
+      "lat": 37.21953905,
+      "lng": 128.35762550618162,
+      "osm": "https://www.openstreetmap.org/way/1346322127",
+      "distanceToPlaceMeters": 590,
+      "placeCoordinate": [
+        37.2195343,
+        128.350964
+      ],
+      "evidence": "OSM amenity=parking, explicit access restrictions excluded; Valhalla kr-motorcycle-1 road approach verified 2026-10-14",
+      "placeSource": "https://www.openstreetmap.org/node/360268669"
+    },
+    "dosan-seowon": {
+      "lat": 36.7283167,
+      "lng": 128.84020477352342,
+      "osm": "https://www.openstreetmap.org/way/691122226",
+      "distanceToPlaceMeters": 337,
+      "placeCoordinate": [
+        36.726583,
+        128.8433122
+      ],
+      "evidence": "OSM amenity=parking, explicit access restrictions excluded; Valhalla kr-motorcycle-1 road approach verified 2026-10-14",
+      "placeSource": "https://www.openstreetmap.org/node/6872626485"
+    },
+    "bongjeongsa": {
+      "lat": 36.65099535,
+      "lng": 128.6624436130282,
+      "osm": "https://www.openstreetmap.org/way/1258543786",
+      "distanceToPlaceMeters": 254,
+      "placeCoordinate": [
+        36.65326615,
+        128.6627249981005
+      ],
+      "evidence": "OSM amenity=parking, explicit access restrictions excluded; Valhalla kr-motorcycle-1 road approach verified 2026-10-14",
+      "placeSource": "https://www.openstreetmap.org/way/691112451"
+    },
+    "gakyeonsa": {
+      "lat": 36.75473465,
+      "lng": 127.92391384718412,
+      "osm": "https://www.openstreetmap.org/way/1546247710",
+      "distanceToPlaceMeters": 309,
+      "placeCoordinate": [
+        36.7547948,
+        127.92737818176113
+      ],
+      "evidence": "OSM amenity=parking, explicit access restrictions excluded; Valhalla kr-motorcycle-1 road approach verified 2026-10-14",
+      "placeSource": "https://www.openstreetmap.org/way/1177176957"
+    },
+    "kimjwajin": {
+      "lat": 36.597686800000005,
+      "lng": 126.54613940856433,
+      "osm": "https://www.openstreetmap.org/way/527184277",
+      "distanceToPlaceMeters": 58,
+      "placeCoordinate": [
+        36.59751415,
+        126.54675112935527
+      ],
+      "evidence": "OSM amenity=parking, explicit access restrictions excluded; Valhalla kr-motorcycle-1 road approach verified 2026-10-14",
+      "placeSource": "https://www.openstreetmap.org/way/527184273"
+    },
+    "mallipo": {
+      "lat": 36.7831219,
+      "lng": 126.14273966833346,
+      "osm": "https://www.openstreetmap.org/way/697071536",
+      "distanceToPlaceMeters": 547,
+      "placeCoordinate": [
+        36.7879429,
+        126.14398335359225
+      ],
+      "evidence": "OSM amenity=parking, explicit access restrictions excluded; Valhalla kr-motorcycle-1 road approach verified 2026-10-14",
+      "placeSource": "https://www.openstreetmap.org/way/495225199"
+    },
+    "hwangtohyeon": {
+      "lat": 35.63394984999999,
+      "lng": 126.83042866451507,
+      "osm": "https://www.openstreetmap.org/way/1353867712",
+      "distanceToPlaceMeters": 222,
+      "placeCoordinate": [
+        35.6320978,
+        126.82952013255506
+      ],
+      "evidence": "OSM amenity=parking, explicit access restrictions excluded; Valhalla kr-motorcycle-1 road approach verified 2026-10-14",
+      "placeSource": "https://www.openstreetmap.org/way/117154054"
+    },
+    "imsil-cheese": {
+      "lat": 35.632061300000004,
+      "lng": 127.30251555782988,
+      "osm": "https://www.openstreetmap.org/way/1254792645",
+      "distanceToPlaceMeters": 146,
+      "placeCoordinate": [
+        35.633294250000006,
+        127.3019645034567
+      ],
+      "evidence": "OSM amenity=parking, explicit access restrictions excluded; Valhalla kr-motorcycle-1 road approach verified 2026-10-14",
+      "placeSource": "https://www.openstreetmap.org/way/1118017057"
+    },
+    "namgye-seowon": {
+      "lat": 35.546974250000005,
+      "lng": 127.78263562790201,
+      "osm": "https://www.openstreetmap.org/way/1220420601",
+      "distanceToPlaceMeters": 236,
+      "placeCoordinate": [
+        35.54897655,
+        127.78351166116272
+      ],
+      "evidence": "OSM amenity=parking, explicit access restrictions excluded; Valhalla kr-motorcycle-1 road approach verified 2026-10-14",
+      "placeSource": "https://www.openstreetmap.org/way/1166004351"
+    },
+    "naewonsa": {
+      "lat": 35.4247221,
+      "lng": 129.10557445310405,
+      "osm": "https://www.openstreetmap.org/way/1242735913",
+      "distanceToPlaceMeters": 120,
+      "placeCoordinate": [
+        35.4241303,
+        129.10447153819203
+      ],
+      "evidence": "OSM amenity=parking, explicit access restrictions excluded; Valhalla kr-motorcycle-1 road approach verified 2026-10-14",
+      "placeSource": "https://www.openstreetmap.org/way/787196426"
+    },
+    "hyangiram": {
+      "lat": 34.5999215,
+      "lng": 127.80202632862151,
+      "osm": "https://www.openstreetmap.org/way/97802184",
+      "distanceToPlaceMeters": 940,
+      "placeCoordinate": [
+        34.59159665,
+        127.8038089
+      ],
+      "evidence": "OSM amenity=parking, explicit access restrictions excluded; Valhalla kr-motorcycle-1 road approach verified 2026-10-14",
+      "placeSource": "https://www.openstreetmap.org/way/1304265380"
+    },
+    "neunggasa": {
+      "lat": 34.64055395,
+      "lng": 127.4135980764863,
+      "osm": "https://www.openstreetmap.org/way/1234176658",
+      "distanceToPlaceMeters": 182,
+      "placeCoordinate": [
+        34.63901439999999,
+        127.414273638515
+      ],
+      "evidence": "OSM amenity=parking, explicit access restrictions excluded; Valhalla kr-motorcycle-1 road approach verified 2026-10-14",
+      "placeSource": "https://www.openstreetmap.org/way/640489781"
+    },
+    "gwangju-folk-museum": {
+      "lat": 35.1835789,
+      "lng": 126.88777515184293,
+      "osm": "https://www.openstreetmap.org/way/468963211",
+      "distanceToPlaceMeters": 103,
+      "placeCoordinate": [
+        35.1841681,
+        126.8886428
+      ],
+      "evidence": "OSM amenity=parking, explicit access restrictions excluded; Valhalla kr-motorcycle-1 road approach verified 2026-10-14",
+      "placeSource": "https://www.openstreetmap.org/node/368733972"
+    },
+    "seomun-market": {
+      "lat": 35.86887895,
+      "lng": 128.58072806075631,
+      "osm": "https://www.openstreetmap.org/way/769505242",
+      "distanceToPlaceMeters": 61,
+      "placeCoordinate": [
+        35.86943,
+        128.5807059
+      ],
+      "evidence": "OSM amenity=parking, explicit access restrictions excluded; Valhalla kr-motorcycle-1 road approach verified 2026-10-14",
+      "placeSource": "https://www.openstreetmap.org/node/368867948"
+    },
+    "jeongsan-hyanggyo": {
+      "lat": 36.41647345,
+      "lng": 126.94518910234564,
+      "osm": "https://www.openstreetmap.org/way/1509391276",
+      "distanceToPlaceMeters": 108,
+      "placeCoordinate": [
+        36.4160532,
+        126.9441063
+      ],
+      "evidence": "OSM amenity=parking, explicit access restrictions excluded; Valhalla kr-motorcycle-1 road approach verified 2026-10-14",
+      "placeSource": "https://www.openstreetmap.org/node/8699906982"
+    },
+    "korea-pop-museum": {
+      "lat": 35.8397695,
+      "lng": 129.29145330902531,
+      "osm": "https://www.openstreetmap.org/way/1167540459",
+      "distanceToPlaceMeters": 177,
+      "placeCoordinate": [
+        35.8399918,
+        129.28951
+      ],
+      "evidence": "OSM amenity=parking, explicit access restrictions excluded; Valhalla kr-motorcycle-1 road approach verified 2026-10-14",
+      "placeSource": "https://www.openstreetmap.org/node/11513252411"
+    },
+    "daewangam-park": {
+      "lat": 35.4898321,
+      "lng": 129.43621751648374,
+      "osm": "https://www.openstreetmap.org/way/476518086",
+      "distanceToPlaceMeters": 456,
+      "placeCoordinate": [
+        35.49235965,
+        129.44017771027995
+      ],
+      "evidence": "OSM amenity=parking, explicit access restrictions excluded; Valhalla kr-motorcycle-1 road approach verified 2026-10-14",
+      "placeSource": "https://www.openstreetmap.org/way/476518093"
+    },
+    "geological-museum": {
+      "lat": 36.3755806,
+      "lng": 127.36328999952002,
+      "osm": "https://www.openstreetmap.org/way/1529364859",
+      "distanceToPlaceMeters": 192,
+      "placeCoordinate": [
+        36.37730795,
+        127.3631967
+      ],
+      "evidence": "OSM amenity=parking, explicit access restrictions excluded; Valhalla kr-motorcycle-1 road approach verified 2026-10-14",
+      "placeSource": "https://www.openstreetmap.org/way/539424926"
+    },
+    "sejong-arboretum": {
+      "lat": 36.49834045,
+      "lng": 127.28283757749011,
+      "osm": "https://www.openstreetmap.org/way/1113205038",
+      "distanceToPlaceMeters": 427,
+      "placeCoordinate": [
+        36.49480835,
+        127.28471657775589
+      ],
+      "evidence": "OSM amenity=parking, explicit access restrictions excluded; Valhalla kr-motorcycle-1 road approach verified 2026-10-14",
+      "placeSource": "https://www.openstreetmap.org/way/799013764"
+    },
+    "sinchang-hyanggyo": {
+      "lat": 36.77418925,
+      "lng": 126.93293614130229,
+      "osm": "https://www.openstreetmap.org/way/601189133",
+      "distanceToPlaceMeters": 642,
+      "placeCoordinate": [
+        36.7798856,
+        126.93178960193785
+      ],
+      "evidence": "OSM amenity=parking, explicit access restrictions excluded; Valhalla kr-motorcycle-1 road approach verified 2026-10-14",
+      "placeSource": "https://www.openstreetmap.org/way/930485856"
+    },
+    "buan-guam-dolmens": {
+      "lat": 35.7077592,
+      "lng": 126.6548928752054,
+      "osm": "https://www.openstreetmap.org/way/946849571",
+      "distanceToPlaceMeters": 41,
+      "placeCoordinate": [
+        35.70793155,
+        126.65448543876123
+      ],
+      "evidence": "OSM amenity=parking, explicit access restrictions excluded; Valhalla kr-motorcycle-1 road approach verified 2026-10-14",
+      "placeSource": "https://www.openstreetmap.org/way/946849576"
+    },
+    "jisan-tombs": {
+      "lat": 35.72223385,
+      "lng": 128.25820699400066,
+      "osm": "https://www.openstreetmap.org/way/1157579672",
+      "distanceToPlaceMeters": 95,
+      "placeCoordinate": [
+        35.72247555,
+        128.2592219086045
+      ],
+      "evidence": "OSM amenity=parking, explicit access restrictions excluded; Valhalla kr-motorcycle-1 road approach verified 2026-10-14",
+      "placeSource": "https://www.openstreetmap.org/way/1157609217"
+    },
+    "seosan-hyanggyo": {
+      "lat": 36.7913834,
+      "lng": 126.4570131,
+      "osm": "https://www.openstreetmap.org/node/10637482734",
+      "distanceToPlaceMeters": 50,
+      "placeCoordinate": [
+        36.791087950000005,
+        126.45658544596454
+      ],
+      "evidence": "OSM amenity=parking, explicit access restrictions excluded; Valhalla kr-motorcycle-1 road approach verified 2026-10-14",
+      "placeSource": "https://www.openstreetmap.org/way/1257074855"
+    },
+    "dangjin-hyanggyo": {
+      "lat": 36.8956603,
+      "lng": 126.6322116664634,
+      "osm": "https://www.openstreetmap.org/way/1210900865",
+      "distanceToPlaceMeters": 357,
+      "placeCoordinate": [
+        36.892645599999994,
+        126.63359854726009
+      ],
+      "evidence": "OSM amenity=parking, explicit access restrictions excluded; Valhalla kr-motorcycle-1 road approach verified 2026-10-14",
+      "placeSource": "https://www.openstreetmap.org/way/1306511236"
+    },
+    "songhak-tombs": {
+      "lat": 34.9835729,
+      "lng": 128.31846655168596,
+      "osm": "https://www.openstreetmap.org/way/1058948750",
+      "distanceToPlaceMeters": 412,
+      "placeCoordinate": [
+        34.98054405,
+        128.32107759180252
+      ],
+      "evidence": "OSM amenity=parking, explicit access restrictions excluded; Valhalla kr-motorcycle-1 road approach verified 2026-10-14",
+      "placeSource": "https://www.openstreetmap.org/way/1308093635"
+    },
+    "okjeon-tombs": {
+      "lat": 35.58316265,
+      "lng": 128.2789180762929,
+      "osm": "https://www.openstreetmap.org/way/1512562095",
+      "distanceToPlaceMeters": 176,
+      "placeCoordinate": [
+        35.58171895,
+        128.27971529155968
+      ],
+      "evidence": "OSM amenity=parking, explicit access restrictions excluded; Valhalla kr-motorcycle-1 road approach verified 2026-10-14",
+      "placeSource": "https://www.openstreetmap.org/way/1512560654"
     }
   },
   "replacements": [
@@ -2287,6 +3222,2196 @@
         "distanceToPlaceMeters": 205,
         "evidence": "OSM 주차 구역과 출입 제한 태그 대조; 이륜차 통행 가능 도로 연결 확인 2026-10-04"
       }
+    },
+    {
+      "id": "hwaseong-fortress",
+      "kind": "spot",
+      "category": "culture",
+      "name": "수원화성",
+      "region": "경기 수원",
+      "lat": 37.2867876,
+      "lng": 127.0114366,
+      "lead": "성문과 성곽을 따라 걷는 수원의 역사",
+      "description": "성곽과 성문을 가까이에서 만날 수 있는 수원의 대표 명소입니다. 긴 성곽 일주 대신 주차장 인근의 성문이나 산책 구간을 골라 둘러보세요.",
+      "visitNote": "주차 후 가까운 관람 구역 방문 · 운영일과 현장 이륜차 주차 조건 확인",
+      "source": "https://www.openstreetmap.org/node/1791243454",
+      "sourceName": "OpenStreetMap · 장소 원문",
+      "visitCoordinate": [
+        37.2867876,
+        127.0114366
+      ],
+      "parking": {
+        "lat": 37.286535400000005,
+        "lng": 127.01427882572122,
+        "osm": "https://www.openstreetmap.org/way/1164818521",
+        "distanceToPlaceMeters": 253,
+        "placeCoordinate": [
+          37.2867876,
+          127.0114366
+        ],
+        "evidence": "OSM amenity=parking, explicit access restrictions excluded; Valhalla kr-motorcycle-1 road approach verified 2026-10-14",
+        "placeSource": "https://www.openstreetmap.org/node/1791243454"
+      }
+    },
+    {
+      "id": "yunggeolleung",
+      "kind": "spot",
+      "category": "culture",
+      "name": "융건릉",
+      "region": "경기 화성",
+      "lat": 37.208282049999994,
+      "lng": 126.98897959405065,
+      "lead": "숲길과 잔디밭으로 이어지는 왕릉 산책",
+      "description": "왕릉과 숲길을 함께 둘러볼 수 있는 곳입니다. 두 능을 모두 돌아보기보다 가까운 능역 한 곳을 골라 짧게 걸어보세요.",
+      "visitNote": "주차 후 가까운 관람 구역 방문 · 운영일과 현장 이륜차 주차 조건 확인",
+      "source": "https://www.openstreetmap.org/way/311231812",
+      "sourceName": "OpenStreetMap · 장소 원문",
+      "visitCoordinate": [
+        37.208282049999994,
+        126.98897959405065
+      ],
+      "parking": {
+        "lat": 37.207558000000006,
+        "lng": 126.98972332497164,
+        "osm": "https://www.openstreetmap.org/way/311231801",
+        "distanceToPlaceMeters": 104,
+        "placeCoordinate": [
+          37.208282049999994,
+          126.98897959405065
+        ],
+        "evidence": "OSM amenity=parking, explicit access restrictions excluded; Valhalla kr-motorcycle-1 road approach verified 2026-10-14",
+        "placeSource": "https://www.openstreetmap.org/way/311231812"
+      }
+    },
+    {
+      "id": "silleuksa",
+      "kind": "spot",
+      "category": "culture",
+      "name": "신륵사",
+      "region": "경기 여주",
+      "lat": 37.2976273,
+      "lng": 127.6615659,
+      "lead": "남한강변 누각과 절집을 함께 만나는 곳",
+      "description": "남한강변에 자리한 여주의 절집입니다. 사찰 주변을 둘러보고 강을 바라보며 잠시 쉬어갈 수 있습니다.",
+      "visitNote": "주차 후 가까운 관람 구역 방문 · 운영일과 현장 이륜차 주차 조건 확인",
+      "source": "https://www.openstreetmap.org/node/2632031838",
+      "sourceName": "OpenStreetMap · 장소 원문",
+      "visitCoordinate": [
+        37.2976273,
+        127.6615659
+      ],
+      "parking": {
+        "lat": 37.29291535,
+        "lng": 127.66024560757947,
+        "osm": "https://www.openstreetmap.org/way/471377055",
+        "distanceToPlaceMeters": 537,
+        "placeCoordinate": [
+          37.2976273,
+          127.6615659
+        ],
+        "evidence": "OSM amenity=parking, explicit access restrictions excluded; Valhalla kr-motorcycle-1 road approach verified 2026-10-14",
+        "placeSource": "https://www.openstreetmap.org/node/2632031838"
+      }
+    },
+    {
+      "id": "seolbong-park",
+      "kind": "spot",
+      "category": "nature",
+      "name": "설봉공원",
+      "region": "경기 이천",
+      "lat": 37.2757201,
+      "lng": 127.42576799270593,
+      "lead": "호수와 조각, 도자 문화가 있는 공원",
+      "description": "호수와 조각 작품, 도자 문화가 어우러진 이천의 공원입니다. 호숫가의 가까운 산책 구간에서 주행 사이의 휴식을 즐겨보세요.",
+      "visitNote": "주차 후 가까운 관람 구역 방문 · 운영일과 현장 이륜차 주차 조건 확인",
+      "source": "https://www.openstreetmap.org/way/337569806",
+      "sourceName": "OpenStreetMap · 장소 원문",
+      "visitCoordinate": [
+        37.2757201,
+        127.42576799270593
+      ],
+      "parking": {
+        "lat": 37.2754815,
+        "lng": 127.4279328231874,
+        "osm": "https://www.openstreetmap.org/way/337559192",
+        "distanceToPlaceMeters": 193,
+        "placeCoordinate": [
+          37.2757201,
+          127.42576799270593
+        ],
+        "evidence": "OSM amenity=parking, explicit access restrictions excluded; Valhalla kr-motorcycle-1 road approach verified 2026-10-14",
+        "placeSource": "https://www.openstreetmap.org/way/337569806"
+      }
+    },
+    {
+      "id": "dumulmeori",
+      "kind": "spot",
+      "category": "nature",
+      "name": "두물머리",
+      "region": "경기 양평",
+      "lat": 37.534660450000004,
+      "lng": 127.31253972902519,
+      "lead": "남한강과 북한강이 만나는 물가 풍경",
+      "description": "남한강과 북한강이 만나는 양평의 물가입니다. 강변 풍경과 오래된 나무를 바라보며 잠시 쉬어가기 좋습니다.",
+      "visitNote": "주차 후 가까운 관람 구역 방문 · 운영일과 현장 이륜차 주차 조건 확인",
+      "source": "https://www.openstreetmap.org/way/832185825",
+      "sourceName": "OpenStreetMap · 장소 원문",
+      "visitCoordinate": [
+        37.534660450000004,
+        127.31253972902519
+      ],
+      "parking": {
+        "lat": 37.53419585,
+        "lng": 127.31643189645725,
+        "osm": "https://www.openstreetmap.org/way/584506152",
+        "distanceToPlaceMeters": 347,
+        "placeCoordinate": [
+          37.534660450000004,
+          127.31253972902519
+        ],
+        "evidence": "OSM amenity=parking, explicit access restrictions excluded; Valhalla kr-motorcycle-1 road approach verified 2026-10-14",
+        "placeSource": "https://www.openstreetmap.org/way/832185825"
+      }
+    },
+    {
+      "id": "anseong-cheongryongsa",
+      "kind": "spot",
+      "category": "culture",
+      "name": "청룡사",
+      "region": "경기 안성",
+      "lat": 36.913553699999994,
+      "lng": 127.2887092110604,
+      "lead": "남사당의 이야기가 남아 있는 안성의 절집",
+      "description": "안성의 산자락에 자리한 오래된 절집입니다. 주차 후 가까운 전각과 주변 풍경을 둘러보세요.",
+      "visitNote": "주차 후 가까운 관람 구역 방문 · 운영일과 현장 이륜차 주차 조건 확인",
+      "source": "https://www.openstreetmap.org/way/1282402749",
+      "sourceName": "OpenStreetMap · 장소 원문",
+      "visitCoordinate": [
+        36.913553699999994,
+        127.2887092110604
+      ],
+      "parking": {
+        "lat": 36.912726449999994,
+        "lng": 127.29134015150053,
+        "osm": "https://www.openstreetmap.org/way/1356599108",
+        "distanceToPlaceMeters": 251,
+        "placeCoordinate": [
+          36.913553699999994,
+          127.2887092110604
+        ],
+        "evidence": "OSM amenity=parking, explicit access restrictions excluded; Valhalla kr-motorcycle-1 road approach verified 2026-10-14",
+        "placeSource": "https://www.openstreetmap.org/way/1282402749"
+      }
+    },
+    {
+      "id": "chiljangsa",
+      "kind": "spot",
+      "category": "culture",
+      "name": "칠장사",
+      "region": "경기 안성",
+      "lat": 37.026257,
+      "lng": 127.39706638464365,
+      "lead": "숲과 옛 건축이 어우러진 안성의 절집",
+      "description": "숲과 옛 건축이 어우러진 안성의 사찰입니다. 등산 일정을 잡기보다 절집 주변을 짧게 걷는 방문에 맞춰보세요.",
+      "visitNote": "주차 후 가까운 관람 구역 방문 · 운영일과 현장 이륜차 주차 조건 확인",
+      "source": "https://www.openstreetmap.org/way/821742400",
+      "sourceName": "OpenStreetMap · 장소 원문",
+      "visitCoordinate": [
+        37.026257,
+        127.39706638464365
+      ],
+      "parking": {
+        "lat": 37.026104450000005,
+        "lng": 127.3984496646121,
+        "osm": "https://www.openstreetmap.org/way/1395618051",
+        "distanceToPlaceMeters": 124,
+        "placeCoordinate": [
+          37.026257,
+          127.39706638464365
+        ],
+        "evidence": "OSM amenity=parking, explicit access restrictions excluded; Valhalla kr-motorcycle-1 road approach verified 2026-10-14",
+        "placeSource": "https://www.openstreetmap.org/way/821742400"
+      }
+    },
+    {
+      "id": "namhansanseong",
+      "kind": "spot",
+      "category": "culture",
+      "name": "남한산성",
+      "region": "경기 광주",
+      "lat": 37.4791368,
+      "lng": 127.1801588,
+      "lead": "능선을 따라 남아 있는 유네스코 산성",
+      "description": "능선을 따라 성곽이 이어지는 산성입니다. 전체 성곽을 돌기보다 주차장과 가까운 성문이나 마을 주변을 골라 둘러보세요.",
+      "visitNote": "주차 후 가까운 관람 구역 방문 · 운영일과 현장 이륜차 주차 조건 확인",
+      "source": "https://www.openstreetmap.org/node/2668229479",
+      "sourceName": "OpenStreetMap · 장소 원문",
+      "visitCoordinate": [
+        37.4791368,
+        127.1801588
+      ],
+      "parking": {
+        "lat": 37.4768561,
+        "lng": 127.18364733695186,
+        "osm": "https://www.openstreetmap.org/way/872191524",
+        "distanceToPlaceMeters": 399,
+        "placeCoordinate": [
+          37.4791368,
+          127.1801588
+        ],
+        "evidence": "OSM amenity=parking, explicit access restrictions excluded; Valhalla kr-motorcycle-1 road approach verified 2026-10-14",
+        "placeSource": "https://www.openstreetmap.org/node/2668229479"
+      }
+    },
+    {
+      "id": "railroad-museum",
+      "kind": "spot",
+      "category": "culture",
+      "name": "철도박물관",
+      "region": "경기 의왕",
+      "lat": 37.314017899999996,
+      "lng": 126.95082720956259,
+      "lead": "철도박물관에서 잠시 쉬어가는 시간.",
+      "description": "철도 차량과 철도 역사를 살펴볼 수 있는 의왕의 박물관입니다. 주차 후 야외 차량 전시와 가까운 실내 전시를 중심으로 둘러보세요.",
+      "visitNote": "주차 후 가까운 관람 구역 방문 · 운영일과 현장 이륜차 주차 조건 확인",
+      "source": "https://www.openstreetmap.org/way/60819387",
+      "sourceName": "OpenStreetMap · 장소 원문",
+      "visitCoordinate": [
+        37.314017899999996,
+        126.95082720956259
+      ],
+      "parking": {
+        "lat": 37.3140767,
+        "lng": 126.94965771189817,
+        "osm": "https://www.openstreetmap.org/way/829939492",
+        "distanceToPlaceMeters": 104,
+        "placeCoordinate": [
+          37.314017899999996,
+          126.95082720956259
+        ],
+        "evidence": "OSM amenity=parking, explicit access restrictions excluded; Valhalla kr-motorcycle-1 road approach verified 2026-10-14",
+        "placeSource": "https://www.openstreetmap.org/way/60819387"
+      }
+    },
+    {
+      "id": "samsung-transport",
+      "kind": "spot",
+      "category": "culture",
+      "name": "삼성화재교통박물관",
+      "region": "경기 용인",
+      "lat": 37.30110185,
+      "lng": 127.21747135361949,
+      "lead": "삼성화재교통박물관에서 잠시 쉬어가는 시간.",
+      "description": "용인에 있는 자동차 박물관입니다. 전시 차량과 야외 공간을 둘러보며 주행 사이에 다른 이동 수단의 역사를 만나보세요.",
+      "visitNote": "주차 후 가까운 관람 구역 방문 · 운영일과 현장 이륜차 주차 조건 확인",
+      "source": "https://www.openstreetmap.org/way/824027913",
+      "sourceName": "OpenStreetMap · 장소 원문",
+      "visitCoordinate": [
+        37.30110185,
+        127.21747135361949
+      ],
+      "parking": {
+        "lat": 37.3000447,
+        "lng": 127.21774219079107,
+        "osm": "https://www.openstreetmap.org/way/824027912",
+        "distanceToPlaceMeters": 120,
+        "placeCoordinate": [
+          37.30110185,
+          127.21747135361949
+        ],
+        "evidence": "OSM amenity=parking, explicit access restrictions excluded; Valhalla kr-motorcycle-1 road approach verified 2026-10-14",
+        "placeSource": "https://www.openstreetmap.org/way/824027913"
+      }
+    },
+    {
+      "id": "pungsuwon",
+      "kind": "spot",
+      "category": "culture",
+      "name": "풍수원성당",
+      "region": "강원 횡성",
+      "lat": 37.529210500000005,
+      "lng": 127.81872615,
+      "lead": "붉은 벽돌 성당과 산골 마을의 고요함",
+      "description": "횡성의 산골 마을에 자리한 붉은 벽돌 성당입니다. 성당과 주변 공간을 둘러보며 차분하게 쉬어갈 수 있습니다.",
+      "visitNote": "주차 후 가까운 관람 구역 방문 · 운영일과 현장 이륜차 주차 조건 확인",
+      "source": "https://www.openstreetmap.org/way/1055946406",
+      "sourceName": "OpenStreetMap · 장소 원문",
+      "visitCoordinate": [
+        37.529210500000005,
+        127.81872615
+      ],
+      "parking": {
+        "lat": 37.52839205,
+        "lng": 127.81742879493764,
+        "osm": "https://www.openstreetmap.org/way/1055946408",
+        "distanceToPlaceMeters": 146,
+        "placeCoordinate": [
+          37.529210500000005,
+          127.81872615
+        ],
+        "evidence": "OSM amenity=parking, explicit access restrictions excluded; Valhalla kr-motorcycle-1 road approach verified 2026-10-14",
+        "placeSource": "https://www.openstreetmap.org/way/1055946406"
+      }
+    },
+    {
+      "id": "sutasa",
+      "kind": "spot",
+      "category": "culture",
+      "name": "수타사",
+      "region": "강원 홍천",
+      "lat": 37.6984994,
+      "lng": 127.9591262,
+      "lead": "계곡을 따라 만나는 오래된 절집",
+      "description": "홍천의 계곡 곁에 자리한 오래된 절집입니다. 사찰과 입구 주변을 짧게 걸으며 숲의 그늘을 즐겨보세요.",
+      "visitNote": "주차 후 가까운 관람 구역 방문 · 운영일과 현장 이륜차 주차 조건 확인",
+      "source": "https://www.openstreetmap.org/node/8547300068",
+      "sourceName": "OpenStreetMap · 장소 원문",
+      "visitCoordinate": [
+        37.6984994,
+        127.9591262
+      ],
+      "parking": {
+        "lat": 37.69770785,
+        "lng": 127.95549356067193,
+        "osm": "https://www.openstreetmap.org/way/1056348515",
+        "distanceToPlaceMeters": 332,
+        "placeCoordinate": [
+          37.6984994,
+          127.9591262
+        ],
+        "evidence": "OSM amenity=parking, explicit access restrictions excluded; Valhalla kr-motorcycle-1 road approach verified 2026-10-14",
+        "placeSource": "https://www.openstreetmap.org/node/8547300068"
+      }
+    },
+    {
+      "id": "parksugeun",
+      "kind": "spot",
+      "category": "culture",
+      "name": "박수근미술관",
+      "region": "강원 양구",
+      "lat": 38.0974539,
+      "lng": 127.9836522,
+      "lead": "돌담과 숲 사이에서 만나는 박수근의 그림",
+      "description": "양구에서 박수근의 작품과 삶을 만나는 미술관입니다. 관심 있는 전시를 골라 둘러보고 주변 숲길에서 잠시 쉬어보세요.",
+      "visitNote": "주차 후 가까운 관람 구역 방문 · 운영일과 현장 이륜차 주차 조건 확인",
+      "source": "https://www.openstreetmap.org/node/7477671685",
+      "sourceName": "OpenStreetMap · 장소 원문",
+      "visitCoordinate": [
+        38.0974539,
+        127.9836522
+      ],
+      "parking": {
+        "lat": 38.097529699999996,
+        "lng": 127.98527426884608,
+        "osm": "https://www.openstreetmap.org/way/1190193249",
+        "distanceToPlaceMeters": 142,
+        "placeCoordinate": [
+          38.0974539,
+          127.9836522
+        ],
+        "evidence": "OSM amenity=parking, explicit access restrictions excluded; Valhalla kr-motorcycle-1 road approach verified 2026-10-14",
+        "placeSource": "https://www.openstreetmap.org/node/7477671685"
+      }
+    },
+    {
+      "id": "kimyujeong",
+      "kind": "spot",
+      "category": "culture",
+      "name": "김유정문학촌",
+      "region": "강원 춘천",
+      "lat": 37.817,
+      "lng": 127.715,
+      "lead": "소설 속 실레마을을 잠시 걸어보는 시간",
+      "description": "춘천 실레마을에 있는 김유정문학촌입니다. 문학 공간과 마을의 가까운 길을 걸으며 소설 속 풍경을 만나보세요.",
+      "visitNote": "주차 후 가까운 관람 구역 방문 · 운영일과 현장 이륜차 주차 조건 확인",
+      "source": "https://commons.wikimedia.org/wiki/File:%EA%B9%80%EC%9C%A0%EC%A0%95%EB%AC%B8%ED%95%99%EC%B4%8C.jpg",
+      "sourceName": "OpenStreetMap · 장소 원문",
+      "visitCoordinate": [
+        37.817,
+        127.715
+      ],
+      "parking": {
+        "lat": 37.81731905,
+        "lng": 127.71368491046083,
+        "osm": "https://www.openstreetmap.org/way/1528325575",
+        "distanceToPlaceMeters": 121,
+        "placeCoordinate": [
+          37.817,
+          127.715
+        ],
+        "evidence": "OSM amenity=parking, explicit access restrictions excluded; Valhalla kr-motorcycle-1 road approach verified 2026-10-14",
+        "placeSource": "https://www.openstreetmap.org/way/1528325575"
+      }
+    },
+    {
+      "id": "daegwallyeong-sheep",
+      "kind": "spot",
+      "category": "nature",
+      "name": "대관령 양떼목장",
+      "region": "강원 평창",
+      "lat": 37.6895278,
+      "lng": 128.75329572609584,
+      "lead": "고개 위 초원에서 바라보는 대관령 풍경",
+      "description": "대관령 고개 위 초원에 자리한 양떼목장입니다. 전체 산책로를 한 번에 돌기보다 관람 가능한 가까운 구간을 골라 방문하세요.",
+      "visitNote": "주차 후 가까운 관람 구역 방문 · 운영일과 현장 이륜차 주차 조건 확인",
+      "source": "https://www.openstreetmap.org/way/257727875",
+      "sourceName": "OpenStreetMap · 장소 원문",
+      "visitCoordinate": [
+        37.6895278,
+        128.75329572609584
+      ],
+      "parking": {
+        "lat": 37.684445249999996,
+        "lng": 128.75454608014772,
+        "osm": "https://www.openstreetmap.org/way/469371491",
+        "distanceToPlaceMeters": 576,
+        "placeCoordinate": [
+          37.6895278,
+          128.75329572609584
+        ],
+        "evidence": "OSM amenity=parking, explicit access restrictions excluded; Valhalla kr-motorcycle-1 road approach verified 2026-10-14",
+        "placeSource": "https://www.openstreetmap.org/way/257727875"
+      }
+    },
+    {
+      "id": "gossi-cave",
+      "kind": "spot",
+      "category": "nature",
+      "name": "고씨굴",
+      "region": "강원 영월",
+      "lat": 37.1293151,
+      "lng": 128.5328946,
+      "lead": "남한강변에서 만나는 석회암 동굴",
+      "description": "남한강변에서 만나는 영월의 석회암 동굴입니다. 관람 시간과 입장 조건을 확인하고, 동굴 방문이 어렵다면 강변에서 잠시 쉬어갈 수 있습니다.",
+      "visitNote": "주차 후 가까운 관람 구역 방문 · 운영일과 현장 이륜차 주차 조건 확인",
+      "source": "https://www.openstreetmap.org/node/368662146",
+      "sourceName": "OpenStreetMap · 장소 원문",
+      "visitCoordinate": [
+        37.1293151,
+        128.5328946
+      ],
+      "parking": {
+        "lat": 37.12987035,
+        "lng": 128.53507015073055,
+        "osm": "https://www.openstreetmap.org/way/546658013",
+        "distanceToPlaceMeters": 203,
+        "placeCoordinate": [
+          37.1293151,
+          128.5328946
+        ],
+        "evidence": "OSM amenity=parking, explicit access restrictions excluded; Valhalla kr-motorcycle-1 road approach verified 2026-10-14",
+        "placeSource": "https://www.openstreetmap.org/node/368662146"
+      }
+    },
+    {
+      "id": "hwangji",
+      "kind": "spot",
+      "category": "nature",
+      "name": "황지연못",
+      "region": "강원 태백",
+      "lat": 37.17313865,
+      "lng": 128.9910362865,
+      "lead": "낙동강의 시작을 만나는 도심 속 연못",
+      "description": "태백 시가지에 자리한 황지연못입니다. 연못 주변의 짧은 산책길에서 주행 사이에 숨을 고르기 좋습니다.",
+      "visitNote": "주차 후 가까운 관람 구역 방문 · 운영일과 현장 이륜차 주차 조건 확인",
+      "source": "https://www.openstreetmap.org/way/676857655",
+      "sourceName": "OpenStreetMap · 장소 원문",
+      "visitCoordinate": [
+        37.17313865,
+        128.9910362865
+      ],
+      "parking": {
+        "lat": 37.174396099999996,
+        "lng": 128.99241565831846,
+        "osm": "https://www.openstreetmap.org/way/679364449",
+        "distanceToPlaceMeters": 186,
+        "placeCoordinate": [
+          37.17313865,
+          128.9910362865
+        ],
+        "evidence": "OSM amenity=parking, explicit access restrictions excluded; Valhalla kr-motorcycle-1 road approach verified 2026-10-14",
+        "placeSource": "https://www.openstreetmap.org/way/676857655"
+      }
+    },
+    {
+      "id": "pohang-jukdo",
+      "kind": "spot",
+      "category": "food",
+      "name": "포항 죽도시장",
+      "region": "경북 포항",
+      "lat": 36.0350097,
+      "lng": 129.3677505867912,
+      "lead": "동해의 제철 먹거리를 고르는 큰 장터",
+      "description": "포항을 대표하는 큰 장터입니다. 지정 주차 구역에 바이크를 두고 가까운 시장 골목에서 식사와 휴식을 함께 챙겨보세요.",
+      "visitNote": "주차 후 가까운 관람 구역 방문 · 운영일과 현장 이륜차 주차 조건 확인",
+      "source": "https://www.openstreetmap.org/way/172241993",
+      "sourceName": "OpenStreetMap · 장소 원문",
+      "visitCoordinate": [
+        36.0350097,
+        129.3677505867912
+      ],
+      "parking": {
+        "lat": 36.034978300000006,
+        "lng": 129.3714761612852,
+        "osm": "https://www.openstreetmap.org/way/471696796",
+        "distanceToPlaceMeters": 335,
+        "placeCoordinate": [
+          36.0350097,
+          129.3677505867912
+        ],
+        "evidence": "OSM amenity=parking, explicit access restrictions excluded; Valhalla kr-motorcycle-1 road approach verified 2026-10-14",
+        "placeSource": "https://www.openstreetmap.org/way/172241993"
+      }
+    },
+    {
+      "id": "guryongpo-history",
+      "kind": "spot",
+      "category": "culture",
+      "name": "구룡포 근대역사거리",
+      "region": "경북 포항",
+      "lat": 35.9905475,
+      "lng": 129.5615858,
+      "lead": "항구 뒤편 골목에 남은 근대의 풍경",
+      "description": "구룡포 항구 뒤편에 근대 건축과 골목이 남아 있는 거리입니다. 가까운 골목을 걸으며 항구와 마을의 풍경을 함께 둘러보세요.",
+      "visitNote": "주차 후 가까운 관람 구역 방문 · 운영일과 현장 이륜차 주차 조건 확인",
+      "source": "https://www.openstreetmap.org/node/13572893483",
+      "sourceName": "OpenStreetMap · 장소 원문",
+      "visitCoordinate": [
+        35.9905475,
+        129.5615858
+      ],
+      "parking": {
+        "lat": 35.99007,
+        "lng": 129.5605689802186,
+        "osm": "https://www.openstreetmap.org/way/1479639570",
+        "distanceToPlaceMeters": 106,
+        "placeCoordinate": [
+          35.9905475,
+          129.5615858
+        ],
+        "evidence": "OSM amenity=parking, explicit access restrictions excluded; Valhalla kr-motorcycle-1 road approach verified 2026-10-14",
+        "placeSource": "https://www.openstreetmap.org/node/13572893483"
+      }
+    },
+    {
+      "id": "daejeonsa",
+      "kind": "spot",
+      "category": "culture",
+      "name": "대전사",
+      "region": "경북 청송",
+      "lat": 36.39686665,
+      "lng": 129.14544048730252,
+      "lead": "주왕산 바위 봉우리를 마주하는 절집",
+      "description": "주왕산의 바위 봉우리를 마주하는 청송의 절집입니다. 산행 대신 사찰 주변의 짧은 관람 동선을 골라 방문하세요.",
+      "visitNote": "주차 후 가까운 관람 구역 방문 · 운영일과 현장 이륜차 주차 조건 확인",
+      "source": "https://www.openstreetmap.org/way/376622632",
+      "sourceName": "OpenStreetMap · 장소 원문",
+      "visitCoordinate": [
+        36.39686665,
+        129.14544048730252
+      ],
+      "parking": {
+        "lat": 36.39060445,
+        "lng": 129.1412752372145,
+        "osm": "https://www.openstreetmap.org/way/671200385",
+        "distanceToPlaceMeters": 790,
+        "placeCoordinate": [
+          36.39686665,
+          129.14544048730252
+        ],
+        "evidence": "OSM amenity=parking, explicit access restrictions excluded; Valhalla kr-motorcycle-1 road approach verified 2026-10-14",
+        "placeSource": "https://www.openstreetmap.org/way/376622632"
+      }
+    },
+    {
+      "id": "seoseokji",
+      "kind": "spot",
+      "category": "culture",
+      "name": "서석지",
+      "region": "경북 영양",
+      "lat": 36.6118173,
+      "lng": 129.0696123,
+      "lead": "연못과 누각으로 이루어진 작은 옛 정원",
+      "description": "연못과 누각이 어우러진 영양의 옛 정원입니다. 작은 정원의 풍경을 차분하게 둘러보는 정차 지점입니다.",
+      "visitNote": "주차 후 가까운 관람 구역 방문 · 운영일과 현장 이륜차 주차 조건 확인",
+      "source": "https://www.openstreetmap.org/node/12763453000",
+      "sourceName": "OpenStreetMap · 장소 원문",
+      "visitCoordinate": [
+        36.6118173,
+        129.0696123
+      ],
+      "parking": {
+        "lat": 36.611430600000006,
+        "lng": 129.0694824716013,
+        "osm": "https://www.openstreetmap.org/way/691141024",
+        "distanceToPlaceMeters": 45,
+        "placeCoordinate": [
+          36.6118173,
+          129.0696123
+        ],
+        "evidence": "OSM amenity=parking, explicit access restrictions excluded; Valhalla kr-motorcycle-1 road approach verified 2026-10-14",
+        "placeSource": "https://www.openstreetmap.org/node/12763453000"
+      }
+    },
+    {
+      "id": "baekdudaegan-arboretum",
+      "kind": "spot",
+      "category": "culture",
+      "name": "국립백두대간수목원",
+      "region": "경북 봉화",
+      "lat": 37.005054599999994,
+      "lng": 128.8107959268902,
+      "lead": "백두대간 숲자락에 펼쳐진 정원",
+      "description": "백두대간 숲자락에 넓게 펼쳐진 봉화의 수목원입니다. 전체 구역을 둘러보기보다 입구와 가까운 정원이나 전시를 골라 방문하세요.",
+      "visitNote": "주차 후 가까운 관람 구역 방문 · 운영일과 현장 이륜차 주차 조건 확인",
+      "source": "https://www.openstreetmap.org/way/1055885827",
+      "sourceName": "OpenStreetMap · 장소 원문",
+      "visitCoordinate": [
+        37.005054599999994,
+        128.8107959268902
+      ],
+      "parking": {
+        "lat": 37.00331095,
+        "lng": 128.80147145702273,
+        "osm": "https://www.openstreetmap.org/way/1225869218",
+        "distanceToPlaceMeters": 850,
+        "placeCoordinate": [
+          37.005054599999994,
+          128.8107959268902
+        ],
+        "evidence": "OSM amenity=parking, explicit access restrictions excluded; Valhalla kr-motorcycle-1 road approach verified 2026-10-14",
+        "placeSource": "https://www.openstreetmap.org/way/1055885827"
+      }
+    },
+    {
+      "id": "munmu-tomb",
+      "kind": "spot",
+      "category": "nature",
+      "name": "문무대왕릉",
+      "region": "경북 경주",
+      "lat": 35.7381286,
+      "lng": 129.4868756,
+      "lead": "신라의 바다를 바라보는 해변 정차",
+      "description": "경주 해변에서 문무대왕릉을 바라볼 수 있는 곳입니다. 바닷속 바위로 들어가지 않고 해변의 관람 지점에서 풍경을 감상하세요.",
+      "visitNote": "주차 후 가까운 관람 구역 방문 · 운영일과 현장 이륜차 주차 조건 확인",
+      "source": "https://www.openstreetmap.org/node/1503595843",
+      "sourceName": "OpenStreetMap · 장소 원문",
+      "visitCoordinate": [
+        35.7381286,
+        129.4868756
+      ],
+      "parking": {
+        "lat": 35.739371500000004,
+        "lng": 129.48359407396322,
+        "osm": "https://www.openstreetmap.org/way/1510419636",
+        "distanceToPlaceMeters": 327,
+        "placeCoordinate": [
+          35.7381286,
+          129.4868756
+        ],
+        "evidence": "OSM amenity=parking, explicit access restrictions excluded; Valhalla kr-motorcycle-1 road approach verified 2026-10-14",
+        "placeSource": "https://www.openstreetmap.org/node/1503595843"
+      }
+    },
+    {
+      "id": "golgulsa",
+      "kind": "spot",
+      "category": "culture",
+      "name": "골굴사",
+      "region": "경북 경주",
+      "lat": 35.8034058,
+      "lng": 129.4061416309268,
+      "lead": "바위에 새긴 불상과 산자락의 절집",
+      "description": "바위에 새긴 불상과 절집을 만나는 경주의 사찰입니다. 경사진 관람 구간의 상태를 확인하고 가까운 공간부터 둘러보세요.",
+      "visitNote": "주차 후 가까운 관람 구역 방문 · 운영일과 현장 이륜차 주차 조건 확인",
+      "source": "https://www.openstreetmap.org/way/567460087",
+      "sourceName": "OpenStreetMap · 장소 원문",
+      "visitCoordinate": [
+        35.8034058,
+        129.4061416309268
+      ],
+      "parking": {
+        "lat": 35.80633355,
+        "lng": 129.41356363182058,
+        "osm": "https://www.openstreetmap.org/way/376784134",
+        "distanceToPlaceMeters": 744,
+        "placeCoordinate": [
+          35.8034058,
+          129.4061416309268
+        ],
+        "evidence": "OSM amenity=parking, explicit access restrictions excluded; Valhalla kr-motorcycle-1 road approach verified 2026-10-14",
+        "placeSource": "https://www.openstreetmap.org/way/567460087"
+      }
+    },
+    {
+      "id": "beopjusa",
+      "kind": "spot",
+      "category": "culture",
+      "name": "법주사",
+      "region": "충북 보은",
+      "lat": 36.543822500000005,
+      "lng": 127.83496625815403,
+      "lead": "속리산 자락에서 만나는 큰 절집",
+      "description": "속리산 자락에 자리한 큰 절집입니다. 긴 산행을 계획하기보다 사찰의 가까운 전각을 중심으로 방문해 보세요.",
+      "visitNote": "주차 후 가까운 관람 구역 방문 · 운영일과 현장 이륜차 주차 조건 확인",
+      "source": "https://www.openstreetmap.org/way/58586419",
+      "sourceName": "OpenStreetMap · 장소 원문",
+      "visitCoordinate": [
+        36.543822500000005,
+        127.83496625815403
+      ],
+      "parking": {
+        "lat": 36.5407592,
+        "lng": 127.83320867457257,
+        "osm": "https://www.openstreetmap.org/way/1413444632",
+        "distanceToPlaceMeters": 375,
+        "placeCoordinate": [
+          36.543822500000005,
+          127.83496625815403
+        ],
+        "evidence": "OSM amenity=parking, explicit access restrictions excluded; Valhalla kr-motorcycle-1 road approach verified 2026-10-14",
+        "placeSource": "https://www.openstreetmap.org/way/58586419"
+      }
+    },
+    {
+      "id": "bogangcheon",
+      "kind": "spot",
+      "category": "nature",
+      "name": "보강천 미루나무숲",
+      "region": "충북 증평",
+      "lat": 36.78711895,
+      "lng": 127.57834154198902,
+      "lead": "미루나무 그늘 아래 쉬어 가는 강변 숲",
+      "description": "증평 보강천을 따라 미루나무 그늘이 이어지는 숲입니다. 강변의 가까운 길을 걸으며 잠시 쉬어가기 좋습니다.",
+      "visitNote": "주차 후 가까운 관람 구역 방문 · 운영일과 현장 이륜차 주차 조건 확인",
+      "source": "https://www.openstreetmap.org/way/471368147",
+      "sourceName": "OpenStreetMap · 장소 원문",
+      "visitCoordinate": [
+        36.78711895,
+        127.57834154198902
+      ],
+      "parking": {
+        "lat": 36.789189750000006,
+        "lng": 127.57811381276812,
+        "osm": "https://www.openstreetmap.org/way/1456800558",
+        "distanceToPlaceMeters": 231,
+        "placeCoordinate": [
+          36.78711895,
+          127.57834154198902
+        ],
+        "evidence": "OSM amenity=parking, explicit access restrictions excluded; Valhalla kr-motorcycle-1 road approach verified 2026-10-14",
+        "placeSource": "https://www.openstreetmap.org/way/471368147"
+      }
+    },
+    {
+      "id": "jincheon-nongdari",
+      "kind": "spot",
+      "category": "culture",
+      "name": "진천 농다리",
+      "region": "충북 진천",
+      "lat": 36.8260137,
+      "lng": 127.4934014,
+      "lead": "물길을 건너는 오래된 돌다리",
+      "description": "진천의 물길을 가로지르는 오래된 돌다리입니다. 주차 후 다리 주변을 둘러보고, 수위와 현장 통제에 따라 관람 동선을 정하세요.",
+      "visitNote": "주차 후 가까운 관람 구역 방문 · 운영일과 현장 이륜차 주차 조건 확인",
+      "source": "https://www.openstreetmap.org/node/9560157002",
+      "sourceName": "OpenStreetMap · 장소 원문",
+      "visitCoordinate": [
+        36.8260137,
+        127.4934014
+      ],
+      "parking": {
+        "lat": 36.82959365,
+        "lng": 127.49378143933541,
+        "osm": "https://www.openstreetmap.org/way/1037384856",
+        "distanceToPlaceMeters": 400,
+        "placeCoordinate": [
+          36.8260137,
+          127.4934014
+        ],
+        "evidence": "OSM amenity=parking, explicit access restrictions excluded; Valhalla kr-motorcycle-1 road approach verified 2026-10-14",
+        "placeSource": "https://www.openstreetmap.org/node/9560157002"
+      }
+    },
+    {
+      "id": "yeongguksa",
+      "kind": "spot",
+      "category": "culture",
+      "name": "영국사",
+      "region": "충북 영동",
+      "lat": 36.157980550000005,
+      "lng": 127.61091511591842,
+      "lead": "천태산 아래 은행나무와 오래된 절집",
+      "description": "천태산 아래 은행나무와 절집이 함께 자리한 영동의 사찰입니다. 산행 대신 사찰 주변을 짧게 둘러보는 일정에 맞춰보세요.",
+      "visitNote": "주차 후 가까운 관람 구역 방문 · 운영일과 현장 이륜차 주차 조건 확인",
+      "source": "https://www.openstreetmap.org/way/1555020403",
+      "sourceName": "OpenStreetMap · 장소 원문",
+      "visitCoordinate": [
+        36.157980550000005,
+        127.61091511591842
+      ],
+      "parking": {
+        "lat": 36.15759505,
+        "lng": 127.62076592709178,
+        "osm": "https://www.openstreetmap.org/way/1555020402",
+        "distanceToPlaceMeters": 885,
+        "placeCoordinate": [
+          36.157980550000005,
+          127.61091511591842
+        ],
+        "evidence": "OSM amenity=parking, explicit access restrictions excluded; Valhalla kr-motorcycle-1 road approach verified 2026-10-14",
+        "placeSource": "https://www.openstreetmap.org/way/1555020403"
+      }
+    },
+    {
+      "id": "uirimji",
+      "kind": "spot",
+      "category": "nature",
+      "name": "의림지",
+      "region": "충북 제천",
+      "lat": 37.17324515,
+      "lng": 128.21062924206336,
+      "lead": "제천의 오래된 저수지와 소나무 그늘",
+      "description": "제천의 오래된 저수지와 소나무 그늘을 만나는 곳입니다. 물가의 가까운 산책 구간에서 풍경을 감상하며 쉬어보세요.",
+      "visitNote": "주차 후 가까운 관람 구역 방문 · 운영일과 현장 이륜차 주차 조건 확인",
+      "source": "https://www.openstreetmap.org/way/471709902",
+      "sourceName": "OpenStreetMap · 장소 원문",
+      "visitCoordinate": [
+        37.17324515,
+        128.21062924206336
+      ],
+      "parking": {
+        "lat": 37.176128750000004,
+        "lng": 128.21130133964854,
+        "osm": "https://www.openstreetmap.org/way/1565320992",
+        "distanceToPlaceMeters": 326,
+        "placeCoordinate": [
+          37.17324515,
+          128.21062924206336
+        ],
+        "evidence": "OSM amenity=parking, explicit access restrictions excluded; Valhalla kr-motorcycle-1 road approach verified 2026-10-14",
+        "placeSource": "https://www.openstreetmap.org/way/471709902"
+      }
+    },
+    {
+      "id": "independence-hall",
+      "kind": "spot",
+      "category": "culture",
+      "name": "독립기념관",
+      "region": "충남 천안",
+      "lat": 36.783045,
+      "lng": 127.224876,
+      "lead": "독립의 역사를 마주하는 넓은 기념관",
+      "description": "독립의 역사를 돌아보는 천안의 기념관입니다. 넓은 전체 구역보다 관심 있는 전시관 한 곳을 골라 관람하세요.",
+      "visitNote": "주차 후 가까운 관람 구역 방문 · 운영일과 현장 이륜차 주차 조건 확인",
+      "source": "https://www.openstreetmap.org/node/368635603",
+      "sourceName": "OpenStreetMap · 장소 원문",
+      "visitCoordinate": [
+        36.783045,
+        127.224876
+      ],
+      "parking": {
+        "lat": 36.778852799999996,
+        "lng": 127.2229026143583,
+        "osm": "https://www.openstreetmap.org/way/1447618667",
+        "distanceToPlaceMeters": 498,
+        "placeCoordinate": [
+          36.783045,
+          127.224876
+        ],
+        "evidence": "OSM amenity=parking, explicit access restrictions excluded; Valhalla kr-motorcycle-1 road approach verified 2026-10-14",
+        "placeSource": "https://www.openstreetmap.org/node/368635603"
+      }
+    },
+    {
+      "id": "hyeonchungsa",
+      "kind": "spot",
+      "category": "culture",
+      "name": "현충사",
+      "region": "충남 아산",
+      "lat": 36.80715385,
+      "lng": 127.03284452609338,
+      "lead": "숲길과 사당에서 기리는 이순신의 삶",
+      "description": "아산에서 이순신의 삶을 기리는 사당입니다. 가까운 관람 구역과 숲길을 차분하게 둘러보세요.",
+      "visitNote": "주차 후 가까운 관람 구역 방문 · 운영일과 현장 이륜차 주차 조건 확인",
+      "source": "https://www.openstreetmap.org/way/633128879",
+      "sourceName": "OpenStreetMap · 장소 원문",
+      "visitCoordinate": [
+        36.80715385,
+        127.03284452609338
+      ],
+      "parking": {
+        "lat": 36.8046287,
+        "lng": 127.0297165758278,
+        "osm": "https://www.openstreetmap.org/way/119129481",
+        "distanceToPlaceMeters": 395,
+        "placeCoordinate": [
+          36.80715385,
+          127.03284452609338
+        ],
+        "evidence": "OSM amenity=parking, explicit access restrictions excluded; Valhalla kr-motorcycle-1 road approach verified 2026-10-14",
+        "placeSource": "https://www.openstreetmap.org/way/633128879"
+      }
+    },
+    {
+      "id": "gwanchoksa",
+      "kind": "spot",
+      "category": "culture",
+      "name": "관촉사",
+      "region": "충남 논산",
+      "lat": 36.1884477,
+      "lng": 127.11302457258759,
+      "lead": "큰 석불을 마주하는 논산의 절집",
+      "description": "큰 석불이 자리한 논산의 절집입니다. 주차 후 가까운 관람 지점을 중심으로 사찰과 석불의 모습을 살펴보세요.",
+      "visitNote": "주차 후 가까운 관람 구역 방문 · 운영일과 현장 이륜차 주차 조건 확인",
+      "source": "https://www.openstreetmap.org/way/807186103",
+      "sourceName": "OpenStreetMap · 장소 원문",
+      "visitCoordinate": [
+        36.1884477,
+        127.11302457258759
+      ],
+      "parking": {
+        "lat": 36.1915608,
+        "lng": 127.11384355000001,
+        "osm": "https://www.openstreetmap.org/way/1552760715",
+        "distanceToPlaceMeters": 354,
+        "placeCoordinate": [
+          36.1884477,
+          127.11302457258759
+        ],
+        "evidence": "OSM amenity=parking, explicit access restrictions excluded; Valhalla kr-motorcycle-1 road approach verified 2026-10-14",
+        "placeSource": "https://www.openstreetmap.org/way/807186103"
+      }
+    },
+    {
+      "id": "donam-seowon",
+      "kind": "spot",
+      "category": "culture",
+      "name": "돈암서원",
+      "region": "충남 논산",
+      "lat": 36.20909605,
+      "lng": 127.18054801916924,
+      "lead": "논산 들녘에 자리한 유네스코 서원",
+      "description": "논산 들녘에 자리한 서원입니다. 담장과 옛 건축을 둘러보며 지역의 풍경 속에서 짧게 쉬어갈 수 있습니다.",
+      "visitNote": "주차 후 가까운 관람 구역 방문 · 운영일과 현장 이륜차 주차 조건 확인",
+      "source": "https://www.openstreetmap.org/way/1566967143",
+      "sourceName": "OpenStreetMap · 장소 원문",
+      "visitCoordinate": [
+        36.20909605,
+        127.18054801916924
+      ],
+      "parking": {
+        "lat": 36.211083,
+        "lng": 127.18162983871196,
+        "osm": "https://www.openstreetmap.org/way/1559875181",
+        "distanceToPlaceMeters": 241,
+        "placeCoordinate": [
+          36.20909605,
+          127.18054801916924
+        ],
+        "evidence": "OSM amenity=parking, explicit access restrictions excluded; Valhalla kr-motorcycle-1 road approach verified 2026-10-14",
+        "placeSource": "https://www.openstreetmap.org/way/1566967143"
+      }
+    },
+    {
+      "id": "boseoksa",
+      "kind": "spot",
+      "category": "culture",
+      "name": "보석사",
+      "region": "충남 금산",
+      "lat": 36.0544668,
+      "lng": 127.47599771520214,
+      "lead": "은행나무와 숲길이 있는 금산의 절집",
+      "description": "큰 은행나무와 숲이 어우러진 금산의 절집입니다. 사찰과 입구 주변의 가까운 길을 걸어보세요.",
+      "visitNote": "주차 후 가까운 관람 구역 방문 · 운영일과 현장 이륜차 주차 조건 확인",
+      "source": "https://www.openstreetmap.org/way/1103329175",
+      "sourceName": "OpenStreetMap · 장소 원문",
+      "visitCoordinate": [
+        36.0544668,
+        127.47599771520214
+      ],
+      "parking": {
+        "lat": 36.0518349,
+        "lng": 127.47686922959917,
+        "osm": "https://www.openstreetmap.org/way/1103331190",
+        "distanceToPlaceMeters": 303,
+        "placeCoordinate": [
+          36.0544668,
+          127.47599771520214
+        ],
+        "evidence": "OSM amenity=parking, explicit access restrictions excluded; Valhalla kr-motorcycle-1 road approach verified 2026-10-14",
+        "placeSource": "https://www.openstreetmap.org/way/1103329175"
+      }
+    },
+    {
+      "id": "janggoksa",
+      "kind": "spot",
+      "category": "culture",
+      "name": "장곡사",
+      "region": "충남 청양",
+      "lat": 36.4173485,
+      "lng": 126.8594428,
+      "lead": "칠갑산 자락에 남은 오래된 목조건축",
+      "description": "칠갑산 자락에 오래된 목조건축이 남아 있는 사찰입니다. 등산로 대신 절집 주변의 관람 구역을 골라 방문하세요.",
+      "visitNote": "주차 후 가까운 관람 구역 방문 · 운영일과 현장 이륜차 주차 조건 확인",
+      "source": "https://www.openstreetmap.org/node/9777426439",
+      "sourceName": "OpenStreetMap · 장소 원문",
+      "visitCoordinate": [
+        36.4173485,
+        126.8594428
+      ],
+      "parking": {
+        "lat": 36.417137350000004,
+        "lng": 126.85885545686831,
+        "osm": "https://www.openstreetmap.org/way/1278348988",
+        "distanceToPlaceMeters": 58,
+        "placeCoordinate": [
+          36.4173485,
+          126.8594428
+        ],
+        "evidence": "OSM amenity=parking, explicit access restrictions excluded; Valhalla kr-motorcycle-1 road approach verified 2026-10-14",
+        "placeSource": "https://www.openstreetmap.org/node/9777426439"
+      }
+    },
+    {
+      "id": "haeinsa",
+      "kind": "spot",
+      "category": "culture",
+      "name": "해인사",
+      "region": "경남 합천",
+      "lat": 35.801041600000005,
+      "lng": 128.09803832230688,
+      "lead": "가야산 숲자락에서 만나는 팔만대장경의 절집",
+      "description": "가야산 숲자락에 자리한 해인사입니다. 사찰의 가까운 관람 구역을 중심으로 둘러보고, 장경판전 관람은 현장 운영 조건을 확인하세요.",
+      "visitNote": "주차 후 가까운 관람 구역 방문 · 운영일과 현장 이륜차 주차 조건 확인",
+      "source": "https://www.openstreetmap.org/way/404193034",
+      "sourceName": "OpenStreetMap · 장소 원문",
+      "visitCoordinate": [
+        35.801041600000005,
+        128.09803832230688
+      ],
+      "parking": {
+        "lat": 35.8006189,
+        "lng": 128.09837020000003,
+        "osm": "https://www.openstreetmap.org/way/1512014446",
+        "distanceToPlaceMeters": 56,
+        "placeCoordinate": [
+          35.801041600000005,
+          128.09803832230688
+        ],
+        "evidence": "OSM amenity=parking, explicit access restrictions excluded; Valhalla kr-motorcycle-1 road approach verified 2026-10-14",
+        "placeSource": "https://www.openstreetmap.org/way/404193034"
+      }
+    },
+    {
+      "id": "namhae-german-village",
+      "kind": "spot",
+      "category": "culture",
+      "name": "남해 독일마을",
+      "region": "경남 남해",
+      "lat": 34.7992332,
+      "lng": 128.0401294,
+      "lead": "붉은 지붕 너머로 펼쳐지는 남해 바다",
+      "description": "붉은 지붕 너머로 남해 바다가 펼쳐지는 마을입니다. 마을의 가까운 골목과 전망 공간을 걸으며 쉬어보세요.",
+      "visitNote": "주차 후 가까운 관람 구역 방문 · 운영일과 현장 이륜차 주차 조건 확인",
+      "source": "https://www.openstreetmap.org/node/2487576879",
+      "sourceName": "OpenStreetMap · 장소 원문",
+      "visitCoordinate": [
+        34.7992332,
+        128.0401294
+      ],
+      "parking": {
+        "lat": 34.80055875,
+        "lng": 128.03809248495762,
+        "osm": "https://www.openstreetmap.org/way/158003436",
+        "distanceToPlaceMeters": 237,
+        "placeCoordinate": [
+          34.7992332,
+          128.0401294
+        ],
+        "evidence": "OSM amenity=parking, explicit access restrictions excluded; Valhalla kr-motorcycle-1 road approach verified 2026-10-14",
+        "placeSource": "https://www.openstreetmap.org/node/2487576879"
+      }
+    },
+    {
+      "id": "daeheungsa",
+      "kind": "spot",
+      "category": "culture",
+      "name": "대흥사",
+      "region": "전남 해남",
+      "lat": 34.4763626,
+      "lng": 126.61595429679214,
+      "lead": "두륜산 숲길 끝에서 만나는 유네스코 절집",
+      "description": "두륜산 숲길 안쪽에 자리한 해남의 절집입니다. 산행을 따로 계획하지 않았다면 사찰 주변의 짧은 동선으로 둘러보세요.",
+      "visitNote": "주차 후 가까운 관람 구역 방문 · 운영일과 현장 이륜차 주차 조건 확인",
+      "source": "https://www.openstreetmap.org/way/616559205",
+      "sourceName": "OpenStreetMap · 장소 원문",
+      "visitCoordinate": [
+        34.4763626,
+        126.61595429679214
+      ],
+      "parking": {
+        "lat": 34.483264500000004,
+        "lng": 126.61425540610024,
+        "osm": "https://www.openstreetmap.org/way/1306062724",
+        "distanceToPlaceMeters": 783,
+        "placeCoordinate": [
+          34.4763626,
+          126.61595429679214
+        ],
+        "evidence": "OSM amenity=parking, explicit access restrictions excluded; Valhalla kr-motorcycle-1 road approach verified 2026-10-14",
+        "placeSource": "https://www.openstreetmap.org/way/616559205"
+      }
+    },
+    {
+      "id": "usuyoung",
+      "kind": "spot",
+      "category": "culture",
+      "name": "우수영관광지",
+      "region": "전남 해남",
+      "lat": 34.574,
+      "lng": 126.307,
+      "lead": "명량해전의 현장과 울돌목 물길",
+      "description": "해남 우수영에서 울돌목의 물길과 명량해전의 이야기를 만나는 곳입니다. 가까운 전망 공간에서 바다의 흐름을 바라보세요.",
+      "visitNote": "주차 후 가까운 관람 구역 방문 · 운영일과 현장 이륜차 주차 조건 확인",
+      "source": "https://commons.wikimedia.org/wiki/File:Haenam_Where_nature_meets_history,_culture.jpg",
+      "sourceName": "OpenStreetMap · 장소 원문",
+      "visitCoordinate": [
+        34.574,
+        126.307
+      ],
+      "parking": {
+        "lat": 34.5731116,
+        "lng": 126.31004561667106,
+        "osm": "https://www.openstreetmap.org/way/1347901906",
+        "distanceToPlaceMeters": 296,
+        "placeCoordinate": [
+          34.574,
+          126.307
+        ],
+        "evidence": "OSM amenity=parking, explicit access restrictions excluded; Valhalla kr-motorcycle-1 road approach verified 2026-10-14",
+        "placeSource": "https://www.openstreetmap.org/way/1347901906"
+      }
+    },
+    {
+      "id": "gokseong-rail-village",
+      "kind": "spot",
+      "category": "culture",
+      "name": "섬진강기차마을",
+      "region": "전남 곡성",
+      "lat": 35.27898415,
+      "lng": 127.3083654754171,
+      "lead": "옛 철도와 정원이 함께 있는 곡성의 산책",
+      "description": "옛 철도와 정원이 함께 있는 곡성의 기차마을입니다. 운행 프로그램을 기다리기보다 가까운 전시와 정원을 골라 짧게 둘러볼 수 있습니다.",
+      "visitNote": "주차 후 가까운 관람 구역 방문 · 운영일과 현장 이륜차 주차 조건 확인",
+      "source": "https://www.openstreetmap.org/way/286359314",
+      "sourceName": "OpenStreetMap · 장소 원문",
+      "visitCoordinate": [
+        35.27898415,
+        127.3083654754171
+      ],
+      "parking": {
+        "lat": 35.2786906,
+        "lng": 127.30669735208888,
+        "osm": "https://www.openstreetmap.org/way/654986729",
+        "distanceToPlaceMeters": 155,
+        "placeCoordinate": [
+          35.27898415,
+          127.3083654754171
+        ],
+        "evidence": "OSM amenity=parking, explicit access restrictions excluded; Valhalla kr-motorcycle-1 road approach verified 2026-10-14",
+        "placeSource": "https://www.openstreetmap.org/way/286359314"
+      }
+    },
+    {
+      "id": "jeoksang-records",
+      "kind": "spot",
+      "category": "culture",
+      "name": "적상산성 사고지",
+      "region": "전북 무주",
+      "lat": 35.94851465,
+      "lng": 127.69466762090885,
+      "lead": "산성의 돌담과 조선의 기록을 만나는 산길.",
+      "description": "적상산성의 돌담과 사고지를 만나는 산길의 정차 지점입니다. 주차 후 가까운 유적 구역을 둘러보고, 긴 산행은 별도 일정으로 계획하세요.",
+      "visitNote": "주차 후 가까운 관람 구역 방문 · 운영일과 현장 이륜차 주차 조건 확인",
+      "source": "https://www.openstreetmap.org/way/1057223207",
+      "sourceName": "OpenStreetMap · 장소 원문",
+      "visitCoordinate": [
+        35.94851465,
+        127.69466762090885
+      ],
+      "parking": {
+        "lat": 35.9488737,
+        "lng": 127.69363988984891,
+        "osm": "https://www.openstreetmap.org/way/1057231294",
+        "distanceToPlaceMeters": 101,
+        "placeCoordinate": [
+          35.94851465,
+          127.69466762090885
+        ],
+        "evidence": "OSM amenity=parking, explicit access restrictions excluded; Valhalla kr-motorcycle-1 road approach verified 2026-10-14",
+        "placeSource": "https://www.openstreetmap.org/way/1057223207"
+      }
+    },
+    {
+      "id": "seonyudo",
+      "kind": "spot",
+      "category": "nature",
+      "name": "선유도",
+      "region": "전북 군산",
+      "lat": 35.810778049999996,
+      "lng": 126.41715615001581,
+      "lead": "다리를 건너 만나는 고군산군도의 바다",
+      "description": "다리로 이어진 고군산군도의 바다를 만나는 섬입니다. 지정 주차 구역에 바이크를 두고 가까운 해변과 마을 풍경을 감상하세요.",
+      "visitNote": "주차 후 가까운 관람 구역 방문 · 운영일과 현장 이륜차 주차 조건 확인",
+      "source": "https://www.openstreetmap.org/way/554668863",
+      "sourceName": "OpenStreetMap · 장소 원문",
+      "visitCoordinate": [
+        35.810778049999996,
+        126.41715615001581
+      ],
+      "parking": {
+        "lat": 35.807431949999994,
+        "lng": 126.41504387791687,
+        "osm": "https://www.openstreetmap.org/way/1263145771",
+        "distanceToPlaceMeters": 418,
+        "placeCoordinate": [
+          35.810778049999996,
+          126.41715615001581
+        ],
+        "evidence": "OSM amenity=parking, explicit access restrictions excluded; Valhalla kr-motorcycle-1 road approach verified 2026-10-14",
+        "placeSource": "https://www.openstreetmap.org/way/554668863"
+      }
+    },
+    {
+      "id": "silsangsa",
+      "kind": "spot",
+      "category": "culture",
+      "name": "실상사",
+      "region": "전북 남원",
+      "lat": 35.4170943,
+      "lng": 127.6352638,
+      "lead": "지리산 아래 들판에 자리한 천년고찰",
+      "description": "지리산 아래 들판에 자리한 남원의 오래된 절집입니다. 산을 오르기보다 사찰 주변을 차분하게 둘러보는 일정에 어울립니다.",
+      "visitNote": "주차 후 가까운 관람 구역 방문 · 운영일과 현장 이륜차 주차 조건 확인",
+      "source": "https://www.openstreetmap.org/node/1047433245",
+      "sourceName": "OpenStreetMap · 장소 원문",
+      "visitCoordinate": [
+        35.4170943,
+        127.6352638
+      ],
+      "parking": {
+        "lat": 35.416193050000004,
+        "lng": 127.6357261568551,
+        "osm": "https://www.openstreetmap.org/way/1383677386",
+        "distanceToPlaceMeters": 109,
+        "placeCoordinate": [
+          35.4170943,
+          127.6352638
+        ],
+        "evidence": "OSM amenity=parking, explicit access restrictions excluded; Valhalla kr-motorcycle-1 road approach verified 2026-10-14",
+        "placeSource": "https://www.openstreetmap.org/node/1047433245"
+      }
+    },
+    {
+      "id": "maisantapsa",
+      "kind": "spot",
+      "category": "culture",
+      "name": "마이산 탑사",
+      "region": "전북 진안",
+      "lat": 35.75861965,
+      "lng": 127.41178731264422,
+      "lead": "두 봉우리와 돌탑이 이루는 독특한 풍경",
+      "description": "마이산 두 봉우리 아래 돌탑이 모여 있는 사찰입니다. 주차 후 탑사까지 걸어가는 시간을 포함해 방문 일정을 잡아보세요.",
+      "visitNote": "주차 후 가까운 관람 구역 방문 · 운영일과 현장 이륜차 주차 조건 확인",
+      "source": "https://www.openstreetmap.org/way/158176940",
+      "sourceName": "OpenStreetMap · 장소 원문",
+      "visitCoordinate": [
+        35.75861965,
+        127.41178731264422
+      ],
+      "parking": {
+        "lat": 35.76656885,
+        "lng": 127.41471137962478,
+        "osm": "https://www.openstreetmap.org/way/1163244846",
+        "distanceToPlaceMeters": 922,
+        "placeCoordinate": [
+          35.75861965,
+          127.41178731264422
+        ],
+        "evidence": "OSM amenity=parking, explicit access restrictions excluded; Valhalla kr-motorcycle-1 road approach verified 2026-10-14",
+        "placeSource": "https://www.openstreetmap.org/way/158176940"
+      }
+    },
+    {
+      "id": "donghwasa",
+      "kind": "spot",
+      "category": "culture",
+      "name": "동화사",
+      "region": "대구 동구",
+      "lat": 35.99271315,
+      "lng": 128.70470542738215,
+      "lead": "팔공산 숲자락에서 만나는 큰 절집",
+      "description": "팔공산 숲자락에 자리한 대구의 큰 절집입니다. 가까운 관람 구역을 골라 사찰과 주변 풍경을 둘러보세요.",
+      "visitNote": "주차 후 가까운 관람 구역 방문 · 운영일과 현장 이륜차 주차 조건 확인",
+      "source": "https://www.openstreetmap.org/way/660080732",
+      "sourceName": "OpenStreetMap · 장소 원문",
+      "visitCoordinate": [
+        35.99271315,
+        128.70470542738215
+      ],
+      "parking": {
+        "lat": 35.9925061,
+        "lng": 128.70277719903316,
+        "osm": "https://www.openstreetmap.org/way/814581049",
+        "distanceToPlaceMeters": 175,
+        "placeCoordinate": [
+          35.99271315,
+          128.70470542738215
+        ],
+        "evidence": "OSM amenity=parking, explicit access restrictions excluded; Valhalla kr-motorcycle-1 road approach verified 2026-10-14",
+        "placeSource": "https://www.openstreetmap.org/way/660080732"
+      }
+    },
+    {
+      "id": "jangtaesan",
+      "kind": "spot",
+      "category": "nature",
+      "name": "장태산자연휴양림",
+      "region": "대전 서구",
+      "lat": 36.219296,
+      "lng": 127.3394828,
+      "lead": "메타세쿼이아가 이루는 대전의 숲길",
+      "description": "메타세쿼이아 숲이 이어지는 대전의 자연휴양림입니다. 입구와 가까운 숲길에서 산행 없이도 잠시 쉬어갈 수 있습니다.",
+      "visitNote": "주차 후 가까운 관람 구역 방문 · 운영일과 현장 이륜차 주차 조건 확인",
+      "source": "https://www.openstreetmap.org/node/368975476",
+      "sourceName": "OpenStreetMap · 장소 원문",
+      "visitCoordinate": [
+        36.219296,
+        127.3394828
+      ],
+      "parking": {
+        "lat": 36.221412,
+        "lng": 127.34000247345986,
+        "osm": "https://www.openstreetmap.org/way/1221913111",
+        "distanceToPlaceMeters": 240,
+        "placeCoordinate": [
+          36.219296,
+          127.3394828
+        ],
+        "evidence": "OSM amenity=parking, explicit access restrictions excluded; Valhalla kr-motorcycle-1 road approach verified 2026-10-14",
+        "placeSource": "https://www.openstreetmap.org/node/368975476"
+      }
+    },
+    {
+      "id": "ulsan-taehwa",
+      "kind": "spot",
+      "category": "nature",
+      "name": "태화강국가정원",
+      "region": "울산 중구",
+      "lat": 35.546,
+      "lng": 129.292,
+      "lead": "대숲과 강변 정원이 이어지는 울산의 산책",
+      "description": "대숲과 강변 정원이 이어지는 울산의 산책 공간입니다. 가까운 정원 구간을 골라 걷고 강을 바라보며 쉬어보세요.",
+      "visitNote": "주차 후 가까운 관람 구역 방문 · 운영일과 현장 이륜차 주차 조건 확인",
+      "source": "https://commons.wikimedia.org/wiki/File:Taehwagang_National_Garden_20221125_075.jpg",
+      "sourceName": "OpenStreetMap · 장소 원문",
+      "visitCoordinate": [
+        35.546,
+        129.292
+      ],
+      "parking": {
+        "lat": 35.54475095,
+        "lng": 129.29341671348703,
+        "osm": "https://www.openstreetmap.org/way/827162213",
+        "distanceToPlaceMeters": 189,
+        "placeCoordinate": [
+          35.546,
+          129.292
+        ],
+        "evidence": "OSM amenity=parking, explicit access restrictions excluded; Valhalla kr-motorcycle-1 road approach verified 2026-10-14",
+        "placeSource": "https://www.openstreetmap.org/way/827162213"
+      }
+    },
+    {
+      "id": "hanhyeong-view",
+      "kind": "spot",
+      "category": "nature",
+      "name": "한반도지형 전망대",
+      "region": "강원 영월",
+      "lat": 37.2195343,
+      "lng": 128.350964,
+      "lead": "물길이 만든 한반도 모양의 풍경",
+      "description": "영월의 물길이 만든 한반도 모양의 풍경을 바라보는 전망대입니다. 주차 후 전망 지점까지 걷는 시간을 포함해 방문을 계획하세요.",
+      "visitNote": "주차 후 가까운 관람 구역 방문 · 운영일과 현장 이륜차 주차 조건 확인",
+      "source": "https://www.openstreetmap.org/node/360268669",
+      "sourceName": "OpenStreetMap · 장소 원문",
+      "visitCoordinate": [
+        37.2195343,
+        128.350964
+      ],
+      "parking": {
+        "lat": 37.21953905,
+        "lng": 128.35762550618162,
+        "osm": "https://www.openstreetmap.org/way/1346322127",
+        "distanceToPlaceMeters": 590,
+        "placeCoordinate": [
+          37.2195343,
+          128.350964
+        ],
+        "evidence": "OSM amenity=parking, explicit access restrictions excluded; Valhalla kr-motorcycle-1 road approach verified 2026-10-14",
+        "placeSource": "https://www.openstreetmap.org/node/360268669"
+      }
+    },
+    {
+      "id": "dosan-seowon",
+      "kind": "spot",
+      "category": "culture",
+      "name": "도산서원",
+      "region": "경북 안동",
+      "lat": 36.726583,
+      "lng": 128.8433122,
+      "lead": "퇴계의 배움과 낙동강 풍경이 남은 서원",
+      "description": "퇴계의 배움과 낙동강 풍경이 남아 있는 안동의 서원입니다. 서원의 건축과 주변 물가를 차분하게 둘러보세요.",
+      "visitNote": "주차 후 가까운 관람 구역 방문 · 운영일과 현장 이륜차 주차 조건 확인",
+      "source": "https://www.openstreetmap.org/node/6872626485",
+      "sourceName": "OpenStreetMap · 장소 원문",
+      "visitCoordinate": [
+        36.726583,
+        128.8433122
+      ],
+      "parking": {
+        "lat": 36.7283167,
+        "lng": 128.84020477352342,
+        "osm": "https://www.openstreetmap.org/way/691122226",
+        "distanceToPlaceMeters": 337,
+        "placeCoordinate": [
+          36.726583,
+          128.8433122
+        ],
+        "evidence": "OSM amenity=parking, explicit access restrictions excluded; Valhalla kr-motorcycle-1 road approach verified 2026-10-14",
+        "placeSource": "https://www.openstreetmap.org/node/6872626485"
+      }
+    },
+    {
+      "id": "bongjeongsa",
+      "kind": "spot",
+      "category": "culture",
+      "name": "봉정사",
+      "region": "경북 안동",
+      "lat": 36.65326615,
+      "lng": 128.6627249981005,
+      "lead": "산자락에서 만나는 오래된 목조건축",
+      "description": "안동의 산자락에 오래된 목조건축이 남아 있는 사찰입니다. 주차 후 가까운 전각부터 골라 관람하세요.",
+      "visitNote": "주차 후 가까운 관람 구역 방문 · 운영일과 현장 이륜차 주차 조건 확인",
+      "source": "https://www.openstreetmap.org/way/691112451",
+      "sourceName": "OpenStreetMap · 장소 원문",
+      "visitCoordinate": [
+        36.65326615,
+        128.6627249981005
+      ],
+      "parking": {
+        "lat": 36.65099535,
+        "lng": 128.6624436130282,
+        "osm": "https://www.openstreetmap.org/way/1258543786",
+        "distanceToPlaceMeters": 254,
+        "placeCoordinate": [
+          36.65326615,
+          128.6627249981005
+        ],
+        "evidence": "OSM amenity=parking, explicit access restrictions excluded; Valhalla kr-motorcycle-1 road approach verified 2026-10-14",
+        "placeSource": "https://www.openstreetmap.org/way/691112451"
+      }
+    },
+    {
+      "id": "gakyeonsa",
+      "kind": "spot",
+      "category": "culture",
+      "name": "각연사",
+      "region": "충북 괴산",
+      "lat": 36.7547948,
+      "lng": 127.92737818176113,
+      "lead": "숲길을 달려 만나는 괴산의 절집",
+      "description": "괴산의 숲길 안쪽에 자리한 절집입니다. 산행 대신 사찰 주변의 관람 구역에서 잠시 쉬어갈 수 있습니다.",
+      "visitNote": "주차 후 가까운 관람 구역 방문 · 운영일과 현장 이륜차 주차 조건 확인",
+      "source": "https://www.openstreetmap.org/way/1177176957",
+      "sourceName": "OpenStreetMap · 장소 원문",
+      "visitCoordinate": [
+        36.7547948,
+        127.92737818176113
+      ],
+      "parking": {
+        "lat": 36.75473465,
+        "lng": 127.92391384718412,
+        "osm": "https://www.openstreetmap.org/way/1546247710",
+        "distanceToPlaceMeters": 309,
+        "placeCoordinate": [
+          36.7547948,
+          127.92737818176113
+        ],
+        "evidence": "OSM amenity=parking, explicit access restrictions excluded; Valhalla kr-motorcycle-1 road approach verified 2026-10-14",
+        "placeSource": "https://www.openstreetmap.org/way/1177176957"
+      }
+    },
+    {
+      "id": "kimjwajin",
+      "kind": "spot",
+      "category": "culture",
+      "name": "김좌진장군생가지",
+      "region": "충남 홍성",
+      "lat": 36.59751415,
+      "lng": 126.54675112935527,
+      "lead": "홍성의 마을에서 돌아보는 독립운동의 역사",
+      "description": "홍성의 마을에서 김좌진 장군의 삶을 돌아보는 공간입니다. 가까운 기념 공간을 둘러보며 주행 사이에 짧게 머물러보세요.",
+      "visitNote": "주차 후 가까운 관람 구역 방문 · 운영일과 현장 이륜차 주차 조건 확인",
+      "source": "https://www.openstreetmap.org/way/527184273",
+      "sourceName": "OpenStreetMap · 장소 원문",
+      "visitCoordinate": [
+        36.59751415,
+        126.54675112935527
+      ],
+      "parking": {
+        "lat": 36.597686800000005,
+        "lng": 126.54613940856433,
+        "osm": "https://www.openstreetmap.org/way/527184277",
+        "distanceToPlaceMeters": 58,
+        "placeCoordinate": [
+          36.59751415,
+          126.54675112935527
+        ],
+        "evidence": "OSM amenity=parking, explicit access restrictions excluded; Valhalla kr-motorcycle-1 road approach verified 2026-10-14",
+        "placeSource": "https://www.openstreetmap.org/way/527184273"
+      }
+    },
+    {
+      "id": "mallipo",
+      "kind": "spot",
+      "category": "nature",
+      "name": "만리포해수욕장",
+      "region": "충남 태안",
+      "lat": 36.7879429,
+      "lng": 126.14398335359225,
+      "lead": "서핑과 모래밭, 태안의 넓은 바다",
+      "description": "태안의 넓은 모래밭과 서해를 만나는 해수욕장입니다. 지정 주차 구역에 바이크를 두고 가까운 해변에서 쉬어보세요.",
+      "visitNote": "주차 후 가까운 관람 구역 방문 · 운영일과 현장 이륜차 주차 조건 확인",
+      "source": "https://www.openstreetmap.org/way/495225199",
+      "sourceName": "OpenStreetMap · 장소 원문",
+      "visitCoordinate": [
+        36.7879429,
+        126.14398335359225
+      ],
+      "parking": {
+        "lat": 36.7831219,
+        "lng": 126.14273966833346,
+        "osm": "https://www.openstreetmap.org/way/697071536",
+        "distanceToPlaceMeters": 547,
+        "placeCoordinate": [
+          36.7879429,
+          126.14398335359225
+        ],
+        "evidence": "OSM amenity=parking, explicit access restrictions excluded; Valhalla kr-motorcycle-1 road approach verified 2026-10-14",
+        "placeSource": "https://www.openstreetmap.org/way/495225199"
+      }
+    },
+    {
+      "id": "hwangtohyeon",
+      "kind": "spot",
+      "category": "culture",
+      "name": "황토현전적지",
+      "region": "전북 정읍",
+      "lat": 35.6320978,
+      "lng": 126.82952013255506,
+      "lead": "동학농민혁명의 현장을 걷는 역사 공원",
+      "description": "동학농민혁명의 현장을 돌아보는 정읍의 역사 공간입니다. 가까운 기념 공간과 산책 구간을 골라 방문하세요.",
+      "visitNote": "주차 후 가까운 관람 구역 방문 · 운영일과 현장 이륜차 주차 조건 확인",
+      "source": "https://www.openstreetmap.org/way/117154054",
+      "sourceName": "OpenStreetMap · 장소 원문",
+      "visitCoordinate": [
+        35.6320978,
+        126.82952013255506
+      ],
+      "parking": {
+        "lat": 35.63394984999999,
+        "lng": 126.83042866451507,
+        "osm": "https://www.openstreetmap.org/way/1353867712",
+        "distanceToPlaceMeters": 222,
+        "placeCoordinate": [
+          35.6320978,
+          126.82952013255506
+        ],
+        "evidence": "OSM amenity=parking, explicit access restrictions excluded; Valhalla kr-motorcycle-1 road approach verified 2026-10-14",
+        "placeSource": "https://www.openstreetmap.org/way/117154054"
+      }
+    },
+    {
+      "id": "imsil-cheese",
+      "kind": "spot",
+      "category": "culture",
+      "name": "임실치즈테마파크",
+      "region": "전북 임실",
+      "lat": 35.633294250000006,
+      "lng": 127.3019645034567,
+      "lead": "임실의 치즈와 정원을 둘러보는 정차",
+      "description": "치즈와 정원을 함께 만나는 임실의 테마파크입니다. 이용 가능한 가까운 전시·정원 구역을 골라 둘러보세요.",
+      "visitNote": "주차 후 가까운 관람 구역 방문 · 운영일과 현장 이륜차 주차 조건 확인",
+      "source": "https://www.openstreetmap.org/way/1118017057",
+      "sourceName": "OpenStreetMap · 장소 원문",
+      "visitCoordinate": [
+        35.633294250000006,
+        127.3019645034567
+      ],
+      "parking": {
+        "lat": 35.632061300000004,
+        "lng": 127.30251555782988,
+        "osm": "https://www.openstreetmap.org/way/1254792645",
+        "distanceToPlaceMeters": 146,
+        "placeCoordinate": [
+          35.633294250000006,
+          127.3019645034567
+        ],
+        "evidence": "OSM amenity=parking, explicit access restrictions excluded; Valhalla kr-motorcycle-1 road approach verified 2026-10-14",
+        "placeSource": "https://www.openstreetmap.org/way/1118017057"
+      }
+    },
+    {
+      "id": "namgye-seowon",
+      "kind": "spot",
+      "category": "culture",
+      "name": "남계서원",
+      "region": "경남 함양",
+      "lat": 35.54897655,
+      "lng": 127.78351166116272,
+      "lead": "들녘과 함께 남아 있는 유네스코 서원",
+      "description": "함양의 들녘에 자리한 서원입니다. 옛 건축과 주변 풍경을 차분하게 둘러보는 정차 지점입니다.",
+      "visitNote": "주차 후 가까운 관람 구역 방문 · 운영일과 현장 이륜차 주차 조건 확인",
+      "source": "https://www.openstreetmap.org/way/1166004351",
+      "sourceName": "OpenStreetMap · 장소 원문",
+      "visitCoordinate": [
+        35.54897655,
+        127.78351166116272
+      ],
+      "parking": {
+        "lat": 35.546974250000005,
+        "lng": 127.78263562790201,
+        "osm": "https://www.openstreetmap.org/way/1220420601",
+        "distanceToPlaceMeters": 236,
+        "placeCoordinate": [
+          35.54897655,
+          127.78351166116272
+        ],
+        "evidence": "OSM amenity=parking, explicit access restrictions excluded; Valhalla kr-motorcycle-1 road approach verified 2026-10-14",
+        "placeSource": "https://www.openstreetmap.org/way/1166004351"
+      }
+    },
+    {
+      "id": "naewonsa",
+      "kind": "spot",
+      "category": "culture",
+      "name": "내원사",
+      "region": "경남 양산",
+      "lat": 35.4241303,
+      "lng": 129.10447153819203,
+      "lead": "계곡과 숲이 어우러진 양산의 절집",
+      "description": "계곡과 숲이 어우러진 양산의 사찰입니다. 긴 계곡 탐방 대신 사찰과 가까운 관람 구역을 중심으로 방문하세요.",
+      "visitNote": "주차 후 가까운 관람 구역 방문 · 운영일과 현장 이륜차 주차 조건 확인",
+      "source": "https://www.openstreetmap.org/way/787196426",
+      "sourceName": "OpenStreetMap · 장소 원문",
+      "visitCoordinate": [
+        35.4241303,
+        129.10447153819203
+      ],
+      "parking": {
+        "lat": 35.4247221,
+        "lng": 129.10557445310405,
+        "osm": "https://www.openstreetmap.org/way/1242735913",
+        "distanceToPlaceMeters": 120,
+        "placeCoordinate": [
+          35.4241303,
+          129.10447153819203
+        ],
+        "evidence": "OSM amenity=parking, explicit access restrictions excluded; Valhalla kr-motorcycle-1 road approach verified 2026-10-14",
+        "placeSource": "https://www.openstreetmap.org/way/787196426"
+      }
+    },
+    {
+      "id": "hyangiram",
+      "kind": "spot",
+      "category": "culture",
+      "name": "향일암",
+      "region": "전남 여수",
+      "lat": 34.59159665,
+      "lng": 127.8038089,
+      "lead": "바위와 바다를 마주하는 여수의 절집",
+      "description": "여수의 바위와 바다를 마주하는 절집입니다. 계단을 오르는 시간을 포함해 일정을 잡고, 경사진 길의 상태를 확인하세요.",
+      "visitNote": "주차 후 가까운 관람 구역 방문 · 운영일과 현장 이륜차 주차 조건 확인",
+      "source": "https://www.openstreetmap.org/way/1304265380",
+      "sourceName": "OpenStreetMap · 장소 원문",
+      "visitCoordinate": [
+        34.59159665,
+        127.8038089
+      ],
+      "parking": {
+        "lat": 34.5999215,
+        "lng": 127.80202632862151,
+        "osm": "https://www.openstreetmap.org/way/97802184",
+        "distanceToPlaceMeters": 940,
+        "placeCoordinate": [
+          34.59159665,
+          127.8038089
+        ],
+        "evidence": "OSM amenity=parking, explicit access restrictions excluded; Valhalla kr-motorcycle-1 road approach verified 2026-10-14",
+        "placeSource": "https://www.openstreetmap.org/way/1304265380"
+      }
+    },
+    {
+      "id": "neunggasa",
+      "kind": "spot",
+      "category": "culture",
+      "name": "능가사",
+      "region": "전남 고흥",
+      "lat": 34.63901439999999,
+      "lng": 127.414273638515,
+      "lead": "팔영산 아래에서 쉬어 가는 천년고찰",
+      "description": "팔영산 아래 자리한 고흥의 오래된 사찰입니다. 산행 대신 절집 주변을 짧게 걸으며 쉬어갈 수 있습니다.",
+      "visitNote": "주차 후 가까운 관람 구역 방문 · 운영일과 현장 이륜차 주차 조건 확인",
+      "source": "https://www.openstreetmap.org/way/640489781",
+      "sourceName": "OpenStreetMap · 장소 원문",
+      "visitCoordinate": [
+        34.63901439999999,
+        127.414273638515
+      ],
+      "parking": {
+        "lat": 34.64055395,
+        "lng": 127.4135980764863,
+        "osm": "https://www.openstreetmap.org/way/1234176658",
+        "distanceToPlaceMeters": 182,
+        "placeCoordinate": [
+          34.63901439999999,
+          127.414273638515
+        ],
+        "evidence": "OSM amenity=parking, explicit access restrictions excluded; Valhalla kr-motorcycle-1 road approach verified 2026-10-14",
+        "placeSource": "https://www.openstreetmap.org/way/640489781"
+      }
+    },
+    {
+      "id": "gwangju-folk-museum",
+      "kind": "spot",
+      "category": "culture",
+      "name": "광주역사민속박물관",
+      "region": "광주 북구",
+      "lat": 35.1841681,
+      "lng": 126.8886428,
+      "lead": "광주역사민속박물관에서 잠시 쉬어가는 시간.",
+      "description": "광주의 생활 문화와 민속을 소개하는 박물관입니다. 중외공원 안에서 잠시 쉬며 가까운 전시 공간을 둘러보세요.",
+      "visitNote": "주차 후 가까운 관람 구역 방문 · 운영일과 현장 이륜차 주차 조건 확인",
+      "source": "https://www.openstreetmap.org/node/368733972",
+      "sourceName": "OpenStreetMap · 장소 원문",
+      "visitCoordinate": [
+        35.1841681,
+        126.8886428
+      ],
+      "parking": {
+        "lat": 35.1835789,
+        "lng": 126.88777515184293,
+        "osm": "https://www.openstreetmap.org/way/468963211",
+        "distanceToPlaceMeters": 103,
+        "placeCoordinate": [
+          35.1841681,
+          126.8886428
+        ],
+        "evidence": "OSM amenity=parking, explicit access restrictions excluded; Valhalla kr-motorcycle-1 road approach verified 2026-10-14",
+        "placeSource": "https://www.openstreetmap.org/node/368733972"
+      }
+    },
+    {
+      "id": "seomun-market",
+      "kind": "spot",
+      "category": "food",
+      "name": "서문시장",
+      "region": "대구 중구",
+      "lat": 35.86943,
+      "lng": 128.5807059,
+      "lead": "서문시장에서 잠시 쉬어가는 시간.",
+      "description": "대구를 대표하는 전통시장입니다. 공영 주차 구역에 바이크를 두고 가까운 시장 골목에서 식사와 휴식을 함께 챙길 수 있습니다.",
+      "visitNote": "주차 후 가까운 관람 구역 방문 · 운영일과 현장 이륜차 주차 조건 확인",
+      "source": "https://www.openstreetmap.org/node/368867948",
+      "sourceName": "OpenStreetMap · 장소 원문",
+      "visitCoordinate": [
+        35.86943,
+        128.5807059
+      ],
+      "parking": {
+        "lat": 35.86887895,
+        "lng": 128.58072806075631,
+        "osm": "https://www.openstreetmap.org/way/769505242",
+        "distanceToPlaceMeters": 61,
+        "placeCoordinate": [
+          35.86943,
+          128.5807059
+        ],
+        "evidence": "OSM amenity=parking, explicit access restrictions excluded; Valhalla kr-motorcycle-1 road approach verified 2026-10-14",
+        "placeSource": "https://www.openstreetmap.org/node/368867948"
+      }
+    },
+    {
+      "id": "jeongsan-hyanggyo",
+      "kind": "spot",
+      "category": "culture",
+      "name": "정산향교",
+      "region": "충남 청양",
+      "lat": 36.4160532,
+      "lng": 126.9441063,
+      "lead": "정산향교에서 잠시 쉬어가는 시간.",
+      "description": "청양 정산면에 남아 있는 조선시대 향교입니다. 시가지에서 잠시 벗어나 향교의 담장과 건물 주변을 살펴보세요.",
+      "visitNote": "주차 후 가까운 관람 구역 방문 · 운영일과 현장 이륜차 주차 조건 확인",
+      "source": "https://www.openstreetmap.org/node/8699906982",
+      "sourceName": "OpenStreetMap · 장소 원문",
+      "visitCoordinate": [
+        36.4160532,
+        126.9441063
+      ],
+      "parking": {
+        "lat": 36.41647345,
+        "lng": 126.94518910234564,
+        "osm": "https://www.openstreetmap.org/way/1509391276",
+        "distanceToPlaceMeters": 108,
+        "placeCoordinate": [
+          36.4160532,
+          126.9441063
+        ],
+        "evidence": "OSM amenity=parking, explicit access restrictions excluded; Valhalla kr-motorcycle-1 road approach verified 2026-10-14",
+        "placeSource": "https://www.openstreetmap.org/node/8699906982"
+      }
+    },
+    {
+      "id": "korea-pop-museum",
+      "kind": "spot",
+      "category": "culture",
+      "name": "한국대중음악박물관",
+      "region": "경북 경주",
+      "lat": 35.8399918,
+      "lng": 129.28951,
+      "lead": "한국대중음악박물관에서 잠시 쉬어가는 시간.",
+      "description": "경주 보문관광단지에 있는 대중음악 박물관입니다. 음반과 음악 자료가 모인 전시 중 관심 있는 공간을 골라 짧게 관람해 보세요.",
+      "visitNote": "주차 후 가까운 관람 구역 방문 · 운영일과 현장 이륜차 주차 조건 확인",
+      "source": "https://www.openstreetmap.org/node/11513252411",
+      "sourceName": "OpenStreetMap · 장소 원문",
+      "visitCoordinate": [
+        35.8399918,
+        129.28951
+      ],
+      "parking": {
+        "lat": 35.8397695,
+        "lng": 129.29145330902531,
+        "osm": "https://www.openstreetmap.org/way/1167540459",
+        "distanceToPlaceMeters": 177,
+        "placeCoordinate": [
+          35.8399918,
+          129.28951
+        ],
+        "evidence": "OSM amenity=parking, explicit access restrictions excluded; Valhalla kr-motorcycle-1 road approach verified 2026-10-14",
+        "placeSource": "https://www.openstreetmap.org/node/11513252411"
+      }
+    },
+    {
+      "id": "daewangam-park",
+      "kind": "spot",
+      "category": "nature",
+      "name": "대왕암공원",
+      "region": "울산 동구",
+      "lat": 35.49235965,
+      "lng": 129.44017771027995,
+      "lead": "대왕암공원에서 잠시 쉬어가는 시간.",
+      "description": "울산의 해안 바위와 소나무 숲이 만나는 공원입니다. 주차 후 입구에서 가까운 산책 구역을 중심으로 바닷바람을 느껴보세요.",
+      "visitNote": "주차 후 가까운 관람 구역 방문 · 운영일과 현장 이륜차 주차 조건 확인",
+      "source": "https://www.openstreetmap.org/way/476518093",
+      "sourceName": "OpenStreetMap · 장소 원문",
+      "visitCoordinate": [
+        35.49235965,
+        129.44017771027995
+      ],
+      "parking": {
+        "lat": 35.4898321,
+        "lng": 129.43621751648374,
+        "osm": "https://www.openstreetmap.org/way/476518086",
+        "distanceToPlaceMeters": 456,
+        "placeCoordinate": [
+          35.49235965,
+          129.44017771027995
+        ],
+        "evidence": "OSM amenity=parking, explicit access restrictions excluded; Valhalla kr-motorcycle-1 road approach verified 2026-10-14",
+        "placeSource": "https://www.openstreetmap.org/way/476518093"
+      }
+    },
+    {
+      "id": "geological-museum",
+      "kind": "spot",
+      "category": "culture",
+      "name": "지질박물관",
+      "region": "대전 유성구",
+      "lat": 36.37730795,
+      "lng": 127.3631967,
+      "lead": "지질박물관에서 잠시 쉬어가는 시간.",
+      "description": "한국지질자원연구원의 지질박물관입니다. 광물과 화석 전시를 살펴보며 대전에서 잠시 다른 시간의 풍경을 만나보세요.",
+      "visitNote": "주차 후 가까운 관람 구역 방문 · 운영일과 현장 이륜차 주차 조건 확인",
+      "source": "https://www.openstreetmap.org/way/539424926",
+      "sourceName": "OpenStreetMap · 장소 원문",
+      "visitCoordinate": [
+        36.37730795,
+        127.3631967
+      ],
+      "parking": {
+        "lat": 36.3755806,
+        "lng": 127.36328999952002,
+        "osm": "https://www.openstreetmap.org/way/1529364859",
+        "distanceToPlaceMeters": 192,
+        "placeCoordinate": [
+          36.37730795,
+          127.3631967
+        ],
+        "evidence": "OSM amenity=parking, explicit access restrictions excluded; Valhalla kr-motorcycle-1 road approach verified 2026-10-14",
+        "placeSource": "https://www.openstreetmap.org/way/539424926"
+      }
+    },
+    {
+      "id": "sejong-arboretum",
+      "kind": "spot",
+      "category": "nature",
+      "name": "국립세종수목원",
+      "region": "세종 세종",
+      "lat": 36.49480835,
+      "lng": 127.28471657775589,
+      "lead": "국립세종수목원에서 잠시 쉬어가는 시간.",
+      "description": "세종의 도심 수목원입니다. 넓은 전체 구역을 한 번에 돌기보다 입구와 가까운 정원이나 실내 전시를 골라 둘러보세요.",
+      "visitNote": "주차 후 가까운 관람 구역 방문 · 운영일과 현장 이륜차 주차 조건 확인",
+      "source": "https://www.openstreetmap.org/way/799013764",
+      "sourceName": "OpenStreetMap · 장소 원문",
+      "visitCoordinate": [
+        36.49480835,
+        127.28471657775589
+      ],
+      "parking": {
+        "lat": 36.49834045,
+        "lng": 127.28283757749011,
+        "osm": "https://www.openstreetmap.org/way/1113205038",
+        "distanceToPlaceMeters": 427,
+        "placeCoordinate": [
+          36.49480835,
+          127.28471657775589
+        ],
+        "evidence": "OSM amenity=parking, explicit access restrictions excluded; Valhalla kr-motorcycle-1 road approach verified 2026-10-14",
+        "placeSource": "https://www.openstreetmap.org/way/799013764"
+      }
+    },
+    {
+      "id": "sinchang-hyanggyo",
+      "kind": "spot",
+      "category": "culture",
+      "name": "신창향교",
+      "region": "충남 아산",
+      "lat": 36.7798856,
+      "lng": 126.93178960193785,
+      "lead": "신창향교에서 잠시 쉬어가는 시간.",
+      "description": "아산 신창면에 있는 조선시대 향교입니다. 주차 후 마을과 가까운 향교 주변을 걸으며 짧게 쉬어갈 수 있습니다.",
+      "visitNote": "주차 후 가까운 관람 구역 방문 · 운영일과 현장 이륜차 주차 조건 확인",
+      "source": "https://www.openstreetmap.org/way/930485856",
+      "sourceName": "OpenStreetMap · 장소 원문",
+      "visitCoordinate": [
+        36.7798856,
+        126.93178960193785
+      ],
+      "parking": {
+        "lat": 36.77418925,
+        "lng": 126.93293614130229,
+        "osm": "https://www.openstreetmap.org/way/601189133",
+        "distanceToPlaceMeters": 642,
+        "placeCoordinate": [
+          36.7798856,
+          126.93178960193785
+        ],
+        "evidence": "OSM amenity=parking, explicit access restrictions excluded; Valhalla kr-motorcycle-1 road approach verified 2026-10-14",
+        "placeSource": "https://www.openstreetmap.org/way/930485856"
+      }
+    },
+    {
+      "id": "buan-guam-dolmens",
+      "kind": "spot",
+      "category": "culture",
+      "name": "부안 구암리 고인돌",
+      "region": "전북 부안",
+      "lat": 35.70793155,
+      "lng": 126.65448543876123,
+      "lead": "부안 구암리 고인돌에서 잠시 쉬어가는 시간.",
+      "description": "부안 구암리에 남아 있는 고인돌 유적입니다. 도로 가까이에서 선사시대 돌무덤의 형태를 살펴보세요.",
+      "visitNote": "주차 후 가까운 관람 구역 방문 · 운영일과 현장 이륜차 주차 조건 확인",
+      "source": "https://www.openstreetmap.org/way/946849576",
+      "sourceName": "OpenStreetMap · 장소 원문",
+      "visitCoordinate": [
+        35.70793155,
+        126.65448543876123
+      ],
+      "parking": {
+        "lat": 35.7077592,
+        "lng": 126.6548928752054,
+        "osm": "https://www.openstreetmap.org/way/946849571",
+        "distanceToPlaceMeters": 41,
+        "placeCoordinate": [
+          35.70793155,
+          126.65448543876123
+        ],
+        "evidence": "OSM amenity=parking, explicit access restrictions excluded; Valhalla kr-motorcycle-1 road approach verified 2026-10-14",
+        "placeSource": "https://www.openstreetmap.org/way/946849576"
+      }
+    },
+    {
+      "id": "jisan-tombs",
+      "kind": "spot",
+      "category": "culture",
+      "name": "고령 지산동 고분군",
+      "region": "경북 고령",
+      "lat": 35.72247555,
+      "lng": 128.2592219086045,
+      "lead": "고령 지산동 고분군에서 잠시 쉬어가는 시간.",
+      "description": "대가야의 고분이 모여 있는 고령 지산동 유적입니다. 주차장과 가까운 전시·유적 구역을 중심으로 방문하고, 능선 전체 탐방은 별도 일정으로 계획하세요.",
+      "visitNote": "주차 후 가까운 관람 구역 방문 · 운영일과 현장 이륜차 주차 조건 확인",
+      "source": "https://www.openstreetmap.org/way/1157609217",
+      "sourceName": "OpenStreetMap · 장소 원문",
+      "visitCoordinate": [
+        35.72247555,
+        128.2592219086045
+      ],
+      "parking": {
+        "lat": 35.72223385,
+        "lng": 128.25820699400066,
+        "osm": "https://www.openstreetmap.org/way/1157579672",
+        "distanceToPlaceMeters": 95,
+        "placeCoordinate": [
+          35.72247555,
+          128.2592219086045
+        ],
+        "evidence": "OSM amenity=parking, explicit access restrictions excluded; Valhalla kr-motorcycle-1 road approach verified 2026-10-14",
+        "placeSource": "https://www.openstreetmap.org/way/1157609217"
+      }
+    },
+    {
+      "id": "seosan-hyanggyo",
+      "kind": "spot",
+      "category": "culture",
+      "name": "서산향교",
+      "region": "충남 서산",
+      "lat": 36.791087950000005,
+      "lng": 126.45658544596454,
+      "lead": "서산향교에서 잠시 쉬어가는 시간.",
+      "description": "서산의 옛 교육 공간인 향교입니다. 읍내 길에서 잠시 벗어나 담장과 건물의 모습을 살펴보세요.",
+      "visitNote": "주차 후 가까운 관람 구역 방문 · 운영일과 현장 이륜차 주차 조건 확인",
+      "source": "https://www.openstreetmap.org/way/1257074855",
+      "sourceName": "OpenStreetMap · 장소 원문",
+      "visitCoordinate": [
+        36.791087950000005,
+        126.45658544596454
+      ],
+      "parking": {
+        "lat": 36.7913834,
+        "lng": 126.4570131,
+        "osm": "https://www.openstreetmap.org/node/10637482734",
+        "distanceToPlaceMeters": 50,
+        "placeCoordinate": [
+          36.791087950000005,
+          126.45658544596454
+        ],
+        "evidence": "OSM amenity=parking, explicit access restrictions excluded; Valhalla kr-motorcycle-1 road approach verified 2026-10-14",
+        "placeSource": "https://www.openstreetmap.org/way/1257074855"
+      }
+    },
+    {
+      "id": "dangjin-hyanggyo",
+      "kind": "spot",
+      "category": "culture",
+      "name": "당진향교",
+      "region": "충남 당진",
+      "lat": 36.892645599999994,
+      "lng": 126.63359854726009,
+      "lead": "당진향교에서 잠시 쉬어가는 시간.",
+      "description": "당진에 남아 있는 조선시대 향교입니다. 주차 후 가까운 건물과 주변 풍경을 짧게 둘러보는 정차 지점입니다.",
+      "visitNote": "주차 후 가까운 관람 구역 방문 · 운영일과 현장 이륜차 주차 조건 확인",
+      "source": "https://www.openstreetmap.org/way/1306511236",
+      "sourceName": "OpenStreetMap · 장소 원문",
+      "visitCoordinate": [
+        36.892645599999994,
+        126.63359854726009
+      ],
+      "parking": {
+        "lat": 36.8956603,
+        "lng": 126.6322116664634,
+        "osm": "https://www.openstreetmap.org/way/1210900865",
+        "distanceToPlaceMeters": 357,
+        "placeCoordinate": [
+          36.892645599999994,
+          126.63359854726009
+        ],
+        "evidence": "OSM amenity=parking, explicit access restrictions excluded; Valhalla kr-motorcycle-1 road approach verified 2026-10-14",
+        "placeSource": "https://www.openstreetmap.org/way/1306511236"
+      }
+    },
+    {
+      "id": "songhak-tombs",
+      "kind": "spot",
+      "category": "culture",
+      "name": "고성 송학동 고분군",
+      "region": "경남 고성",
+      "lat": 34.98054405,
+      "lng": 128.32107759180252,
+      "lead": "고성 송학동 고분군에서 잠시 쉬어가는 시간.",
+      "description": "가야의 고분이 모여 있는 고성 송학동 유적입니다. 주차장 가까운 고분과 안내 공간에서 지역의 역사를 살펴보세요.",
+      "visitNote": "주차 후 가까운 관람 구역 방문 · 운영일과 현장 이륜차 주차 조건 확인",
+      "source": "https://www.openstreetmap.org/way/1308093635",
+      "sourceName": "OpenStreetMap · 장소 원문",
+      "visitCoordinate": [
+        34.98054405,
+        128.32107759180252
+      ],
+      "parking": {
+        "lat": 34.9835729,
+        "lng": 128.31846655168596,
+        "osm": "https://www.openstreetmap.org/way/1058948750",
+        "distanceToPlaceMeters": 412,
+        "placeCoordinate": [
+          34.98054405,
+          128.32107759180252
+        ],
+        "evidence": "OSM amenity=parking, explicit access restrictions excluded; Valhalla kr-motorcycle-1 road approach verified 2026-10-14",
+        "placeSource": "https://www.openstreetmap.org/way/1308093635"
+      }
+    },
+    {
+      "id": "okjeon-tombs",
+      "kind": "spot",
+      "category": "culture",
+      "name": "합천 옥전 고분군",
+      "region": "경남 합천",
+      "lat": 35.58171895,
+      "lng": 128.27971529155968,
+      "lead": "합천 옥전 고분군에서 잠시 쉬어가는 시간.",
+      "description": "황강 인근에 남아 있는 합천의 가야 고분군입니다. 박물관과 가까운 유적 구역을 골라 방문하고, 긴 탐방은 별도 일정으로 잡아보세요.",
+      "visitNote": "주차 후 가까운 관람 구역 방문 · 운영일과 현장 이륜차 주차 조건 확인",
+      "source": "https://www.openstreetmap.org/way/1512560654",
+      "sourceName": "OpenStreetMap · 장소 원문",
+      "visitCoordinate": [
+        35.58171895,
+        128.27971529155968
+      ],
+      "parking": {
+        "lat": 35.58316265,
+        "lng": 128.2789180762929,
+        "osm": "https://www.openstreetmap.org/way/1512562095",
+        "distanceToPlaceMeters": 176,
+        "placeCoordinate": [
+          35.58171895,
+          128.27971529155968
+        ],
+        "evidence": "OSM amenity=parking, explicit access restrictions excluded; Valhalla kr-motorcycle-1 road approach verified 2026-10-14",
+        "placeSource": "https://www.openstreetmap.org/way/1512560654"
+      }
     }
   ],
   "photosById": {
@@ -3393,9 +6518,921 @@
       "photoKind": "PLACE_PHOTO",
       "photoVerifiedAt": "2026-10-04",
       "reuseStatus": "verified"
+    },
+    "hwaseong-fortress": {
+      "image": "/web/app/assets/spots/hwaseong-fortress.webp?v=spots-200",
+      "photoSource": "https://commons.wikimedia.org/wiki/File:Hwaseong_Fortress_01.jpg",
+      "photoOriginalUrl": "https://upload.wikimedia.org/wikipedia/commons/e/ed/Hwaseong_Fortress_01.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+      "photoCredit": "Bernard Gagnon",
+      "photoLicense": "CC0",
+      "photoLicenseUrl": "http://creativecommons.org/publicdomain/zero/1.0/deed.en",
+      "photoKind": "PLACE_PHOTO",
+      "photoVerifiedAt": "2026-10-14",
+      "photoChanges": "960px 이내 리사이즈 · WebP 변환",
+      "reuseStatus": "verified"
+    },
+    "yunggeolleung": {
+      "image": "/web/app/assets/spots/yunggeolleung.webp?v=spots-200",
+      "photoSource": "https://commons.wikimedia.org/wiki/File:Family_Feud_Grave_Site_(180816301).jpeg",
+      "photoOriginalUrl": "https://upload.wikimedia.org/wikipedia/commons/d/db/Family_Feud_Grave_Site_%28180816301%29.jpeg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+      "photoCredit": "Mathew Schwartz",
+      "photoLicense": "CC BY 3.0",
+      "photoLicenseUrl": "https://creativecommons.org/licenses/by/3.0",
+      "photoKind": "PLACE_PHOTO",
+      "photoVerifiedAt": "2026-10-14",
+      "photoChanges": "960px 이내 리사이즈 · WebP 변환",
+      "reuseStatus": "verified"
+    },
+    "silleuksa": {
+      "image": "/web/app/assets/spots/silleuksa.webp?v=spots-200",
+      "photoSource": "https://commons.wikimedia.org/wiki/File:Silleuksa_Temple_-_Geungnakbojeon_IMG_2188.jpg",
+      "photoOriginalUrl": "https://upload.wikimedia.org/wikipedia/commons/6/6d/Silleuksa_Temple_-_Geungnakbojeon_IMG_2188.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+      "photoCredit": "G41rn8",
+      "photoLicense": "CC BY-SA 4.0",
+      "photoLicenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+      "photoKind": "PLACE_PHOTO",
+      "photoVerifiedAt": "2026-10-14",
+      "photoChanges": "960px 이내 리사이즈 · WebP 변환",
+      "reuseStatus": "verified"
+    },
+    "seolbong-park": {
+      "image": "/web/app/assets/spots/seolbong-park.webp?v=spots-200",
+      "photoSource": "https://commons.wikimedia.org/wiki/File:Seolbong_Park,_Icheon.jpg",
+      "photoOriginalUrl": "https://upload.wikimedia.org/wikipedia/commons/4/44/Seolbong_Park%2C_Icheon.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+      "photoCredit": "Mikhail Kim",
+      "photoLicense": "CC BY-SA 2.0",
+      "photoLicenseUrl": "https://creativecommons.org/licenses/by-sa/2.0",
+      "photoKind": "PLACE_PHOTO",
+      "photoVerifiedAt": "2026-10-14",
+      "photoChanges": "960px 이내 리사이즈 · WebP 변환",
+      "reuseStatus": "verified"
+    },
+    "dumulmeori": {
+      "image": "/web/app/assets/spots/dumulmeori.webp?v=spots-200",
+      "photoSource": "https://commons.wikimedia.org/wiki/File:Yangpyeong_Dumulmeori_2019-11-11.jpg",
+      "photoOriginalUrl": "https://upload.wikimedia.org/wikipedia/commons/5/54/Yangpyeong_Dumulmeori_2019-11-11.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+      "photoCredit": "Foxy1219",
+      "photoLicense": "CC BY-SA 4.0",
+      "photoLicenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+      "photoKind": "PLACE_PHOTO",
+      "photoVerifiedAt": "2026-10-14",
+      "photoChanges": "960px 이내 리사이즈 · WebP 변환",
+      "reuseStatus": "verified"
+    },
+    "anseong-cheongryongsa": {
+      "image": "/web/app/assets/spots/anseong-cheongryongsa.webp?v=spots-200",
+      "photoSource": "https://commons.wikimedia.org/wiki/File:%EC%95%88%EC%84%B1_%EC%B2%AD%EB%A3%A1%EC%82%AC_%EB%8C%80%EC%9B%85%EC%A0%84_%EB%B0%B0%EB%A9%B4_%EC%A0%84%EA%B2%BD_(%EC%B4%AC%EC%98%81%EB%85%84%EB%8F%84_2015%EB%85%84)_01.jpg",
+      "photoOriginalUrl": "https://upload.wikimedia.org/wikipedia/commons/5/58/%EC%95%88%EC%84%B1_%EC%B2%AD%EB%A3%A1%EC%82%AC_%EB%8C%80%EC%9B%85%EC%A0%84_%EB%B0%B0%EB%A9%B4_%EC%A0%84%EA%B2%BD_%28%EC%B4%AC%EC%98%81%EB%85%84%EB%8F%84_2015%EB%85%84%29_01.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+      "photoCredit": "Cultural Heritage Authority",
+      "photoLicense": "KOGL Type 1",
+      "photoLicenseUrl": "http://www.kogl.or.kr/info/licenseType1.do",
+      "photoKind": "PLACE_PHOTO",
+      "photoVerifiedAt": "2026-10-14",
+      "photoChanges": "960px 이내 리사이즈 · WebP 변환",
+      "reuseStatus": "verified"
+    },
+    "chiljangsa": {
+      "image": "/web/app/assets/spots/chiljangsa.webp?v=spots-200",
+      "photoSource": "https://commons.wikimedia.org/wiki/File:%EC%95%88%EC%84%B1_%EC%B9%A0%EC%9E%A5%EC%82%AC_%EB%8C%80%EC%9B%85%EC%A0%84_%EC%A0%95%EB%A9%B4.jpg",
+      "photoOriginalUrl": "https://upload.wikimedia.org/wikipedia/commons/0/06/%EC%95%88%EC%84%B1_%EC%B9%A0%EC%9E%A5%EC%82%AC_%EB%8C%80%EC%9B%85%EC%A0%84_%EC%A0%95%EB%A9%B4.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+      "photoCredit": "Encyclopedia of Korean Culture",
+      "photoLicense": "KOGL Type 1",
+      "photoLicenseUrl": "http://www.kogl.or.kr/info/licenseType1.do",
+      "photoKind": "PLACE_PHOTO",
+      "photoVerifiedAt": "2026-10-14",
+      "photoChanges": "960px 이내 리사이즈 · WebP 변환",
+      "reuseStatus": "verified"
+    },
+    "namhansanseong": {
+      "image": "/web/app/assets/spots/namhansanseong.webp?v=spots-200",
+      "photoSource": "https://commons.wikimedia.org/wiki/File:Korea-Namhansanseong-06.jpg",
+      "photoOriginalUrl": "https://upload.wikimedia.org/wikipedia/commons/5/5e/Korea-Namhansanseong-06.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+      "photoCredit": "Steve46814 (talk)",
+      "photoLicense": "CC BY-SA 3.0",
+      "photoLicenseUrl": "https://creativecommons.org/licenses/by-sa/3.0",
+      "photoKind": "PLACE_PHOTO",
+      "photoVerifiedAt": "2026-10-14",
+      "photoChanges": "960px 이내 리사이즈 · WebP 변환",
+      "reuseStatus": "verified"
+    },
+    "railroad-museum": {
+      "image": "/web/app/assets/spots/railroad-museum.webp?v=spots-200",
+      "photoSource": "https://commons.wikimedia.org/wiki/File:Korea_Railroad_Museum.jpg",
+      "photoOriginalUrl": "https://upload.wikimedia.org/wikipedia/commons/2/25/Korea_Railroad_Museum.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+      "photoCredit": "조사부장 from kowp",
+      "photoLicense": "CC BY-SA 3.0",
+      "photoLicenseUrl": "http://creativecommons.org/licenses/by-sa/3.0/",
+      "photoKind": "PLACE_PHOTO",
+      "photoVerifiedAt": "2026-10-14",
+      "photoChanges": "960px 이내 리사이즈 · WebP 변환",
+      "reuseStatus": "verified"
+    },
+    "samsung-transport": {
+      "image": "/web/app/assets/spots/samsung-transport.webp?v=spots-200",
+      "photoSource": "https://commons.wikimedia.org/wiki/File:Samsung_Transportation_Museum,_Yongin_(%EC%82%BC%EC%84%B1%ED%99%94%EC%9E%AC%EA%B5%90%ED%86%B5%EB%B0%95%EB%AC%BC%EA%B4%80,_%EC%9A%A9%EC%9D%B8)_-_panoramio_(1).jpg",
+      "photoOriginalUrl": "https://upload.wikimedia.org/wikipedia/commons/2/20/Samsung_Transportation_Museum%2C_Yongin_%28%EC%82%BC%EC%84%B1%ED%99%94%EC%9E%AC%EA%B5%90%ED%86%B5%EB%B0%95%EB%AC%BC%EA%B4%80%2C_%EC%9A%A9%EC%9D%B8%29_-_panoramio_%281%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+      "photoCredit": "골뱅이",
+      "photoLicense": "CC BY-SA 3.0",
+      "photoLicenseUrl": "https://creativecommons.org/licenses/by-sa/3.0",
+      "photoKind": "PLACE_PHOTO",
+      "photoVerifiedAt": "2026-10-14",
+      "photoChanges": "960px 이내 리사이즈 · WebP 변환",
+      "reuseStatus": "verified"
+    },
+    "pungsuwon": {
+      "image": "/web/app/assets/spots/pungsuwon.webp?v=spots-200",
+      "photoSource": "https://commons.wikimedia.org/wiki/File:2020-04-22_14.01.12_%ED%92%8D%EC%88%98%EC%9B%90%EC%84%B1%EB%8B%B9.jpg",
+      "photoOriginalUrl": "https://upload.wikimedia.org/wikipedia/commons/b/b1/2020-04-22_14.01.12_%ED%92%8D%EC%88%98%EC%9B%90%EC%84%B1%EB%8B%B9.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+      "photoCredit": "Choi Kwang-mo",
+      "photoLicense": "CC0",
+      "photoLicenseUrl": "http://creativecommons.org/publicdomain/zero/1.0/deed.en",
+      "photoKind": "PLACE_PHOTO",
+      "photoVerifiedAt": "2026-10-14",
+      "photoChanges": "960px 이내 리사이즈 · WebP 변환",
+      "reuseStatus": "verified"
+    },
+    "sutasa": {
+      "image": "/web/app/assets/spots/sutasa.webp?v=spots-200",
+      "photoSource": "https://commons.wikimedia.org/wiki/File:%EC%88%98%ED%83%80%EC%82%AC(%ED%99%8D%EC%B2%9C%EA%B5%B0_%EB%8F%99%EB%A9%B4)IMG_3767.jpg",
+      "photoOriginalUrl": "https://upload.wikimedia.org/wikipedia/commons/3/32/%EC%88%98%ED%83%80%EC%82%AC%28%ED%99%8D%EC%B2%9C%EA%B5%B0_%EB%8F%99%EB%A9%B4%29IMG_3767.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+      "photoCredit": "최광모 (Choe Kwangmo)",
+      "photoLicense": "CC0",
+      "photoLicenseUrl": "http://creativecommons.org/publicdomain/zero/1.0/deed.en",
+      "photoKind": "PLACE_PHOTO",
+      "photoVerifiedAt": "2026-10-14",
+      "photoChanges": "960px 이내 리사이즈 · WebP 변환",
+      "reuseStatus": "verified"
+    },
+    "parksugeun": {
+      "image": "/web/app/assets/spots/parksugeun.webp?v=spots-200",
+      "photoSource": "https://commons.wikimedia.org/wiki/File:%EB%B0%95%EC%88%98%EA%B7%BC%EB%AF%B8%EC%88%A0%EA%B4%80-tourgo.jpg",
+      "photoOriginalUrl": "https://upload.wikimedia.org/wikipedia/commons/c/c9/%EB%B0%95%EC%88%98%EA%B7%BC%EB%AF%B8%EC%88%A0%EA%B4%80-tourgo.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+      "photoCredit": "한국문화관광연구원",
+      "photoLicense": "KOGL Type 1",
+      "photoLicenseUrl": "http://www.kogl.or.kr/info/licenseType1.do",
+      "photoKind": "PLACE_PHOTO",
+      "photoVerifiedAt": "2026-10-14",
+      "photoChanges": "960px 이내 리사이즈 · WebP 변환",
+      "reuseStatus": "verified"
+    },
+    "kimyujeong": {
+      "image": "/web/app/assets/spots/kimyujeong.webp?v=spots-200",
+      "photoSource": "https://commons.wikimedia.org/wiki/File:%EA%B9%80%EC%9C%A0%EC%A0%95%EB%AC%B8%ED%95%99%EC%B4%8C.jpg",
+      "photoOriginalUrl": "https://upload.wikimedia.org/wikipedia/commons/9/94/%EA%B9%80%EC%9C%A0%EC%A0%95%EB%AC%B8%ED%95%99%EC%B4%8C.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+      "photoCredit": "문화포털",
+      "photoLicense": "CC BY 4.0",
+      "photoLicenseUrl": "https://creativecommons.org/licenses/by/4.0",
+      "photoKind": "PLACE_PHOTO",
+      "photoVerifiedAt": "2026-10-14",
+      "photoChanges": "960px 이내 리사이즈 · WebP 변환",
+      "reuseStatus": "verified"
+    },
+    "daegwallyeong-sheep": {
+      "image": "/web/app/assets/spots/daegwallyeong-sheep.webp?v=spots-200",
+      "photoSource": "https://commons.wikimedia.org/wiki/File:Daegwallyeong_Sheep_Farm.jpg",
+      "photoOriginalUrl": "https://upload.wikimedia.org/wikipedia/commons/e/ea/Daegwallyeong_Sheep_Farm.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+      "photoCredit": "Ken Eckert",
+      "photoLicense": "CC BY-SA 4.0",
+      "photoLicenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+      "photoKind": "PLACE_PHOTO",
+      "photoVerifiedAt": "2026-10-14",
+      "photoChanges": "960px 이내 리사이즈 · WebP 변환",
+      "reuseStatus": "verified"
+    },
+    "gossi-cave": {
+      "image": "/web/app/assets/spots/gossi-cave.webp?v=spots-200",
+      "photoSource": "https://commons.wikimedia.org/wiki/File:Gossi_Cave.jpg",
+      "photoOriginalUrl": "https://upload.wikimedia.org/wikipedia/commons/1/13/Gossi_Cave.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+      "photoCredit": "Korea.net / Korean Culture and Information Service",
+      "photoLicense": "CC BY-SA 2.0",
+      "photoLicenseUrl": "https://creativecommons.org/licenses/by-sa/2.0",
+      "photoKind": "PLACE_PHOTO",
+      "photoVerifiedAt": "2026-10-14",
+      "photoChanges": "960px 이내 리사이즈 · WebP 변환",
+      "reuseStatus": "verified"
+    },
+    "hwangji": {
+      "image": "/web/app/assets/spots/hwangji.webp?v=spots-200",
+      "photoSource": "https://commons.wikimedia.org/wiki/File:Hwangji_Pond_Taebaek_City_20260713_(04).jpg",
+      "photoOriginalUrl": "https://upload.wikimedia.org/wikipedia/commons/b/b7/Hwangji_Pond_Taebaek_City_20260713_%2804%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+      "photoCredit": "Treeinkr",
+      "photoLicense": "CC BY-SA 4.0",
+      "photoLicenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+      "photoKind": "PLACE_PHOTO",
+      "photoVerifiedAt": "2026-10-14",
+      "photoChanges": "960px 이내 리사이즈 · WebP 변환",
+      "reuseStatus": "verified"
+    },
+    "pohang-jukdo": {
+      "image": "/web/app/assets/spots/pohang-jukdo.webp?v=spots-200",
+      "photoSource": "https://commons.wikimedia.org/wiki/File:SpiceDisplay.jpg",
+      "photoOriginalUrl": "https://upload.wikimedia.org/wikipedia/commons/8/80/SpiceDisplay.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+      "photoCredit": "Yagobo79",
+      "photoLicense": "Public domain",
+      "photoLicenseUrl": "https://creativecommons.org/publicdomain/mark/1.0/",
+      "photoKind": "PLACE_PHOTO",
+      "photoVerifiedAt": "2026-10-14",
+      "photoChanges": "960px 이내 리사이즈 · WebP 변환",
+      "reuseStatus": "verified"
+    },
+    "guryongpo-history": {
+      "image": "/web/app/assets/spots/guryongpo-history.webp?v=spots-200",
+      "photoSource": "https://commons.wikimedia.org/wiki/File:Guryongpo_Japanese_House_Street_20240113_002.jpg",
+      "photoOriginalUrl": "https://upload.wikimedia.org/wikipedia/commons/7/70/Guryongpo_Japanese_House_Street_20240113_002.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+      "photoCredit": "Mobius6",
+      "photoLicense": "CC BY 4.0",
+      "photoLicenseUrl": "https://creativecommons.org/licenses/by/4.0",
+      "photoKind": "PLACE_PHOTO",
+      "photoVerifiedAt": "2026-10-14",
+      "photoChanges": "960px 이내 리사이즈 · WebP 변환",
+      "reuseStatus": "verified"
+    },
+    "daejeonsa": {
+      "image": "/web/app/assets/spots/daejeonsa.webp?v=spots-200",
+      "photoSource": "https://commons.wikimedia.org/wiki/File:Daejeonsa_%26_Juwang_Mt.jpg",
+      "photoOriginalUrl": "https://upload.wikimedia.org/wikipedia/commons/8/89/Daejeonsa_%26_Juwang_Mt.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+      "photoCredit": "Trainholic",
+      "photoLicense": "CC BY-SA 4.0",
+      "photoLicenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+      "photoKind": "PLACE_PHOTO",
+      "photoVerifiedAt": "2026-10-14",
+      "photoChanges": "960px 이내 리사이즈 · WebP 변환",
+      "reuseStatus": "verified"
+    },
+    "seoseokji": {
+      "image": "/web/app/assets/spots/seoseokji.webp?v=spots-200",
+      "photoSource": "https://commons.wikimedia.org/wiki/File:%EC%84%9C%EC%84%9D%EC%A7%80.jpg",
+      "photoOriginalUrl": "https://upload.wikimedia.org/wikipedia/commons/b/b1/%EC%84%9C%EC%84%9D%EC%A7%80.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+      "photoCredit": "Metal526",
+      "photoLicense": "CC BY-SA 3.0",
+      "photoLicenseUrl": "https://creativecommons.org/licenses/by-sa/3.0",
+      "photoKind": "PLACE_PHOTO",
+      "photoVerifiedAt": "2026-10-14",
+      "photoChanges": "960px 이내 리사이즈 · WebP 변환",
+      "reuseStatus": "verified"
+    },
+    "hoeryongpo": {
+      "image": "/web/app/assets/spots/hoeryongpo.webp?v=spots-200",
+      "photoSource": "https://commons.wikimedia.org/wiki/File:Hoeryongpo.jpg",
+      "photoOriginalUrl": "https://upload.wikimedia.org/wikipedia/commons/b/b7/Hoeryongpo.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+      "photoCredit": "w:ko:사용자:Salamander03's father",
+      "photoLicense": "CC BY-SA 3.0",
+      "photoLicenseUrl": "http://creativecommons.org/licenses/by-sa/3.0/",
+      "photoKind": "PLACE_PHOTO",
+      "photoVerifiedAt": "2026-10-14",
+      "photoChanges": "960px 이내 리사이즈 · WebP 변환",
+      "reuseStatus": "verified"
+    },
+    "baekdudaegan-arboretum": {
+      "image": "/web/app/assets/spots/baekdudaegan-arboretum.webp?v=spots-200",
+      "photoSource": "https://commons.wikimedia.org/wiki/File:%EA%B5%AD%EB%A6%BD%EB%B0%B1%EB%91%90%EB%8C%80%EA%B0%84%EC%88%98%EB%AA%A9%EC%9B%90_%EC%97%AC%ED%96%89%EC%9E%90%EC%84%BC%ED%84%B0.jpg",
+      "photoOriginalUrl": "https://upload.wikimedia.org/wikipedia/commons/7/7f/%EA%B5%AD%EB%A6%BD%EB%B0%B1%EB%91%90%EB%8C%80%EA%B0%84%EC%88%98%EB%AA%A9%EC%9B%90_%EC%97%AC%ED%96%89%EC%9E%90%EC%84%BC%ED%84%B0.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+      "photoCredit": "메라크",
+      "photoLicense": "CC BY 2.0 kr",
+      "photoLicenseUrl": "https://creativecommons.org/licenses/by/2.0/kr/deed.en",
+      "photoKind": "PLACE_PHOTO",
+      "photoVerifiedAt": "2026-10-14",
+      "photoChanges": "960px 이내 리사이즈 · WebP 변환",
+      "reuseStatus": "verified"
+    },
+    "munmu-tomb": {
+      "image": "/web/app/assets/spots/munmu-tomb.webp?v=spots-200",
+      "photoSource": "https://commons.wikimedia.org/wiki/File:Underwater_Tomb_of_King_Munmu.jpeg",
+      "photoOriginalUrl": "https://upload.wikimedia.org/wikipedia/commons/f/fc/Underwater_Tomb_of_King_Munmu.jpeg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+      "photoCredit": "vatar/편성재",
+      "photoLicense": "CC BY-SA 3.0",
+      "photoLicenseUrl": "https://creativecommons.org/licenses/by-sa/3.0",
+      "photoKind": "PLACE_PHOTO",
+      "photoVerifiedAt": "2026-10-14",
+      "photoChanges": "960px 이내 리사이즈 · WebP 변환",
+      "reuseStatus": "verified"
+    },
+    "golgulsa": {
+      "image": "/web/app/assets/spots/golgulsa.webp?v=spots-200",
+      "photoSource": "https://commons.wikimedia.org/wiki/File:Golgulsa,_Gyeongju_01.jpg",
+      "photoOriginalUrl": "https://upload.wikimedia.org/wikipedia/commons/2/24/Golgulsa%2C_Gyeongju_01.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+      "photoCredit": "Seefooddiet",
+      "photoLicense": "CC BY-SA 4.0",
+      "photoLicenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+      "photoKind": "PLACE_PHOTO",
+      "photoVerifiedAt": "2026-10-14",
+      "photoChanges": "960px 이내 리사이즈 · WebP 변환",
+      "reuseStatus": "verified"
+    },
+    "beopjusa": {
+      "image": "/web/app/assets/spots/beopjusa.webp?v=spots-200",
+      "photoSource": "https://commons.wikimedia.org/wiki/File:Korea-Boeun-Beopjusa_Palsangjeon_and_Bell_Pavilion_1765-06.JPG",
+      "photoOriginalUrl": "https://upload.wikimedia.org/wikipedia/commons/b/b5/Korea-Boeun-Beopjusa_Palsangjeon_and_Bell_Pavilion_1765-06.JPG?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+      "photoCredit": "Steve46814",
+      "photoLicense": "CC BY-SA 3.0",
+      "photoLicenseUrl": "https://creativecommons.org/licenses/by-sa/3.0",
+      "photoKind": "PLACE_PHOTO",
+      "photoVerifiedAt": "2026-10-14",
+      "photoChanges": "960px 이내 리사이즈 · WebP 변환",
+      "reuseStatus": "verified"
+    },
+    "bogangcheon": {
+      "image": "/web/app/assets/spots/bogangcheon.webp?v=spots-200",
+      "photoSource": "https://commons.wikimedia.org/wiki/File:Bogangcheon_Cottonwood_Grove.jpg",
+      "photoOriginalUrl": "https://upload.wikimedia.org/wikipedia/commons/4/4c/Bogangcheon_Cottonwood_Grove.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+      "photoCredit": "Kim Youngho",
+      "photoLicense": "KOGL Type 1",
+      "photoLicenseUrl": "http://www.kogl.or.kr/info/licenseType1.do",
+      "photoKind": "PLACE_PHOTO",
+      "photoVerifiedAt": "2026-10-14",
+      "photoChanges": "960px 이내 리사이즈 · WebP 변환",
+      "reuseStatus": "verified"
+    },
+    "jincheon-nongdari": {
+      "image": "/web/app/assets/spots/jincheon-nongdari.webp?v=spots-200",
+      "photoSource": "https://commons.wikimedia.org/wiki/File:Jincheon_Nongdari_Bridge_20200716_160025.jpg",
+      "photoOriginalUrl": "https://upload.wikimedia.org/wikipedia/commons/b/b0/Jincheon_Nongdari_Bridge_20200716_160025.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+      "photoCredit": "Piotrus",
+      "photoLicense": "CC BY-SA 4.0",
+      "photoLicenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+      "photoKind": "PLACE_PHOTO",
+      "photoVerifiedAt": "2026-10-14",
+      "photoChanges": "960px 이내 리사이즈 · WebP 변환",
+      "reuseStatus": "verified"
+    },
+    "yeongguksa": {
+      "image": "/web/app/assets/spots/yeongguksa.webp?v=spots-200",
+      "photoSource": "https://commons.wikimedia.org/wiki/File:%EC%98%81%EB%8F%99%EC%98%81%EA%B5%AD%EC%82%AC%EC%9D%98%EC%9D%80%ED%96%89%EB%82%98%EB%AC%B4.jpg",
+      "photoOriginalUrl": "https://upload.wikimedia.org/wikipedia/commons/2/2b/%EC%98%81%EB%8F%99%EC%98%81%EA%B5%AD%EC%82%AC%EC%9D%98%EC%9D%80%ED%96%89%EB%82%98%EB%AC%B4.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+      "photoCredit": "Korea Heritage Service",
+      "photoLicense": "KOGL Type 1",
+      "photoLicenseUrl": "http://www.kogl.or.kr/info/licenseType1.do",
+      "photoKind": "PLACE_PHOTO",
+      "photoVerifiedAt": "2026-10-14",
+      "photoChanges": "960px 이내 리사이즈 · WebP 변환",
+      "reuseStatus": "verified"
+    },
+    "sanmagi": {
+      "image": "/web/app/assets/spots/sanmagi.webp?v=spots-200",
+      "photoSource": "https://commons.wikimedia.org/wiki/File:Korea_Goesangun_09_(15052415893).jpg",
+      "photoOriginalUrl": "https://upload.wikimedia.org/wikipedia/commons/5/53/Korea_Goesangun_09_%2815052415893%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+      "photoCredit": "Republic of  Korea from Seoul, Republic of Korea",
+      "photoLicense": "CC BY-SA 2.0",
+      "photoLicenseUrl": "https://creativecommons.org/licenses/by-sa/2.0",
+      "photoKind": "PLACE_PHOTO",
+      "photoVerifiedAt": "2026-10-14",
+      "photoChanges": "960px 이내 리사이즈 · WebP 변환",
+      "reuseStatus": "verified"
+    },
+    "uirimji": {
+      "image": "/web/app/assets/spots/uirimji.webp?v=spots-200",
+      "photoSource": "https://commons.wikimedia.org/wiki/File:Uirimji_Reservoir_(3)_(32813000084).jpg",
+      "photoOriginalUrl": "https://upload.wikimedia.org/wikipedia/commons/1/15/Uirimji_Reservoir_%283%29_%2832813000084%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+      "photoCredit": "Kyle Magnuson from Los Angeles, United States",
+      "photoLicense": "CC BY 2.0",
+      "photoLicenseUrl": "https://creativecommons.org/licenses/by/2.0",
+      "photoKind": "PLACE_PHOTO",
+      "photoVerifiedAt": "2026-10-14",
+      "photoChanges": "960px 이내 리사이즈 · WebP 변환",
+      "reuseStatus": "verified"
+    },
+    "independence-hall": {
+      "image": "/web/app/assets/spots/independence-hall.webp?v=spots-200",
+      "photoSource": "https://commons.wikimedia.org/wiki/File:Independence_Hall_of_Korea_01.JPG",
+      "photoOriginalUrl": "https://upload.wikimedia.org/wikipedia/commons/5/53/Independence_Hall_of_Korea_01.JPG?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+      "photoCredit": "Lawinc82",
+      "photoLicense": "CC BY-SA 3.0",
+      "photoLicenseUrl": "https://creativecommons.org/licenses/by-sa/3.0",
+      "photoKind": "PLACE_PHOTO",
+      "photoVerifiedAt": "2026-10-14",
+      "photoChanges": "960px 이내 리사이즈 · WebP 변환",
+      "reuseStatus": "verified"
+    },
+    "hyeonchungsa": {
+      "image": "/web/app/assets/spots/hyeonchungsa.webp?v=spots-200",
+      "photoSource": "https://commons.wikimedia.org/wiki/File:Korea-Asan-Spring_garden_near_Hyeonchungsa-01.jpg",
+      "photoOriginalUrl": "https://upload.wikimedia.org/wikipedia/commons/2/2c/Korea-Asan-Spring_garden_near_Hyeonchungsa-01.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+      "photoCredit": "Jo from Brisbane, Australia",
+      "photoLicense": "CC BY 2.0",
+      "photoLicenseUrl": "https://creativecommons.org/licenses/by/2.0",
+      "photoKind": "PLACE_PHOTO",
+      "photoVerifiedAt": "2026-10-14",
+      "photoChanges": "960px 이내 리사이즈 · WebP 변환",
+      "reuseStatus": "verified"
+    },
+    "gwanchoksa": {
+      "image": "/web/app/assets/spots/gwanchoksa.webp?v=spots-200",
+      "photoSource": "https://commons.wikimedia.org/wiki/File:Gwanchoksa_-_Courtyard_IMG_20160928_035626.jpg",
+      "photoOriginalUrl": "https://upload.wikimedia.org/wikipedia/commons/4/48/Gwanchoksa_-_Courtyard_IMG_20160928_035626.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+      "photoCredit": "G41rn8",
+      "photoLicense": "CC BY-SA 4.0",
+      "photoLicenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+      "photoKind": "PLACE_PHOTO",
+      "photoVerifiedAt": "2026-10-14",
+      "photoChanges": "960px 이내 리사이즈 · WebP 변환",
+      "reuseStatus": "verified"
+    },
+    "donam-seowon": {
+      "image": "/web/app/assets/spots/donam-seowon.webp?v=spots-200",
+      "photoSource": "https://commons.wikimedia.org/wiki/File:Donam_Seowon.jpg",
+      "photoOriginalUrl": "https://upload.wikimedia.org/wikipedia/commons/0/05/Donam_Seowon.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+      "photoCredit": "Ryuch",
+      "photoLicense": "CC BY-SA 3.0",
+      "photoLicenseUrl": "https://creativecommons.org/licenses/by-sa/3.0",
+      "photoKind": "PLACE_PHOTO",
+      "photoVerifiedAt": "2026-10-14",
+      "photoChanges": "960px 이내 리사이즈 · WebP 변환",
+      "reuseStatus": "verified"
+    },
+    "boseoksa": {
+      "image": "/web/app/assets/spots/boseoksa.webp?v=spots-200",
+      "photoSource": "https://commons.wikimedia.org/wiki/File:%EB%B3%B4%EC%84%9D%EC%82%AC_%EB%8C%80%EC%9B%85%EC%A0%84.jpg",
+      "photoOriginalUrl": "https://upload.wikimedia.org/wikipedia/commons/0/0c/%EB%B3%B4%EC%84%9D%EC%82%AC_%EB%8C%80%EC%9B%85%EC%A0%84.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+      "photoCredit": "Korea Heritage Service",
+      "photoLicense": "CC BY-SA 4.0",
+      "photoLicenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+      "photoKind": "PLACE_PHOTO",
+      "photoVerifiedAt": "2026-10-14",
+      "photoChanges": "960px 이내 리사이즈 · WebP 변환",
+      "reuseStatus": "verified"
+    },
+    "janggoksa": {
+      "image": "/web/app/assets/spots/janggoksa.webp?v=spots-200",
+      "photoSource": "https://commons.wikimedia.org/wiki/File:Janggoksa_Temple_Main_Hall_Front.jpg",
+      "photoOriginalUrl": "https://upload.wikimedia.org/wikipedia/commons/a/ae/Janggoksa_Temple_Main_Hall_Front.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+      "photoCredit": "Tungdangthanh",
+      "photoLicense": "CC BY-SA 4.0",
+      "photoLicenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+      "photoKind": "PLACE_PHOTO",
+      "photoVerifiedAt": "2026-10-14",
+      "photoChanges": "960px 이내 리사이즈 · WebP 변환",
+      "reuseStatus": "verified"
+    },
+    "haeinsa": {
+      "image": "/web/app/assets/spots/haeinsa.webp?v=spots-200",
+      "photoSource": "https://commons.wikimedia.org/wiki/File:Haeinsa_Temple_01.jpg",
+      "photoOriginalUrl": "https://upload.wikimedia.org/wikipedia/commons/e/e5/Haeinsa_Temple_01.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+      "photoCredit": "Bernard Gagnon",
+      "photoLicense": "CC0",
+      "photoLicenseUrl": "http://creativecommons.org/publicdomain/zero/1.0/deed.en",
+      "photoKind": "PLACE_PHOTO",
+      "photoVerifiedAt": "2026-10-14",
+      "photoChanges": "960px 이내 리사이즈 · WebP 변환",
+      "reuseStatus": "verified"
+    },
+    "upo-wetland": {
+      "image": "/web/app/assets/spots/upo-wetland.webp?v=spots-200",
+      "photoSource": "https://commons.wikimedia.org/wiki/File:Upo_Wetland%27s_Many_Colours.jpg",
+      "photoOriginalUrl": "https://upload.wikimedia.org/wikipedia/commons/3/3d/Upo_Wetland%27s_Many_Colours.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+      "photoCredit": "Speedyturtle2000",
+      "photoLicense": "CC BY-SA 3.0",
+      "photoLicenseUrl": "https://creativecommons.org/licenses/by-sa/3.0",
+      "photoKind": "PLACE_PHOTO",
+      "photoVerifiedAt": "2026-10-14",
+      "photoChanges": "960px 이내 리사이즈 · WebP 변환",
+      "reuseStatus": "verified"
+    },
+    "namhae-german-village": {
+      "image": "/web/app/assets/spots/namhae-german-village.webp?v=spots-200",
+      "photoSource": "https://commons.wikimedia.org/wiki/File:View_of_German_Village_in_Namhae,_South_Korea.jpg",
+      "photoOriginalUrl": "https://upload.wikimedia.org/wikipedia/commons/8/87/View_of_German_Village_in_Namhae%2C_South_Korea.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+      "photoCredit": "Choi2451",
+      "photoLicense": "CC0",
+      "photoLicenseUrl": "http://creativecommons.org/publicdomain/zero/1.0/deed.en",
+      "photoKind": "PLACE_PHOTO",
+      "photoVerifiedAt": "2026-10-14",
+      "photoChanges": "960px 이내 리사이즈 · WebP 변환",
+      "reuseStatus": "verified"
+    },
+    "daeheungsa": {
+      "image": "/web/app/assets/spots/daeheungsa.webp?v=spots-200",
+      "photoSource": "https://commons.wikimedia.org/wiki/File:Daeheungsa_11-03878.JPG",
+      "photoOriginalUrl": "https://upload.wikimedia.org/wikipedia/commons/d/d8/Daeheungsa_11-03878.JPG?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+      "photoCredit": "Steve46814",
+      "photoLicense": "CC BY-SA 3.0",
+      "photoLicenseUrl": "https://creativecommons.org/licenses/by-sa/3.0",
+      "photoKind": "PLACE_PHOTO",
+      "photoVerifiedAt": "2026-10-14",
+      "photoChanges": "960px 이내 리사이즈 · WebP 변환",
+      "reuseStatus": "verified"
+    },
+    "usuyoung": {
+      "image": "/web/app/assets/spots/usuyoung.webp?v=spots-200",
+      "photoSource": "https://commons.wikimedia.org/wiki/File:Haenam_Where_nature_meets_history,_culture.jpg",
+      "photoOriginalUrl": "https://upload.wikimedia.org/wikipedia/commons/c/c0/Haenam_Where_nature_meets_history%2C_culture.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+      "photoCredit": "USAG- Humphreys",
+      "photoLicense": "CC BY 2.0",
+      "photoLicenseUrl": "https://creativecommons.org/licenses/by/2.0/",
+      "photoKind": "PLACE_PHOTO",
+      "photoVerifiedAt": "2026-10-14",
+      "photoChanges": "960px 이내 리사이즈 · WebP 변환",
+      "reuseStatus": "verified"
+    },
+    "gokseong-rail-village": {
+      "image": "/web/app/assets/spots/gokseong-rail-village.webp?v=spots-200",
+      "photoSource": "https://commons.wikimedia.org/wiki/File:Oldgokseongst.jpg",
+      "photoOriginalUrl": "https://upload.wikimedia.org/wikipedia/commons/0/07/Oldgokseongst.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+      "photoCredit": "Kimhs5400(블루시티)",
+      "photoLicense": "CC BY-SA 4.0",
+      "photoLicenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+      "photoKind": "PLACE_PHOTO",
+      "photoVerifiedAt": "2026-10-14",
+      "photoChanges": "960px 이내 리사이즈 · WebP 변환",
+      "reuseStatus": "verified"
+    },
+    "jeoksang-records": {
+      "image": "/web/app/assets/spots/jeoksang-records.webp?v=spots-200",
+      "photoSource": "https://commons.wikimedia.org/wiki/File:Muju-Jeoksangsan-Fortress.jpg",
+      "photoOriginalUrl": "https://upload.wikimedia.org/wikipedia/commons/4/4a/Muju-Jeoksangsan-Fortress.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+      "photoCredit": "Dittwjfsdgkvkdjg",
+      "photoLicense": "CC BY 4.0",
+      "photoLicenseUrl": "https://creativecommons.org/licenses/by/4.0",
+      "photoKind": "PLACE_PHOTO",
+      "photoVerifiedAt": "2026-10-14",
+      "photoChanges": "960px 이내 리사이즈 · WebP 변환",
+      "reuseStatus": "verified"
+    },
+    "seonyudo": {
+      "image": "/web/app/assets/spots/seonyudo.webp?v=spots-200",
+      "photoSource": "https://commons.wikimedia.org/wiki/File:Seonyu_island.JPG",
+      "photoOriginalUrl": "https://upload.wikimedia.org/wikipedia/commons/5/54/Seonyu_island.JPG?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+      "photoCredit": "The original uploader was Albam at Korean Wikipedia.",
+      "photoLicense": "CC BY 3.0",
+      "photoLicenseUrl": "https://creativecommons.org/licenses/by/3.0",
+      "photoKind": "PLACE_PHOTO",
+      "photoVerifiedAt": "2026-10-14",
+      "photoChanges": "960px 이내 리사이즈 · WebP 변환",
+      "reuseStatus": "verified"
+    },
+    "silsangsa": {
+      "image": "/web/app/assets/spots/silsangsa.webp?v=spots-200",
+      "photoSource": "https://commons.wikimedia.org/wiki/File:Three-story_Stone_Pagodas_of_Silsangsa_Temple.jpg",
+      "photoOriginalUrl": "https://upload.wikimedia.org/wikipedia/commons/3/3a/Three-story_Stone_Pagodas_of_Silsangsa_Temple.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+      "photoCredit": "한국저작권위원회 · 작자 미상",
+      "photoLicense": "Public domain",
+      "photoLicenseUrl": "https://creativecommons.org/publicdomain/mark/1.0/",
+      "photoKind": "PLACE_PHOTO",
+      "photoVerifiedAt": "2026-10-14",
+      "photoChanges": "960px 이내 리사이즈 · WebP 변환",
+      "reuseStatus": "verified"
+    },
+    "maisantapsa": {
+      "image": "/web/app/assets/spots/maisantapsa.webp?v=spots-200",
+      "photoSource": "https://commons.wikimedia.org/wiki/File:Korea-Jinan-Tapsa_and_Stone_Pagodas_3704-07.jpg",
+      "photoOriginalUrl": "https://upload.wikimedia.org/wikipedia/commons/0/0f/Korea-Jinan-Tapsa_and_Stone_Pagodas_3704-07.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+      "photoCredit": "Steve46814",
+      "photoLicense": "CC BY-SA 3.0",
+      "photoLicenseUrl": "https://creativecommons.org/licenses/by-sa/3.0",
+      "photoKind": "PLACE_PHOTO",
+      "photoVerifiedAt": "2026-10-14",
+      "photoChanges": "960px 이내 리사이즈 · WebP 변환",
+      "reuseStatus": "verified"
+    },
+    "donghwasa": {
+      "image": "/web/app/assets/spots/donghwasa.webp?v=spots-200",
+      "photoSource": "https://commons.wikimedia.org/wiki/File:Korea-Daegu-Donghwasa-01.jpg",
+      "photoOriginalUrl": "https://upload.wikimedia.org/wikipedia/commons/5/59/Korea-Daegu-Donghwasa-01.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+      "photoCredit": "by martinroell",
+      "photoLicense": "CC BY-SA 2.0",
+      "photoLicenseUrl": "https://creativecommons.org/licenses/by-sa/2.0",
+      "photoKind": "PLACE_PHOTO",
+      "photoVerifiedAt": "2026-10-14",
+      "photoChanges": "960px 이내 리사이즈 · WebP 변환",
+      "reuseStatus": "verified"
+    },
+    "jangtaesan": {
+      "image": "/web/app/assets/spots/jangtaesan.webp?v=spots-200",
+      "photoSource": "https://commons.wikimedia.org/wiki/File:View_from_the_Jangtaesan.jpg",
+      "photoOriginalUrl": "https://upload.wikimedia.org/wikipedia/commons/d/de/View_from_the_Jangtaesan.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+      "photoCredit": "VaneTrz20",
+      "photoLicense": "CC0",
+      "photoLicenseUrl": "http://creativecommons.org/publicdomain/zero/1.0/deed.en",
+      "photoKind": "PLACE_PHOTO",
+      "photoVerifiedAt": "2026-10-14",
+      "photoChanges": "960px 이내 리사이즈 · WebP 변환",
+      "reuseStatus": "verified"
+    },
+    "ulsan-taehwa": {
+      "image": "/web/app/assets/spots/ulsan-taehwa.webp?v=spots-200",
+      "photoSource": "https://commons.wikimedia.org/wiki/File:Taehwagang_National_Garden_20221125_075.jpg",
+      "photoOriginalUrl": "https://upload.wikimedia.org/wikipedia/commons/e/eb/Taehwagang_National_Garden_20221125_075.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+      "photoCredit": "Mobius6",
+      "photoLicense": "CC BY-SA 4.0",
+      "photoLicenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+      "photoKind": "PLACE_PHOTO",
+      "photoVerifiedAt": "2026-10-14",
+      "photoChanges": "960px 이내 리사이즈 · WebP 변환",
+      "reuseStatus": "verified"
+    },
+    "hanhyeong-view": {
+      "image": "/web/app/assets/spots/hanhyeong-view.webp?v=spots-200",
+      "photoSource": "https://commons.wikimedia.org/wiki/File:Sinseong2.jpg",
+      "photoOriginalUrl": "https://upload.wikimedia.org/wikipedia/commons/e/ea/Sinseong2.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+      "photoCredit": "Dittwjfsdgkvkdjg",
+      "photoLicense": "CC BY-SA 3.0",
+      "photoLicenseUrl": "https://creativecommons.org/licenses/by-sa/3.0",
+      "photoKind": "PLACE_PHOTO",
+      "photoVerifiedAt": "2026-10-14",
+      "photoChanges": "960px 이내 리사이즈 · WebP 변환",
+      "reuseStatus": "verified"
+    },
+    "dosan-seowon": {
+      "image": "/web/app/assets/spots/dosan-seowon.webp?v=spots-200",
+      "photoSource": "https://commons.wikimedia.org/wiki/File:Korea-Andong-Dosan_Seowon_3001%2600%2601-06.jpg",
+      "photoOriginalUrl": "https://upload.wikimedia.org/wikipedia/commons/a/a4/Korea-Andong-Dosan_Seowon_3001%2600%2601-06.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+      "photoCredit": "Steve46814",
+      "photoLicense": "CC BY-SA 3.0",
+      "photoLicenseUrl": "https://creativecommons.org/licenses/by-sa/3.0",
+      "photoKind": "PLACE_PHOTO",
+      "photoVerifiedAt": "2026-10-14",
+      "photoChanges": "960px 이내 리사이즈 · WebP 변환",
+      "reuseStatus": "verified"
+    },
+    "bongjeongsa": {
+      "image": "/web/app/assets/spots/bongjeongsa.webp?v=spots-200",
+      "photoSource": "https://commons.wikimedia.org/wiki/File:Korea-Andong-Bongjeongsa_3040-06_Geungnakjeon.JPG",
+      "photoOriginalUrl": "https://upload.wikimedia.org/wikipedia/commons/6/68/Korea-Andong-Bongjeongsa_3040-06_Geungnakjeon.JPG?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+      "photoCredit": "Steve46814",
+      "photoLicense": "CC BY-SA 3.0",
+      "photoLicenseUrl": "https://creativecommons.org/licenses/by-sa/3.0",
+      "photoKind": "PLACE_PHOTO",
+      "photoVerifiedAt": "2026-10-14",
+      "photoChanges": "960px 이내 리사이즈 · WebP 변환",
+      "reuseStatus": "verified"
+    },
+    "gakyeonsa": {
+      "image": "/web/app/assets/spots/gakyeonsa.webp?v=spots-200",
+      "photoSource": "https://commons.wikimedia.org/wiki/File:%EA%B0%81%EC%97%B0%EC%82%AC.jpg",
+      "photoOriginalUrl": "https://upload.wikimedia.org/wikipedia/commons/2/29/%EA%B0%81%EC%97%B0%EC%82%AC.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+      "photoCredit": "Dalgial",
+      "photoLicense": "CC BY-SA 4.0",
+      "photoLicenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+      "photoKind": "PLACE_PHOTO",
+      "photoVerifiedAt": "2026-10-14",
+      "photoChanges": "960px 이내 리사이즈 · WebP 변환",
+      "reuseStatus": "verified"
+    },
+    "kimjwajin": {
+      "image": "/web/app/assets/spots/kimjwajin.webp?v=spots-200",
+      "photoSource": "https://commons.wikimedia.org/wiki/File:Birthplace_of_Kim_Chwa-chin.jpg",
+      "photoOriginalUrl": "https://upload.wikimedia.org/wikipedia/commons/2/2b/Birthplace_of_Kim_Chwa-chin.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+      "photoCredit": "Trainholic",
+      "photoLicense": "CC BY 4.0",
+      "photoLicenseUrl": "https://creativecommons.org/licenses/by/4.0",
+      "photoKind": "PLACE_PHOTO",
+      "photoVerifiedAt": "2026-10-14",
+      "photoChanges": "960px 이내 리사이즈 · WebP 변환",
+      "reuseStatus": "verified"
+    },
+    "mallipo": {
+      "image": "/web/app/assets/spots/mallipo.webp?v=spots-200",
+      "photoSource": "https://commons.wikimedia.org/wiki/File:%ED%83%9C%EC%95%88%ED%95%B4%EC%95%88%EA%B5%AD%EB%A6%BD%EA%B3%B5%EC%9B%90_%EB%A7%8C%EB%A6%AC%ED%8F%AC_%EC%9D%BC%EB%AA%B0.jpg",
+      "photoOriginalUrl": "https://upload.wikimedia.org/wikipedia/commons/9/98/%ED%83%9C%EC%95%88%ED%95%B4%EC%95%88%EA%B5%AD%EB%A6%BD%EA%B3%B5%EC%9B%90_%EB%A7%8C%EB%A6%AC%ED%8F%AC_%EC%9D%BC%EB%AA%B0.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+      "photoCredit": "Olga Lipunova",
+      "photoLicense": "CC BY-SA 3.0",
+      "photoLicenseUrl": "https://creativecommons.org/licenses/by-sa/3.0",
+      "photoKind": "PLACE_PHOTO",
+      "photoVerifiedAt": "2026-10-14",
+      "photoChanges": "960px 이내 리사이즈 · WebP 변환",
+      "reuseStatus": "verified"
+    },
+    "hwangtohyeon": {
+      "image": "/web/app/assets/spots/hwangtohyeon.webp?v=spots-200",
+      "photoSource": "https://commons.wikimedia.org/wiki/File:%EA%B5%AC%EB%AF%BC%EC%82%AC.jpg",
+      "photoOriginalUrl": "https://upload.wikimedia.org/wikipedia/commons/d/de/%EA%B5%AC%EB%AF%BC%EC%82%AC.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+      "photoCredit": "주경천",
+      "photoLicense": "CC BY-SA 4.0",
+      "photoLicenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+      "photoKind": "PLACE_PHOTO",
+      "photoVerifiedAt": "2026-10-14",
+      "photoChanges": "960px 이내 리사이즈 · WebP 변환",
+      "reuseStatus": "verified"
+    },
+    "imsil-cheese": {
+      "image": "/web/app/assets/spots/imsil-cheese.webp?v=spots-200",
+      "photoSource": "https://commons.wikimedia.org/wiki/File:Imsilgun_County_04_(16597675160).jpg",
+      "photoOriginalUrl": "https://upload.wikimedia.org/wikipedia/commons/5/5e/Imsilgun_County_04_%2816597675160%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+      "photoCredit": "Republic of  Korea from Seoul, Republic of Korea",
+      "photoLicense": "CC BY-SA 2.0",
+      "photoLicenseUrl": "https://creativecommons.org/licenses/by-sa/2.0",
+      "photoKind": "PLACE_PHOTO",
+      "photoVerifiedAt": "2026-10-14",
+      "photoChanges": "960px 이내 리사이즈 · WebP 변환",
+      "reuseStatus": "verified"
+    },
+    "namgye-seowon": {
+      "image": "/web/app/assets/spots/namgye-seowon.webp?v=spots-200",
+      "photoSource": "https://commons.wikimedia.org/wiki/File:%ED%95%A8%EC%96%91_%EB%82%A8%EA%B3%84%EC%84%9C%EC%9B%902.jpg",
+      "photoOriginalUrl": "https://upload.wikimedia.org/wikipedia/commons/a/af/%ED%95%A8%EC%96%91_%EB%82%A8%EA%B3%84%EC%84%9C%EC%9B%902.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+      "photoCredit": "국가유산청",
+      "photoLicense": "KOGL Type 1",
+      "photoLicenseUrl": "http://www.kogl.or.kr/info/licenseType1.do",
+      "photoKind": "PLACE_PHOTO",
+      "photoVerifiedAt": "2026-10-14",
+      "photoChanges": "960px 이내 리사이즈 · WebP 변환",
+      "reuseStatus": "verified"
+    },
+    "naewonsa": {
+      "image": "/web/app/assets/spots/naewonsa.webp?v=spots-200",
+      "photoSource": "https://commons.wikimedia.org/wiki/File:%EC%96%91%EC%82%B0_%EB%82%B4%EC%9B%90%EC%82%AC.jpg",
+      "photoOriginalUrl": "https://upload.wikimedia.org/wikipedia/commons/d/d4/%EC%96%91%EC%82%B0_%EB%82%B4%EC%9B%90%EC%82%AC.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+      "photoCredit": "국가유산청",
+      "photoLicense": "KOGL Type 1",
+      "photoLicenseUrl": "http://www.kogl.or.kr/info/licenseType1.do",
+      "photoKind": "PLACE_PHOTO",
+      "photoVerifiedAt": "2026-10-14",
+      "photoChanges": "960px 이내 리사이즈 · WebP 변환",
+      "reuseStatus": "verified"
+    },
+    "hyangiram": {
+      "image": "/web/app/assets/spots/hyangiram.webp?v=spots-200",
+      "photoSource": "https://commons.wikimedia.org/wiki/File:Hyangiram_hermitage_03.jpg",
+      "photoOriginalUrl": "https://upload.wikimedia.org/wikipedia/commons/0/00/Hyangiram_hermitage_03.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+      "photoCredit": "Tour Go: Tourism Knowledge Information System",
+      "photoLicense": "KOGL Type 1",
+      "photoLicenseUrl": "http://www.kogl.or.kr/info/licenseType1.do",
+      "photoKind": "PLACE_PHOTO",
+      "photoVerifiedAt": "2026-10-14",
+      "photoChanges": "960px 이내 리사이즈 · WebP 변환",
+      "reuseStatus": "verified"
+    },
+    "neunggasa": {
+      "image": "/web/app/assets/spots/neunggasa.webp?v=spots-200",
+      "photoSource": "https://commons.wikimedia.org/wiki/File:South_Korea-Goheunggun-Neunggasa_5841-07.JPG",
+      "photoOriginalUrl": "https://upload.wikimedia.org/wikipedia/commons/6/64/South_Korea-Goheunggun-Neunggasa_5841-07.JPG?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+      "photoCredit": "Steve46814",
+      "photoLicense": "CC BY-SA 3.0",
+      "photoLicenseUrl": "https://creativecommons.org/licenses/by-sa/3.0",
+      "photoKind": "PLACE_PHOTO",
+      "photoVerifiedAt": "2026-10-14",
+      "photoChanges": "960px 이내 리사이즈 · WebP 변환",
+      "reuseStatus": "verified"
+    },
+    "gwangju-folk-museum": {
+      "image": "/web/app/assets/spots/gwangju-folk-museum.webp?v=spots-200",
+      "photoSource": "https://commons.wikimedia.org/wiki/File:Korea-Gwangju_Folk_Museum_4650-07.JPG",
+      "photoOriginalUrl": "https://upload.wikimedia.org/wikipedia/commons/8/86/Korea-Gwangju_Folk_Museum_4650-07.JPG?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+      "photoCredit": "Steve46814",
+      "photoLicense": "CC BY-SA 3.0",
+      "photoLicenseUrl": "https://creativecommons.org/licenses/by-sa/3.0",
+      "photoKind": "PLACE_PHOTO",
+      "photoVerifiedAt": "2026-10-14",
+      "photoChanges": "960px 이내 리사이즈 · WebP 변환",
+      "reuseStatus": "verified"
+    },
+    "seomun-market": {
+      "image": "/web/app/assets/spots/seomun-market.webp?v=spots-200",
+      "photoSource": "https://commons.wikimedia.org/wiki/File:10%EA%B2%BD_%EC%84%9C%EB%AC%B8%EC%8B%9C%EC%9E%A5.jpg",
+      "photoOriginalUrl": "https://upload.wikimedia.org/wikipedia/commons/f/fd/10%EA%B2%BD_%EC%84%9C%EB%AC%B8%EC%8B%9C%EC%9E%A5.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+      "photoCredit": "대구광역시",
+      "photoLicense": "CC BY-SA 4.0",
+      "photoLicenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+      "photoKind": "PLACE_PHOTO",
+      "photoVerifiedAt": "2026-10-14",
+      "photoChanges": "960px 이내 리사이즈 · WebP 변환",
+      "reuseStatus": "verified"
+    },
+    "jeongsan-hyanggyo": {
+      "image": "/web/app/assets/spots/jeongsan-hyanggyo.webp?v=spots-200",
+      "photoSource": "https://commons.wikimedia.org/wiki/File:%EC%A0%95%EC%82%B0%ED%96%A5%EA%B5%90.jpg",
+      "photoOriginalUrl": "https://upload.wikimedia.org/wikipedia/commons/6/63/%EC%A0%95%EC%82%B0%ED%96%A5%EA%B5%90.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+      "photoCredit": "한국학중앙연구원·유남해",
+      "photoLicense": "KOGL Type 1",
+      "photoLicenseUrl": "http://www.kogl.or.kr/info/licenseType1.do",
+      "photoKind": "PLACE_PHOTO",
+      "photoVerifiedAt": "2026-10-14",
+      "photoChanges": "960px 이내 리사이즈 · WebP 변환",
+      "reuseStatus": "verified"
+    },
+    "korea-pop-museum": {
+      "image": "/web/app/assets/spots/korea-pop-museum.webp?v=spots-200",
+      "photoSource": "https://commons.wikimedia.org/wiki/File:Korea_populer_music_museum.jpg",
+      "photoOriginalUrl": "https://upload.wikimedia.org/wikipedia/commons/7/73/Korea_populer_music_museum.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+      "photoCredit": "User:Altostratus",
+      "photoLicense": "CC BY-SA 4.0",
+      "photoLicenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+      "photoKind": "PLACE_PHOTO",
+      "photoVerifiedAt": "2026-10-14",
+      "photoChanges": "960px 이내 리사이즈 · WebP 변환",
+      "reuseStatus": "verified"
+    },
+    "daewangam-park": {
+      "image": "/web/app/assets/spots/daewangam-park.webp?v=spots-200",
+      "photoSource": "https://commons.wikimedia.org/wiki/File:Daewangam_Park.jpg",
+      "photoOriginalUrl": "https://upload.wikimedia.org/wikipedia/commons/3/35/Daewangam_Park.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+      "photoCredit": "Shinfull",
+      "photoLicense": "CC BY-SA 4.0",
+      "photoLicenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+      "photoKind": "PLACE_PHOTO",
+      "photoVerifiedAt": "2026-10-14",
+      "photoChanges": "960px 이내 리사이즈 · WebP 변환",
+      "reuseStatus": "verified"
+    },
+    "geological-museum": {
+      "image": "/web/app/assets/spots/geological-museum.webp?v=spots-200",
+      "photoSource": "https://commons.wikimedia.org/wiki/File:%EC%A7%80%EC%A7%88%EB%B0%95%EB%AC%BC%EA%B4%80_Geological_Museum_KIGAM.jpg",
+      "photoOriginalUrl": "https://upload.wikimedia.org/wikipedia/commons/d/d1/%EC%A7%80%EC%A7%88%EB%B0%95%EB%AC%BC%EA%B4%80_Geological_Museum_KIGAM.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+      "photoCredit": "Rickinasia",
+      "photoLicense": "CC BY-SA 4.0",
+      "photoLicenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+      "photoKind": "PLACE_PHOTO",
+      "photoVerifiedAt": "2026-10-14",
+      "photoChanges": "960px 이내 리사이즈 · WebP 변환",
+      "reuseStatus": "verified"
+    },
+    "sejong-arboretum": {
+      "image": "/web/app/assets/spots/sejong-arboretum.webp?v=spots-200",
+      "photoSource": "https://commons.wikimedia.org/wiki/File:%EA%B5%AD%EB%A6%BD%EC%84%B8%EC%A2%85%EC%88%98%EB%AA%A9%EC%9B%901.jpg",
+      "photoOriginalUrl": "https://upload.wikimedia.org/wikipedia/commons/0/0b/%EA%B5%AD%EB%A6%BD%EC%84%B8%EC%A2%85%EC%88%98%EB%AA%A9%EC%9B%901.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+      "photoCredit": "파란색 하늘",
+      "photoLicense": "CC BY-SA 3.0",
+      "photoLicenseUrl": "https://creativecommons.org/licenses/by-sa/3.0",
+      "photoKind": "PLACE_PHOTO",
+      "photoVerifiedAt": "2026-10-14",
+      "photoChanges": "960px 이내 리사이즈 · WebP 변환",
+      "reuseStatus": "verified"
+    },
+    "sinchang-hyanggyo": {
+      "image": "/web/app/assets/spots/sinchang-hyanggyo.webp?v=spots-200",
+      "photoSource": "https://commons.wikimedia.org/wiki/File:%EC%8B%A0%EC%B0%BD%ED%96%A5%EA%B5%90_%EC%A0%84%EA%B2%BD_(%EC%B4%AC%EC%98%81%EB%85%84%EB%8F%84_2015%EB%85%84).jpg",
+      "photoOriginalUrl": "https://upload.wikimedia.org/wikipedia/commons/f/fa/%EC%8B%A0%EC%B0%BD%ED%96%A5%EA%B5%90_%EC%A0%84%EA%B2%BD_%28%EC%B4%AC%EC%98%81%EB%85%84%EB%8F%84_2015%EB%85%84%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+      "photoCredit": "Korean Cultural Heritage Administration",
+      "photoLicense": "KOGL Type 1",
+      "photoLicenseUrl": "http://www.kogl.or.kr/info/licenseType1.do",
+      "photoKind": "PLACE_PHOTO",
+      "photoVerifiedAt": "2026-10-14",
+      "photoChanges": "960px 이내 리사이즈 · WebP 변환",
+      "reuseStatus": "verified"
+    },
+    "buan-guam-dolmens": {
+      "image": "/web/app/assets/spots/buan-guam-dolmens.webp?v=spots-200",
+      "photoSource": "https://commons.wikimedia.org/wiki/File:%EB%B6%80%EC%95%88_%EA%B5%AC%EC%95%94%EB%A6%AC_%EC%A7%80%EC%84%9D%EB%AC%98%EA%B5%B0.jpg",
+      "photoOriginalUrl": "https://upload.wikimedia.org/wikipedia/commons/4/47/%EB%B6%80%EC%95%88_%EA%B5%AC%EC%95%94%EB%A6%AC_%EC%A7%80%EC%84%9D%EB%AC%98%EA%B5%B0.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+      "photoCredit": "문화재청 (공공누리 제1유형)",
+      "photoLicense": "KOGL Type 1",
+      "photoLicenseUrl": "http://www.kogl.or.kr/info/licenseType1.do",
+      "photoKind": "PLACE_PHOTO",
+      "photoVerifiedAt": "2026-10-14",
+      "photoChanges": "960px 이내 리사이즈 · WebP 변환",
+      "reuseStatus": "verified"
+    },
+    "jisan-tombs": {
+      "image": "/web/app/assets/spots/jisan-tombs.webp?v=spots-200",
+      "photoSource": "https://commons.wikimedia.org/wiki/File:%EA%B3%A0%EB%A0%B9_%EC%A7%80%EC%82%B0%EB%8F%99_%EA%B3%A0%EB%B6%84%EA%B5%B0.jpg",
+      "photoOriginalUrl": "https://upload.wikimedia.org/wikipedia/commons/2/26/%EA%B3%A0%EB%A0%B9_%EC%A7%80%EC%82%B0%EB%8F%99_%EA%B3%A0%EB%B6%84%EA%B5%B0.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+      "photoCredit": "최옥석",
+      "photoLicense": "CC BY-SA 4.0",
+      "photoLicenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+      "photoKind": "PLACE_PHOTO",
+      "photoVerifiedAt": "2026-10-14",
+      "photoChanges": "960px 이내 리사이즈 · WebP 변환",
+      "reuseStatus": "verified"
+    },
+    "seosan-hyanggyo": {
+      "image": "/web/app/assets/spots/seosan-hyanggyo.webp?v=spots-200",
+      "photoSource": "https://commons.wikimedia.org/wiki/File:%EC%84%9C%EC%82%B0%ED%96%A5%EA%B5%901.jpg",
+      "photoOriginalUrl": "https://upload.wikimedia.org/wikipedia/commons/8/83/%EC%84%9C%EC%82%B0%ED%96%A5%EA%B5%901.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+      "photoCredit": "Seosan City Government",
+      "photoLicense": "CC BY-SA 4.0",
+      "photoLicenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+      "photoKind": "PLACE_PHOTO",
+      "photoVerifiedAt": "2026-10-14",
+      "photoChanges": "960px 이내 리사이즈 · WebP 변환",
+      "reuseStatus": "verified"
+    },
+    "dangjin-hyanggyo": {
+      "image": "/web/app/assets/spots/dangjin-hyanggyo.webp?v=spots-200",
+      "photoSource": "https://commons.wikimedia.org/wiki/File:%ED%83%9C%EC%95%88_%EB%8B%B9%EC%A7%84%ED%96%A5%EA%B5%90_%EB%AA%85%EB%A5%9C%EB%8B%B9.jpg",
+      "photoOriginalUrl": "https://upload.wikimedia.org/wikipedia/commons/4/41/%ED%83%9C%EC%95%88_%EB%8B%B9%EC%A7%84%ED%96%A5%EA%B5%90_%EB%AA%85%EB%A5%9C%EB%8B%B9.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+      "photoCredit": "This file is licensed under the Korea Open Government License Type 1.\n\n\nAttribution: 문화재청\n\n\n\nYou are free:\nto share – to copy, distribute and transmit the work online or offline, for commercial or non-commercial purposes\nto remix – to adapt the work\nUnder the following conditions:\nattribution – You must specify the source of the work.\nhttp://www.kogl.or.kr/info/licenseType1.doKOGL Type 1공공누리 제1유형 출처 표시truetrue",
+      "photoLicense": "KOGL Type 1",
+      "photoLicenseUrl": "http://www.kogl.or.kr/info/licenseType1.do",
+      "photoKind": "PLACE_PHOTO",
+      "photoVerifiedAt": "2026-10-14",
+      "photoChanges": "960px 이내 리사이즈 · WebP 변환",
+      "reuseStatus": "verified"
+    },
+    "songhak-tombs": {
+      "image": "/web/app/assets/spots/songhak-tombs.webp?v=spots-200",
+      "photoSource": "https://commons.wikimedia.org/wiki/File:Goseong_Seonghak_Tomb_01.JPG",
+      "photoOriginalUrl": "https://upload.wikimedia.org/wikipedia/commons/b/b4/Goseong_Seonghak_Tomb_01.JPG?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+      "photoCredit": "hyolee2",
+      "photoLicense": "CC BY-SA 4.0",
+      "photoLicenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+      "photoKind": "PLACE_PHOTO",
+      "photoVerifiedAt": "2026-10-14",
+      "photoChanges": "960px 이내 리사이즈 · WebP 변환",
+      "reuseStatus": "verified"
+    },
+    "okjeon-tombs": {
+      "image": "/web/app/assets/spots/okjeon-tombs.webp?v=spots-200",
+      "photoSource": "https://commons.wikimedia.org/wiki/File:%ED%95%A9%EC%B2%9C_%EC%98%A5%EC%A0%84_%EA%B3%A0%EB%B6%84%EA%B5%B0.jpg",
+      "photoOriginalUrl": "https://upload.wikimedia.org/wikipedia/commons/3/30/%ED%95%A9%EC%B2%9C_%EC%98%A5%EC%A0%84_%EA%B3%A0%EB%B6%84%EA%B5%B0.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+      "photoCredit": "문화재청",
+      "photoLicense": "KOGL Type 1",
+      "photoLicenseUrl": "http://www.kogl.or.kr/info/licenseType1.do",
+      "photoKind": "PLACE_PHOTO",
+      "photoVerifiedAt": "2026-10-14",
+      "photoChanges": "960px 이내 리사이즈 · WebP 변환",
+      "reuseStatus": "verified"
     }
   }
 };
   root.SSKR_SPOT_CURATION=data;
-  if(typeof module!=="undefined")module.exports=data;
-})(typeof window!=="undefined"?window:globalThis);
+  if(typeof module!=='undefined')module.exports=data;
+})(typeof window!=='undefined'?window:globalThis);

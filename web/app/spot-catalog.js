@@ -629,20 +629,21 @@
   const curation=root.SSKR_SPOT_CURATION||(typeof require!=='undefined'?require('./spot-curation.js'):null);
   if(curation){
     const removed=new Set(curation.removedIds);
-    root.SSKR_SPOT_LEGACY=places.filter(p=>removed.has(p.id));
-    for(let i=places.length-1;i>=0;i--)if(removed.has(places[i].id))places.splice(i,1);
     for(const place of places){
       const parking=curation.parkingById[place.id];
       if(!parking)continue;
-      place.visitCoordinate=[place.lat,place.lng];
+      place.visitCoordinate=parking.placeCoordinate||[place.lat,place.lng];
       place.lat=parking.lat;place.lng=parking.lng;
       place.parking=parking;place.coordinateAccuracy='parking-osm';
     }
+    root.SSKR_SPOT_LEGACY=places.filter(p=>removed.has(p.id));
+    for(let i=places.length-1;i>=0;i--)if(removed.has(places[i].id))places.splice(i,1);
     for(const replacement of curation.replacements){
-      if(removed.has(replacement.id)){root.SSKR_SPOT_LEGACY.push({...replacement,lat:replacement.parking.lat,lng:replacement.parking.lng});continue;}
-      places.push({...replacement,lat:replacement.parking.lat,lng:replacement.parking.lng,coordinateAccuracy:'parking-osm'});
+      const visitCoordinate=replacement.visitCoordinate||replacement.parking.placeCoordinate||(Number.isFinite(replacement.lat)&&Number.isFinite(replacement.lng)?[replacement.lat,replacement.lng]:undefined);
+      if(removed.has(replacement.id)){root.SSKR_SPOT_LEGACY.push({...replacement,visitCoordinate,lat:replacement.parking.lat,lng:replacement.parking.lng});continue;}
+      places.push({...replacement,visitCoordinate,lat:replacement.parking.lat,lng:replacement.parking.lng,coordinateAccuracy:'parking-osm'});
     }
-    for(const place of places)Object.assign(place,curation.photosById?.[place.id]||{});
+    for(const place of [...places,...root.SSKR_SPOT_LEGACY])Object.assign(place,curation.photosById?.[place.id]||{});
   }
   root.SSKR_SPOT_CATALOG=places;
   if(typeof module!=='undefined')module.exports=places;

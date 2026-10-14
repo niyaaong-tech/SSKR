@@ -98,8 +98,8 @@
 
   const horizon = [830,370,700,370,570,370,440,370,310,370,180,370,90,370,40,370];
   const horizonStops = [1,.84,.7,.56,.42,.28,.14,0];
-  // CSV canonical coordinates projected through the page's final south-Korea map zoom.
-  const routeSpots = [[899.442,182.284],[804.099,253.671],[730.334,257.588],[731.33,325.075],[709.74,358.421],[663.859,390.734],[583.752,522.783],[550.248,518.552]];
+  // Illustration anchors projected through the final south-Korea map zoom.
+  const routeSpots = [[899.442,182.284],[804.099,253.671],[730.334,257.588],[731.33,325.075],[709.74,358.421],[663.859,390.734],[583.752,522.783],[513.43,453.85]];
   const traceSpots = [[870,330],[760,330],[650,330],[540,330],[430,330],[320,330],[210,330],[100,330]];
   const route = routeSpots.flat();
   const trace = traceSpots.flat();
@@ -142,9 +142,9 @@
   const multiLayer=svgElement('g',{class:'multi-routes','aria-hidden':'true'},journeySvg);
   // Illustration anchors share the existing map's projected coordinate space.
   const routeDefinitions=[
-    {name:'강릉',points:routeSpots,names:['강릉','평창','원주','충주','괴산','청주','익산','군산'],count:4},
-    {name:'울진 후포',points:[[966,386],[853,411],[797,498],[756,444],routeSpots[5],routeSpots[6],routeSpots[7]],names:['울진 후포','안동','구미','상주','청주','익산','군산'],count:3},
-    {name:'부산 죽도공원',points:[[948,670],[860,655],[752,667],[647,629],[562,603],routeSpots[7]],names:['부산 죽도공원','창원','진주','남원','정읍','군산'],count:5}
+    {name:'강릉',points:routeSpots,names:['강릉','평창','원주','충주','괴산','청주','익산','대천해수욕장'],count:4},
+    {name:'울진 후포',points:[[966,386],[853,411],[797,498],[756,444],routeSpots[5],routeSpots[6],routeSpots[7]],names:['울진 후포','안동','구미','상주','청주','익산','대천해수욕장'],count:3},
+    {name:'부산 죽도공원',points:[[948,670],[860,655],[752,667],[647,629],[562,603],routeSpots[7]],names:['부산 죽도공원','창원','진주','남원','정읍','대천해수욕장'],count:5}
   ];
   let randomState=2026;
   const random=()=>{randomState=(Math.imul(randomState,1664525)+1013904223)>>>0;return randomState/4294967296;};
@@ -175,7 +175,7 @@
   const finishGroup=svgElement('g',{class:'extra-spot'},multiLayer);
   const finishRing=svgElement('circle',{cx:routeSpots[7][0],cy:routeSpots[7][1],r:10,class:'node-ring'},finishGroup);
   const finish=svgElement('circle',{cx:routeSpots[7][0],cy:routeSpots[7][1],r:5,class:'spot-core'},finishGroup);
-  const finishLabel=svgElement('text',{x:routeSpots[7][0]-12,y:routeSpots[7][1]-16,'text-anchor':'end',class:'multi-route-label'},multiLayer);finishLabel.textContent='군산';
+  const finishLabel=svgElement('text',{x:routeSpots[7][0]-12,y:routeSpots[7][1]-16,'text-anchor':'end',class:'multi-route-label'},multiLayer);finishLabel.textContent='대천해수욕장';
   const renderMultiRoutes=(frame,p)=>{
     const visibility=range(frame,295,325)*(1-range(frame,753,783));
     setOpacity(multiLayer,visibility);

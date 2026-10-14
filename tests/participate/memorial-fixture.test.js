@@ -29,8 +29,8 @@ test('price snapshots and application-payment-participation relationships reconc
   for(const tier of data.priceTiers)assert.equal(data.participations.filter(p=>p.priceTierId===tier.id).length,tier.quantity);
   assert.equal(data.payments.reduce((n,p)=>n+p.amount,0),20500000);
 });
-test('30 distinct road journeys use existing five starts, actual catalog spots and the same finish',()=>{
-  const locations=new Map(catalog.map(p=>[p.id,p]));assert.equal(new Set(data.memorials.map(m=>m.visitedLocationIds.join(','))).size,30);
+test('30 distinct historical road journeys keep five starts, original places and the same finish',()=>{
+  const locations=new Map(historicalCatalog.map(p=>[p.id,p]));assert.equal(new Set(data.memorials.map(m=>m.visitedLocationIds.join(','))).size,30);
   assert.equal(new Set(routes.map(r=>crypto.createHash('sha256').update(r.legs.map(l=>l.shape).join('|')).digest('hex'))).size,30);
   assert.equal(new Set(data.memorials.map(m=>m.startLocationId)).size,5);
   for(const m of data.memorials){assert.equal(locations.get(m.startLocationId).kind,'start');assert.equal(m.finishLocationId,'daecheon');assert.ok(m.visitedLocationIds.every(id=>locations.has(id)));assert.equal(m.spotCount,m.visitedLocationIds.length-2);assert.equal(m.coverLocationId&&m.visitedLocationIds.includes(m.coverLocationId),true);}

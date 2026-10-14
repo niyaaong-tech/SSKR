@@ -24,13 +24,14 @@
     return finishes[0].id;
   }
   function createEmpty(catalog) {
-    return { id: null, title: '', startId: null, stopIds: [], finishId: finishId(catalog), catalogVersion: catalogVersion(catalog), routingVersion: null, createdAt: null, updatedAt: null };
+    return { id: null, title: '', startId: null, stopIds: [], pinnedStopIds: [], finishId: finishId(catalog), catalogVersion: catalogVersion(catalog), routingVersion: null, createdAt: null, updatedAt: null };
   }
   // Keep removed catalog IDs visible on load so the rider can repair the plan.
   // Invalid references are reported by status and rejected by the write adapter.
   function normalize(plan, catalog) {
     if (!plan || typeof plan !== 'object' || Array.isArray(plan)) throw new Error('루트 정보를 읽을 수 없습니다.');
     if (plan.stopIds != null && (!Array.isArray(plan.stopIds) || plan.stopIds.some(id => typeof id !== 'string' || !id))) throw new Error('경유지 목록을 읽을 수 없습니다.');
+    if (plan.pinnedStopIds != null && (!Array.isArray(plan.pinnedStopIds) || plan.pinnedStopIds.some(id => typeof id !== 'string' || !id))) throw new Error('핀고정 목록을 읽을 수 없습니다.');
     if (plan.startId != null && typeof plan.startId !== 'string') throw new Error('출발지 정보를 읽을 수 없습니다.');
     if (plan.finishId != null && typeof plan.finishId !== 'string') throw new Error('도착지 정보를 읽을 수 없습니다.');
     if (plan.id != null && (typeof plan.id !== 'string' || !plan.id)) throw new Error('저장된 루트 번호를 읽을 수 없습니다.');
@@ -38,7 +39,7 @@
     if (plan.routingVersion != null && typeof plan.routingVersion !== 'string') throw new Error('도로 데이터 버전을 확인해 주세요.');
     const result = {
       ...createEmpty(catalog), id: plan.id || null, title: (plan.title || '').trim(), startId: plan.startId || null,
-      stopIds: [...(plan.stopIds || [])], finishId: plan.finishId || finishId(catalog),
+      stopIds: [...(plan.stopIds || [])], pinnedStopIds: [...new Set(plan.pinnedStopIds || [])].filter(id => (plan.stopIds || []).includes(id)), finishId: plan.finishId || finishId(catalog),
       catalogVersion: plan.catalogVersion || catalogVersion(catalog), routingVersion: plan.routingVersion || null, createdAt: plan.createdAt || null, updatedAt: plan.updatedAt || null
     };
     if (plan.ownerUserId != null) result.ownerUserId = plan.ownerUserId;
@@ -192,14 +193,15 @@
       .slice(0, Math.max(0, Math.floor(Number(limit) || 0)))
       .map(({ score, ...entry }) => entry);
   }
-  function autoFill(value, catalog, provider, { variant = 0, event = {}, drivingBudgetSeconds = null } = {}) {
+  function autoFill(value, catalog, provider, { variant = 0, event = {}, drivingBudgetSeconds = null, excludeIds = [] } = {}) {
     const plan = normalize(value, catalog);
     if (!plan.startId || referenceIssues(plan, catalog).length) return plan;
-    const minimum = minimumStops(event);
+    const minimum = minimumStops(event), excluded = new Set(excludeIds);
     while (plan.stopIds.length < minimum) {
       let best = null;
       for (let at = 0; at <= plan.stopIds.length; at++) {
         const candidate = rankedCandidates(plan, at, catalog, provider, variant, true, minimum).find(entry=>{
+          if(excluded.has(entry.placeId))return false;
           if(!Number.isFinite(drivingBudgetSeconds))return true;
           const stops=plan.stopIds.slice();stops.splice(entry.at,0,entry.placeId);
           const duration=totals([plan.startId,...stops,plan.finishId],provider)?.durationSeconds;
@@ -212,18 +214,29 @@
     }
     return plan;
   }
-  function optimize(value, provider) {
+  function rebuild(value, catalog, provider, options = {}) {
+    const original = normalize(value, catalog);
+    if (!original.startId || referenceIssues(original, catalog).length) return original;
+    const pinned = new Set(original.pinnedStopIds);
+    const seed = { ...original, stopIds: original.stopIds.filter(id => pinned.has(id)) };
+    const filled = autoFill(seed, catalog, provider, { ...options, excludeIds: original.stopIds.filter(id => !pinned.has(id)) });
+    if (filled.stopIds.length < minimumStops(options.event)) return filled;
+    return optimize(filled, provider, { drivingBudgetSeconds: options.drivingBudgetSeconds });
+  }
+  function optimize(value, provider, { drivingBudgetSeconds = null } = {}) {
     const plan = clone(value), initial = totals(orderedIds(plan), provider);
     if (!plan.startId || !initial) return plan;
     let current = initial.distanceMeters, improved = true, rounds = 0;
+    const pinned = new Set(plan.pinnedStopIds || []), pinnedOrder = plan.stopIds.filter(id => pinned.has(id));
     // Directed distances: recalculate each proposed reversal rather than assuming symmetry.
     while (improved && rounds++ < 12) {
       improved = false;
       for (let i = 0; i < plan.stopIds.length - 1; i++) {
         for (let j = i + 1; j < plan.stopIds.length; j++) {
           const candidate = [...plan.stopIds.slice(0, i), ...plan.stopIds.slice(i, j + 1).reverse(), ...plan.stopIds.slice(j + 1)];
+          if (JSON.stringify(candidate.filter(id => pinned.has(id))) !== JSON.stringify(pinnedOrder)) continue;
           const result = totals([plan.startId, ...candidate, plan.finishId], provider);
-          if (result && result.distanceMeters + 1 < current) { plan.stopIds = candidate; current = result.distanceMeters; improved = true; }
+          if (result && (!Number.isFinite(drivingBudgetSeconds) || result.durationSeconds <= drivingBudgetSeconds) && result.distanceMeters + 1 < current) { plan.stopIds = candidate; current = result.distanceMeters; improved = true; }
         }
       }
     }
@@ -281,5 +294,5 @@
     }
     return { list, get, save, remove };
   }
-  return { MIN_STOPS, minimumStops, createEmpty, normalize, orderedIds, status, insertionOptions, bestInsertion, insertionRecommendations, recommendations, nextRecommendations, autoFill, optimize, createStore };
+  return { MIN_STOPS, minimumStops, createEmpty, normalize, orderedIds, status, insertionOptions, bestInsertion, insertionRecommendations, recommendations, nextRecommendations, autoFill, rebuild, optimize, createStore };
 });

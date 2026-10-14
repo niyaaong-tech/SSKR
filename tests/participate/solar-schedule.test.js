@@ -38,3 +38,10 @@ test('location-specific daylight and mock metadata survive the context adapter w
  const snap=value.mockSnapshot;snap.event.eventStartAt='2027-10-16T06:00:00+09:00';snap.event.eventEndAt='2027-10-16T21:00:00+09:00';
  const updated=await handleParticipateRequest('context',{snapshot:snap,account:{linked:false}}),window=solar.windowFor(updated.event,start,finish);assert.match(window.sunriseAt,/2027-10-15/);assert.equal(window.state,'CALCULATED_MOCK');
 });
+
+test('schedule defaults use the event sunrise in its timezone and 120 minutes of rest',()=>{
+ const e=event('2027-10-16'),data={eventId:e.id,date:'2027-10-16',timezone:e.timezone,configVersion:1,verification:'REVIEWED',sourceUrl:'https://astro.kasi.re.kr/kor/life/pageView/9',calculationVersion:'operator-fixture',starts:[{...start,locationId:start.id,sunriseAt:'2027-10-15T21:33:00.000Z'}],finish:{...finish,locationId:finish.id,sunsetAt:'2027-10-16T08:58:00.000Z'}};
+ const {scheduleDefaults}=require('../../web/shared/event-rules');assert.deepEqual(scheduleDefaults({event:{...e,sunlight:data},start,finish}),{departureTime:'06:33',breakMinutes:'120'});assert.deepEqual(scheduleDefaults({event:{...e,sunlight:data,configVersion:2},start,finish}),{departureTime:'',breakMinutes:'120'});
+ assert.equal(scheduleDefaults({event:{...e,sunlight:{...data,starts:[{...data.starts[0],sunriseAt:'2027-10-15T21:33:30.000Z'}]}},start,finish}).departureTime,'06:34');
+ const calculated=scheduleDefaults({event:e,start,finish});assert.match(calculated.departureTime,/^06:3[0-9]$/);assert.equal(calculated.breakMinutes,'120');assert.equal(scheduleDefaults({event:{...e,sunlightMode:null},start,finish}).departureTime,'');
+});

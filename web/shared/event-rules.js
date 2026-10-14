@@ -12,6 +12,12 @@
       {key:'notice',label:'운영 안내',complete:p.acknowledgedNoticeVersion===e.preparationNoticeVersion,value:p.acknowledgedNoticeVersion===e.preparationNoticeVersion?'확인 완료':'최신 안내 확인 필요',editable:!context.account.blocked}
     ];
   }
+  function scheduleDefaults({event={},start,finish}={}) {
+    const sunlight=solar.windowFor(event,start,finish),value=sunlight.sunriseAt;
+    let departureTime='';
+    if(validDate(value)){try{departureTime=new Intl.DateTimeFormat('en-GB',{timeZone:event.timezone||'Asia/Seoul',hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).format(new Date(Math.ceil(Date.parse(value)/60000)*60000));}catch{}}
+    return {departureTime,breakMinutes:'120'};
+  }
   function reviewSchedule({event={},departureTime,breakMinutes,drivingSeconds=0,date=event.eventStartAt,start,finish}) {
     if(!Number.isFinite(drivingSeconds)||drivingSeconds<0 || !/^\d{2}:\d{2}$/.test(departureTime||'') || !validDate(date) || breakMinutes==='' || breakMinutes==null || !Number.isFinite(Number(breakMinutes)) || Number(breakMinutes)<0||Number(breakMinutes)>1440)return {state:'UNREVIEWED',label:'일정 미검토'};
     const [hours,minutes]=departureTime.split(':').map(Number);
@@ -36,5 +42,5 @@
     const label=warnings.length?warnings.join(' · '):`설정한 일정은 마감 이내 · ${remainingMinutes}분 여유`;
     return {state:beforeStart&&late?'EARLY_LATE':beforeStart?'EARLY':late?'LATE':'WITHIN',label,arrivalLabel,warnings,departureAt:new Date(departureAt).toISOString(),arrivalAt:new Date(arrivalAt).toISOString(),earliestDepartureAt:new Date(earliest).toISOString(),deadlineAt:new Date(deadline).toISOString(),remainingMinutes,drivingBudgetSeconds:Math.floor((deadline-Math.max(departureAt,earliest))/1000)-Number(breakMinutes)*60,sunlightState:sunlight.state,sourceUrl:sunlight.sourceUrl,calculationVersion:sunlight.calculationVersion};
   }
-  return {preparation,reviewSchedule};
+  return {preparation,scheduleDefaults,reviewSchedule};
 });

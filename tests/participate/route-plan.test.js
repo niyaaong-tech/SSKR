@@ -85,11 +85,11 @@ test('route-wide and manual recommendations report the same exact deltas used fo
 });
 
 test('the bundled directed road matrix inserts Auraji near Gangneung instead of after the last stop',()=>{
-  const catalog=require('../../web/app/spot-catalog'),manifest=require('../../web/shared/routes/manifest.json'),run=require('../../web/app/data/routes/run-001.json');
+  const catalog=require('../../web/app/spot-catalog'),manifest=require('../../web/shared/routes/manifest.json');
   const indices=new Map(manifest.placeIds.map((id,i)=>[id,i])),provider={summary(a,b){const i=indices.get(a),j=indices.get(b);if(i===undefined||j===undefined)return null;return {distanceMeters:manifest.distances[i][j],durationSeconds:manifest.durations[i][j]};}};
-  const ids=[run.legs[0].fromLocationId,...run.legs.map(leg=>leg.toLocationId)],plan={...planner.createEmpty(catalog),startId:ids[0],stopIds:ids.slice(1,-1)};
+  const plan={...planner.createEmpty(catalog),startId:'gangneung',stopIds:['the-road-1423','cheongpung','sujupalbong','goesan-market','munui','bikongs','gongsanseong','gungnamji']};
   const best=planner.bestInsertion(plan,'auraji',catalog,provider),last=planner.bestInsertion(plan,'auraji',catalog,provider,{afterId:plan.stopIds.at(-1)});
-  assert.ok(best.addedDistanceMeters<5000);assert.ok(last.addedDistanceMeters>400000);assert.equal(best.fromId,'gangneung-market');
+  assert.ok(best&&last);assert.ok(best.addedDistanceMeters<last.addedDistanceMeters*.1);assert.ok(last.addedDistanceMeters>400000);assert.equal(best.fromId,'gangneung');assert.equal(best.at,0);
   const next=structuredClone(plan);next.stopIds.splice(best.at,0,'auraji');
   assert.deepEqual(next.stopIds.filter(id=>id!=='auraji'),plan.stopIds);
   assert.equal(planner.status(next,catalog,provider).distanceMeters-planner.status(plan,catalog,provider).distanceMeters,best.addedDistanceMeters);
@@ -393,4 +393,34 @@ test('next recommendations report the exact directed insertion delta including t
   }
  }
  blocked.add('spot-4:spot-7');assert.ok(!planner.nextRecommendations(plan,'spot-3',catalog,provider,{limit:30}).some(x=>x.placeId==='spot-4'));
+});
+
+test('pinned rebuild keeps anchor order, replaces every unpinned spot and fills the event minimum',()=>{
+ const {catalog,provider,plan}=fixture(32);plan.stopIds=['spot-3','spot-7','spot-16','spot-24'];plan.pinnedStopIds=['spot-16','spot-3'];const before=structuredClone(plan);
+ const next=planner.rebuild(plan,catalog,provider,{variant:1});assert.equal(next.stopIds.length,10);assert.equal(new Set(next.stopIds).size,10);assert.deepEqual(next.stopIds.filter(id=>plan.pinnedStopIds.includes(id)),['spot-3','spot-16']);assert.ok(!next.stopIds.includes('spot-7')&&!next.stopIds.includes('spot-24'));assert.equal(planner.status(next,catalog,provider).complete,true);assert.deepEqual(plan,before);
+ const another=planner.rebuild(next,catalog,provider,{variant:2});assert.deepEqual(another.stopIds.filter(id=>next.stopIds.includes(id)),['spot-3','spot-16']);assert.equal(another.stopIds.length,10);
+});
+test('rebuild respects a configured minimum and never discards excess pinned stops',()=>{
+ const {catalog,provider,plan}=fixture(35);plan.stopIds=['spot-2','spot-9','spot-20'];plan.pinnedStopIds=['spot-9'];assert.equal(planner.rebuild(plan,catalog,provider,{event:{minimumSpotCheckins:12}}).stopIds.length,12);
+ plan.stopIds=Array.from({length:14},(_,i)=>'spot-'+(i+1));plan.pinnedStopIds=[...plan.stopIds];assert.deepEqual(planner.rebuild(plan,catalog,provider).stopIds,plan.stopIds);
+});
+test('pinned rebuild enforces the directed driving budget and exposes incomplete proposals without mutating input',()=>{
+ const {catalog,provider,plan,blocked}=fixture(30);plan.stopIds=['spot-3','spot-14'];plan.pinnedStopIds=['spot-3'];const budget=planner.status(plan,catalog,provider).durationSeconds;
+ const next=planner.rebuild(plan,catalog,provider,{drivingBudgetSeconds:budget});assert.equal(next.stopIds.length,10);assert.ok(planner.status(next,catalog,provider).durationSeconds<=budget);
+ for(const a of catalog)for(const b of catalog)if(a.id!==b.id&&(a.kind==='spot'&&!plan.pinnedStopIds.includes(a.id)||b.kind==='spot'&&!plan.pinnedStopIds.includes(b.id)))blocked.add(a.id+':'+b.id);
+ const before=structuredClone(plan),partial=planner.rebuild(plan,catalog,provider);assert.deepEqual(partial.stopIds,['spot-3']);assert.equal(planner.status(partial,catalog,provider).complete,false);assert.deepEqual(plan,before);
+});
+test('optimization preserves the pinned relative order, the full place set and directed costs',()=>{
+ const {catalog,provider,plan}=fixture(20);plan.stopIds=['spot-15','spot-2','spot-7','spot-18'];plan.pinnedStopIds=['spot-15','spot-7'];const before=structuredClone(plan),next=planner.optimize(plan,provider);
+ assert.deepEqual(next.stopIds.filter(id=>plan.pinnedStopIds.includes(id)),['spot-15','spot-7']);assert.deepEqual([...next.stopIds].sort(),[...plan.stopIds].sort());assert.ok(planner.status(next,catalog,provider).distanceMeters<=planner.status(plan,catalog,provider).distanceMeters);assert.deepEqual(plan,before);
+});
+test('pins save and reload as optional version-one metadata and removed pins are cleaned up',()=>{
+ const {catalog,plan}=fixture(),storage=memoryStorage(),store=planner.createStore(storage,catalog);plan.stopIds=['spot-3','spot-8'];plan.pinnedStopIds=['spot-3'];const saved=store.save(plan,account);
+ assert.deepEqual(store.get(saved.id,account).pinnedStopIds,['spot-3']);assert.deepEqual(planner.normalize({...saved,stopIds:['spot-8']},catalog).pinnedStopIds,[]);
+ const data=JSON.parse(storage.getItem('sskr.mock.route-plans:rider-1'));assert.equal(data.version,1);delete data.plans[0].pinnedStopIds;storage.setItem('sskr.mock.route-plans:rider-1',JSON.stringify(data));assert.deepEqual(store.get(saved.id,account).pinnedStopIds,[]);assert.throws(()=>planner.normalize({...plan,pinnedStopIds:'spot-3'},catalog),/핀고정/);
+});
+test('current real road data rebuilds between pinned anchors with connected roads and a limited detour',()=>{
+ const catalog=require('../../web/app/spot-catalog'),manifest=require('../../web/shared/routes/manifest.json'),indices=new Map(manifest.placeIds.map((id,i)=>[id,i])),provider={summary(a,b){const i=indices.get(a),j=indices.get(b);if(i===undefined||j===undefined)return null;return {distanceMeters:manifest.distances[i][j],durationSeconds:manifest.durations[i][j]};}};const plan={...planner.createEmpty(catalog),startId:'gangneung',stopIds:['auraji','cheongpung','munui'],pinnedStopIds:['auraji','munui']};
+ const anchor={...plan,stopIds:['auraji','munui']},baseline=planner.status(anchor,catalog,provider),next=planner.rebuild(plan,catalog,provider),stats=planner.status(next,catalog,provider);
+ assert.equal(next.stopIds.length,10);assert.deepEqual(next.stopIds.filter(id=>plan.pinnedStopIds.includes(id)),['auraji','munui']);assert.ok(!next.stopIds.includes('cheongpung'));assert.equal(stats.complete,true);assert.ok(stats.distanceMeters<baseline.distanceMeters*2);
 });

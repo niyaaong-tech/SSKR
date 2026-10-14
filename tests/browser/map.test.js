@@ -58,14 +58,32 @@ test('overview zoom stops at the spot layout and panning stays within Korean ter
  assert.deepEqual(errors,[]);
 });
 
+test('one, two and three digit markers and photo badges keep their text centered',async()=>{
+ const spots=require('../../web/app/spot-catalog').filter(p=>p.kind==='spot');
+ for(const [width,height] of [[1440,1000],[390,844],[360,540]]){
+  const p=await page(width,height);
+  for(const id of [spots[0].id,spots[11].id,spots.at(-1).id]){
+   await p.goto(base+'/app/spots/'+id+'?scenario=guest');await p.waitForFunction(()=>{const e=document.querySelector('.spot-pin.is-selected>span');return window.__map&&!__map._animatingZoom&&e?.getBoundingClientRect().width>=24&&getComputedStyle(e).display==='flex';});
+   const marker=await p.evaluate(()=>{const e=document.querySelector('.spot-pin.is-selected>span');const box=e.getBoundingClientRect(),range=document.createRange();range.selectNodeContents(e);const text=range.getBoundingClientRect(),style=getComputedStyle(e);return {value:e.textContent,width:box.width,height:box.height,x:(text.left+text.right-box.left-box.right)/2,y:(text.top+text.bottom-box.top-box.bottom)/2,textWidth:text.width,spacing:style.letterSpacing};});
+   assert.ok(Math.abs(marker.x)<=.6&&Math.abs(marker.y)<=1.5,JSON.stringify({width,...marker}));assert.ok(marker.textWidth<=marker.width-4,JSON.stringify(marker));assert.ok(['0px','normal'].includes(marker.spacing),JSON.stringify(marker));
+   const badges=await (await p.waitForFunction(()=>{const items=[...document.querySelectorAll('.spot-mini-number')].map(e=>{const b=e.getBoundingClientRect(),r=document.createRange();r.selectNodeContents(e);const t=r.getBoundingClientRect();return {value:e.textContent,width:b.width,textWidth:t.width,x:(t.left+t.right-b.left-b.right)/2};}).filter(b=>b.width>0);return items.length&&items.every(b=>b.width>=20)?items:false;})).jsonValue();
+   assert.ok(badges.length>0);assert.ok(badges.every(b=>Math.abs(b.x)<=.6&&b.textWidth<=b.width-2),JSON.stringify({width,badges}));
+   if(id===spots.at(-1).id)await capture(p,'number-marker-'+width);
+  }
+  await p.close();
+ }
+ assert.deepEqual(errors,[]);
+});
+
 test('coastal map details are preserved at high zoom',async()=>{
- const p=await page();for(const id of ['daecheon','haesindang-park','gyeongju','hupo','ganwolam','muchangpo']){await open(p,'/app/spots/'+id+'?scenario=guest');const place=require('../../web/app/spot-catalog').find(p=>p.id===id);await p.evaluate(p=>__map.setView([p.lat,p.lng],14,{animate:false}),place);await p.waitForTimeout(300);await p.waitForFunction(()=>__backdrop.getMaplibreMap().getZoom()>=13&&__backdrop.getMaplibreMap().areTilesLoaded(),null,{timeout:60000});assert.ok(await p.evaluate(p=>__map.getCenter().distanceTo([p.lat,p.lng])<100,place));const counts=await p.evaluate(()=>{const g=__backdrop.getMaplibreMap();return {water:g.querySourceFeatures('openmaptiles',{sourceLayer:'water'}).length,roads:g.querySourceFeatures('openmaptiles',{sourceLayer:'transportation'}).length};});assert.ok(counts.water>0,id+' water');assert.ok(counts.roads>0,id+' roads');if(id==='daecheon')await capture(p,'coast');}await p.close();assert.deepEqual(errors,[]);
+ const p=await page();for(const id of ['daecheon','jangho','gyeongju','hupo','ganwolam','muchangpo']){await open(p,'/app/spots/'+id+'?scenario=guest');const place=require('../../web/app/spot-catalog').find(p=>p.id===id);await p.evaluate(p=>__map.setView([p.lat,p.lng],14,{animate:false}),place);await p.waitForTimeout(300);await p.waitForFunction(()=>__backdrop.getMaplibreMap().getZoom()>=13&&__backdrop.getMaplibreMap().areTilesLoaded(),null,{timeout:60000});assert.ok(await p.evaluate(p=>__map.getCenter().distanceTo([p.lat,p.lng])<100,place));const counts=await p.evaluate(()=>{const g=__backdrop.getMaplibreMap();return {water:g.querySourceFeatures('openmaptiles',{sourceLayer:'water'}).length,roads:g.querySourceFeatures('openmaptiles',{sourceLayer:'transportation'}).length};});assert.ok(counts.water>0,id+' water');assert.ok(counts.roads>0,id+' roads');if(id==='daecheon')await capture(p,'coast');}await p.close();assert.deepEqual(errors,[]);
 });
 
 test('South Korean terrain remains visible in the gap before vector tiles reach their minimum zoom',async()=>{
  const p=await page(390,430);await p.goto(base+'/app/spots?scenario=guest');await p.waitForSelector('.leaflet-sskr-base-land-pane path');
  await p.locator('[data-spot-mode="plan"]').click();
- await p.evaluate(()=>__map.setZoom(5.75,{animate:false}));await p.waitForFunction(()=>__backdrop.getMaplibreMap().isStyleLoaded()&&__backdrop.getMaplibreMap().areTilesLoaded());
+ // Exercise the shared terrain fallback below the tighter APP overview limit.
+ await p.waitForTimeout(250);await p.evaluate(()=>{__map.setMinZoom(4);__map.setZoom(5.75,{animate:false});});await p.waitForFunction(()=>__backdrop.getMaplibreMap().isStyleLoaded()&&__backdrop.getMaplibreMap().areTilesLoaded());
  const gap=await p.evaluate(()=>{const gl=__backdrop.getMaplibreMap();return {leaflet:__map.getZoom(),vector:gl.getZoom(),minimum:gl.getStyle().sources.openmaptiles.minzoom,features:gl.querySourceFeatures('openmaptiles',{sourceLayer:'sskr_land'}).length};});
  assert.equal(gap.leaflet,5.75);assert.ok(gap.vector<gap.minimum);assert.equal(gap.features,0,'the regression must exercise terrain without vector tiles');
  for(const zoom of [5.5,5.75,6,8.25,5.75]){

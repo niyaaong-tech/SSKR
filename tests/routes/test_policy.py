@@ -12,6 +12,7 @@ from pathlib import Path
 import sys
 import tempfile
 import unittest
+from unittest import mock
 from xml.sax.saxutils import quoteattr
 
 sys.dont_write_bytecode = True
@@ -22,6 +23,89 @@ spec.loader.exec_module(builder)
 
 
 class MotorcyclePolicyTests(unittest.TestCase):
+    def test_reverse_attribute_lookup_keeps_the_exact_original_geometry(self):
+        class MatchingError(Exception):
+            pass
+
+        calls = []
+        class Actor:
+            def trace_attributes(self, request):
+                calls.append(json.loads(json.dumps(request)))
+                if request.get("costing_options", {}).get("motorcycle", {}).get("ignore_oneways"):
+                    return {"shape": request["encoded_polyline"], "edges": [{"way_id": 101}]}
+                if request["shape_match"] == "edge_walk":
+                    raise MatchingError("edge_walk algorithm failed")
+                return {"shape": "??ACAA", "edges": [{"way_id": 101}]}
+
+        with mock.patch.object(builder.valhalla, "ValhallaError", MatchingError):
+            result = builder.exact_trace(Actor(), "??AAAA")
+        self.assertEqual(result["edges"], [{"way_id": 101}])
+        self.assertEqual(calls[-1]["encoded_polyline"], "CC@@@@")
+        self.assertTrue(builder.same_geometry(builder.reversed_polyline(calls[-1]["encoded_polyline"]), "??AAAA"))
+        self.assertNotIn("costing_options", calls[0])
+
+    def test_partial_loop_serialization_must_preserve_every_original_segment(self):
+        self.assertTrue(builder.trace_covers_geometry("??AAAA", "??AACCBBAA"))
+        self.assertFalse(builder.same_geometry("??AAAA", "??AACCBBAA"))
+        self.assertFalse(builder.trace_covers_geometry("??AACCBBAA", "??AAAA"))
+        self.assertFalse(builder.trace_covers_geometry("??AAAA", "??AACC@@"))
+        self.assertFalse(builder.trace_covers_geometry("??AAAA", "??ACAA"))
+        self.assertFalse(builder.trace_covers_geometry("??AAAA", "CC@@@@"))
+
+    def test_geometry_comparison_ignores_only_consecutive_duplicate_vertices(self):
+        self.assertTrue(builder.same_geometry("??AA??AA", "??AAAA"))
+        self.assertFalse(builder.same_geometry("??ACAA", "??AAAA"))
+        self.assertFalse(builder.same_geometry("CC@@@@", "??AAAA"))
+        self.assertFalse(builder.same_geometry("??AA@@CC", "??AAAA"))
+        self.assertFalse(builder.same_geometry("?", "??AAAA"))
+        self.assertFalse(builder.same_geometry(None, "??AAAA"))
+
+    def test_edge_walk_failure_accepts_only_an_identical_complete_fallback(self):
+        class MatchingError(Exception):
+            pass
+
+        calls = []
+        class Actor:
+            def trace_attributes(self, request):
+                calls.append(json.loads(json.dumps(request)))
+                if request["shape_match"] == "edge_walk":
+                    raise MatchingError("edge_walk algorithm failed to find exact route match")
+                return {"shape": "original-shape", "edges": [{"way_id": 101}]}
+
+        with mock.patch.object(builder.valhalla, "ValhallaError", MatchingError):
+            trace = builder.exact_trace(Actor(), "original-shape")
+        self.assertEqual(trace["edges"], [{"way_id": 101}])
+        self.assertEqual([call["shape_match"] for call in calls], ["edge_walk", "walk_or_snap"])
+        self.assertIn("shape", calls[-1]["filters"]["attributes"])
+
+    def test_fallback_cannot_accept_nearby_or_missing_geometry(self):
+        class MatchingError(Exception):
+            pass
+
+        class Actor:
+            def __init__(self, result):
+                self.result = result
+
+            def trace_attributes(self, request):
+                if request["shape_match"] == "edge_walk":
+                    raise MatchingError("edge_walk algorithm failed")
+                return self.result
+
+        with mock.patch.object(builder.valhalla, "ValhallaError", MatchingError):
+            for result in ({"shape": "another-road", "edges": [{"way_id": 101}]}, {"edges": [{"way_id": 101}]}):
+                with self.subTest(result=result), self.assertRaisesRegex(RuntimeError, "changed the route geometry"):
+                    builder.exact_trace(Actor(result), "original-shape")
+
+    def test_other_routing_errors_do_not_trigger_map_matching(self):
+        class MatchingError(Exception):
+            pass
+
+        actor = mock.Mock()
+        actor.trace_attributes.side_effect = MatchingError("Exceeded shape limit")
+        with mock.patch.object(builder.valhalla, "ValhallaError", MatchingError), self.assertRaises(MatchingError):
+            builder.exact_trace(actor, "original-shape")
+        self.assertEqual(actor.trace_attributes.call_count, 1)
+
     def test_shape_prefix_packing_is_lossless_and_acyclic(self):
         shapes = {"west": {"shape": "a" * 100 + "west"},
                   "north": {"shape": "a" * 100 + "north"},
@@ -97,6 +181,26 @@ class MotorcyclePolicyTests(unittest.TestCase):
                 self.assertTrue(builder.forbidden({"highway": "primary", "surface": surface}))
         for surface in ("asphalt", "concrete", "paving_stones"):
             self.assertFalse(builder.forbidden({"highway": "residential", "surface": surface}))
+
+
+class StagedCatalogTests(unittest.TestCase):
+    def test_validated_list_and_local_export_preserve_identity_and_order(self):
+        records = [{"id": "sokcho", "kind": "start", "lat": 38.18, "lng": 128.60},
+                   {"id": "daecheon", "kind": "finish", "lat": 36.31, "lng": 126.51}]
+        with tempfile.TemporaryDirectory(prefix="sskr-catalog-") as directory:
+            path = Path(directory) / "catalog.json"
+            for value in (records, {"records": records, "legacyRecords": []}):
+                path.write_text(json.dumps(value), encoding="utf-8")
+                self.assertEqual(builder.catalog(path), records)
+
+    def test_rejects_duplicate_ids_and_invalid_staging_data(self):
+        place = {"id": "spot-one", "kind": "spot", "lat": 36.5, "lng": 127.0}
+        with tempfile.TemporaryDirectory(prefix="sskr-catalog-") as directory:
+            path = Path(directory) / "catalog.json"
+            for value in ([], [place, place], [{**place, "id": "../outside"}], [{**place, "lat": float("nan")}], [{**place, "kind": "other"}]):
+                path.write_text(json.dumps(value), encoding="utf-8")
+                with self.assertRaises(ValueError):
+                    builder.catalog(path)
 
 
 class PreparedDataTests(unittest.TestCase):

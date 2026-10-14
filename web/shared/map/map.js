@@ -1,6 +1,6 @@
 (function(root,factory){const api=factory(root);if(typeof module==='object'&&module.exports)module.exports=api;else root.SSKR_MAP=Object.freeze(api);})(typeof globalThis!=='undefined'?globalThis:this,root=>{
  'use strict';
- const southKoreaView=[[33.08,124.5],[38.64,132.02]];
+ const southKoreaView=[[34.27,126.06],[38.26,129.65]];
  const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
  function cardSlots(count,mobile){const first=count%4||4,split=Math.ceil(count/2);return Array.from({length:count},(_,i)=>mobile?{row:i<first?1:2+Math.floor((i-first)/4),column:i<first?i+1:1+(i-first)%4}:{side:i<split?0:1,row:i<split?i:i-split});}
  function clusterPlaces(places,project,size=50,selectedId='',pinnedIds=new Set()){
@@ -33,6 +33,13 @@
   root.SSKR_MAP_INTERACTION.bindWheel({getMap:()=>map,panel:()=>$('.spot-map'),signal:events.signal});
   function sizing(){const height=$('.spot-map-wrap').clientHeight,mobile=matchMedia('(max-width:700px)').matches,cardHeight=mobile?Math.min(74,Math.max(34,height*.105)):Math.min(104,Math.max(24,(height-146)/6));$('.spot-map-wrap').style.setProperty('--spot-card-height',cardHeight+'px');return {height,mobile,cardHeight};}
   function padding(){return safePadding({...sizing(),width:$('.spot-map-wrap').clientWidth,editing,compact:host.classList.contains('is-mobile-editor'),insets});}
+  function overviewPadding(){
+   const pad=padding();
+   if(!editing&&sizing().mobile)return pad;
+   const compact=editing&&host.classList.contains('is-mobile-editor'),edge=compact?6:18;
+   if(compact)pad.paddingBottomRight[0]=Math.max(pad.paddingBottomRight[0],100);
+   return {paddingTopLeft:[pad.paddingTopLeft[0],edge+(insets.top||0)],paddingBottomRight:[pad.paddingBottomRight[0],edge+(insets.bottom||0)]};
+  }
   function panBounds(){return options.overview&&(overviewActive||Math.abs(map.getZoom()-map.getMinZoom())<.26)?null:root.L.latLngBounds([[33.05,124.26],[43.07,131.96]]);}
   function limits(){
    applyingLimits=true;
@@ -42,10 +49,10 @@
    map.setMaxBounds(null);
    map.stop();
    map.setMinZoom(4);
-   const overview=root.L.latLngBounds(options.overview?southKoreaView:[[34.58,126.4],[37.9,129.52]]),pad=padding();
+   const overview=root.L.latLngBounds(options.overview?southKoreaView:[[34.58,126.4],[37.9,129.52]]),pad=options.overview?overviewPadding():padding();
    const minimum=Math.max(4,map.getBoundsZoom(overview,false,root.L.point(pad.paddingTopLeft).add(pad.paddingBottomRight)));
-   // Overview padding needs sea around Jeju and Dokdo. The former hard edge
-   // at 33.05N pushed a fitted southern overview north before it settled.
+   // Frame the mainland at the minimum zoom; islands remain reachable by pan.
+   // Keep the fitted frame independent of the outer territorial pan boundary.
    // clampPan still rejects views with no Korean land inside the usable area.
    // Apply layout-driven zoom before raising the limit: Leaflet's setMinZoom
    // otherwise starts an animation that invalidates the selected card position.
@@ -135,13 +142,14 @@
   function renderMarkers(){
    if(!map||disposed)return;layer.eachLayer(marker=>{marker.getTooltip?.()?.getElement?.()?.remove();marker.unbindTooltip();});layer.clearLayers();markers.clear();
    const ordered=editing?routePlaces(catalog,routeIds):[],chosen=new Set(ordered.map(p=>p.id)),candidateIds=new Set(editing?candidates.map(p=>p.id):[]);
-   const visible=new Map(items.map(p=>[p.id,p]));if(editing){candidates.forEach(p=>visible.set(p.id,p));ordered.forEach(p=>visible.set(p.id,p));}
-   const pinned=editing?new Set([...chosen,...candidateIds]):new Set(pageItems.map(p=>p.id));
+   const starts=editing?[...catalog.values()].filter(p=>p.kind==='start'):[];
+   const visible=new Map(items.map(p=>[p.id,p]));if(editing){starts.forEach(p=>visible.set(p.id,p));candidates.forEach(p=>visible.set(p.id,p));ordered.forEach(p=>visible.set(p.id,p));}
+   const pinned=editing?new Set([...chosen,...candidateIds,...starts.map(p=>p.id)]):new Set(pageItems.map(p=>p.id));
    const groups=options.cluster===false?[...visible.values()].map(p=>[p]):clusterPlaces([...visible.values()],p=>map.project([p.lat,p.lng],map.getZoom()),50,selected?.id,pinned);
    groups.forEach(group=>{
     const p=group[0],multiple=group.length>1,point=multiple?[group.reduce((n,p)=>n+p.lat,0)/group.length,group.reduce((n,p)=>n+p.lng,0)/group.length]:[p.lat,p.lng];
     const planned=!multiple&&chosen.has(p.id),candidate=!multiple&&!planned&&candidateIds.has(p.id),active=planned&&activeId===p.id;
-    const marker=root.L.marker(point,{keyboard:true,autoPanOnFocus:false,title:multiple?group.length+'개 장소 확대':p.name,zIndexOffset:active?1000:planned?600:candidate?400:0,icon:root.L.divIcon({className:'spot-pin '+(multiple?'cluster':p.kind)+(selected?.id===p.id&&!multiple?' is-selected':'')+(planned?' is-route-stop':'')+(candidate?' is-route-candidate':'')+(active?' is-route-active':''),html:`<span>${esc(multiple?group.length+'곳':p.number??'·')}</span>`,iconSize:multiple?[36,36]:[18,18],iconAnchor:multiple?[18,18]:[9,9]})});
+    const marker=root.L.marker(point,{keyboard:true,autoPanOnFocus:false,title:multiple?group.length+'개 장소 확대':p.name,zIndexOffset:active?1000:planned?600:candidate?400:0,icon:root.L.divIcon({className:'spot-pin '+(multiple?'cluster':p.kind)+(selected?.id===p.id&&!multiple?' is-selected':'')+(planned?' is-route-stop':'')+(candidate?' is-route-candidate':'')+(active?' is-route-active':''),html:`<span>${esc(multiple?group.length+'곳':p.number??'·')}</span>`,iconSize:multiple?[36,36]:[24,24],iconAnchor:multiple?[18,18]:[12,12]})});
     const tip=document.createElement('div');tip.className=multiple?'spot-tip-copy':'spot-route-tooltip';
     if(multiple)tip.innerHTML=`<strong>${group.length}개 장소</strong><span>${group.slice(0,3).map(p=>esc(editing?formatPlaceText(p.name):p.name)).join(' · ')}</span>`;
     else{
@@ -175,7 +183,7 @@
    const bounds=routeLayer?.getBounds(),places=editing&&routeIds.length?routePlaces(catalog,routeIds):items;
    const fullKind=places.length>1&&['start','spot','finish'].some(kind=>places.every(p=>p.kind===kind)&&places.length===[...catalog.values()].filter(p=>p.kind===kind).length);
    const overview=options.overview&&!options.route&&!routeIds.length&&(places.length===catalog.size||fullKind);
-   const settings={...padding(),maxZoom:12,animate:!reduced,duration:.35};overviewActive=overview&&!selected;
+   const settings={...(overview?overviewPadding():padding()),maxZoom:12,animate:!reduced,duration:.35};overviewActive=overview&&!selected;
    if(bounds?.isValid()){places.forEach(p=>bounds.extend([p.lat,p.lng]));map.fitBounds(bounds,settings);}
    else if(overview){fittingOverview=true;map.fitBounds(southKoreaView,{...settings,animate:false});fittingOverview=false;}
    else if(places.length)map.fitBounds(places.map(p=>[p.lat,p.lng]),settings);

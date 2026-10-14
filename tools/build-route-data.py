@@ -11,6 +11,8 @@ from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor, as_compl
 import gzip
 import hashlib
 import json
+import math
+import re
 import os
 from pathlib import Path
 import subprocess
@@ -80,7 +82,20 @@ def pack_shapes(legs):
     return packed
 
 
-def catalog():
+def catalog(catalog_path=None):
+    if catalog_path:
+        value = json.loads(catalog_path.read_text(encoding="utf-8"))
+        places = value.get("records") if isinstance(value, dict) else value
+        if not isinstance(places, list) or not places:
+            raise ValueError("Catalog must contain a nonempty place list")
+        for p in places:
+            if not isinstance(p, dict) or not isinstance(p.get("id"), str) or not re.fullmatch(r"[a-z0-9]+(?:-[a-z0-9]+)*", p["id"]):
+                raise ValueError("Catalog place IDs must be safe lowercase slugs")
+            if p.get("kind") not in {"start", "spot", "finish"} or any(not isinstance(p.get(k), (int, float)) or isinstance(p.get(k), bool) or not math.isfinite(p[k]) for k in ("lat", "lng")):
+                raise ValueError("Catalog places require a kind and finite coordinates")
+        if len({p["id"] for p in places}) != len(places):
+            raise ValueError("Duplicate catalog place IDs")
+        return places
     raw = subprocess.check_output(["node", "-e", "process.stdout.write(JSON.stringify(require('./web/app/spot-catalog.js')))"], cwd=ROOT)
     return json.loads(raw.decode("utf-8"))
 
@@ -223,12 +238,125 @@ def route_origin(job):
     return route_origin_impl(job)
 
 
+def geometry_vertices(encoded):
+    if not isinstance(encoded, str):
+        raise ValueError("Missing polyline")
+    def vertices(encoded):
+        index = lat = lon = 0
+        points = []
+        while index < len(encoded):
+            values = []
+            for _ in range(2):
+                value = shift = 0
+                while True:
+                    byte = ord(encoded[index]) - 63
+                    index += 1
+                    if not 0 <= byte <= 63:
+                        raise ValueError("Invalid polyline")
+                    value |= (byte & 31) << shift
+                    shift += 5
+                    if byte < 32:
+                        break
+                values.append(~(value >> 1) if value & 1 else value >> 1)
+            lat += values[0]
+            lon += values[1]
+            point = (lat, lon)
+            if not points or points[-1] != point:
+                points.append(point)
+        return points
+
+    return vertices(encoded)
+
+
+def same_geometry(first, second):
+    if not isinstance(first, str) or not isinstance(second, str):
+        return False
+    if first == second:
+        return True
+    try:
+        return geometry_vertices(first) == geometry_vertices(second)
+    except (IndexError, ValueError):
+        return False
+
+
+def trace_covers_geometry(original, matched):
+    if same_geometry(original, matched):
+        return True
+    try:
+        route, trace = geometry_vertices(original), geometry_vertices(matched)
+    except (IndexError, ValueError):
+        return False
+    if not route or len(trace) <= len(route):
+        return False
+    prefix = suffix = 0
+    for first, second in zip(route, trace):
+        if first != second:
+            break
+        prefix += 1
+    for first, second in zip(reversed(route), reversed(trace)):
+        if first != second:
+            break
+        suffix += 1
+    # A partial loop edge can be serialized in full by the matching API.
+    # All original segments must remain verbatim, in order, on either side
+    # of one extra closed loop. No original segment is dropped or snapped.
+    return (prefix > 0 and suffix > 0 and prefix + suffix - 1 == len(route)
+            and trace[prefix - 1] == trace[len(trace) - suffix])
+
+
+def reversed_polyline(shape):
+    encoded = []
+    previous = (0, 0)
+    for point in reversed(geometry_vertices(shape)):
+        for coordinate, last in zip(point, previous):
+            delta = coordinate - last
+            value = ~(delta << 1) if delta < 0 else delta << 1
+            while value >= 32:
+                encoded.append(chr((32 | (value & 31)) + 63))
+                value >>= 5
+            encoded.append(chr(value + 63))
+        previous = point
+    return "".join(encoded)
+
+
+def exact_trace(actor, shape):
+    request = {"encoded_polyline": shape, "shape_match": "edge_walk", "costing": "motorcycle",
+               "filters": {"action": "include", "attributes": ["edge.way_id", "edge.road_class", "edge.use"]}}
+    try:
+        return actor.trace_attributes(request)
+    except valhalla.ValhallaError as error:
+        if "edge_walk" not in str(error):
+            raise
+        # Some partial service-road origins cannot initialize edge walking.
+        # Accept the documented fallback only when every original segment is
+        # preserved in order. The API may serialize a partial loop edge in
+        # full; that extra closed loop is checked but is never published.
+        request["shape_match"] = "walk_or_snap"
+        request["filters"]["attributes"].append("shape")
+        trace = actor.trace_attributes(request)
+        if not trace_covers_geometry(shape, trace.get("shape")):
+            # Attribute lookup can round a partial destination differently.
+            # Walking the exact reversed geometry avoids that correlation.
+            # Only this read-only lookup ignores direction; actual routing
+            # always respects one-ways and keeps its original geometry.
+            try:
+                reverse = reversed_polyline(shape)
+                reverse_trace = actor.trace_attributes({**request, "encoded_polyline": reverse,
+                    "shape_match": "edge_walk", "costing_options": {"motorcycle": {"ignore_oneways": True}}})
+                if same_geometry(reverse, reverse_trace.get("shape")):
+                    return reverse_trace
+            except (IndexError, ValueError, valhalla.ValhallaError):
+                pass
+            raise RuntimeError("Road matching changed the route geometry") from error
+        return trace
+
+
 def route_origin_impl(job):
     origin, destinations = job
     path = WORK / "rows" / (origin + ".json")
     if path.exists():
         previous = json.loads(path.read_text(encoding="utf-8"))
-        if previous.get("version") == VERSION:
+        if previous.get("version") == VERSION and not previous.get("unavailable"):
             return origin, len(previous["legs"]), len(previous["unavailable"])
     result = {"version": VERSION, "fromId": origin, "legs": {}, "unavailable": {}}
     costing = {"shortest": True, "disable_hierarchy_pruning": True, "ignore_access": False,
@@ -254,8 +382,7 @@ def route_origin_impl(job):
             # Route-search hierarchy options are not needed for an exact edge
             # walk (and crash the Windows 3.9 binding when used for tracing).
             dump(WORK / "progress" / (origin + ".json"), {"target": target, "stage": "trace"})
-            trace = ROUTER.trace_attributes({"encoded_polyline": leg["shape"], "shape_match": "edge_walk", "costing": "motorcycle",
-                    "filters": {"action": "include", "attributes": ["edge.way_id", "edge.road_class", "edge.use"]}})
+            trace = exact_trace(ROUTER, leg["shape"])
             ways = {e["way_id"] for e in trace["edges"]}
             if not ways or 0 in ways:
                 raise RuntimeError("Graph did not retain source road IDs: " + origin + " -> " + target)
@@ -270,8 +397,8 @@ def route_origin_impl(job):
     return origin, len(result["legs"]), len(result["unavailable"])
 
 
-def routes(work, workers, only):
-    places = catalog()
+def routes(work, workers, only, catalog_path=None, output=None):
+    places = catalog(catalog_path)
     source = json.loads((work / "input.json").read_text())
     catalog_json = json.dumps([{k: p[k] for k in ("id", "kind", "lat", "lng")} for p in places], separators=(",", ":"))
     catalog_version = hashlib.sha256(catalog_json.encode()).hexdigest()[:16]
@@ -292,7 +419,7 @@ def routes(work, workers, only):
                               "seconds": round(time.time() - started)}), flush=True)
     if only:
         return
-    output = ROOT / "web" / "shared" / "routes"
+    output = output or ROOT / "web" / "shared" / "routes"
     publication = output
     ids = [p["id"] for p in places]
     distances = [[0 if a == b else None for b in ids] for a in ids]
@@ -319,7 +446,7 @@ def routes(work, workers, only):
           "accessPolicy": {"maxSnapMeters": 750, "minReachableEdges": 50, "tunnelAccess": False},
           "license": "ODbL-1.0", "attribution": "© OpenStreetMap contributors", "policyVersion": POLICY_VERSION})
     dump(publication / "validation.json", {"version": version, "routeCount": sum(v is not None and v > 0 for row in distances for v in row),
-          "unavailable": unavailable, "policy": "Every published route was edge-walked and checked against permitted OSM way IDs."})
+          "unavailable": unavailable, "policy": "Every published route was edge-walked or matched with all original segments unchanged and in order, then checked against permitted OSM way IDs. Duplicate vertices and an extra closed serialization loop are allowed only in the validation response; the original route is always published."})
     # Removed catalog origins must not leave unused public geometry behind.
     active_origins = {p["id"] for p in places if p["kind"] != "finish"}
     for path in (publication / "legs").glob("*.json.gz"):
@@ -337,6 +464,8 @@ def main():
     parser.add_argument("--resume", default="initialize")
     parser.add_argument("--workers", type=int, default=3)
     parser.add_argument("--only", nargs="*")
+    parser.add_argument("--catalog", type=Path, help="Validated staged catalog JSON, or an export with records")
+    parser.add_argument("--output", type=Path, help="Publish verified roads to a staging directory before catalog promotion")
     args = parser.parse_args()
     work = args.work.resolve()
     if work == ROOT or ROOT in work.parents:
@@ -349,7 +478,7 @@ def main():
     elif args.stage == "graph":
         graph(work, args.resume)
     elif args.stage == "routes":
-        routes(work, args.workers, args.only)
+        routes(work, args.workers, args.only, args.catalog, args.output)
 
 
 if __name__ == "__main__":

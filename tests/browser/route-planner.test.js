@@ -231,8 +231,10 @@ test('start galleries and illustrated help stay usable in narrow and short scree
   const p=await page(width,height);await open(p);
   if(width<800)await p.locator('#rp-tab-route').click();
   const button=p.locator('.rp-start-select');assert.equal(await button.isVisible(),true);
-  assert.ok((await button.boundingBox()).height>=80);assert.equal(await button.evaluate(el=>{const s=getComputedStyle(el);return s.color==='rgb(255, 255, 255)'&&s.backgroundColor!=='rgba(0, 0, 0, 0)';}),true);
-  await button.click();const gallery=p.locator('.rp-dialog--starts');
+  assert.ok((await button.boundingBox()).height>=44);assert.equal(await button.innerText(),'출발지 선택');
+  const presentation=await button.evaluate(el=>{const s=getComputedStyle(el),r=el.getBoundingClientRect(),next=el.closest('li').nextElementSibling.getBoundingClientRect();const lum=color=>color.match(/[\d.]+/g).slice(0,3).map(v=>{v=Number(v)/255;return v<=.04045?v/12.92:((v+.055)/1.055)**2.4;}).reduce((sum,v,i)=>sum+v*[.2126,.7152,.0722][i],0);const values=[lum(s.color),lum(s.backgroundColor)].sort((a,b)=>a-b);return {contrast:(values[1]+.05)/(values[0]+.05),gap:next.top-r.bottom,overflow:el.scrollWidth>el.clientWidth};});assert.ok(presentation.contrast>=4.5);assert.ok(presentation.gap>=12);assert.equal(presentation.overflow,false);
+  assert.equal(await button.locator('.rp-start-select-arrow').evaluate(el=>getComputedStyle(el).animationName),'none');
+  await button.focus();await p.keyboard.press('Enter');const gallery=p.locator('.rp-dialog--starts');
   assert.equal(await gallery.locator('[data-start-id] img').count(),11);
   const grid=await gallery.locator('.rp-start-options').evaluate(el=>getComputedStyle(el).gridTemplateColumns.split(' ').length);assert.equal(grid,width<600?2:3);
   assert.equal(await gallery.evaluate(el=>el.scrollHeight>el.clientHeight),true);

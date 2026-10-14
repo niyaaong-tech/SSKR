@@ -63,7 +63,7 @@
     resize.observe(area);
     const panelResize=new ResizeObserver(()=>{if(active&&!mobile)selectionLayout();});panelResize.observe(host);const headerResize=new ResizeObserver(scheduleLayout);root.addEventListener('resize',resizeLayout,{signal:events.signal});root.visualViewport?.addEventListener('resize',scheduleLayout,{signal:events.signal});
     host.addEventListener('focusin',scheduleLayout,{signal:events.signal});host.addEventListener('focusout',()=>requestAnimationFrame(scheduleLayout),{signal:events.signal});
-    function recover(){try{const value=JSON.parse(session?.getItem(SESSION)||'null');if(value&&(value.ownerId===null||value.ownerId===(account.linked?account.id:null))){plan=domain.normalize(value.plan,catalog);autoDeparture=value.autoDeparture??!value.schedule?.departureTime;schedule=readSchedule(value.schedule,autoDeparture,value.autoDeparture===undefined);active=value.active===true;dirty=value.dirty===true;anchorId=value.anchorId||plan.stopIds.at(-1)||plan.startId;selected=byId.get(value.selectedId)||byId.get(anchorId)||null;scrollRestore=value.viewport;}}catch{}}
+    function recover(){try{const value=JSON.parse(session?.getItem(SESSION)||'null');if(value&&(value.ownerId===null||value.ownerId===(account.linked?account.id:null))){plan=domain.normalize(value.plan,catalog);autoDeparture=value.autoDeparture??!value.schedule?.departureTime;schedule=readSchedule(value.schedule,autoDeparture,value.autoDeparture===undefined);active=value.active===true;dirty=value.dirty===true;anchorId=Object.hasOwn(value,'anchorId')?value.anchorId:plan.stopIds.at(-1)||plan.startId;selected=byId.get(value.selectedId)||null;scrollRestore=value.viewport;}}catch{}}
     recover();
     const identity=p=>({id:p.id,ownerUserId:p.ownerUserId,createdAt:p.createdAt,updatedAt:p.updatedAt});
     identities.set(context,identity(plan));
@@ -74,7 +74,7 @@
     function notify(message,error=false){noticeMessage=message;noticeError=error;clearTimeout(flashTimer);const el=host.querySelector('.rp-notice');if(el){el.textContent=message;el.classList.toggle('is-error',error);el.hidden=false;}flashTimer=setTimeout(()=>{noticeMessage='';const current=host.querySelector('.rp-notice');if(current)current.hidden=true;},3500);}
     function status(p=plan){return domain.status(p,catalog,ready?provider:null,event());}
     function distanceSummary(p=plan){const value=status(p);return Number.isFinite(value.distanceMeters)?`<strong>${km(value.distanceMeters)}</strong><span class="rp-drive-time">예상 주행 ${time(value.durationSeconds)}</span>`:`<span>${!p.startId?'출발지를 선택해 주세요':!ready?'도로 정보 준비 중':'경로 확인 필요'}</span>`;}
-    function mapPlan(p=plan,fit=false){if(!active)return;const ids=p.startId?domain.orderedIds(p):[];viewer.setRoute?.(result?.legs||[],{selectedIds:ids,activeId:anchorId,places:ids.map(id=>byId.get(id)).filter(Boolean),fit});}
+    function mapPlan(p=plan,fit=false){if(!active)return;const ids=p.startId?domain.orderedIds(p):[];viewer.setRoute?.(result?.legs||[],{selectedIds:ids,activeId:selected?.id||null,pinnedIds:p.pinnedStopIds,places:ids.map(id=>byId.get(id)).filter(Boolean),fit});}
     function currentId(){return anchorId===plan.startId||plan.stopIds.includes(anchorId)?anchorId:plan.stopIds.at(-1)||plan.startId;}
     function insertionFor(id){return ready?domain.bestInsertion(plan,id,catalog,provider):null;}
     function insertionSignature(){return JSON.stringify([context,revision,domain.orderedIds(plan)]);}
@@ -120,18 +120,46 @@
         if(!validRoads(roads,[position.fromId,id,position.toId]))throw new Error('추가할 구간의 도로를 확인하지 못했습니다. 기존 경로는 유지됩니다.');
         const latest=insertionFor(id);if(!latest||latest.at!==position.at||latest.fromId!==position.fromId||latest.toId!==position.toId)throw new Error('추가 위치를 다시 확인해 주세요.');
         pendingAdd=null;const stops=plan.stopIds.slice();stops.splice(latest.at,0,id);
-        anchorId=id;selected=place;detailId=null;change({...plan,stopIds:stops},`${placeText(place.name)} · 경유지에 담았습니다. 실행 취소로 되돌릴 수 있어요.`);selectOnMap(id);
+        const reveal=selected?.id===id;if(reveal){anchorId=id;selected=place;detailId=null;}
+        change({...plan,stopIds:stops},`${placeText(place.name)} · 경유지에 담았습니다. 실행 취소로 되돌릴 수 있어요.`);if(reveal)selectOnMap(id);
       }catch(error){if(!disposed&&pendingAdd===request&&error?.name!=='AbortError')notify(roadMessage(error),true);}
       finally{if(pendingAdd===request){pendingAdd=null;render();syncMap();}}
     }
-    function select(place){if(syncingSelection||!active||!place||(!plan.startId&&place.kind!=='start'))return;selected=byId.get(place.id)||place;if(plan.stopIds.includes(place.id)||plan.startId===place.id)anchorId=place.id;showDetail(place.id);syncMap();persist();}
+    function revealRoutePoint(id){
+      requestAnimationFrame(()=>{
+        if(!active||disposed||selected?.id!==id)return;
+        const row=host.querySelector('[data-waypoint="'+CSS.escape(id)+'"]'),scroll=host.querySelector('[data-scroll="route"]');
+        if(!row||!scroll)return;
+        const box=row.getBoundingClientRect();if(!box.height)return;
+        const top=mobile?sticky.getBoundingClientRect().bottom+8:scroll.getBoundingClientRect().top+8;
+        const bottom=mobile?(root.visualViewport?.height||root.innerHeight)-8:scroll.getBoundingClientRect().bottom-8;
+        const delta=box.top<top?box.top-top:box.bottom>bottom?box.bottom-bottom:0;
+        if(delta){if(mobile)root.scrollBy({top:delta,behavior:'instant'});else scroll.scrollTop+=delta;}
+      });
+    }
+    function deselect({closeDetail=false,renderUI=true}={}){
+      const changed=Boolean(selected||anchorId||closeDetail&&detailId);
+      selected=null;anchorId=null;if(closeDetail)detailId=null;
+      viewer.clearSelection?.();options.onSelectionClear?.();
+      if(!changed)return;
+      persist();if(active&&renderUI){render();syncMap();}
+    }
+    function select(place){
+      if(syncingSelection||!active||!place||(!plan.startId&&place.kind!=='start'))return;
+      selected=byId.get(place.id)||place;
+      const included=domain.orderedIds(plan).includes(place.id);
+      if(plan.stopIds.includes(place.id)||plan.startId===place.id)anchorId=place.id;
+      if(mobile&&included)activateTab('route');else showDetail(place.id);
+      if(included)revealRoutePoint(place.id);
+      syncMap();persist();
+    }
     function card(place,{recommendation=null}={}){if(!place)return'';
       const position=plan.stopIds.indexOf(place.id),included=position>=0?`경로 포함 · ${position+1}번째`:place.id===plan.startId?'선택된 출발지':place.id===plan.finishId?'고정 도착지':'';
       return `<article class="rp-place${selected?.id===place.id?' is-selected':''}" data-place-id="${esc(place.id)}"><button type="button" class="rp-place-view" data-rp-action="select" data-id="${esc(place.id)}" aria-label="${esc(placeText(place.name))} 지도에서 확인">${place.image?`<img src="${esc(place.image)}" alt="" loading="lazy" referrerpolicy="no-referrer">`:'<span class="rp-photo-empty"></span>'}<span><small>${esc(placeText(place.region))}</small><strong>${esc(placeText(place.name))}</strong>${included?`<span class="rp-included">${included}</span>`:''}<em>${esc(place.kind==='start'?'출발지':place.kind==='finish'?'고정 도착지':categories[place.category]||'스팟')}</em></span></button>${recommendation?`<p>${esc(insertionDelta(recommendation))}</p>`:''}</article>`;
     }
     function pointRow(id,index,kind){
       const currentPlace=byId.get(id),place=currentPlace||legacyById.get(id),name=placeText(place?.name||'더 이상 제공되지 않는 장소'),isStop=kind==='spot',pinned=plan.pinnedStopIds.includes(id);
-      return `<li class="rp-waypoint${anchorId===id?' is-active':''}${!currentPlace?' is-missing':''}${pinned?' is-pinned':''}" data-waypoint="${esc(id)}"${isStop?' draggable="true"':''}>
+      return `<li class="rp-waypoint${selected?.id===id?' is-active':''}${!currentPlace?' is-missing':''}${pinned?' is-pinned':''}" data-waypoint="${esc(id)}"${isStop?' draggable="true"':''}>
         ${isStop?`<button type="button" class="rp-drag rp-icon" data-drag-handle="${esc(id)}" aria-label="${esc(name)} 순서 이동, 위아래 방향키 사용" title="끌어서 순서 이동">${icon('drag')}</button>`:''}
         <button type="button" class="rp-point-main" data-rp-action="anchor" data-id="${esc(id)}" ${!currentPlace?'disabled':''} aria-label="${esc(name)} 지도에서 확인"><span class="rp-point-number ${kind}">${isStop?index+1:kind==='start'?'출':'도'}</span><span><small>${kind==='start'?'출발지':kind==='finish'?'고정 도착지':esc(placeText(place?.region||'위치 확인 필요'))}</small><strong>${esc(name)}</strong></span></button>
         ${kind==='start'?'<button type="button" class="rp-start-change" data-rp-action="change-start" aria-label="출발지 변경">변경</button>':''}
@@ -243,12 +271,16 @@
     async function generate(type,retryBase=null){
       if(!active||disposed||!ready||!plan.startId||routeBusy||pendingAdd||generation)return;
       const base=copy(retryBase||plan),original=copy(plan),automatic=type!=='optimize';
-      invalidateGeneration();const request={controller:new AbortController(),signature:generationSignature(),type,base};generation=request;render();
+      invalidateGeneration();deselect({closeDetail:true,renderUI:false});const request={controller:new AbortController(),signature:generationSignature(),type,base};generation=request;render();syncMap();
       const current=()=>!disposed&&active&&generation===request&&!request.controller.signal.aborted&&request.signature===generationSignature();
       try{
         await new Promise(resolve=>requestAnimationFrame(resolve));if(!current())return;
-        const budget=reviewFor(base,0).drivingBudgetSeconds,next=automatic?domain.rebuild(base,catalog,provider,{variant:variant++,event:event(),drivingBudgetSeconds:budget}):domain.optimize(base,provider,{drivingBudgetSeconds:budget});
-        if(automatic&&next.stopIds.length<minimum())throw new Error(Number.isFinite(budget)?'핀고정한 장소와 일정 안에서 경유지를 모두 채우지 못했습니다. 핀고정이나 하루 일정을 조정해 주세요.':'새로운 경유지를 모두 연결하지 못했습니다. 핀고정한 장소나 출발지를 검토해 주세요.');
+        const budget=reviewFor(base,0).drivingBudgetSeconds,generationOptions={variant:variant++,event:event()},baseDuration=status(base).durationSeconds;
+        let next=automatic?domain.rebuild(base,catalog,provider,{...generationOptions,drivingBudgetSeconds:budget}):domain.optimize(base,provider,{drivingBudgetSeconds:Number.isFinite(budget)&&baseDuration<=budget?budget:null});
+        // A planning estimate is advisory. Try the day budget first, then keep a
+        // connected proposal and show its actual arrival warning in My Route.
+        if(automatic&&next.stopIds.length<minimum()&&Number.isFinite(budget))next=domain.rebuild(base,catalog,provider,generationOptions);
+        if(automatic&&next.stopIds.length<minimum())throw new Error('새 조합에 넣을 수 있는 경유지를 충분히 찾지 못했습니다. 현재 경로는 그대로 유지됩니다.');
         if(new Set(next.stopIds).size!==next.stopIds.length||next.startId!==base.startId||next.finishId!==base.finishId)throw new Error('루트 구성을 확인하지 못했습니다. 기존 경로를 유지했습니다.');
         const pinned=new Set(base.pinnedStopIds),pinOrder=base.stopIds.filter(id=>pinned.has(id));
         if(JSON.stringify(next.stopIds.filter(id=>pinned.has(id)))!==JSON.stringify(pinOrder))throw new Error('핀고정한 장소를 유지하지 못했습니다. 기존 경로를 유지했습니다.');
@@ -256,7 +288,6 @@
         if(!automatic&&JSON.stringify([...next.stopIds].sort())!==JSON.stringify([...base.stopIds].sort()))throw new Error('루트 구성에 변경이 있어 적용하지 않았습니다.');
         const ids=domain.orderedIds(next),roads=await provider.route(ids,{signal:request.controller.signal});if(!current())return;
         if(!validRoads(roads,ids))throw new Error('도로 연결을 확인하지 못했습니다. 기존 경로를 유지했습니다.');
-        if(automatic&&Number.isFinite(budget)&&roads.durationSeconds>budget)throw new Error('설정한 하루 일정 안에서 주행하기 어려운 조합입니다. 기존 경로를 유지했습니다.');
         const before=status(original);
         if(JSON.stringify(next.stopIds)===JSON.stringify(original.stopIds)||!automatic&&roads.distanceMeters+1>=before.distanceMeters){notify(!automatic?'더 짧은 방문 순서를 찾지 못했습니다.':'핀고정한 장소를 유지하는 다른 조합을 찾지 못했습니다.');return;}
         remember();plan=domain.normalize(next,catalog);dirty=true;generation=null;result=roads;routeError='';routeBusy=false;++routeRequest;routeAbort?.abort();anchorId=null;selected=null;detailId=null;viewer.clearSelection?.();persist();render();syncMap(true);scheduleLayout();notify(!automatic?`경로 최적화로 ${km(before.distanceMeters-roads.distanceMeters)} 줄였습니다.`:type==='rebuild'?'핀고정한 장소를 유지하고 경유지를 재구성했습니다.':'경유지 자동 완성을 적용했습니다.');
@@ -275,7 +306,7 @@
       modal.querySelector('[data-cancel]').onclick=closeDialog;
       modal.querySelectorAll('[data-reset]').forEach(button=>button.onclick=()=>{const keep=button.dataset.reset==='keep';closeDialog();anchorId=null;selected=null;detailId=null;viewer.clearSelection?.();change({...plan,stopIds:keep?pins:[],pinnedStopIds:keep?pins:[]},keep?`핀고정한 스팟 ${pins.length}곳만 남겼습니다.`:'경유 스팟을 초기화했습니다.');});
     }
-    function switchPlan(next,nextSchedule,changed=false){cancelAdd();invalidateGeneration();remember();context=++contextSerial;plan=domain.normalize(next,catalog);identities.set(context,identity(plan));autoDeparture=nextSchedule?.autoDeparture??!nextSchedule?.departureTime;schedule=readSchedule(nextSchedule,autoDeparture,nextSchedule?.autoDeparture===undefined);dirty=changed;anchorId=null;selected=null;detailId=null;tab='search';closeDialog();options.onStartChange?.(plan.startId);persist();calculate(true);}
+    function switchPlan(next,nextSchedule,changed=false){cancelAdd();invalidateGeneration();deselect({closeDetail:true,renderUI:false});remember();context=++contextSerial;plan=domain.normalize(next,catalog);identities.set(context,identity(plan));autoDeparture=nextSchedule?.autoDeparture??!nextSchedule?.departureTime;schedule=readSchedule(nextSchedule,autoDeparture,nextSchedule?.autoDeparture===undefined);dirty=changed;anchorId=null;selected=null;detailId=null;tab='search';closeDialog();options.onStartChange?.(plan.startId);persist();calculate(true);}
     function editSaved(id,duplicate=false){let saved;try{saved=store.get(id,account);}catch(error){notify(error.message,true);return;}if(!saved)return;let nextSchedule;try{nextSchedule=JSON.parse(storage?.getItem('sskr.route.schedule.'+account.id+'.'+id)||'null')||null;}catch{nextSchedule=null;}if(duplicate)saved={...saved,id:null,ownerUserId:null,title:`${saved.title.slice(0,57)} 복사`,createdAt:null,updatedAt:null};switchPlan(saved,nextSchedule,duplicate);}
     function newPlan(){switchPlan(domain.createEmpty(catalog),null);}
     function undoChange(){if(!undo.length)return;cancelAdd();invalidateGeneration();const previous=undo.pop(),switched=previous.context!==context,oldStart=plan.startId;if(switched){schedule=previous.schedule;autoDeparture=previous.autoDeparture;}context=previous.context;plan={...previous.plan,...(identities.get(context)||identity(previous.plan))};if(autoDeparture)schedule.departureTime=defaultSchedule().departureTime;dirty=switched?previous.dirty:true;anchorId=null;selected=null;detailId=null;if(switched||oldStart!==plan.startId)options.onStartChange?.(plan.startId);persist();calculate();viewer.clearSelection?.();notify('이전 작성 내용으로 돌아갔습니다.');}
@@ -303,7 +334,7 @@
       if(action==='back-detail'){detailId=null;tab=returnTab==='route'?'route':'search';render();if(mobile)scrollList(detailScroll);else host.querySelector('[data-scroll="places"]').scrollTop=detailScroll;return;}
       if(action==='tab'){activateTab(button.dataset.tab);return;}
       if(action==='select'){select(byId.get(id));selectOnMap(id,true);return;}
-      if(action==='anchor'){detailId=null;anchorId=id;selected=byId.get(id);selectOnMap(id,true);render();syncMap();persist();return;}
+      if(action==='anchor'){detailId=null;anchorId=id;selected=byId.get(id);selectOnMap(id,true);render();revealRoutePoint(id);syncMap();persist();return;}
       if(action==='pin'){togglePin(id);return;}if(action==='reset-spots'){resetSpots();return;}
       if(action==='remove'){if(anchorId===id)anchorId=null;if(selected?.id===id){selected=null;viewer.clearSelection?.();}change({...plan,stopIds:plan.stopIds.filter(stop=>stop!==id)},'경유지를 삭제했습니다.');return;}
       if(action==='up'||action==='down'){const stops=plan.stopIds.slice(),index=stops.indexOf(id),target=index+(action==='up'?-1:1);if(index>=0&&target>=0&&target<stops.length){[stops[index],stops[target]]=[stops[target],stops[index]];change({...plan,stopIds:stops});}return;}
@@ -320,6 +351,13 @@
     host.addEventListener('focusout',event=>{if(!event.target.matches('[data-route-title]'))return;const title=event.target.value.trim();if(title!==plan.title){plan={...plan,title};persist();}event.target.value=title;titleEditing=false;},{signal:events.signal});
     host.addEventListener('keydown',event=>{if(event.target.matches('[data-route-title]')&&event.key==='Enter'){event.preventDefault();event.target.blur();}},{signal:events.signal});
     area.addEventListener('click',handleAction,{signal:events.signal});
+    document.addEventListener('click',event=>{
+      if(!active||disposed||!selected&&!anchorId||mapHost.contains(event.target))return;
+      // Place controls select a place; other outside clicks clear its visual
+      // selection. Reading a detail keeps the detail view and its scroll state.
+      if(event.target.closest('.rp-dialog,[data-rp-action="select"],[data-rp-action="anchor"],[data-drag-handle]'))return;
+      deselect();
+    },{signal:events.signal});
     root.addEventListener('keydown',event=>{if(!active||dialog||event.defaultPrevented||event.target.closest('input,textarea,[contenteditable]:not([contenteditable="false"])'))return;if((event.ctrlKey||event.metaKey)&&!event.shiftKey&&event.key.toLowerCase()==='z'&&undo.length){event.preventDefault();undoChange();}const id=event.target.closest('[data-drag-handle]')?.dataset.dragHandle;if(id&&['ArrowUp','ArrowDown'].includes(event.key)){event.preventDefault();handleAction({target:{closest:()=>({dataset:{rpAction:event.key==='ArrowUp'?'up':'down',id},closest:()=>null})}});host.querySelector(`[data-drag-handle="${CSS.escape(id)}"]`)?.focus({preventScroll:true});}},{signal:events.signal});
     area.addEventListener('keydown',event=>{const button=event.target.closest('.rp-tabs [role="tab"]');if(!button||!['ArrowLeft','ArrowRight','Home','End'].includes(event.key))return;event.preventDefault();const tabs=[...area.querySelectorAll('.rp-tabs [role="tab"]:not(:disabled)')],i=tabs.indexOf(button),next=event.key==='Home'?0:event.key==='End'?tabs.length-1:(i+(event.key==='ArrowRight'?1:-1)+tabs.length)%tabs.length;activateTab(tabs[next].dataset.tab);area.querySelector('#rp-tab-'+tab)?.focus({preventScroll:true});},{signal:events.signal});
 
@@ -342,7 +380,7 @@
     const map=viewer.getMap?.();map?.on('moveend',persist);root.addEventListener('pagehide',persist,{signal:events.signal});
     if(scrollRestore&&active&&map){map.setView([scrollRestore.lat,scrollRestore.lng],scrollRestore.zoom,{animate:false});requestAnimationFrame(()=>{if(!disposed)root.scrollTo({top:0,behavior:'instant'});scheduleLayout();});}
     setMode(active);
-    return {receivePlace(id){const p=byId.get(id);if(!p)return;if(p.kind==='start'){start(id);}else if(!plan.startId){incomingCandidate=p;notify('출발지를 먼저 선택하면 탐색한 장소를 이어서 검토할 수 있습니다.');}else{select(p);selectOnMap(id,true);}},isActive:()=>active,hasStart:()=>Boolean(plan.startId),distanceFromStart:id=>ready&&plan.startId?provider.summary(plan.startId,id)?.distanceMeters:null,startPlace:()=>byId.get(plan.startId),openSaved:openManagement,setMode,select,routeActionState,openPlace(place){if(!active||!place||!plan.startId&&place.kind!=='start')return;select(place);},addFromMap(place){if(active&&place)add(place.id);},setFilters(items,filters={}){filterItems=items;filterCategory=typeof filters==='object'?filters.category||'all':'all';queryText=typeof filters==='object'?filters.query||'':'';filterActive=typeof filters==='object'?Boolean(queryText||filters.category&&filters.category!=='all'):filters;candidateLimit=12;if(active)render();},destroy(){cancelAdd();invalidateGeneration();persist();active=false;layoutMode();disposed=true;resize.disconnect();panelResize.disconnect();headerResize.disconnect();filterNodes.forEach(node=>options.filterParking?.append(node));document.body.classList.remove('route-editor-active');cancelAnimationFrame(layoutFrame);events.abort();routeAbort?.abort();map?.off('moveend',persist);clearTimeout(flashTimer);closeDialog();viewer.setEditing?.(false);}};
+    return {deselect,receivePlace(id){const p=byId.get(id);if(!p)return;if(p.kind==='start'){start(id);}else if(!plan.startId){incomingCandidate=p;notify('출발지를 먼저 선택하면 탐색한 장소를 이어서 검토할 수 있습니다.');}else{select(p);selectOnMap(id,true);}},isActive:()=>active,hasStart:()=>Boolean(plan.startId),distanceFromStart:id=>ready&&plan.startId?provider.summary(plan.startId,id)?.distanceMeters:null,startPlace:()=>byId.get(plan.startId),openSaved:openManagement,setMode,select,routeActionState,openPlace(place){if(!active||!place||!plan.startId&&place.kind!=='start')return;selected=byId.get(place.id)||place;showDetail(place.id);syncMap();persist();},addFromMap(place){if(active&&place)add(place.id);},setFilters(items,filters={}){filterItems=items;filterCategory=typeof filters==='object'?filters.category||'all':'all';queryText=typeof filters==='object'?filters.query||'':'';filterActive=typeof filters==='object'?Boolean(queryText||filters.category&&filters.category!=='all'):filters;candidateLimit=12;if(active)render();},destroy(){cancelAdd();invalidateGeneration();persist();active=false;layoutMode();disposed=true;resize.disconnect();panelResize.disconnect();headerResize.disconnect();filterNodes.forEach(node=>options.filterParking?.append(node));document.body.classList.remove('route-editor-active');cancelAnimationFrame(layoutFrame);events.abort();routeAbort?.abort();map?.off('moveend',persist);clearTimeout(flashTimer);closeDialog();viewer.setEditing?.(false);}};
   }
   root.SSKR_ROUTE_PLANNER={mount};
 })(typeof globalThis!=='undefined'?globalThis:this);

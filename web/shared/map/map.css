@@ -37,6 +37,7 @@
 .sskr-map .spot-pin.is-route-stop.start>span{background:#b68842}
 .sskr-map .spot-pin.is-route-stop.finish>span{background:#587b90}
 .sskr-map .spot-pin.is-route-candidate>span{border:2px solid #8c5d26;background:#fff2d7;color:#694418;box-shadow:0 0 0 3px #e6ba724d}
+.sskr-map .spot-pin.is-route-pinned>span{background:#657453;border-color:#ead9b8;color:#fff}
 .sskr-map .spot-pin.is-route-active>span{box-shadow:0 0 0 4px #edc77fc9,0 2px 8px #26392b66}
 @media(max-width:700px){.sskr-map.is-route-editing .spot-map-controls{right:calc(8px + var(--map-inset-right,0px));top:calc(10px + var(--map-inset-top,0px))}.sskr-map.is-route-editing .spot-list-head{left:calc(8px + var(--map-inset-left,0px));top:calc(10px + var(--map-inset-top,0px));max-width:calc(100% - 124px - var(--map-inset-left,0px) - var(--map-inset-right,0px))}}
 

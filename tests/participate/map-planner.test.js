@@ -56,7 +56,7 @@ function fixture(options={}){
  const host=new Element();
  for(const selector of ['.spot-attribution','.spot-map','.spot-map-wrap','.spot-list','.spot-list-head','.spot-card-pages','.spot-map-status','[data-result-label]','[data-result-count]','[data-card-page]','[data-in-view]','[data-action="fit"]','[data-action="previous-cards"]','[data-action="next-cards"]'])host.children.set(selector,new Element());
  host.querySelector('.spot-attribution').children.set('summary',new Element());
- const map={zoom:7,min:4,layers:[],fitCalls:[],handlers:{},limitCalls:[],stop(){this.limitCalls.push("stop");return this;},panInsideBounds(bounds,options){this.limitCalls.push({action:"pan",bounds,options});return this;},invalidateSize(){return this;},setView(){return this;},setMinZoom(n){this.min=n;return this;},setMaxBounds(bounds){this.limitCalls.push({action:"bounds",bounds});return this;},getMinZoom(){return this.min;},getZoom(){return this.zoom;},getBoundsZoom(){return 7;},setZoom(n){this.zoom=n;return this;},getBounds(){return {contains:()=>true};},project:([lat,lng])=>({x:lng*100,y:lat*100}),createPane:()=>({style:{}}),on(name,fn){this.handlers[name]=fn;return this;},fitBounds(bounds,opts){this.fitCalls.push({bounds,opts});return this;},getSize(){return {x:1200,y:700};},remove(){this.removed=true;this.layers.forEach(l=>l.clearLayers?.());this.layers=[];}};
+ const map={zoom:7,min:4,center:{lat:36.5,lng:127.8},getCenter(){return this.center;},layers:[],fitCalls:[],flyCalls:[],handlers:{},events:{},limitCalls:[],stop(){this.limitCalls.push("stop");return this;},panInsideBounds(bounds,options){this.limitCalls.push({action:"pan",bounds,options});return this;},invalidateSize(){return this;},setView(){return this;},setMinZoom(n){this.min=n;return this;},setMaxBounds(bounds){this.limitCalls.push({action:"bounds",bounds});return this;},getMinZoom(){return this.min;},getZoom(){return this.zoom;},getBoundsZoom(){return 7;},setZoom(n){this.zoom=n;return this;},getBounds(){return {contains:()=>true};},project:point=>({x:(Array.isArray(point)?point[1]:point.lng)*100,y:(Array.isArray(point)?point[0]:point.lat)*100}),createPane:()=>({style:{}}),on(name,fn){(this.events[name]??=[]).push(fn);this.handlers[name]=event=>this.fire(name,event);return this;},off(name,fn){this.events[name]=(this.events[name]||[]).filter(listener=>listener!==fn);return this;},once(name,fn){const listener=event=>{this.off(name,listener);fn(event);};return this.on(name,listener);},fire(name,event={}){for(const fn of [...(this.events[name]||[])])fn(event);return this;},flyTo(point,optsZoom,opts){this.flyCalls.push({point,zoom:optsZoom,opts});if(!this.deferFly){this.zoom=optsZoom;this.center={lat:point[0],lng:point[1]};this.fire('moveend');}return this;},fitBounds(bounds,opts){this.fitCalls.push({bounds,opts});return this;},getSize(){return {x:1200,y:700};},remove(){this.removed=true;this.layers.forEach(l=>l.clearLayers?.());this.layers=[];}};
  const groups=[];
  const group=()=>{const g={children:[],addTo(m){m.layers.push(this);return this;},eachLayer(fn){this.children.forEach(fn);return this;},clearLayers(){this.children.forEach(child=>child.fire?.('remove'));this.children=[];return this;},getBounds(){return {isValid:()=>this.children.length>0,extend(){return this;}};}};groups.push(g);return g;};
  const leaflet={map:()=>map,latLngBounds:points=>({points}),point:points=>({add:other=>points.map((v,i)=>v+other[i])}),layerGroup:group,featureGroup:group,DomEvent:{disableClickPropagation(){},stopPropagation(){},on(element,names,fn){for(const name of names.split(' '))element.listeners[name]=fn;},off(element,names,fn){for(const name of names.split(' '))if(element.listeners[name]===fn)delete element.listeners[name];}},divIcon:opts=>opts,
@@ -160,4 +160,26 @@ test('layout limits stop stale bounds pans before enforcing the new viewport',()
 test('implicit bounds corrections do not animate past selected-card positioning',()=>{
  const {map,api}=fixture();map.limitCalls=[];map.panInsideBounds({});
  assert.equal(map.limitCalls[0].options.animate,false);api.destroy();
+});
+
+
+test('individual selection focuses from overview while detailed and internal selection retain zoom',()=>{
+ const {api,map,callbacks}=fixture();
+ api.select('a');assert.equal(map.zoom,11);assert.deepEqual([...map.flyCalls[0].point],[places[1].lat,places[1].lng]);
+ map.zoom=13;api.select('b');assert.equal(map.zoom,13);assert.equal(map.flyCalls.length,1);
+ api.select('a',{fly:true});assert.equal(map.flyCalls.at(-1).zoom,13);
+ map.zoom=7;api.select('b',{fly:false});assert.equal(map.zoom,7);assert.equal(map.flyCalls.length,2);
+ assert.deepEqual(callbacks,['a','b','a','b']);api.destroy();
+});
+
+
+test('focus ignores intermediate layout events and removes cancelled completion handlers',()=>{
+ const {api,map}=fixture(),baseline=map.events.moveend.length;map.deferFly=true;
+ api.select('a');assert.equal(map.events.moveend.length,baseline+1);
+ map.zoom=9;map.fire('moveend');assert.equal(map.events.moveend.length,baseline+1,'layout movement is not the selected destination');
+ map.zoom=11;map.center={lat:places[1].lat,lng:places[1].lng};map.fire('moveend');assert.equal(map.events.moveend.length,baseline);
+ api.select('b',{fly:true});assert.equal(map.events.moveend.length,baseline+1);
+ api.clearSelection();assert.equal(map.events.moveend.length,baseline,'deselect must remove the old movement callback');
+ api.select('a',{fly:true});api.select('b',{fly:true});assert.equal(map.events.moveend.length,baseline+1,'rapid choices retain only the latest completion handler');
+ api.setEditing(true);assert.equal(map.events.moveend.length,baseline);api.destroy();
 });

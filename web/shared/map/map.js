@@ -22,7 +22,7 @@
  function mount(host,options={}){
   const events=new AbortController(),reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
   let items=options.items||[],selected=items.find(p=>p.id===options.initialId)||null,inView=options.inView??true,page=0,pageItems=[],map,layer,routeLayer,highlight,landLayer,observer,resizeTimer,revealTimer,creditTimer,creditObserver,creditPinned=false,disposed=false,returnY=0;
-  let markers=new Map(),landRings=[],correctingPan=false,applyingLimits=false,fittingOverview=false,overviewActive=false,editing=false,plannerLegs=[],routeIds=[],pinnedRouteIds=new Set(),activeId='',candidates=[],insets={},hoverTooltip=null,hoverId='',resizeBackdrop=()=>{};
+  let markers=new Map(),landRings=[],correctingPan=false,applyingLimits=false,fittingOverview=false,overviewActive=false,editing=false,plannerLegs=[],routeIds=[],pinnedRouteIds=new Set(),activeId='',candidates=[],insets={},hoverTooltip=null,hoverId='',selectionMoveEnd=null,resizeBackdrop=()=>{};
   const catalog=new Map((options.catalog||items).map(p=>[p.id,p])),remember=places=>places.forEach(p=>catalog.set(p.id,p));remember(items);
   host.classList.add('sskr-map');
   host.innerHTML=`<div class="spot-workspace"><div class="spot-map-wrap"><div class="spot-map" style="position:absolute;inset:0" tabindex="0" role="region" aria-label="대한민국 SSKR 장소 지도"></div><div class="spot-list-head"><h3><span data-result-label></span> <span data-result-count></span></h3>${options.inViewControl===false?'':`<label><input type="checkbox" data-in-view ${inView?'checked':''}> 지도 안에서만</label>`}</div><div class="spot-map-controls" role="group" aria-label="지도 제어"><button type="button" data-action="zoom-in" aria-label="지도 확대">+</button><button type="button" data-action="zoom-out" aria-label="지도 축소">−</button><button type="button" data-action="fit" aria-label="${options.route?'전체 경로':'전체 장소'} 보기" title="전체 보기"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M8 3H3v5m13-5h5v5M3 16v5h5m13-5v5h-5"/></svg></button></div><div class="spot-list" aria-label="지도 장소 목록"></div><div class="spot-card-pages"><button type="button" data-action="previous-cards" aria-label="이전 장소 목록">‹</button><span data-card-page aria-live="polite"></span><button type="button" data-action="next-cards" aria-label="다음 장소 목록">›</button></div><p class="spot-map-status" role="status"></p><details class="spot-attribution" open><summary>지도 출처</summary><div><a href="https://openfreemap.org/" target="_blank" rel="noopener">OpenFreeMap</a> · <a href="https://www.openmaptiles.org/" target="_blank" rel="noopener">OpenMapTiles</a><br>© <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap contributors</a><br>남북한 육지 윤곽: <a href="https://www.geoboundaries.org/" target="_blank" rel="noopener">geoBoundaries</a> (남한 Natural Earth, 북한 WFP·OCHA / CC BY 3.0 IGO)<br>도로·지역: <a href="https://www.openstreetmap.org/relation/307756" target="_blank" rel="noopener">OpenStreetMap</a></div></details></div></div>`;
@@ -110,7 +110,7 @@
    $('.spot-list').querySelectorAll('img').forEach(img=>img.onerror=()=>img.remove());
   }
   function revealSelected(id,settle=true){
-   if(!map||disposed||selected?.id!==id)return;
+   if(!map||disposed||selectionMoveEnd||selected?.id!==id)return;
    if(settle){clearTimeout(revealTimer);revealTimer=setTimeout(()=>revealSelected(id,false),180);}
    const marker=markers.get(id),tooltip=marker?.getTooltip?.()?.getElement?.(),panel=$('.spot-map');
    if(!tooltip||!panel)return;
@@ -134,10 +134,24 @@
    const dx=target.left-card.left,dy=target.top-card.top;
    if(Math.abs(dx)>.5||Math.abs(dy)>.5)map.panBy([-dx,-dy],{animate:false});
   }
-  function select(item,{open=false,fly=false,reveal=true}={}){
-   overviewActive=false;selected=item;renderCards(true);renderMarkers();options.onSelect?.(item);
-   if(fly&&map){if(reveal)map.once('moveend',()=>requestAnimationFrame(()=>revealSelected(item.id)));map.flyTo([item.lat,item.lng],Math.max(map.getZoom(),11),{animate:!reduced,duration:.4});}
-   else if(reveal)requestAnimationFrame(()=>revealSelected(item.id));
+  function cancelSelectionMove(){
+   if(!selectionMoveEnd)return;
+   map.off('moveend',selectionMoveEnd);selectionMoveEnd=null;map.stop();
+  }
+  function select(item,{open=false,fly=map?.getZoom()<11,reveal=true}={}){
+   overviewActive=false;cancelSelectionMove();clearTimeout(revealTimer);selected=item;renderCards(true);renderMarkers();options.onSelect?.(item);
+   if(fly&&map){
+    map.stop();
+    const zoom=Math.max(map.getZoom(),11);
+    const finish=()=>{
+     const center=map.project(map.getCenter(),zoom),target=map.project([item.lat,item.lng],zoom);
+     // Ignore intermediate layout events; Leaflet rounds its final center to pixels.
+     if(selectionMoveEnd!==finish||Math.abs(map.getZoom()-zoom)>1e-6||Math.hypot(center.x-target.x,center.y-target.y)>1)return;
+     map.off('moveend',finish);selectionMoveEnd=null;if(reveal)requestAnimationFrame(()=>revealSelected(item.id));
+    };
+    selectionMoveEnd=finish;map.on('moveend',finish);
+    map.flyTo([item.lat,item.lng],zoom,{animate:!reduced,duration:.4});
+   }else if(reveal)requestAnimationFrame(()=>revealSelected(item.id));
    if(open){returnY=scrollY;options.onOpen?.(item);}
   }
   function closeHover(){hoverTooltip?.remove();hoverTooltip=null;hoverId='';}
@@ -189,10 +203,10 @@
    highlight.setLatLngs([]).setStyle({opacity:0});
    $('[data-action="fit"]').setAttribute('aria-label',editing||options.route?'전체 경로 보기':'전체 장소 보기');
   }
-  function clearSelection({notify=false}={}){selected=null;activeId='';clearTimeout(revealTimer);highlight?.setStyle({opacity:0});renderCards();renderMarkers();if(notify)options.onDeselect?.();}
+  function clearSelection({notify=false}={}){selected=null;activeId='';cancelSelectionMove();clearTimeout(revealTimer);highlight?.setStyle({opacity:0});renderCards();renderMarkers();if(notify)options.onDeselect?.();}
   // Resize must preserve the geographic center before bounds or overlays are updated.
   function fit(){
-   if(!map||disposed)return;map.invalidateSize({pan:true,animate:false});limits();if(editing)clearSelection();
+   if(!map||disposed)return;cancelSelectionMove();map.invalidateSize({pan:true,animate:false});limits();if(editing)clearSelection();
    const bounds=routeLayer?.getBounds(),places=editing&&routeIds.length?routePlaces(catalog,routeIds):items;
    const fullKind=places.length>1&&['start','spot','finish'].some(kind=>places.every(p=>p.kind===kind)&&places.length===[...catalog.values()].filter(p=>p.kind===kind).length);
    const overview=options.overview&&!options.route&&!routeIds.length&&(places.length===catalog.size||fullKind);
@@ -255,19 +269,19 @@
    }}
    else $('.spot-map-status').textContent='지도 배경을 불러오지 못했습니다. 장소 카드는 계속 이용할 수 있습니다.';
    if(options.route?.length)renderRoute();
-   map.on('dragstart',()=>{overviewActive=false;clearTimeout(revealTimer);});
+   map.on('dragstart',()=>{overviewActive=false;cancelSelectionMove();clearTimeout(revealTimer);});
    map.on('moveend',()=>{if(clampPan())return;renderCards();renderMarkers()});map.on('click',()=>clearSelection({notify:true}));
    observer=new ResizeObserver(()=>{clearTimeout(resizeTimer);resizeTimer=setTimeout(()=>{if(disposed)return;map.invalidateSize({pan:true,animate:false});limits();resizeBackdrop();if(!clampPan()){renderCards();renderMarkers();if(selected){const id=selected.id;requestAnimationFrame(()=>revealSelected(id));}}},100)});observer.observe($('.spot-map'));
   }else{$('.spot-map-status').textContent='지도 연결을 확인해 주세요. 장소 카드는 계속 이용할 수 있습니다.';host.querySelectorAll('.spot-map-controls button,[data-in-view]').forEach(b=>b.disabled=true);}
-  listen(host,'click',e=>{const id=e.target.closest('[data-place]')?.dataset.place,p=items.find(p=>p.id===id)||(editing?catalog.get(id):null);if(p){select(p,{open:true});return;}const action=e.target.closest('[data-action]')?.dataset.action;if(action==='zoom-in')map?.zoomIn();if(action==='zoom-out')map?.zoomOut();if(action==='fit'){clearSelection({notify:true});fit();}if(action==='previous-cards'||action==='next-cards'){page+=action==='next-cards'?1:-1;renderCards();renderMarkers();}});
+  listen(host,'click',e=>{const id=e.target.closest('[data-place]')?.dataset.place,p=items.find(p=>p.id===id)||(editing?catalog.get(id):null);if(p){select(p,{open:true});return;}const action=e.target.closest('[data-action]')?.dataset.action;if(action==='zoom-in'||action==='zoom-out')cancelSelectionMove();if(action==='zoom-in')map?.zoomIn();if(action==='zoom-out')map?.zoomOut();if(action==='fit'){clearSelection({notify:true});fit();}if(action==='previous-cards'||action==='next-cards'){page+=action==='next-cards'?1:-1;renderCards();renderMarkers();}});
   listen($('[data-in-view]'),'change',e=>{inView=e.target.checked;page=0;renderCards();renderMarkers();});
   renderCards();renderMarkers();fit();if(selected&&options.initialZoom&&map)map.setView([selected.lat,selected.lng],Math.max(map.getMinZoom(),options.initialZoom),{animate:false});
   return {getMap:()=>map,setItems(next,{selectedId,reset=false,fit:refit=true}={}){if(disposed)return;items=next;remember(items);page=0;if(reset){inView=true;if($('[data-in-view]'))$('[data-in-view]').checked=true;}const id=selectedId??selected?.id;selected=items.find(p=>p.id===id)||(editing?catalog.get(id):null)||null;renderCards(true);renderMarkers();if(refit)fit();},
    setRoute(legs,{selectedIds=[],activeId:nextActiveId='',pinnedIds=[],places=[],fit:refit=false}={}){if(disposed)return;remember(places);plannerLegs=Array.isArray(legs)?legs:[];routeIds=[...new Set(selectedIds)];if(routeIds.length)overviewActive=false;activeId=nextActiveId;pinnedRouteIds=new Set(pinnedIds.filter(id=>routeIds.includes(id)));renderRoute();renderMarkers();if(refit)fit();},
    setCandidates(next=[]){if(disposed)return;candidates=next;remember(candidates);renderMarkers();},
-   setEditing(value){if(disposed||editing===Boolean(value))return;editing=Boolean(value);if(editing&&options.overview&&!routeIds.length)overviewActive=true;host.classList.toggle('is-route-editing',editing);if(editing)credits.open=false;selected=null;renderRoute();renderCards();renderMarkers();if(map){limits();clampPan();}},
+   setEditing(value){if(disposed||editing===Boolean(value))return;editing=Boolean(value);if(editing&&options.overview&&!routeIds.length)overviewActive=true;host.classList.toggle('is-route-editing',editing);if(editing)credits.open=false;selected=null;cancelSelectionMove();renderRoute();renderCards();renderMarkers();if(map){limits();clampPan();}},
    setInsets(next={}){if(disposed)return;insets=Object.fromEntries(['left','top','right','bottom'].map(key=>[key,Math.max(0,Number(next[key])||0)]));for(const [key,value] of Object.entries(insets))host.style.setProperty('--map-inset-'+key,value+'px');if(map){limits();clampPan();}},
-   fitRoute:fit,clearSelection,select(id,opts){if(disposed)return;const p=items.find(p=>p.id===id)||(editing?catalog.get(id):null);if(p)select(p,opts)},revealSelected,highlight(coords){if(!disposed)highlight?.setLatLngs(coords).setStyle({opacity:1});},returnToMap(){if(disposed)return;scrollTo({top:returnY,behavior:reduced?'auto':'smooth'});$('.spot-map').focus({preventScroll:true});},locate(id){if(disposed)return;host.scrollIntoView({behavior:reduced?'auto':'smooth',block:'center'});this.select(id,{fly:true});},destroy(){disposed=true;closeHover();events.abort();clearTimeout(resizeTimer);clearTimeout(revealTimer);clearTimeout(creditTimer);observer?.disconnect();creditObserver?.disconnect();map?.remove();markers.clear();catalog.clear();plannerLegs=[];routeIds=[];candidates=[];host.classList.remove('sskr-map','is-route-editing');for(const key of ['left','top','right','bottom'])host.style.removeProperty('--map-inset-'+key);}};
+   fitRoute:fit,clearSelection,select(id,opts){if(disposed)return;const p=items.find(p=>p.id===id)||(editing?catalog.get(id):null);if(p)select(p,opts)},revealSelected,highlight(coords){if(!disposed)highlight?.setLatLngs(coords).setStyle({opacity:1});},returnToMap(){if(disposed)return;scrollTo({top:returnY,behavior:reduced?'auto':'smooth'});$('.spot-map').focus({preventScroll:true});},locate(id){if(disposed)return;host.scrollIntoView({behavior:reduced?'auto':'smooth',block:'center'});this.select(id,{fly:true});},destroy(){disposed=true;cancelSelectionMove();closeHover();events.abort();clearTimeout(resizeTimer);clearTimeout(revealTimer);clearTimeout(creditTimer);observer?.disconnect();creditObserver?.disconnect();map?.remove();markers.clear();catalog.clear();plannerLegs=[];routeIds=[];candidates=[];host.classList.remove('sskr-map','is-route-editing');for(const key of ['left','top','right','bottom'])host.style.removeProperty('--map-inset-'+key);}};
  }
  return {mount,cardSlots,clusterPlaces,photoCard,formatPlaceText,routeCoordinates,routePlaces,safePadding};
 });

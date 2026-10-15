@@ -559,7 +559,7 @@ test('a first real touch selects a spot in both APP browse and public exploratio
   const p=await page(390,844,{isMobile:true,hasTouch:true});await p.goto(base+url);await p.waitForFunction(()=>window.__map);await p.locator('.spot-pin.spot').first().waitFor({state:'attached'});
   assert.ok((await p.locator('.spot-map').boundingBox()).height>200,url+' map must have a usable height');await p.locator('.spot-map').scrollIntoViewIfNeeded();await p.locator('[data-action=fit]').tap();await p.waitForFunction(()=>!__map._animatingZoom);assert.equal(await p.locator('.spot-pin.is-selected').count(),0);
   const title=await (await p.waitForFunction(()=>{const map=document.querySelector('.spot-map').getBoundingClientRect();return [...document.querySelectorAll('.spot-pin:not(.cluster):not(.is-selected)')].find(el=>{const r=el.getBoundingClientRect(),x=r.x+r.width/2,y=r.y+r.height/2;return x>map.left+20&&x<map.right-20&&y>map.top+60&&y<map.bottom-100&&document.elementFromPoint(x,y)?.closest('.spot-pin')===el;})?.getAttribute('title');})).jsonValue();
-  const marker=p.locator('.spot-pin[title="'+title+'"]');await marker.tap();await p.waitForSelector('.spot-pin.is-selected');assert.equal(await p.locator('.spot-pin.is-selected').getAttribute('title'),title);assert.equal(await p.locator('.leaflet-tooltip .spot-photo-card:visible').count(),1);assert.deepEqual(p.errors,[]);await p.close();
+  const marker=p.locator('.spot-pin[title="'+title+'"]');await marker.tap();await p.waitForSelector('.spot-pin.is-selected');assert.equal(await p.locator('.spot-pin.is-selected').getAttribute('title'),title);await p.waitForFunction(()=>__map.getZoom()===11&&!__map._animatingZoom);assert.equal(await p.locator('.leaflet-tooltip .spot-photo-card:visible').count(),1);assert.deepEqual(p.errors,[]);await p.close();
  }
 });
 
@@ -681,4 +681,70 @@ test('map resize keeps the geographic camera centered when a populated route ret
   await recordGeometry(p,'route-camera-resizes',{before,after,cameraChecks});
   assert.deepEqual(p.errors,[]);
  }finally{await p.close();}
+});
+
+
+async function reachableStartMarker(p){
+ const title=await (await p.waitForFunction(()=>{
+  const map=document.querySelector('.spot-map').getBoundingClientRect();
+  return [...document.querySelectorAll('.spot-pin.start')].find(el=>{
+   const r=el.getBoundingClientRect(),x=r.x+r.width/2,y=r.y+r.height/2;
+   return x>map.left+20&&x<map.right-20&&y>map.top+30&&y<map.bottom-70&&document.elementFromPoint(x,y)?.closest('.spot-pin')===el;
+  })?.getAttribute('title');
+ },null,{timeout:5000})).jsonValue();
+ return p.locator('.spot-pin.start[title="'+title+'"]');
+}
+
+test('zoomed-out spot selection focuses once and preserves detailed zoom on desktop and touch',async()=>{
+ for(const width of [1440,390]){
+  const p=await page(width,900,width<800?{isMobile:true,hasTouch:true}:{});await open(p);
+  const camera=()=>p.evaluate(()=>({zoom:__map.getZoom(),center:__map.getCenter()}));
+  const focused=zoom=>p.waitForFunction(async z=>{
+   let last='',stable=0;
+   for(let frame=0;frame<150;frame++){
+    await new Promise(requestAnimationFrame);
+    const m=__map,c=m.getCenter(),b=document.querySelector('.spot-map').getBoundingClientRect(),size=m.getSize();
+    const ready=!m._animatingZoom&&(z==null||Math.abs(m.getZoom()-z)<.01)&&Math.abs(size.x-b.width)<1&&Math.abs(size.y-b.height)<1;
+    const key=ready?JSON.stringify([c.lat,c.lng,m.getZoom(),b.x,b.y,b.width,b.height]):'';
+    stable=key&&last===key?stable+1:0;last=key;if(stable>=12)return true;
+   }
+   return false;
+  },zoom,{timeout:10000});
+  const overview=async()=>{await p.locator('.spot-map-controls [data-action=fit]').click();await focused();assert.ok((await camera()).zoom<11);};
+  const visibleCard=async()=>{const map=await p.locator('.spot-map').boundingBox();for(const selector of ['.spot-tooltip .spot-photo-card:visible','.spot-tooltip .spot-route-add:visible']){const box=await p.locator(selector).last().boundingBox();assert.ok(box&&box.x>=map.x&&box.y>=map.y&&box.x+box.width<=map.x+map.width&&box.y+box.height<=map.y+map.height,JSON.stringify({width,selector,box,map}));}};
+  await overview();const marker=await reachableStartMarker(p),title=await marker.getAttribute('title');
+  const before=await camera();if(width>800){await marker.hover();await p.waitForTimeout(150);assert.deepEqual(await camera(),before,'hover must not focus or zoom');assert.equal(await p.locator('.spot-route-add:visible').count(),0);}
+  if(width<800)await marker.tap();else await marker.click();await focused(11);await visibleCard();
+  const place=await p.evaluate(name=>SSKR_SPOT_CATALOG.find(p=>p.name===name),title);
+  await p.evaluate(place=>__map.setView([place.lat,place.lng],13,{animate:false}),place);await p.waitForTimeout(250);
+  if(width<800)await marker.tap();else await marker.click();await focused(13);await visibleCard();
+  if(width>800){await overview();await marker.focus();await p.keyboard.press('Enter');await focused(11);await visibleCard();}
+  await start(p,'samcheok');await autoFill(p);const plan=await draft(p);await overview();
+  if(await p.locator('#rp-tab-route').isVisible())await p.locator('#rp-tab-route').click();
+  await p.locator('[data-waypoint="'+plan.stopIds[0]+'"] [data-rp-action=anchor]').click();await focused(11);
+  assert.deepEqual((await draft(p)).stopIds,plan.stopIds,'focusing must preserve route order');
+  await capture(p,'spot-selection-focus-'+width,true);
+  await p.locator('[data-spot-mode=browse]').click();await p.locator('.spot-map-controls [data-action=fit]').click();await p.waitForTimeout(450);
+  assert.ok((await camera()).zoom<11);await p.locator('.spot-mini-select').first().click();await focused(11);
+  assert.deepEqual(p.errors,[]);await p.close();
+ }
+});
+
+
+test('animated spot focus cancels stale selections and a full-view action on desktop and touch',async()=>{
+ for(const width of [1440,390]){
+  const p=await page(width,900,{reducedMotion:'no-preference',...(width<800?{isMobile:true,hasTouch:true}:{})});await open(p);await p.waitForTimeout(500);
+  const first=p.locator('.spot-pin.start[title="남항진해변"]'),last=p.locator('.spot-pin.start[title="망상해변"]');
+  await first.focus();await p.keyboard.press('Enter');await last.focus();await p.keyboard.press('Enter');
+  await p.waitForFunction(()=>Math.abs(__map.getZoom()-11)<.01&&!__map._animatingZoom);await p.waitForTimeout(600);
+  assert.equal(await p.locator('.spot-pin.is-selected').getAttribute('title'),'망상해변');
+  const box=await p.locator('.spot-map').boundingBox(),card=await p.locator('.spot-tooltip .spot-photo-card:visible').boundingBox(),button=await p.locator('.spot-route-add:visible').boundingBox();
+  for(const r of [card,button])assert.ok(r&&r.x>=box.x&&r.y>=box.y&&r.x+r.width<=box.x+box.width&&r.y+r.height<=box.y+box.height,JSON.stringify({width,r,box}));
+  await capture(p,'spot-focus-animated-'+width,true);
+  await p.locator('.spot-map-controls [data-action=fit]').click();await p.waitForTimeout(500);
+  const marker=await reachableStartMarker(p);if(width<800)await marker.tap({timeout:5000});else await marker.click({timeout:5000});await p.locator('.spot-map-controls [data-action=fit]').click();await p.waitForTimeout(800);
+  const stopped=await p.evaluate(()=>({center:__map.getCenter(),zoom:__map.getZoom()}));assert.ok(stopped.zoom<11);assert.equal(await p.locator('.spot-pin.is-selected,.spot-route-add:visible').count(),0);
+  await p.waitForTimeout(600);assert.deepEqual(await p.evaluate(()=>({center:__map.getCenter(),zoom:__map.getZoom()})),stopped,'cancelled selection must not move the overview later');
+  await capture(p,'spot-focus-cancel-'+width,true);assert.deepEqual(p.errors,[]);await p.close();
+ }
 });

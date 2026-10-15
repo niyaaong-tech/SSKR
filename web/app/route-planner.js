@@ -53,10 +53,8 @@
     function selectionLayout(){viewer.getMap?.()?.invalidateSize({pan:true,animate:false});}
     function scheduleLayout(){cancelAnimationFrame(layoutFrame);layoutFrame=requestAnimationFrame(()=>{workspaceLayout();requestAnimationFrame(()=>{if(active&&!disposed&&selected)viewer.revealSelected?.(selected.id);});});}
     function selectOnMap(id,pan=false){
-      const place=byId.get(id),map=viewer.getMap?.();
       if(pan)revealMap();
-      syncingSelection=true;try{viewer.select?.(id,{reveal:!pan});}finally{syncingSelection=false;}
-      if(pan&&place&&map){map.stop?.();map.setView([place.lat,place.lng],Math.max(map.getZoom(),8),{animate:false});viewer.revealSelected?.(id);requestAnimationFrame(()=>viewer.revealSelected?.(id));}
+      syncingSelection=true;try{viewer.select?.(id,{fly:pan});}finally{syncingSelection=false;}
     }
     function resizeLayout(){const changed=layoutMode(),wide=!mobile;if(changed||area.classList.contains('is-wide')!==wide){area.classList.toggle('is-wide',wide);if(wide&&tab==='route')tab='search';render();}scheduleLayout();}
     const resize=new ResizeObserver(resizeLayout);

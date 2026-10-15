@@ -21,7 +21,7 @@ async function page(width=1440,height=1000,input={}){const p=await browser.newPa
 async function open(p,scenario='guest'){await p.goto(base+'/app/spots?scenario='+scenario);await p.waitForSelector('[data-spot-mode="plan"]');try{await p.waitForFunction(()=>window.__map,null,{timeout:5000});}catch(error){throw Error(`Map did not initialize: ${JSON.stringify({errors:p.errors,mapStatus:await p.locator('.spot-map-status').textContent(),leaflet:await p.evaluate(()=>Boolean(window.L)),mapApi:await p.evaluate(()=>Boolean(window.SSKR_MAP))})}`,{cause:error});}await p.locator('[data-spot-mode="plan"]').click();await p.waitForSelector('.route-planner:not([hidden])');}
 const draft=p=>p.evaluate(()=>JSON.parse(sessionStorage.getItem('sskr.route-editor')).plan);
 async function settle(p){await p.waitForFunction(()=>!document.querySelector('[data-route-generation][aria-busy=true]')&&![...document.querySelectorAll('.rp-operation')].some(e=>/연결 중|만드는 중|준비하고/.test(e.textContent)));}
-async function capture(p,name){if(!process.env.SSKR_QA_OUTPUT)return;fs.mkdirSync(process.env.SSKR_QA_OUTPUT,{recursive:true});await p.locator('.spot-planning-area').screenshot({path:path.join(process.env.SSKR_QA_OUTPUT,name+'.png')});}
+async function capture(p,name,viewport=false){if(!process.env.SSKR_QA_OUTPUT)return;fs.mkdirSync(process.env.SSKR_QA_OUTPUT,{recursive:true});const target=viewport?p:p.locator('.spot-planning-area');await target.screenshot({path:path.join(process.env.SSKR_QA_OUTPUT,name+'.png')});}
 
 async function chooseStart(p,id='songjeong'){if(!await p.locator('[data-rp-action="change-start"]').isVisible())await p.locator('#rp-tab-route').click();await p.locator('[data-rp-action="change-start"]').click();await p.locator('[data-start-id="'+id+'"]').click();}
 async function start(p,id='songjeong'){await chooseStart(p,id);await settle(p);if(await p.locator('#rp-tab-search').isVisible())await p.locator('#rp-tab-search').click();await p.waitForSelector('.rp-next .rp-place-view');}
@@ -116,7 +116,7 @@ test('hover keeps the map still and only a selected top marker exposes a fully v
 
 
 test('selecting from a scrolled mobile list reveals the sticky map card and action',async()=>{
- const p=await page(390,844);await open(p);assert.equal(await p.locator('[data-rp-action="sheet"]').count(),0);
+ const p=await page(390,844);await open(p);assert.equal(await p.locator('[data-rp-action="sheet"]').count(),0);await p.locator('#rp-tab-search').click();
  await p.locator('.rp-place-results .rp-place-view').last().scrollIntoViewIfNeeded();await p.locator('.rp-place-results .rp-place-view').last().click();
  const action=p.locator('.leaflet-tooltip .spot-route-add:visible').last();await action.waitFor();await p.waitForTimeout(250);
  const map=await p.locator('.spot-map').boundingBox(),summary=await p.locator('.rp-map-summary').boundingBox(),card=await p.locator('.leaflet-tooltip .spot-photo-card:visible').last().boundingBox(),button=await action.boundingBox();
@@ -148,6 +148,28 @@ test('mouse and keyboard corner selections reveal the card and action on mobile 
 });
 
 
+test('mobile entry prioritizes the left route tab and compact accessible editing controls',async()=>{
+ for(const width of [390,360,430,768]){
+  const p=await page(width,844);await open(p);await settle(p);await p.locator('.spot-pin.start').first().waitFor();await p.waitForTimeout(200);
+  await capture(p,'mobile-entry-'+width,true);
+  const entryTab=await p.locator('#rp-tab-route').getAttribute('aria-selected');await p.locator('#rp-tab-route').click();await capture(p,'mobile-route-'+width,true);assert.equal(entryTab,'true');
+  assert.deepEqual(await p.locator('.rp-tabs [role=tab]').allTextContents(),['내 경로','장소 찾기']);
+  assert.equal(await p.locator('#rp-tab-route').getAttribute('aria-selected'),'true');assert.equal(await p.locator('.rp-route-pane').isVisible(),true);
+  const header=await p.locator('.rp-header').boundingBox(),fields=await p.locator('.rp-schedule-fields').boundingBox(),title=await p.locator('#rp-route-title').boundingBox(),save=await p.locator('[data-rp-action=save]').boundingBox();
+  assert.ok(header.height<=140,JSON.stringify({width,header}));assert.ok(title.y+title.height<=fields.y&&save.y+save.height<=fields.y);assert.ok(title.x+title.width+3<=save.x);
+  const controls=await p.locator('.rp-header button,.rp-header input,.rp-tabs button').evaluateAll(es=>es.map(e=>({name:e.getAttribute('aria-label')||e.textContent,rect:e.getBoundingClientRect().toJSON()})));
+  assert.ok(controls.every(e=>e.rect.height>=44&&e.rect.width>=44),JSON.stringify({width,controls}));
+  const inputs=await p.locator('[data-schedule-input]').evaluateAll(es=>es.map(e=>e.getBoundingClientRect().toJSON()));assert.ok(Math.abs(inputs[0].y-inputs[1].y)<1);assert.ok(Math.abs(inputs[0].height-inputs[1].height)<1);
+  const summary=await p.locator('.rp-route-summary').boundingBox(),start=await p.locator('.rp-start-select').boundingBox();assert.ok(start.y-summary.y-summary.height<=12,JSON.stringify({width,summary,start}));
+  assert.equal(await p.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);
+  await p.locator('#rp-tab-search').click();await p.locator('#rp-tab-search').focus();await p.keyboard.press('Home');assert.equal(await p.locator('#rp-tab-route').getAttribute('aria-selected'),'true');await p.keyboard.press('End');assert.equal(await p.locator('#rp-tab-search').getAttribute('aria-selected'),'true');
+  await p.locator('[data-spot-mode=browse]').click();await p.locator('[data-spot-mode=plan]').click();assert.equal(await p.locator('#rp-tab-route').getAttribute('aria-selected'),'true');
+  await p.locator('#rp-route-title').fill('함께 달리는 동해안 루트');assert.equal(await p.locator('#rp-route-title').evaluate(e=>e===document.activeElement),true);for(const action of ['manage','undo','help','save']){await p.keyboard.press('Tab');assert.equal(await p.evaluate(()=>document.activeElement.dataset.rpAction),action);}await p.keyboard.press('Tab');assert.equal(await p.evaluate(()=>document.activeElement.name),'departureTime');await p.locator('input[name=breakMinutes]').fill('135');await p.locator('input[name=departureTime]').fill('07:15');assert.ok((await p.locator('.rp-header').boundingBox()).height<=140);
+  await p.reload();await p.locator('.route-planner:not([hidden])').waitFor();await settle(p);assert.equal(await p.locator('#rp-tab-route').getAttribute('aria-selected'),'true');assert.equal(await p.locator('#rp-route-title').inputValue(),'함께 달리는 동해안 루트');assert.equal(await p.locator('input[name=breakMinutes]').inputValue(),'135');assert.equal(await p.locator('input[name=departureTime]').inputValue(),'07:15');
+  assert.deepEqual(p.errors,[]);await p.close();
+ }
+});
+
 test('responsive workspace uses document scrolling on mobile and retains desktop panels',async()=>{
  for(const width of [360,390,430,768,1000,1280,1440,1920]){const p=await page(width,844);await open(p);await start(p);
  assert.equal(await p.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);
@@ -159,7 +181,7 @@ test('responsive workspace uses document scrolling on mobile and retains desktop
   const map=await p.locator('.spot-map').boundingBox(),tabs=await p.locator('.rp-tabs').boundingBox();assert.ok(map.y>=0&&map.y<3);assert.ok(Math.abs(tabs.y-(map.y+map.height))<=2);
   assert.ok((await p.locator('.app-header').boundingBox()).y+64<=0);
   await p.locator('.rp-next .rp-place-view').first().click();assert.equal(await p.locator('.rp-place-detail').count(),1);await p.locator('[data-rp-action="back-detail"]').click();
-  await p.locator('#rp-tab-search').focus();await p.evaluate(()=>dispatchEvent(new Event('resize')));await p.waitForTimeout(100);assert.equal(await p.evaluate(()=>document.activeElement.id),'rp-tab-search');await p.keyboard.press('ArrowRight');assert.equal(await p.locator('.rp-route-pane').isVisible(),true);await p.locator('#rp-tab-search').click();
+  await p.locator('#rp-tab-search').focus();await p.evaluate(()=>dispatchEvent(new Event('resize')));await p.waitForTimeout(100);assert.equal(await p.evaluate(()=>document.activeElement.id),'rp-tab-search');await p.keyboard.press('ArrowLeft');assert.equal(await p.locator('.rp-route-pane').isVisible(),true);await p.locator('#rp-tab-search').click();
   await p.locator('.spot-search input').fill('김해');await p.waitForTimeout(250);assert.ok(await p.locator('.rp-place-results .rp-place').count()>0);await p.locator('.spot-search input').fill('');await p.waitForTimeout(250);
  }else{assert.equal(await p.locator('.rp-mobile-sticky').count(),0);assert.equal(await p.locator('[data-scroll="places"]').evaluate(e=>getComputedStyle(e).overflowY),'auto');}
  assert.deepEqual(p.errors,[]);await capture(p,'workspace-'+width);await p.close();
@@ -195,7 +217,7 @@ test('network failures use a readable message and preserve manual editing',async
 
 test('short screens keep the complete map card visible and mobile details omit duplicate names',async()=>{
  for(const [width,height] of [[360,640],[390,664],[430,700],[844,390]]){
-  const p=await page(width,height);await open(p);await p.locator('.rp-place-results .rp-place-view').first().click();await p.waitForTimeout(400);
+  const p=await page(width,height);await open(p);if(width<=800)await p.locator('#rp-tab-search').click();await p.locator('.rp-place-results .rp-place-view').first().click();await p.waitForTimeout(400);
   // A previously queued bounds animation must not move the card after reveal.
   for(const delay of [0,500]){
   if(delay)await p.waitForTimeout(delay);
@@ -291,7 +313,7 @@ test('default browse and empty editor fill the mainland frame and cannot zoom ou
 });
 
 test('touch selection and keyboard-sized viewport preserve the route and usable map actions',async()=>{
- const p=await page(390,844,{hasTouch:true,isMobile:true,deviceScaleFactor:2});await open(p);
+ const p=await page(390,844,{hasTouch:true,isMobile:true,deviceScaleFactor:2});await open(p);await p.locator('#rp-tab-search').tap();
  await p.locator('.rp-place-results .rp-place-view').first().tap();await p.waitForTimeout(300);
  await p.locator('.leaflet-tooltip .spot-route-add:visible').last().tap();await settle(p);const original=await draft(p);
  await p.locator('#rp-tab-search').tap();await p.locator('.spot-search input').tap();await p.setViewportSize({width:390,height:430});await p.locator('.spot-search input').fill('김해');await p.waitForTimeout(300);
@@ -400,7 +422,7 @@ test('pin controls save and restore, footer tools stay side by side, and reset o
   const marker=p.locator('.spot-pin.is-route-pinned');assert.equal(await marker.locator('.spot-pin-lock').count(),1);assert.match(await marker.getAttribute('aria-label'),/핀고정/);
   const beforeStyle=await marker.locator('span').evaluate(e=>{const s=getComputedStyle(e);return {background:s.backgroundColor,radius:s.borderRadius};});await marker.click();
   assert.deepEqual(await marker.locator('span').evaluate(e=>{const s=getComputedStyle(e);return {background:s.backgroundColor,radius:s.borderRadius};}),beforeStyle);assert.equal(await marker.locator('span').evaluate(e=>getComputedStyle(e).outlineStyle),'solid');assert.equal(await row.locator('.rp-point-number').evaluate(e=>getComputedStyle(e).backgroundColor),beforeStyle.background);
-  assert.equal(await p.locator('.leaflet-tooltip .spot-mini-number.is-route-pinned').count(),1);assert.equal(await p.locator('.leaflet-tooltip .spot-mini-pin').count(),1);assert.equal(await p.locator('.spot-route-add:visible').count(),0);
+  await p.waitForFunction(()=>document.querySelectorAll('.leaflet-tooltip .spot-mini-number.is-route-pinned').length===1);assert.equal(await p.locator('.leaflet-tooltip .spot-mini-number.is-route-pinned').count(),1);assert.equal(await p.locator('.leaflet-tooltip .spot-mini-pin').count(),1);assert.equal(await p.locator('.spot-route-add:visible').count(),0);
   await save(p,'핀고정 경로');const identity=await draft(p);
   await p.reload();await p.locator('.route-planner:not([hidden])').waitFor();await settle(p);if(width<=800)await p.locator('#rp-tab-route').click();assert.deepEqual((await draft(p)).pinnedStopIds,[chosen]);
   await autoFill(p);let before=await draft(p);assert.equal(before.stopIds.length,10);assert.ok(before.stopIds.includes(chosen));

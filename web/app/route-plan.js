@@ -111,22 +111,32 @@
   function bestInsertion(value, placeId, catalog, provider, options) {
     return insertionOptions(value,placeId,catalog,provider,options).sort((a,b)=>a.addedDistanceMeters-b.addedDistanceMeters || a.addedDurationSeconds-b.addedDurationSeconds || a.at-b.at)[0] || null;
   }
-  function insertionRecommendations(value, catalog, provider, { afterId = null, limit = 3, event = {} } = {}) {
+  function insertionRecommendations(value, catalog, provider, { afterId = null, limit = 3, event = {}, seed = 0, eligibleIds = null, avoidIds = [] } = {}) {
     const plan=normalize(value,catalog), index=catalogIndex(catalog), trip=totals(orderedIds(plan),provider);
     if(!plan.startId || !trip || referenceIssues(plan,catalog).length)return [];
-    if(!plan.stopIds.length)return nextRecommendations(plan,plan.startId,catalog,provider,{limit,event}).flatMap(candidate=>{
-      const insertion=bestInsertion(plan,candidate.placeId,catalog,provider,{afterId});return insertion?[{...candidate,...insertion}]:[];
-    });
+    const count=Math.max(0,Math.floor(Number(limit)||0)),allowed=eligibleIds===null?null:new Set(eligibleIds),avoid=new Set(avoidIds);
+    if(!count)return [];
     const scale=Math.max(5000,trip.distanceMeters/(minimumStops(event)+1)),counts=categoryCounts(plan,index),selected=[];
-    const candidates=listPlaces(catalog).flatMap(place=>{
+    let candidates=!plan.stopIds.length?rankedNextCandidates(plan,plan.startId,catalog,provider,event).flatMap(candidate=>{
+      if(allowed&&!allowed.has(candidate.placeId))return [];
+      const insertion=bestInsertion(plan,candidate.placeId,catalog,provider,{afterId});return insertion?[{...candidate,...insertion}]:[];
+    }):listPlaces(catalog).flatMap(place=>{
+      if(allowed&&!allowed.has(place.id))return [];
       const insertion=bestInsertion(plan,place.id,catalog,provider,{afterId});if(!insertion)return [];
       const nearest=Math.min(...plan.stopIds.map(id=>leg(provider,id,place.id)?.distanceMeters??Infinity));
       const repetition=(counts.get(place.category)||0)*scale*.23,crowding=Math.max(0,scale*.5-nearest)*.7;
       return [{...insertion,score:insertion.addedDistanceMeters+repetition+crowding,reason:afterId===null?'루트 전체에 추가':'지정 구간에 추가'}];
     });
-    while(candidates.length&&selected.length<Math.max(0,Math.floor(Number(limit)||0))){
+    if(!plan.stopIds.length&&!seed)return candidates.slice(0,count).map(({score,...entry})=>entry);
+    candidates.sort((a,b)=>a.score-b.score||a.placeId.localeCompare(b.placeId));
+    const best=candidates[0]?.score||0;
+    // Randomize within the convenient candidates; do not draw from the entire map.
+    if(seed&&candidates.length){const ceiling=Math.max(best+scale,candidates[Math.min(count,candidates.length)-1].score);candidates=candidates.filter(entry=>entry.score<=ceiling).slice(0,Math.max(30,count*3));}
+    const random=id=>{let n=hash(`${seed}:${id}`);n=Math.imul(n^(n>>>16),0x7feb352d);n=Math.imul(n^(n>>>15),0x846ca68b);return ((n^(n>>>16))>>>0)/4294967296+.5/4294967296;};
+    while(candidates.length&&selected.length<count){
       const penalty=entry=>selected.reduce((sum,item)=>sum+(index.get(item.placeId)?.category===index.get(entry.placeId)?.category?7500:0)+Math.max(0,7000-(leg(provider,item.placeId,entry.placeId)?.distanceMeters??Infinity)),0);
-      candidates.sort((a,b)=>a.score+penalty(a)-b.score-penalty(b)||a.addedDurationSeconds-b.addedDurationSeconds||a.placeId.localeCompare(b.placeId));
+      const priority=entry=>seed?-Math.log(random(entry.placeId))*(1+Math.max(0,entry.score+penalty(entry)-best)/scale)*(avoid.has(entry.placeId)?5:1):entry.score+penalty(entry);
+      candidates.sort((a,b)=>priority(a)-priority(b)||a.addedDurationSeconds-b.addedDurationSeconds||a.placeId.localeCompare(b.placeId));
       const {score,...candidate}=candidates.shift();selected.push(candidate);
     }
     return selected;
@@ -170,7 +180,7 @@
     }
     return selected;
   }
-  function nextRecommendations(value, currentId, catalog, provider, { limit = 3, event = {} } = {}) {
+  function rankedNextCandidates(value, currentId, catalog, provider, event) {
     const plan = normalize(value, catalog), current = currentId || plan.stopIds.at(-1) || plan.startId;
     if (!plan.startId || !current || referenceIssues(plan, catalog).length) return [];
     const used = new Set(orderedIds(plan)), position = insertionIndex(plan, current);
@@ -190,9 +200,11 @@
         return [{ placeId: place.id, fromDistanceMeters: incoming.distanceMeters, addedDistanceMeters: added,
           addedDurationSeconds: addedTime, durationSeconds: incoming.durationSeconds,
           reason: `다음 구간에 추가 · 전체 경로 ${added >= 0 ? '+' : '−'}${Math.round(Math.abs(added) / 1000)} km`, score }];
-      }).sort((a, b) => a.score - b.score || a.placeId.localeCompare(b.placeId))
-      .slice(0, Math.max(0, Math.floor(Number(limit) || 0)))
-      .map(({ score, ...entry }) => entry);
+      }).sort((a, b) => a.score - b.score || a.placeId.localeCompare(b.placeId));
+  }
+  function nextRecommendations(value, currentId, catalog, provider, { limit = 3, event = {} } = {}) {
+    return rankedNextCandidates(value,currentId,catalog,provider,event)
+      .slice(0,Math.max(0,Math.floor(Number(limit)||0))).map(({score,...entry})=>entry);
   }
   function autoFill(value, catalog, provider, { variant = 0, event = {}, drivingBudgetSeconds = null, excludeIds = [] } = {}) {
     const plan = normalize(value, catalog);

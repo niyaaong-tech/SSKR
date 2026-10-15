@@ -24,6 +24,63 @@ async function open(p,url){await p.goto(base+url);if(url.startsWith('/app/memori
 const metrics=p=>p.locator('.spot-mini-select').first().evaluate(e=>{const s=getComputedStyle(e),caption=getComputedStyle(e.querySelector('strong'));return {width:s.width,height:s.height,radius:s.borderRadius,font:caption.fontSize,color:caption.color};});
 async function capture(p,name){if(!process.env.SSKR_QA_OUTPUT)return;const dir=path.join(require('./ui-evidence.cjs').output(),process.env.SSKR_QA_PHASE||process.env.SSKR_QA_RUN_ID||'checks','screenshots',process.env.BROWSER_ENGINE||'chromium');fs.mkdirSync(dir,{recursive:true});const file=path.join(dir,name+'.png');if(fs.existsSync(file))throw Error('Screenshot evidence already exists: '+file);const target=p.locator(".spot-workspace");await target.screenshot({path:file});}
 async function terrainCovers(p,coordinates){return p.evaluate(([lat,lng])=>{const path=document.querySelector('.leaflet-sskr-base-land-pane path'),point=__map.latLngToContainerPoint([lat,lng]),box=document.querySelector('.spot-map').getBoundingClientRect();const local=new DOMPoint(box.left+point.x,box.top+point.y).matrixTransform(path.getScreenCTM().inverse());return path.isPointInFill(local)&&getComputedStyle(path).fillOpacity==='1';},coordinates);}
+test('spot details: sourced addresses optional visitor notes and clean map links across spot kinds',async()=>{
+ const catalog=require('../../web/app/spot-catalog');
+ for(const width of [1440,390]){
+  const p=await page(width,844,{hasTouch:width<800,isMobile:width<800});
+  try{for(const id of ['jangtaesan','cheongnyeongpo','auraji','gyeongju','daecheon']){
+   const place=catalog.find(p=>p.id===id);await p.goto(base+'/app/spots/'+id+'?scenario=guest&spotKind=all');
+   const detail=p.locator('.spot-detail');await detail.locator('h3').waitFor();
+   assert.equal(await detail.locator('h3').textContent(),place.name);
+   assert.equal(await detail.locator('dl>div').first().locator('dd').textContent(),place.address);
+   assert.equal(await detail.locator('dt').filter({hasText:'방문 메모'}).count(),place.note?1:0);
+   if(place.note)assert.equal(await detail.locator('dl>div').last().locator('dd').textContent(),place.note);
+   const text=await detail.textContent();assert.doesNotMatch(text,/undefined|null|GPS|주차 구역|주차 위치|참가 확정|출발 후보|집결 후보/);
+   const coordinates=place.parking||place;assert.ok(!text.includes(coordinates.lat.toFixed(6))&&!text.includes(coordinates.lng.toFixed(6)));
+   assert.equal(await detail.locator('.spot-detail-top,.spot-participant-note').count(),0);
+   assert.equal(await p.locator('.spot-map-note').count(),0);
+   assert.equal(await detail.locator('.spot-detail-source').getAttribute('href'),place.addressSource||place.source);
+   assert.equal(decodeURIComponent(new URL(await detail.locator('.spot-detail-map').getAttribute('href')).pathname).split('/p/search/')[1],place.address+' '+place.name);
+   assert.equal(await detail.locator('a[href*="openstreetmap.org"]').count(),0);
+   assert.ok(await p.evaluate(id=>{const place=SSKR_SPOT_CATALOG.find(p=>p.id===id);return Boolean(place.lat&&place.lng&&typeof place.operatorNote==='string');},id));
+  }}finally{await p.close();}
+ }
+ assert.deepEqual(errors,[]);
+});
+
+test('spot details: readable addresses compact spacing and touch targets at responsive boundaries',async()=>{
+ for(const width of [360,390,430,700,701,1100,1101,1440]){
+  const p=await page(width,844,{hasTouch:width<=800,isMobile:width<=800});
+  try{
+   await p.goto(base+'/app/spots/jangtaesan?scenario=guest');const detail=p.locator('.spot-detail');await detail.locator('h3').waitFor();await detail.scrollIntoViewIfNeeded();
+   await p.evaluate(()=>document.fonts.ready);await detail.locator('img').evaluate(img=>img.decode());
+   const geometry=await detail.evaluate(e=>{const r=e.getBoundingClientRect(),copy=e.querySelector('.spot-detail-copy'),s=getComputedStyle(copy);return {width:r.width,padding:Number.parseFloat(s.paddingLeft),overflow:document.documentElement.scrollWidth>innerWidth,rows:[...e.querySelectorAll('dd')].map(dd=>({width:dd.clientWidth,scroll:dd.scrollWidth})),actions:[...e.querySelectorAll('.spot-detail-actions a,.spot-detail-actions button')].map(a=>({height:a.getBoundingClientRect().height,scroll:a.scrollWidth,width:a.clientWidth}))};});
+   assert.equal(geometry.overflow,false,width+' page overflow');assert.equal(geometry.padding,width<=700?18:width<=1100?20:24);
+   assert.ok(geometry.rows.every(r=>r.scroll<=r.width+1),width+' address must wrap');assert.ok(geometry.actions.every(a=>a.height>=44&&a.scroll<=a.width+1),width+' action targets');
+   if(process.env.SSKR_QA_OUTPUT&&[390,1440].includes(width)){
+    const dir=path.join(require('./ui-evidence.cjs').output(),process.env.SSKR_QA_RUN_ID||'checks','screenshots',process.env.BROWSER_ENGINE||'chromium');fs.mkdirSync(dir,{recursive:true});await detail.screenshot({path:path.join(dir,'spot-detail-'+width+'.png')});
+   }
+  }finally{await p.close();}
+ }
+ assert.deepEqual(errors,[]);
+});
+
+test('spot details: photo errors and shared planner public details never expose internal coordinates',async()=>{
+ const p=await page(),place=require('../../web/app/spot-catalog').find(p=>p.id==='jangtaesan');
+ try{
+  await p.route('**/assets/spots/jangtaesan.webp*',r=>r.abort());
+  await p.goto(base+'/app/spots/jangtaesan?scenario=guest');await p.locator('.spot-detail .spot-location-visual').waitFor();
+  assert.match(await p.locator('.spot-detail').textContent(),/장안로 461/);assert.doesNotMatch(await p.locator('.spot-detail').textContent(),/GPS|\d{2}\.\d{3,}/);
+  await p.goto(base+'/app/spots?scenario=guest&mode=plan');await p.locator('[data-rp-action="change-start"]').click();await p.locator('[data-start-id="songjeong"]').click();
+  await p.locator('.spot-search input').fill('장태산');await p.locator('.rp-place[data-place-id="jangtaesan"] .rp-place-view').click();await p.locator('.rp-place-detail h3').waitFor();
+  const planner=await p.locator('.rp-place-detail').textContent();assert.ok(planner.includes(place.address)&&planner.includes(place.note));assert.doesNotMatch(planner,/주차 위치|GPS|\d{2}\.\d{6}/);
+  await p.goto(base+'/explore/#jangtaesan');await p.locator('#detail-name').waitFor();assert.equal(await p.locator('#detail-region').textContent(),place.address);assert.equal(await p.locator('#detail-note').textContent(),place.note);
+  assert.equal(await p.locator('#detail-parking-row').count(),0);assert.doesNotMatch(await p.locator('.detail-links').textContent(),/GPS|주차/);
+  await p.goto(base+'/explore/#auraji');await p.locator('#detail-name').waitFor();assert.equal(await p.locator('#detail-note-row').isVisible(),false);
+ }finally{await p.close();}
+ assert.deepEqual(errors,[]);
+});
+
 test('spot, memorial and public explorer keep the same map style and card dimensions',async()=>{
  const p=await page(),memorial=fixture.memorials.find(m=>m.spotCount===12);let expected;
  for(const [name,url] of [['spots','/app/spots?scenario=guest'],['memorial','/app/memorials/'+memorial.id+'?scenario=guest'],['explore','/explore/']]){await open(p,url);const current=await metrics(p);if(expected)assert.deepEqual(current,expected);else expected=current;assert.equal(await p.locator('.spot-mini-card').count(),12);assert.equal(await p.evaluate(()=>__backdrop.getMaplibreMap().getStyle().name),'SSKR Korea');

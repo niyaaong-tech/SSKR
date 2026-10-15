@@ -73,9 +73,56 @@ function assertCompactWaypoint(g,width){
 }
 
 
-test('entry uses one finder, automatic insertion, map-only addition, and a separate management dialog',async()=>{
+test('entry uses one finder, automatic insertion, start selection on the map, and a separate management dialog',async()=>{
  const p=await page();await open(p);assert.equal(await p.locator('#rp-tab-places,#rp-tab-saved,#rp-insertion,.rp-sheet-toggle,.rp-expand').count(),0);assert.equal(await p.locator('[data-rp-action=save]').count(),1);assert.equal(await p.locator('[data-rp-action=autofill]').isDisabled(),true);
  const name=await p.locator('.rp-place-view strong').first().textContent();assert.doesNotMatch(name,/·/);await p.locator('.rp-place-view').first().click();assert.equal(await p.locator('.rp-place-detail [data-rp-action=add]').count(),0);await p.locator('.spot-route-add:visible').last().click();await settle(p);assert.ok((await draft(p)).startId);assert.equal(await p.locator('.rp-place-add').count(),0);await addFirstRecommendation(p);assert.equal((await draft(p)).stopIds.length,1);assert.deepEqual(p.errors,[]);await p.close();
+});
+
+test('recommendation discovery keeps ten scrollable candidates stable until refresh and offers detail actions',async()=>{
+ for(const width of [360,390,430,801,1440]){
+  const p=await page(width,844,{isMobile:width<=800,hasTouch:width<=800});
+  try{
+   await open(p);await start(p);const ids=()=>p.locator('.rp-next .rp-place').evaluateAll(es=>es.map(e=>e.dataset.placeId));
+   const first=await ids();assert.equal(first.length,10);assert.equal(new Set(first).size,10);assert.equal(await p.locator('.rp-place-add').count(),0);
+   const before=await draft(p);await p.locator('.rp-next .rp-place').last().scrollIntoViewIfNeeded();
+   assert.ok(await p.locator('.rp-next .rp-place').last().isVisible());
+   if(width>800)assert.ok(await p.locator('[data-scroll=places]').evaluate(e=>e.scrollTop>0));
+   else assert.ok(await p.evaluate(()=>scrollY>0));
+   await p.locator('.rp-next .rp-place-view').first().click();assert.ok(await p.locator('.rp-place-detail h3').isVisible());
+   const actions=p.locator('.rp-detail-actions');assert.equal(await actions.locator('[data-rp-action]').count(),2);
+   const geometry=await p.locator('.rp-detail-head').evaluate(e=>{const r=el=>el.getBoundingClientRect().toJSON(),icons=[...e.querySelectorAll('.rp-detail-actions button')];return {head:r(e),title:r(e.querySelector('.rp-detail-title')),actions:icons.map(button=>({button:r(button),svg:r(button.querySelector('svg'))})),overflow:document.documentElement.scrollWidth>innerWidth};});
+   assert.equal(geometry.overflow,false);assert.ok(geometry.title.right<=geometry.actions[0].button.left+1);assert.ok(geometry.actions[0].button.right<=geometry.actions[1].button.left);
+   for(const {button,svg} of geometry.actions){assert.equal(button.width,44);assert.equal(button.height,44);assert.ok(Math.abs(button.x+button.width/2-svg.x-svg.width/2)<.2&&Math.abs(button.y+button.height/2-svg.y-svg.height/2)<.2);assert.ok(button.right<=geometry.head.right+1);}
+   const addColors=await p.locator('.rp-detail-add').evaluate(e=>({background:getComputedStyle(e).backgroundColor,color:getComputedStyle(e).color}));
+   assert.deepEqual(addColors,{background:'rgb(49, 88, 63)',color:'rgb(255, 255, 255)'},'detail add keeps the visible primary action palette');
+   assert.equal(await p.locator('.spot-route-add:visible').count(),1,'original map-card action stays available');
+   await p.locator('[data-rp-action=back-detail]').click();assert.deepEqual(await ids(),first,'viewing a candidate must not reshuffle the list');
+   await p.locator('[data-rp-action=refresh-recommendations]').click();const refreshed=await ids();assert.equal(refreshed.length,10);assert.notDeepEqual(refreshed,first);assert.deepEqual(await draft(p),before);
+   await p.locator('.rp-next .rp-place-view').first().click();const old=await p.locator('.rp-detail-add').getAttribute('data-id');
+   await p.locator('.rp-detail-actions [data-rp-action=refresh-recommendations]').click();const next=await p.locator('.rp-detail-add').getAttribute('data-id');assert.notEqual(next,old);assert.deepEqual(await draft(p),before);
+   assert.equal(await p.locator('.spot-pin.is-selected').getAttribute('title'),await p.locator('.rp-place-detail h3').textContent());
+   if([390,1440].includes(width))await capture(p,'recommendation-detail-'+width,true);
+   if(width<=800)await p.locator('.rp-detail-add').tap();else await p.locator('.rp-detail-add').click();
+   await p.waitForFunction(id=>JSON.parse(sessionStorage.getItem('sskr.route-editor')).plan.stopIds.includes(id),next,{timeout:5000});
+   await settle(p);const added=await draft(p);assert.equal(added.stopIds.length,1,'direct detail addition at '+width+'px');assert.ok(added.stopIds.includes(next));
+   await p.locator('[data-rp-action=undo]').click();await settle(p);assert.deepEqual((await draft(p)).stopIds,before.stopIds);assert.deepEqual(p.errors,[]);
+  }finally{await p.close();}
+ }
+});
+
+test('recommendation detail addition shares pending duplicate failure and exact insertion protections',async()=>{
+ const p=await page();try{
+  await open(p);await start(p);await addFirstRecommendation(p);await addFirstRecommendation(p);
+  await p.locator('.rp-next .rp-place-view').first().click();const id=await p.locator('.rp-detail-add').getAttribute('data-id'),before=await draft(p);
+  const expected=await p.evaluate(({plan,id})=>SSKR_ROUTE_PLAN.bestInsertion(plan,id,SSKR_SPOT_CATALOG,SSKR_ROUTE_PROVIDER.create()),{plan:before,id});
+  await p.evaluate(()=>window.__roadFailure=true);await p.locator('.rp-detail-add').click();await settle(p);assert.deepEqual(await draft(p),before);
+  await p.evaluate(()=>{window.__roadFailure=false;window.__roadDelay=250;});await p.locator('.rp-detail-add').dispatchEvent('click');
+  assert.equal(await p.locator('.rp-detail-add').isDisabled(),true);assert.equal(await p.locator('.rp-recommend-refresh').isDisabled(),true);await p.locator('.rp-detail-add').dispatchEvent('click');await settle(p);
+  const next=await draft(p),order=before.stopIds.slice();order.splice(expected.at,0,id);assert.deepEqual(next.stopIds,order);assert.equal(next.stopIds.filter(x=>x===id).length,1);
+  const delta=await p.evaluate(({before,next})=>{const provider=SSKR_ROUTE_PROVIDER.create(),a=SSKR_ROUTE_PLAN.status(before,SSKR_SPOT_CATALOG,provider),b=SSKR_ROUTE_PLAN.status(next,SSKR_SPOT_CATALOG,provider);return {distance:b.distanceMeters-a.distanceMeters,time:b.durationSeconds-a.durationSeconds};},{before,next});
+  assert.ok(Math.abs(delta.distance-expected.addedDistanceMeters)<.001&&Math.abs(delta.time-expected.addedDurationSeconds)<.001);
+  await p.locator('[data-waypoint="'+id+'"] .rp-point-main').click();await p.locator('.leaflet-tooltip .spot-photo-card').last().click();assert.equal(await p.locator('.rp-detail-add').isDisabled(),true);assert.deepEqual(p.errors,[]);
+ }finally{await p.close();}
 });
 test('desktop widths cap sidebars, leave remaining width to the map, and never overflow',async()=>{
  const p=await page(1180,757);await open(p);await start(p);
@@ -268,7 +315,7 @@ test('short screens keep the complete map card visible and mobile details omit d
    assert.ok(box.x>=map.x&&box.x+box.width<=map.x+map.width+1&&box.y>=map.y&&box.y+box.height<=map.y+map.height&&!(box.x<head.x+head.width&&box.x+box.width>head.x&&box.y<head.y+head.height&&box.y+box.height>head.y),JSON.stringify({width,height,map,head,box}));
   }
   }
-  if(width<=800){assert.ok((await p.locator('.rp-mobile-sticky').boundingBox()).height<height-44);assert.equal(await p.locator('.rp-place-detail h3').isVisible(),false);}else{assert.ok(await p.locator('.spot-planning-area').evaluate(e=>e.getBoundingClientRect().bottom<=innerHeight+1));const name=await p.locator('.rp-place-detail h3').boundingBox(),photo=await p.locator('.rp-detail-image').boundingBox();assert.ok(name.y<photo.y);}
+  if(width<=800){assert.ok((await p.locator('.rp-mobile-sticky').boundingBox()).height<height-44);assert.equal(await p.locator('.rp-place-detail h3').isVisible(),true);}else{assert.ok(await p.locator('.spot-planning-area').evaluate(e=>e.getBoundingClientRect().bottom<=innerHeight+1));const name=await p.locator('.rp-place-detail h3').boundingBox(),photo=await p.locator('.rp-detail-image').boundingBox();assert.ok(name.y<photo.y);}
   assert.deepEqual(p.errors,[]);await p.close();
  }
 });

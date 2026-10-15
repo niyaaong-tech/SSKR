@@ -30,7 +30,24 @@ test('APP catalog has 200 parking-backed spots, eleven starts and one finish wit
 test('removed source spots remain available as legacy memorial references',()=>{
  assert.equal(base.length,42);
  const legacy=globalThis.SSKR_SPOT_LEGACY||[];
- for(const p of base){const copy=catalog.find(x=>x.id===p.id)||legacy.find(x=>x.id===p.id);assert.ok(copy,p.id);for(const key of ['id','kind','name','region','lead','description','source'])assert.deepEqual(copy[key],p[key],p.id+': '+key);}
+ for(const p of base){const active=catalog.find(x=>x.id===p.id),copy=active||legacy.find(x=>x.id===p.id);assert.ok(copy,p.id);for(const key of ['id','kind','name','region','lead','source',...(active?[]:['description'])])assert.deepEqual(copy[key],p[key],p.id+': '+key);}
+});
+
+test('shared spot details have sourced addresses and separate visitor notes from operator notes',()=>{
+ for(const p of catalog){
+  assert.ok(p.address&&p.address!==p.region,p.id+' full address');
+  assert.match(p.addressSource,/^https:\/\//,p.id+' address source');
+  if(p.addressVerifiedAt!==null)assert.match(p.addressVerifiedAt,/^\d{4}-\d{2}-\d{2}$/,p.id+' verified date');
+  assert.doesNotMatch(p.address,/^(충청남도|충청북도|경상북도|경상남도) (충남|충북|경북|경남) /,p.id+' duplicate province');
+  assert.equal(typeof p.note,'string',p.id+' optional visitor note');
+  assert.equal(typeof p.operatorNote,'string',p.id+' preserved operator note');
+  assert.equal(p.visitNote,undefined,p.id+' obsolete note field');
+  assert.doesNotMatch(p.note,/집결|대관|허가|주차|운영|확인/);
+  assert.doesNotMatch(p.description,/지정된 주차 공간|허용된 주차 구역|바이크는 주차 구역|참가 확정/);
+ }
+ assert.match(catalog.find(p=>p.id==='cheongnyeongpo').note,/배를 타고/);
+ assert.match(catalog.find(p=>p.id==='jangtaesan').address,/장안로 461/);
+ assert.equal(catalog.find(p=>p.id==='auraji').note,'');
 });
 test('parking points are separated by more than five kilometers, including starts and finish',()=>{
  const radians=Math.PI/180;

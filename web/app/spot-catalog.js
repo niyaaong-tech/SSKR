@@ -644,6 +644,7 @@
       places.push({...replacement,visitCoordinate,lat:replacement.parking.lat,lng:replacement.parking.lng,coordinateAccuracy:'parking-osm'});
     }
     for(const place of [...places,...root.SSKR_SPOT_LEGACY])Object.assign(place,curation.photosById?.[place.id]||{});
+    for(const place of places)Object.assign(place,curation.detailsById?.[place.id]||{});
   }
   root.SSKR_SPOT_CATALOG=places;
   if(typeof module!=='undefined')module.exports=places;

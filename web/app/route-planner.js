@@ -5,9 +5,12 @@
   const time=v=>{if(!Number.isFinite(v))return '';const m=Math.round(v/60);return m>=60?`${Math.floor(m/60)}시간 ${m%60}분`:`${m}분`;};
   const roadMessage=error=>/[가-힣]/.test(error?.message||'')?error.message:'도로 정보를 불러오지 못했습니다. 연결 상태를 확인하고 다시 시도해 주세요.';
   const SESSION='sskr.route-editor';
+  const newRecommendationSeed=()=>root.crypto?.getRandomValues?root.crypto.getRandomValues(new Uint32Array(1))[0]||1:Math.floor(Math.random()*4294967295)||1;
   const categories={cafe:'라이딩 · 카페',food:'맛집 · 시장',nature:'자연 · 전망',culture:'역사 · 마을'};
   const placeText=value=>root.SSKR_MAP.formatPlaceText(value);
   const iconPaths={location:'<path d="M19 10c0 5-7 11-7 11S5 15 5 10a7 7 0 1 1 14 0Z"/><circle cx="12" cy="10" r="2.5"/>',arrow:'<path d="M5 12h14m-6-6 6 6-6 6"/>',pin:'<path d="M8 3h8v6l3 3v2H5v-2l3-3Z"/><path d="M12 14v7"/>',folder:'<path d="M3 7V5h7l2 2h9v13H3Z"/>',undo:'<path d="m8 4-5 5 5 5M3 9h10a7 7 0 0 1 0 14"/>',help:'<circle cx="12" cy="12" r="9"/><path d="M9 9a3 3 0 1 1 4 3c-1 0-1 1-1 2m0 3h.01"/>',drag:'<path d="M8 5h.01M8 12h.01M8 19h.01M16 5h.01M16 12h.01M16 19h.01"/>'};
+  iconPaths.plus='<path d="M12 5v14M5 12h14"/>';
+  iconPaths.refresh='<path d="M20 4v6h-6M4 20v-6h6"/><path d="M5.1 9a7 7 0 0 1 11.6-4.2L20 10M4 14l3.3 5.2A7 7 0 0 0 18.9 15"/>';
   const icon=key=>`<svg viewBox="0 0 24 24" aria-hidden="true">${iconPaths[key]}</svg>`;
   function mount(host,options){
     const domain=root.SSKR_ROUTE_PLAN,catalog=options.catalog,byId=new Map(catalog.map(p=>[p.id,p])),viewer=options.viewer;
@@ -22,6 +25,7 @@
     let revision=0,context=0,contextSerial=0,generation=null,operationError='',failedOperation=null,queryText='',filterCategory='all',filterActive=false,dialogFocus=null;
     let titleEditing=false,draggedId=null,dropIndex=null,dropSlot=null;
     let detailId=null,detailScroll=0,returnTab='search',syncingSelection=false,noticeMessage='',noticeError=false;
+    let recommendationSeed=newRecommendationSeed(),recommendationAvoidIds=[],recommendationCache=null;
     let layoutFrame=0,mobile=false,sticky=null,mapSummary=null,viewportHeight=root.innerHeight,viewportWidth=root.innerWidth;
     const area=host.parentElement,mapHost=area.querySelector('.spot-map-host'),filterNodes=options.filters||[],tabScroll=new Map();
     function mobilePosition(){return Math.max(0,root.scrollY-(area.getBoundingClientRect().top+root.scrollY));}
@@ -87,7 +91,20 @@
       const value=insertionFor(place.id);
       return value?{disabled:false,description:''}:{disabled:true,description:plan.stopIds.includes(place.id)?'이미 경로에 포함된 장소입니다.':'이 구간의 도로를 연결할 수 없습니다.'};
     }
-    function recommendations(){if(!ready||!plan.startId)return[];const allowed=new Set(filterItems.map(p=>p.id));return domain.insertionRecommendations(plan,catalog,provider,{limit:filterActive?catalog.length:3,event:event()}).filter(r=>allowed.has(r.placeId)).slice(0,3);}
+    function recommendations(){
+      if(!ready||!plan.startId)return[];
+      const eligibleIds=filterItems.map(p=>p.id),key=JSON.stringify([domain.orderedIds(plan),minimum(),eligibleIds,recommendationSeed,recommendationAvoidIds]);
+      if(recommendationCache?.key===key)return recommendationCache.items;
+      const items=domain.insertionRecommendations(plan,catalog,provider,{limit:10,event:event(),seed:recommendationSeed,eligibleIds,avoidIds:recommendationAvoidIds});
+      recommendationCache={key,items};return items;
+    }
+    function refreshButton(){return `<button type="button" class="rp-icon rp-recommend-refresh" data-rp-action="refresh-recommendations" aria-label="추천 스팟 새로고침" title="추천 스팟 새로고침" ${!ready||!plan.startId||routeBusy||pendingAdd||generation||!recommendations().length?'disabled':''}>${icon('refresh')}</button>`;}
+    function refreshRecommendations(){
+      const previousId=detailId;recommendationAvoidIds=recommendations().map(item=>item.placeId);recommendationSeed=(recommendationSeed+0x9e3779b9)>>>0||1;recommendationCache=null;
+      const next=recommendations().find(item=>item.placeId!==previousId);
+      if(previousId&&next){select(byId.get(next.placeId));selectOnMap(next.placeId,true);}else{render();syncMap();}
+      persist();notify(previousId&&!next?'다른 추천 스팟이 없습니다.':'추천 스팟을 새로 골랐습니다.');
+    }
     function syncMap(fit=false){if(!active)return;mapPlan(plan,fit);viewer.setCandidates?.(recommendations().map(item=>byId.get(item.placeId)).filter(Boolean));}
     function setMode(value){const entering=value&&!active;if(!value){cancelAdd();invalidateGeneration();}active=value;document.body.classList.toggle('route-editor-active',value);layoutMode();if(entering)tab=mobile?'route':'search';area.classList.toggle('is-wide',value&&!mobile);host.hidden=!value;viewer.setEditing?.(value);options.onModeChange?.(value,plan.startId);if(value){render();root.scrollTo({top:0,behavior:'instant'});scheduleLayout();syncMap();if(selected)selectOnMap(selected.id);else if(mobile&&!plan.startId)requestAnimationFrame(()=>{if(active&&!disposed&&!plan.startId&&!selected)viewer.fitRoute?.();});if(!providerStarted)loadProvider();}persist();}
     async function calculate(fit=false){
@@ -212,9 +229,9 @@
     function placesContent(){
       const starting=!plan.startId,searching=Boolean(queryText.trim()),rec=recommendations(),items=filterItems.filter(p=>p.kind===(starting?'start':'spot'));
       const recommended=!starting&&!searching&&rec.length>0,shown=recommended?rec.map(r=>card(byId.get(r.placeId),{recommendation:r})).join(''):items.slice(0,candidateLimit).map(p=>card(p)).join('');
-      return `<div class="rp-section-title"><h3>${starting?'출발지':searching?'검색 결과':recommended?'추천 스팟':'장소 찾기'}</h3>${recommended?'':`<span>${items.length}스팟</span>`}</div><div class="rp-filter-slot"></div><div id="rp-category-results" role="tabpanel" aria-labelledby="spot-category-${esc(filterCategory)}"><div class="rp-search-slot"></div><div class="${recommended?'rp-next':'rp-place-results'}">${shown||'<p class="rp-caption">조건에 맞는 장소가 없습니다. 검색 조건을 바꿔보세요.</p>'}</div></div>${!recommended&&items.length>candidateLimit?'<button type="button" class="rp-browse-button" data-rp-action="more">장소 더 보기</button>':''}`;
+      return `<div class="rp-section-title"><h3>${starting?'출발지':searching?'검색 결과':recommended?'추천 스팟':'장소 찾기'}</h3>${recommended?refreshButton():`<span>${items.length}스팟</span>`}</div><div class="rp-filter-slot"></div><div id="rp-category-results" role="tabpanel" aria-labelledby="spot-category-${esc(filterCategory)}"><div class="rp-search-slot"></div><div class="${recommended?'rp-next':'rp-place-results'}">${shown||'<p class="rp-caption">조건에 맞는 장소가 없습니다. 검색 조건을 바꿔보세요.</p>'}</div></div>${!recommended&&items.length>candidateLimit?'<button type="button" class="rp-browse-button" data-rp-action="more">장소 더 보기</button>':''}`;
     }
-    function detailContent(){const p=byId.get(detailId);if(!p)return '';return `<section class="rp-place-detail"><div class="rp-detail-head"><button type="button" data-rp-action="back-detail" aria-label="목록으로 돌아가기">←</button><div><h3>${esc(placeText(p.name))}</h3><p class="rp-detail-region">${esc(placeText(p.region))}</p></div></div>${plan.stopIds.includes(p.id)?`<p class="rp-included">경로 포함 · ${plan.stopIds.indexOf(p.id)+1}번째 스팟</p>`:''}${insertionCaption(p)}<p>${esc(p.description||p.lead)}</p>${p.image?`<figure class="rp-detail-visual"><img class="rp-detail-image" src="${esc(p.image)}" alt="${esc(placeText(p.name))}" referrerpolicy="no-referrer"><figcaption><a href="${esc(p.photoSource||p.source)}" target="_blank" rel="noopener noreferrer">${esc(p.photoCredit||'장소 사진 출처')}</a></figcaption></figure>`:''}<p>${esc(p.address||'')}</p><p class="rp-caption">${esc(p.note)}</p>${p.parking?`<p class="rp-caption">주차 위치 ${p.parking.lat.toFixed(6)}, ${p.parking.lng.toFixed(6)}</p>`:''}</section>`;}
+    function detailContent(){const p=byId.get(detailId);if(!p)return '';const action=routeActionState(p);return `<section class="rp-place-detail"><div class="rp-detail-head"><button type="button" class="rp-detail-back" data-rp-action="back-detail" aria-label="목록으로 돌아가기">←</button><div class="rp-detail-title"><h3>${esc(placeText(p.name))}</h3><p class="rp-detail-region">${esc(placeText(p.region))}</p></div>${p.kind==='spot'?`<div class="rp-detail-actions">${refreshButton()}<button type="button" class="rp-icon rp-primary rp-detail-add" data-rp-action="add" data-id="${esc(p.id)}" aria-label="${esc(placeText(p.name))} 스팟 추가" title="${esc(action.disabled?action.description:'스팟 추가')}" ${action.disabled?'disabled':''}>${icon('plus')}</button></div>`:''}</div>${plan.stopIds.includes(p.id)?`<p class="rp-included">경로 포함 · ${plan.stopIds.indexOf(p.id)+1}번째 스팟</p>`:''}${insertionCaption(p)}<p>${esc(p.description||p.lead)}</p>${p.image?`<figure class="rp-detail-visual"><img class="rp-detail-image" src="${esc(p.image)}" alt="${esc(placeText(p.name))}" referrerpolicy="no-referrer"><figcaption><a href="${esc(p.photoSource||p.source)}" target="_blank" rel="noopener noreferrer">${esc(p.photoCredit||'장소 사진 출처')}</a></figcaption></figure>`:''}<p>${esc(p.address||'')}</p>${p.note?`<p class="rp-caption">${esc(p.note)}</p>`:''}</section>`;}
     function stopCount(p=plan){const count=p.stopIds.length,missing=Math.max(0,minimum()-count);return '<span>'+count+' 스팟 경유</span>'+(missing?'<span class="rp-stop-shortage">스팟 '+missing+'개 부족</span>':'');}
     function savedContent(){
       const tools=count=>'<div class="rp-management-tools"><span>'+count+'</span><button type="button" data-rp-action="new">＋ 새 루트</button></div>';
@@ -257,7 +274,7 @@
     function openHelp(){
       const steps=[
         ['start','출발지 선택하기','‘내 경로’의 ‘출발지 선택’을 누르세요. 사진과 지역을 살펴보고 한 곳을 고르면 출발지가 설정돼요. 나중에 ‘변경’을 눌러 다시 고를 수 있어요.','실제 출발지 선택 창의 사진 격자와 지역 표시'],
-        ['add','지도에서 스팟 추가하기','추천 스팟이나 검색 결과에서 장소를 고르면 지도가 확대되고 사진 카드가 나타나요. 카드 위의 ‘스팟 추가’를 누르면 도로 우회가 적은 위치에 넣어 드려요.','실제 지도에 선택된 황지연못 사진 카드와 스팟 추가 버튼'],
+        ['add','스팟 골라 추가하기','추천 스팟이나 검색 결과에서 장소를 고르면 지도가 확대되고 상세 정보가 열려요. 이름 옆 + 또는 지도 사진 카드 위의 ‘스팟 추가’를 누르면 도로 우회가 적은 위치에 넣어 드려요. 새로고침 아이콘으로 다른 추천 스팟도 만나보세요.','실제 지도에 선택된 황지연못 사진 카드와 스팟 추가 버튼'],
         ['complete','자동 완성으로 채우기',`남기고 싶은 스팟은 카드 오른쪽 핀으로 먼저 고정해 주세요. ‘내 경로’ 아래 ‘스팟 자동 완성’을 누르면 고정한 스팟을 포함해 ${minimum()}개를 자동으로 구성해요.`,'실제 내 경로 카드의 핀 버튼과 스팟 자동 완성 버튼'],
         ['adjust','스팟과 방문 순서 조정하기','‘스팟 재구성’은 핀고정한 스팟을 남기고 나머지를 바꿔요. ‘경로 최적화’는 스팟을 유지하며 방문 순서만 바꿔요. 직접 순서를 바꾸려면 카드 왼쪽 점 손잡이를 끌어 옮기세요.','실제 핀고정 카드와 일반 카드, 스팟 재구성 및 경로 최적화 버튼'],
         ['schedule','하루 일정 맞추기','상단의 ‘출발 시각’과 ‘휴게시간 (분)’을 바꾸면 ‘내 경로’의 도착 예상에 바로 반영돼요. 마감보다 늦게 도착하는 일정이면 안내를 확인하고 루트나 시간을 조정하세요.','실제 출발 시각 및 휴게시간 입력과 오후 도착 예상 표시'],
@@ -332,6 +349,7 @@
       const button=event.target.closest('[data-rp-action]');if(!button||button.disabled)return;const action=button.dataset.rpAction,id=button.dataset.id;button.closest('details')?.removeAttribute('open');
       if(action==='manage'||action==='help'){button.focus({preventScroll:true});if(action==='manage')openManagement();else openHelp();return;}
       if(action==='change-start'){openStartPicker();return;}
+      if(action==='add'){add(id);return;}if(action==='refresh-recommendations'){refreshRecommendations();return;}
       if(action==='back-detail'){detailId=null;tab=returnTab==='route'?'route':'search';render();if(mobile)scrollList(detailScroll);else host.querySelector('[data-scroll="places"]').scrollTop=detailScroll;return;}
       if(action==='tab'){activateTab(button.dataset.tab);return;}
       if(action==='select'){select(byId.get(id));selectOnMap(id,true);return;}
@@ -356,7 +374,7 @@
       if(!active||disposed||!selected&&!anchorId||mapHost.contains(event.target))return;
       // Place controls select a place; other outside clicks clear its visual
       // selection. Reading a detail keeps the detail view and its scroll state.
-      if(event.target.closest('.rp-dialog,[data-rp-action="select"],[data-rp-action="anchor"],[data-drag-handle]'))return;
+      if(event.target.closest('.rp-dialog,[data-rp-action="select"],[data-rp-action="anchor"],[data-rp-action="add"],[data-rp-action="refresh-recommendations"],[data-drag-handle]'))return;
       deselect();
     },{signal:events.signal});
     root.addEventListener('keydown',event=>{if(!active||dialog||event.defaultPrevented||event.target.closest('input,textarea,[contenteditable]:not([contenteditable="false"])'))return;if((event.ctrlKey||event.metaKey)&&!event.shiftKey&&event.key.toLowerCase()==='z'&&undo.length){event.preventDefault();undoChange();}const id=event.target.closest('[data-drag-handle]')?.dataset.dragHandle;if(id&&['ArrowUp','ArrowDown'].includes(event.key)){event.preventDefault();handleAction({target:{closest:()=>({dataset:{rpAction:event.key==='ArrowUp'?'up':'down',id},closest:()=>null})}});host.querySelector(`[data-drag-handle="${CSS.escape(id)}"]`)?.focus({preventScroll:true});}},{signal:events.signal});

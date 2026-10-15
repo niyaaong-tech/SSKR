@@ -84,6 +84,40 @@ test('route-wide and manual recommendations report the same exact deltas used fo
   }
 });
 
+test('seeded recommendations vary convenient candidates and retain exact directed insertion costs',()=>{
+ const {catalog,provider,plan}=fixture(45);plan.stopIds=['spot-10','spot-25'];
+ const distant=Array.from({length:12},(_,i)=>({id:'far-'+i,kind:'spot',category:'nature'})),expanded=[...catalog,...distant],near=new Set(catalog.map(p=>p.id));
+ const roads={summary(a,b){return near.has(a)&&near.has(b)?provider.summary(a,b):{distanceMeters:900000,durationSeconds:90000};}};
+ const before=structuredClone(plan),all=new Set(),orders=new Set();
+ for(let seed=1;seed<=20;seed++){
+  const options={limit:10,seed},items=planner.insertionRecommendations(plan,expanded,roads,options);
+  assert.equal(items.length,10);assert.equal(new Set(items.map(p=>p.placeId)).size,10);
+  assert.deepEqual(items,planner.insertionRecommendations(plan,expanded,roads,options));orders.add(items.map(p=>p.placeId).join(','));
+  for(const item of items){all.add(item.placeId);assert.ok(near.has(item.placeId)&&!plan.stopIds.includes(item.placeId));assert.deepEqual(Object.fromEntries(Object.entries(item).filter(([key])=>key!=='reason')),planner.bestInsertion(plan,item.placeId,expanded,roads));}
+ }
+ assert.ok(orders.size>15&&all.size>20,'seed changes must offer varied places, not just reorder a fixed ten');assert.deepEqual(plan,before);
+});
+
+test('seeded initial recommendations retain early journey progress and filter before sampling',()=>{
+ const {catalog,provider,plan}=fixture(100),orders=new Set();
+ for(let seed=1;seed<=12;seed++){
+  const items=planner.insertionRecommendations(plan,catalog,provider,{limit:10,seed});assert.equal(items.length,10);
+  assert.ok(items.every(p=>Number(p.placeId.split('-')[1])<=25),'initial suggestions stay near the first part of the journey');orders.add(items.map(p=>p.placeId).join(','));
+ }
+ assert.ok(orders.size>8);
+ const eligibleIds=['spot-2','spot-7','spot-15'];assert.deepEqual(new Set(planner.insertionRecommendations(plan,catalog,provider,{limit:10,seed:4,eligibleIds}).map(p=>p.placeId)),new Set(eligibleIds));
+ assert.deepEqual(planner.insertionRecommendations(plan,catalog,provider,{seed:2,eligibleIds:[]}),[]);
+ assert.deepEqual(planner.insertionRecommendations(plan,catalog,provider,{seed:2,limit:0}),[]);
+});
+
+test('recommendation refresh favors unseen alternatives without excluding sparse valid candidates',()=>{
+ const {catalog,provider,plan}=fixture(40);plan.stopIds=['spot-4','spot-30'];
+ const first=planner.insertionRecommendations(plan,catalog,provider,{seed:5,limit:10}),avoidIds=first.map(p=>p.placeId),next=planner.insertionRecommendations(plan,catalog,provider,{seed:11,limit:10,avoidIds});
+ assert.ok(next.some(p=>!avoidIds.includes(p.placeId)));assert.notDeepEqual(next.map(p=>p.placeId),avoidIds);
+ const eligibleIds=['spot-7','spot-9'];const sparse=planner.insertionRecommendations(plan,catalog,provider,{seed:12,limit:10,avoidIds:eligibleIds,eligibleIds});assert.equal(sparse.length,2);
+ assert.deepEqual(planner.insertionRecommendations({...plan,startId:null},catalog,provider,{seed:3,limit:10}),[]);
+});
+
 test('the bundled directed road matrix inserts Auraji near Gangneung instead of after the last stop',()=>{
   const catalog=require('../../web/app/spot-catalog'),manifest=require('../../web/shared/routes/manifest.json');
   const indices=new Map(manifest.placeIds.map((id,i)=>[id,i])),provider={summary(a,b){const i=indices.get(a),j=indices.get(b);if(i===undefined||j===undefined)return null;return {distanceMeters:manifest.distances[i][j],durationSeconds:manifest.durations[i][j]};}};

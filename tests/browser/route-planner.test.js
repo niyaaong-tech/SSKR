@@ -306,10 +306,13 @@ test('start galleries and illustrated help stay usable in narrow and short scree
   assert.equal(await gallery.locator('[data-close]').evaluate(el=>{const r=el.getBoundingClientRect(),d=el.closest('dialog').getBoundingClientRect();return r.top>=d.top&&r.bottom<=d.bottom;}),true);
   await gallery.locator('[data-start-id="songjeong"]').click();await settle(p);assert.equal((await draft(p)).startId,'songjeong');
   await p.locator('#rp-route-title').fill('도움말 복귀 확인');await p.locator('[data-rp-action=help]').click();const help=p.locator('.rp-dialog--help');
-  assert.equal(await help.locator('.rp-help-steps img').count(),4);
-  assert.equal(await help.locator('.rp-help-steps img').evaluateAll(async images=>{await Promise.all(images.map(img=>img.decode()));return images.every(img=>img.naturalWidth===480&&img.alt.length>10);}),true);
+  assert.equal(await help.locator('.rp-help-steps img').count(),6);
+  assert.equal(await help.locator('.rp-help-steps img').evaluateAll(async images=>{await Promise.all(images.map(img=>img.decode()));return images.every(img=>img.naturalWidth>=400&&img.naturalHeight>100&&img.alt.length>10);}),true);
+  await capture(p,'route-help-'+width,true);
+  assert.equal(await help.locator('picture source').count(),6);assert.ok(await help.locator('img').evaluateAll((images,mobile)=>images.every(img=>img.currentSrc.endsWith((mobile?'-mobile':'-desktop')+'.webp')),width<=800));
+  assert.equal(await help.evaluate(el=>el.scrollWidth>el.clientWidth),false);assert.doesNotMatch(await help.textContent(),/저장’을 누르고 루트 이름을 정해|마감 여유/);
   assert.match(await help.textContent(),/경유 스팟 10개.*총 12개/s);assert.equal(await help.evaluate(el=>el.scrollHeight>el.clientHeight),true);
-  await help.locator('.rp-help-notes').scrollIntoViewIfNeeded();await p.keyboard.press('Escape');
+  await help.locator('.rp-help-notes').scrollIntoViewIfNeeded();assert.equal(await help.locator('[data-close]').evaluate(el=>{const r=el.getBoundingClientRect(),d=el.closest('dialog').getBoundingClientRect();return r.top>=d.top&&r.bottom<=d.bottom&&r.width>=44;}),true);await p.keyboard.press('Escape');
   assert.equal(await p.locator('[data-rp-action=help]').evaluate(el=>el===document.activeElement),true);
   assert.equal(await p.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);assert.deepEqual(p.errors,[]);await p.close();
  }
@@ -747,4 +750,68 @@ test('animated spot focus cancels stale selections and a full-view action on des
   await p.waitForTimeout(600);assert.deepEqual(await p.evaluate(()=>({center:__map.getCenter(),zoom:__map.getZoom()})),stopped,'cancelled selection must not move the overview later');
   await capture(p,'spot-focus-cancel-'+width,true);assert.deepEqual(p.errors,[]);await p.close();
  }
+});
+
+
+test('UI assets: route help captures current interface',{skip:process.env.SSKR_CAPTURE_ROUTE_HELP!=='1'},async()=>{
+ const output=path.join(require('./ui-evidence.cjs').output(),'route-help');fs.mkdirSync(output,{recursive:true});
+ const captures=[];
+ for(const width of [1280,390]){
+  const mobile=width<800,variant=mobile?'mobile':'desktop',p=await page(width,900,{deviceScaleFactor:2,...(mobile?{isMobile:true,hasTouch:true}:{})});
+  await p.unroute('**/web/app/route-provider.js*');await open(p,'logged-in-no-application');
+  const stable=()=>p.waitForFunction(async()=>{
+   await document.fonts.ready;let previous='',stable=0;
+   for(let frame=0;frame<120;frame++){await new Promise(requestAnimationFrame);const m=__map,b=document.querySelector('.spot-map').getBoundingClientRect(),c=m.getCenter(),key=m._animatingZoom?'':JSON.stringify([b.x,b.y,b.width,b.height,c.lat,c.lng,m.getZoom(),scrollY]);stable=key&&key===previous?stable+1:0;previous=key;if(stable>=12)return true;}return false;
+  },null,{timeout:10000});
+  const part=async selector=>{const el=typeof selector==='string'?p.locator(selector):selector;await el.scrollIntoViewIfNeeded();await stable();return (await el.screenshot()).toString('base64');};
+  const write=async(key,parts,selectors)=>{
+   const result=await p.evaluate(async parts=>{
+    const images=await Promise.all(parts.map(async src=>{const img=new Image();img.src='data:image/png;base64,'+src;await img.decode();return img;})),gap=24,pad=24;
+    const canvas=document.createElement('canvas');canvas.width=Math.max(...images.map(img=>img.width))+pad*2;canvas.height=images.reduce((n,img)=>n+img.height,0)+gap*(images.length-1)+pad*2;
+    const ctx=canvas.getContext('2d');ctx.fillStyle='#f7f8f3';ctx.fillRect(0,0,canvas.width,canvas.height);let y=pad;
+    for(const img of images){ctx.drawImage(img,Math.round((canvas.width-img.width)/2),y);y+=img.height+gap;}
+    return {width:canvas.width,height:canvas.height,data:canvas.toDataURL('image/webp',.94).split(',')[1]};
+   },parts);
+   const file=key+'-'+variant+'.webp';fs.writeFileSync(path.join(output,file),Buffer.from(result.data,'base64'));captures.push({file,width:result.width,height:result.height,viewport:{width,height:900},selectors});
+  };
+  if(mobile)await p.locator('#rp-tab-route').click();await p.locator('[data-rp-action=change-start]').click();
+  await p.locator('[data-start-id=gangneung] img').evaluate(img=>img.decode());await stable();
+  const firstOption=await p.locator('[data-start-id]').first().boundingBox(),last=await p.locator('[data-start-id=gangneung]').boundingBox();
+  const clip={x:firstOption.x,y:firstOption.y,width:last.x+last.width-firstOption.x,height:Math.max(firstOption.height,last.height)};
+  await write('start',[(await p.screenshot({clip})).toString('base64')],['first two actual start options']);
+  await p.locator('[data-start-id=samcheok]').click();await settle(p);if(mobile)await p.locator('#rp-tab-search').click();
+  await p.locator('.rp-next .rp-place-view').first().click();await stable();
+  const photo=p.locator('.spot-tooltip .spot-photo-card:visible').last();await photo.locator('img').evaluate(img=>img.decode());
+  const tip=await p.locator('.spot-tooltip:visible').last().boundingBox(),action=await p.locator('.spot-route-add:visible').boundingBox(),map=await p.locator('.spot-map').boundingBox();
+  const top=Math.min(tip.y,action.y),bottom=Math.max(tip.y+tip.height,action.y+action.height);
+  const mapClip={x:Math.max(map.x,tip.x-65),y:Math.max(map.y,top-12),width:Math.min(290,map.width-10),height:Math.min(bottom-top+58,map.height-40)};
+  mapClip.x=Math.min(mapClip.x,map.x+map.width-mapClip.width);mapClip.y=Math.min(mapClip.y,map.y+map.height-mapClip.height-32);
+  await write('add',[(await p.screenshot({clip:mapClip})).toString('base64')],['selected map photo card and spot add button']);
+  await p.locator('.spot-route-add:visible').click();await settle(p);if(mobile)await p.locator('#rp-tab-route').click();
+  await p.waitForFunction(()=>document.querySelector('.rp-notice')?.hidden!==false,null,{timeout:10000});
+  const first=(await draft(p)).stopIds[0];
+  await write('complete',[await part('[data-waypoint="'+first+'"]'),await part('.rp-route-pane .rp-route-tools')],['first waypoint','.rp-route-tools before minimum']);
+  await autoFill(p);await p.waitForFunction(()=>document.querySelector('.rp-notice')?.hidden!==false,null,{timeout:10000});
+  const ids=(await draft(p)).stopIds;await rowAction(p,ids[0],'pin');await p.waitForFunction(()=>document.querySelector('.rp-notice')?.hidden!==false,null,{timeout:10000});
+  await write('adjust',[await part('[data-waypoint="'+ids[0]+'"]'),await part('[data-waypoint="'+ids[1]+'"]'),await part('.rp-route-pane .rp-route-tools')],['pinned waypoint','unpinned waypoint','.rp-route-tools after minimum']);
+  await p.locator('#rp-departure-time').fill('06:30');await p.locator('#rp-break-minutes').fill('90');await p.locator('#rp-break-minutes').blur();
+  await write('schedule',[await part('.rp-schedule-fields'),await part('.rp-route-summary')],['.rp-schedule-fields','.rp-route-summary']);
+  await p.locator('#rp-route-title').fill('동해에서 대천까지');await p.locator('#rp-route-title').press('Enter');await save(p);await savedTab(p);await stable();
+  await write('save',[await part('.rp-dialog--management')],['.rp-dialog--management with saved example route']);
+  assert.equal((await draft(p)).stopIds.length,10);assert.deepEqual(p.errors,[]);await p.close();
+ }
+ fs.writeFileSync(path.join(output,'captures.json'),JSON.stringify({source:require('./ui-evidence.cjs').source(),realRoadData:true,captures},null,2));
+});
+
+
+test('help screenshots follow the editor breakpoint and preserve the route while reading',async()=>{
+ const p=await page(1440,900);await open(p);await start(p);await p.locator('[data-rp-action=help]').click();const original=await draft(p);
+ for(const width of [430,768,800,801,1440]){
+  await p.setViewportSize({width,height:700});
+  await p.waitForFunction(mobile=>[...document.querySelectorAll('.rp-help-steps img')].every(img=>img.complete&&img.naturalWidth>0&&img.currentSrc.endsWith((mobile?'-mobile':'-desktop')+'.webp')),width<=800);
+  assert.equal(await p.locator('.rp-dialog--help').evaluate(el=>el.scrollWidth>el.clientWidth),false);
+  assert.deepEqual(await draft(p),original,'reading help must not edit the route');
+ }
+ await p.locator('.rp-help-notes').scrollIntoViewIfNeeded();await capture(p,'route-help-notes',true);await p.keyboard.press('Escape');
+ assert.equal(await p.locator('[data-rp-action=help]').evaluate(el=>el===document.activeElement),true);assert.deepEqual(p.errors,[]);await p.close();
 });

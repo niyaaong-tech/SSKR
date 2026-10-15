@@ -1,0 +1,41 @@
+// Select the existing suites; this wrapper never starts another browser runner.
+const fs=require('node:fs'),path=require('node:path'),{spawnSync}=require('node:child_process');
+const evidence=require('../tests/browser/ui-evidence.cjs');
+const suites=['tests/browser/map.test.js','tests/browser/route-planner.test.js'];
+function options(args){const values={};for(const arg of args){const match=arg.match(/^--(source|engine|viewports|pattern|input)=(.+)$/);if(!match)throw Error('Unknown or incomplete option: '+arg);if(values[match[1]])throw Error('Duplicate option: '+match[1]);values[match[1]]=match[2];}return values;}
+function viewports(value){if(!value.split(',').every(v=>/^\d{3,4}x\d{3,4}$/.test(v)&&v.split('x').every(n=>Number(n)>=300&&Number(n)<=2560))||new Set(value.split(',')).size!==value.split(',').length)throw Error('Invalid viewport list');return value;}
+function capturesComplete(entry){return Boolean(entry&&(entry.capture||entry.functionalLayout)?.status==='passed'&&entry.captures?.length&&entry.captures.length===entry.requestedViewports.split(',').length);}
+function validateAfter(data,requestedViewports,engine){if(!capturesComplete(data.phases.before))throw Error('Complete before captures first (a failing before geometry baseline is allowed)');if(data.phases.before.requestedViewports!==requestedViewports||data.phases.before.engine!==engine)throw Error('Use the same viewport list and engine as before');}
+function phaseOutcome(geometry,capture){return {...capture,captureStatus:capture.status,geometryStatus:geometry.status,status:geometry.status==='passed'&&capture.status==='passed'?'passed':'failed',error:capture.error||(geometry.status!=='passed'?'Geometry checks failed; see the phase geometry log':null)};}
+function validateReview(data){if(evidence.functionalStatus(data)!=='passed')throw Error('Resolve failing or pending related checks before reviewing');if(!capturesComplete(data.phases.before)||!capturesComplete(data.phases.after)||data.phases.after.geometry?.status!=='passed'||data.phases.after.functionalLayout?.status!=='passed')throw Error('Complete matched capture sets and a passing after geometry gate before reviewing');}
+function run(pattern,{mode,engine,requestedViewports,dir,data,runId}){
+ const args=['--test','--test-concurrency=1','--test-reporter=tap','--test-name-pattern='+pattern,...suites],command='node '+args.map(s=>JSON.stringify(s)).join(' '),log=runId+'.log';if(fs.existsSync(path.join(dir,log)))throw Error('Run log already exists: '+log);
+ const startedAt=new Date().toISOString(),result=spawnSync(process.execPath,args,{cwd:evidence.root,env:{...process.env,BROWSER_ENGINE:engine,SSKR_QA_PHASE:['before','after'].includes(mode)?mode:'',SSKR_QA_RUN_ID:runId,SSKR_QA_VIEWPORTS:requestedViewports||'',SSKR_QA_OUTPUT:dir},encoding:'utf8',windowsHide:true,timeout:600000,maxBuffer:16*1024*1024});
+ fs.writeFileSync(path.join(dir,log),(result.stdout||'')+(result.stderr||'')+(result.error?'\n'+result.error.message:''));const counts=evidence.parseTap(result.stdout||'');
+ const status=result.status===0&&counts.executedTests>0&&counts.passedTests>0&&counts.failedTests===0?'passed':'failed';
+ return {status,exitCode:result.status,pid:result.pid,wrapperPid:process.pid,startedAt,finishedAt:new Date().toISOString(),...counts,command,log,engine,requestedViewports:pattern==='^UI geometry:'?'suite defaults':requestedViewports||'suite defaults',runId,source:evidence.source(),error:result.error?.message||(counts.executedTests===0?'No real tests executed (file stubs and skipped tests do not count)':counts.failedTests?'Selected tests failed; see '+log:result.status!==0?'Test process exited with code '+result.status:null)};
+}
+function main(argv=process.argv.slice(2)){
+ const [mode,...args]=argv;if(!['before','after','check','review','geometry'].includes(mode))throw Error('Usage: npm run qa:ui -- before|after [--viewports=1440x900,390x844] [--engine=chromium|webkit] | geometry [--engine=chromium|webkit] | check --pattern=... [--engine=chromium|webkit] | review --input=...');
+ const config=options(args);if(config.viewports&&!['before','after'].includes(mode))throw Error('--viewports is only supported by before/after captures; geometry/check use the fixed test matrix');const allowed={before:['source','engine','viewports'],after:['source','engine','viewports'],geometry:['source','engine'],check:['source','engine','pattern'],review:['source','input']}[mode];for(const key of Object.keys(config))if(!allowed.includes(key))throw Error('--'+key+' is not supported by '+mode);const engine=config.engine||process.env.BROWSER_ENGINE||'chromium';if(!['chromium','webkit'].includes(engine))throw Error('Engine must be chromium or webkit');
+ if(config.source&&evidence.canonical(config.source)!==evidence.root)throw Error('--source must resolve to this wrapper\'s own checkout; run that checkout\'s qa:ui instead');
+ const dir=evidence.output(),data=evidence.report(dir);if(data.source?.sourceRoot&&data.source.sourceRoot!==evidence.root)throw Error('Output belongs to another source checkout');data.source=evidence.source();
+ if(mode==='review'){
+  validateReview(data);if(!config.input)throw Error('Specify --input=<review.json>');const review=JSON.parse(fs.readFileSync(config.input,'utf8'));if(!review.reviewer?.trim())throw Error('Review requires reviewer identifier');
+  for(const key of ['visualReview','copyReview']){const value=review[key];if(!value||!['pending','reviewed','needs_changes'].includes(value.status)||!Array.isArray(value.observations)||value.observations.some(x=>typeof x!=='string'||!x.trim())||(value.status!=='pending'&&!value.observations.length))throw Error('Review needs valid status and concrete observations: '+key);data[key]={...value,reviewer:review.reviewer,recordedAt:new Date().toISOString()};}
+  evidence.write(data,dir);console.log(path.join(dir,'report.md'));return;
+ }
+ const requestedViewports=config.viewports?viewports(config.viewports):['before','after'].includes(mode)?'1440x900,390x844':undefined;
+ if(['before','after'].includes(mode)){
+  if(data.phases[mode])throw Error('Phase already exists; use a fresh output directory');
+  if(mode==='after')validateAfter(data,requestedViewports,engine);
+  data.phases[mode]={requestedViewports,engine,captures:[],geometry:{status:'pending'},functionalLayout:{status:'pending'},source:data.source};evidence.write(data,dir);
+  const geometry=run('^UI geometry:',{mode,engine,requestedViewports,dir,data,runId:mode+'-geometry'});let current=evidence.report(dir);current.phases[mode].geometry=geometry;
+  evidence.write(current,dir); // Keep diagnostic captures even when the measured baseline fails.
+  const entry=run('^UI evidence: waypoint rows',{mode,engine,requestedViewports,dir,data:current,runId:mode+'-capture'});current=evidence.report(dir);if(entry.status==='passed'&&current.phases[mode].captures.length!==requestedViewports.split(',').length){entry.status='failed';entry.error='Expected one matched capture per requested viewport';}
+  current.phases[mode].capture=entry;const combined=phaseOutcome(geometry,entry);current.phases[mode].functionalLayout=combined;current.functionalLayout={status:combined.status};evidence.write(current,dir);console.log(JSON.stringify({mode,...combined,overallStatus:current.functionalLayout.status,report:path.join(dir,'report.md')}));process.exitCode=current.functionalLayout.status==='passed'?0:1;return;
+ }
+ const pattern=mode==='geometry'?'^UI geometry:':config.pattern;if(!pattern)throw Error('Specify a relevant existing --pattern');const runId=mode+'-'+(data.relatedChecks.length+1),entry=run(pattern,{mode,engine,requestedViewports,dir,data,runId});const current=evidence.report(dir);current.source=data.source;current.relatedChecks.push(entry);current.functionalLayout={status:entry.status};evidence.write(current,dir);console.log(JSON.stringify({mode,...entry,overallStatus:current.functionalLayout.status,report:path.join(dir,'report.md')}));process.exitCode=current.functionalLayout.status==='passed'?0:1;
+}
+if(require.main===module){try{main();}catch(error){console.error(error.message);process.exitCode=1;}}
+module.exports={options,viewports,capturesComplete,validateAfter,phaseOutcome,validateReview,main};

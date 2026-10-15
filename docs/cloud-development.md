@@ -8,7 +8,7 @@
 - 주 작업 경로: `C:\Project\SSKR\source`. 클라우드에서는 해당 저장소의 checkout 루트를 사용합니다.
 - 운영 주소: https://sskr.vercel.app
 - 운영 브랜치: `main`. main push는 Vercel 운영 배포를 자동 실행합니다.
-- 이번 수정의 시작 기준: `79e670aa39692c5b2f7b5bfc53823021d7ae5b25` (2026-10-15). 추가 요청에 따라 PC 묶음·지도 번호·사진 배지까지 크기와 내부 여백을 통일하고 텍스트 중심을 보정합니다. 기존 지도 좌표·입력 보강은 유지합니다. 이후 작업은 항상 최신 `origin/main`에서 시작하고 실제 시작 SHA를 기록합니다.
+- 이번 수정의 시작 기준: `81139cbb66814139ba59bff0b9e8504990ad0bfc` (2026-10-15). 지도 배지·입력·탭의 여백과 중앙 정렬 오류를 예방하도록 UI 스킬과 검수 하네스를 보강합니다. 후속 iPhone 화면에서 드러난 시간 입력 상단 정렬은 모바일의 display:block 덮어쓰기를 제거하고 기본 flex 배치를 복구합니다. native 내부 값은 박스 실측과 구분하며 실제 iPhone Safari 확인은 별도입니다. 이후 작업은 항상 최신 `origin/main`에서 시작하고 실제 시작 SHA를 기록합니다.
 - 구조: HTML/CSS/JavaScript, Node.js 개발 서버와 Vercel API 함수. React·Next.js 프로젝트가 아니며 `npm run build`는 없습니다.
 - 로컬 확인 환경: Node.js 24.18.0 / npm 11.16.0. 클라우드도 Node.js 24.x를 기준으로 맞추고 `package-lock.json`으로 설치합니다.
 - 번호·묶음 축소는 기존 공용 지도 브라우저 2개 사례를 Edge·WebKit에서 각각 통과했습니다. APP·공개 탐색의 PC·모바일과 800/801px 경계에서 내용 폭·텍스트 중심·한~세 자리 숫자·사진 배지·묶음 터치 확대를 확인했습니다. 실제 로컬 브라우저에서 PC 3열과 핀·선택 번호 및 사진 배지를 확인했습니다. 실제 iPhone Safari 실기 검증은 별도입니다.
@@ -215,6 +215,17 @@ npm run test:maps
 npm run test:spots
 git diff --check
 ```
+
+UI 정렬·여백 검수는 실제 소스에 통합한 `qa:ui`를 사용합니다. 스킬 정본은 `.agents/skills/sskr-ui-polish/SKILL.md`이며 자세한 실행·판정 기준은 그 안의 `references/ui-qa.md`를 따릅니다.
+
+```powershell
+$env:SSKR_QA_OUTPUT = Join-Path $env:TEMP 'sskr-ui-qa'
+npm run qa:ui -- geometry --engine=chromium
+# 모바일·native 입력·폰트 차이를 변경했다면 별도 출력 폴더에서 WebKit도 확인합니다.
+npm run qa:ui -- geometry --engine=webkit
+```
+
+`geometry`는 실제 텍스트 중심·번호/썸네일 크기 일치·내부 여백·입력/카드/탭 간격을 검사하고, 격리된 잘못된 CSS가 같은 검사에서 거부되는지도 확인합니다. 박스 크기와 투명한 조작 영역은 별도로 측정합니다. 지도 크기 변경은 기존 `mobile editor keeps vector geography aligned` 사례도 `qa:ui check --pattern`으로 실행합니다. `before`·`after`는 같은 조건의 캡처와 자동 게이트 결과를 따로 남기고, 변경 전 실패를 숨기지 않으면서 변경 후 통과 여부를 비교합니다. 검사 대상 root·HEAD·미커밋 파일 해시·브라우저·실행 사례·실측 JSON을 보고서에 기록하며 테스트 0개나 전부 스킵은 실패입니다. 시각 검토·문구 검토·사용자 승인은 자동 통과와 구분합니다. 관련 기능 동작 검사를 대신하는 명령은 아닙니다.
 
 변경한 JavaScript에는 `node --check <파일>`을 실행합니다. HOME·About·공개 탐색을 수정했다면 해당 테스트도 직접 실행합니다.
 

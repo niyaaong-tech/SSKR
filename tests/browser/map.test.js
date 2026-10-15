@@ -3,6 +3,7 @@ const assert=require('node:assert/strict');
 const {spawn}=require('node:child_process');
 const net=require('node:net'),path=require('node:path'),fs=require('node:fs');
 const {chromium,webkit}=require('playwright');
+const {measureBox,assertCenteredText,assertTextFits,assertSameSize,recordGeometry}=require('./ui-geometry.cjs');
 const engine=process.env.BROWSER_ENGINE==='webkit'?webkit:chromium;
 const fixture=require('../../data/fixtures/memorial-event.json');
 let server,browser,base;
@@ -21,7 +22,7 @@ async function page(width=1440,height=1000,input={}){const p=await browser.newPa
 }
 async function open(p,url){await p.goto(base+url);if(url.startsWith('/app/memorials/')){await p.waitForSelector('.memorial-detail');await p.getByText('여정 지도 보기',{exact:true}).click();}await p.waitForSelector('.spot-mini-card');await p.waitForFunction(()=>window.__backdrop?.getMaplibreMap().isStyleLoaded()&&window.__backdrop?.getMaplibreMap().areTilesLoaded(),null,{timeout:60000});assert.equal(await p.locator('.spot-map-status').textContent(),'');assert.ok(await p.evaluate(()=>__backdrop.getMaplibreMap().querySourceFeatures('openmaptiles',{sourceLayer:'sskr_land'}).length));}
 const metrics=p=>p.locator('.spot-mini-select').first().evaluate(e=>{const s=getComputedStyle(e),caption=getComputedStyle(e.querySelector('strong'));return {width:s.width,height:s.height,radius:s.borderRadius,font:caption.fontSize,color:caption.color};});
-async function capture(p,name){if(!process.env.SSKR_QA_OUTPUT)return;fs.mkdirSync(process.env.SSKR_QA_OUTPUT,{recursive:true});await p.locator('.spot-workspace').screenshot({path:path.join(process.env.SSKR_QA_OUTPUT,name+'.png')});}
+async function capture(p,name){if(!process.env.SSKR_QA_OUTPUT)return;const dir=path.join(require('./ui-evidence.cjs').output(),process.env.SSKR_QA_PHASE||process.env.SSKR_QA_RUN_ID||'checks','screenshots',process.env.BROWSER_ENGINE||'chromium');fs.mkdirSync(dir,{recursive:true});const file=path.join(dir,name+'.png');if(fs.existsSync(file))throw Error('Screenshot evidence already exists: '+file);const target=p.locator(".spot-workspace");await target.screenshot({path:file});}
 async function terrainCovers(p,coordinates){return p.evaluate(([lat,lng])=>{const path=document.querySelector('.leaflet-sskr-base-land-pane path'),point=__map.latLngToContainerPoint([lat,lng]),box=document.querySelector('.spot-map').getBoundingClientRect();const local=new DOMPoint(box.left+point.x,box.top+point.y).matrixTransform(path.getScreenCTM().inverse());return path.isPointInFill(local)&&getComputedStyle(path).fillOpacity==='1';},coordinates);}
 test('spot, memorial and public explorer keep the same map style and card dimensions',async()=>{
  const p=await page(),memorial=fixture.memorials.find(m=>m.spotCount===12);let expected;
@@ -59,33 +60,87 @@ test('overview zoom stops at the spot layout and panning stays within Korean ter
  assert.deepEqual(errors,[]);
 });
 
-test('cluster badges use compact centered text at every size and expand without route state',async()=>{
- for(const [width,height,url]of [[1440,900],[360,760],[390,844],[430,844],[800,844],[801,900],[1440,900,"/explore/"],[390,844,"/explore/"]]){
-  const mobile=width<=800,p=await page(width,height,{isMobile:mobile,hasTouch:mobile});await open(p,url||'/app/spots?scenario=guest');await p.evaluate(()=>document.fonts.ready);const grouped=p.locator('.spot-pin.cluster').first();await grouped.waitFor();
-  assert.match(await grouped.textContent(),/^\d+스팟$/);assert.match(await grouped.getAttribute('aria-label'),/스팟 묶음 확대$/);assert.equal(await p.locator('.spot-pin.is-route-stop').count(),0);
-  await capture(p,'cluster-'+width+(url?'-public':''));
-  const plain=p.locator('.spot-pin.spot:not(.cluster)').first(),styles=await Promise.all([plain,grouped].map(e=>e.locator('span').evaluate(el=>{const s=getComputedStyle(el),r=el.getBoundingClientRect(),parent=el.parentElement.getBoundingClientRect(),range=document.createRange();range.selectNodeContents(el);return {radius:s.borderRadius,background:s.backgroundColor,color:s.color,font:s.fontSize,padding:s.padding,textX:(range.getBoundingClientRect().left+range.getBoundingClientRect().right-r.left-r.right)/2,textY:(range.getBoundingClientRect().top+range.getBoundingClientRect().bottom-r.top-r.bottom)/2,textWidth:range.getBoundingClientRect().width,width:r.width,height:r.height,hitWidth:parent.width,hitHeight:parent.height,offsetX:(r.left+r.right-parent.left-parent.right)/2,offsetY:(r.top+r.bottom-parent.top-parent.bottom)/2};})));
-  assert.ok(styles.every(s=>s.radius!=='50%'&&s.textWidth<=s.width-2));assert.notEqual(styles[0].background,styles[1].background);const lum=color=>color.match(/[\d.]+/g).slice(0,3).map(v=>{v=Number(v)/255;return v<=.04045?v/12.92:((v+.055)/1.055)**2.4;}).reduce((sum,v,i)=>sum+v*[.2126,.7152,.0722][i],0);assert.ok(styles.every(s=>(lum(s.background)+.05)/(lum(s.color)+.05)>=4.5));
-  const badge=styles[1];assert.equal(badge.height,mobile?18:20,JSON.stringify({width,badge}));assert.equal(badge.font,mobile?'9px':'10px');assert.equal(badge.hitWidth,48);assert.equal(badge.hitHeight,30);assert.ok(Math.abs(badge.offsetX)<1&&Math.abs(badge.offsetY)<1);
-  assert.ok(badge.width<48);assert.equal(badge.padding,'1px 3px 0px');assert.equal(badge.radius,mobile?'3px':'4px');assert.ok(Math.abs(badge.textX)<=.6&&Math.abs(badge.textY)<=.6,JSON.stringify({width,url,badge}));
-  const samples=await grouped.locator('span').evaluate(el=>{const original=el.textContent;try{return ['2스팟','23스팟','200스팟'].map(text=>{el.textContent=text;const r=el.getBoundingClientRect(),range=document.createRange();range.selectNodeContents(el);return {text,width:r.width,height:r.height,textWidth:range.getBoundingClientRect().width};});}finally{el.textContent=original;}});assert.ok(samples.every(s=>s.textWidth<=s.width-2&&s.height===(mobile?18:20)),JSON.stringify({width,samples}));
-  const zoom=await p.evaluate(()=>__map.getZoom());if(mobile)await grouped.tap();else await grouped.click();await p.waitForFunction(z=>__map.getZoom()>z&&!__map._animatingZoom,zoom);assert.equal(await p.locator('.spot-pin.is-route-stop').count(),0);assert.deepEqual(errors,[]);await p.close();
+const numberSize = width => width <= 800 ? 18 : 20;
+function assertNumberBadge(metrics, width, label = 'number badge') {
+ assert.equal(metrics.box.width,numberSize(width),label+' width');
+ assert.equal(metrics.box.height,numberSize(width),label+' height');
+ assert.equal(metrics.fontSize,width<=800?9:10,label+' font');
+ assert.equal(metrics.padding.top,1,label+' baseline inset');
+ assert.deepEqual([metrics.padding.right,metrics.padding.bottom,metrics.padding.left],[0,0,0],label+' padding');
+ assertCenteredText(metrics,{xTolerance:.1,yTolerance:.6,label});assertTextFits(metrics,{label});
+}
+function assertClusterBadge(metrics,width){
+ assert.equal(metrics.box.height,numberSize(width),'cluster height');
+ assert.equal(metrics.fontSize,width<=800?9:10,'cluster font');
+ assert.deepEqual(metrics.padding,{top:1,right:3,bottom:0,left:3},'cluster padding');
+ const extraWidth=metrics.box.width-metrics.border.left-metrics.border.right-metrics.padding.left-metrics.padding.right-metrics.text.width;
+ assert.ok(extraWidth>=-.5&&extraWidth<=1,'cluster has unexplained horizontal whitespace: '+JSON.stringify(metrics));
+ assertCenteredText(metrics,{xTolerance:.1,yTolerance:.6,label:'cluster'});assertTextFits(metrics,{label:'cluster'});
+}
+
+test('UI geometry: compact cluster labels center real text and retain touch expansion',async()=>{
+ for(const [width,height,url]of [[1440,900],[360,760],[390,844],[430,844],[800,844],[801,900],[1440,900,'/explore/'],[390,844,'/explore/']]){
+  const mobile=width<=800,p=await page(width,height,{isMobile:mobile,hasTouch:mobile});
+  try{
+   await open(p,url||'/app/spots?scenario=guest');const grouped=p.locator('.spot-pin.cluster').first(),badge=grouped.locator('span');
+   assert.match(await grouped.textContent(),/^\d+스팟$/);assert.match(await grouped.getAttribute('aria-label'),/스팟 묶음 확대$/);assert.equal(await p.locator('.spot-pin.is-route-stop').count(),0);
+   const metrics=await measureBox(badge);assertClusterBadge(metrics,width);
+   const hit=await grouped.boundingBox();assert.equal(hit.width,48);assert.equal(hit.height,30);
+   assert.ok(Math.abs(metrics.box.x+metrics.box.width/2-hit.x-hit.width/2)<.1&&Math.abs(metrics.box.y+metrics.box.height/2-hit.y-hit.height/2)<.1,'visual label must stay on its geographic anchor');
+   const plain=p.locator('.spot-pin.spot:not(.cluster)>span').first();
+   const styles=await Promise.all([plain,badge].map(el=>el.evaluate(e=>{const s=getComputedStyle(e);return {background:s.backgroundColor,color:s.color,radius:s.borderRadius};})));
+   assert.ok(styles.every(s=>s.radius!=='50%'));assert.notEqual(styles[0].background,styles[1].background);
+   const lum=color=>color.match(/[\d.]+/g).slice(0,3).map(v=>{v=Number(v)/255;return v<=.04045?v/12.92:((v+.055)/1.055)**2.4;}).reduce((sum,v,i)=>sum+v*[.2126,.7152,.0722][i],0);
+   assert.ok(styles.every(s=>(lum(s.background)+.05)/(lum(s.color)+.05)>=4.5));
+   const original=await badge.textContent(),samples=[];
+   try{for(const text of ['2스팟','23스팟','200스팟']){await badge.evaluate((e,text)=>e.textContent=text,text);const sample=await measureBox(badge);assertClusterBadge(sample,width);samples.push(sample);}}
+   finally{await badge.evaluate((e,text)=>e.textContent=text,original);}
+   await recordGeometry(p,'cluster-'+width+(url?'-public':''),{metrics,hit,samples});await capture(p,'cluster-'+width+(url?'-public':''));
+   const zoom=await p.evaluate(()=>__map.getZoom());if(mobile)await grouped.tap();else await grouped.click();await p.waitForFunction(z=>__map.getZoom()>z&&!__map._animatingZoom,zoom);assert.equal(await p.locator('.spot-pin.is-route-stop').count(),0);
+  }finally{await p.close();}
  }
+ assert.deepEqual(errors,[]);
 });
 
-test('one, two and three digit markers and photo badges keep their text centered',async()=>{
+test('UI geometry: one two and three digit map and photo badges use matching compact centered boxes',async()=>{
  const spots=require('../../web/app/spot-catalog').filter(p=>p.kind==='spot');
- for(const [width,height] of [[1440,1000],[390,844],[360,540]]){
-  const p=await page(width,height);
-  for(const id of [spots[0].id,spots[11].id,spots.at(-1).id]){
-   await p.goto(base+'/app/spots/'+id+'?scenario=guest');await p.waitForFunction(()=>{const e=document.querySelector('.spot-pin.is-selected>span');return window.__map&&!__map._animatingZoom&&e?.getBoundingClientRect().width>=18&&getComputedStyle(e).display==='flex';});
-   const marker=await p.evaluate(()=>{const e=document.querySelector('.spot-pin.is-selected>span');const box=e.getBoundingClientRect(),range=document.createRange();range.selectNodeContents(e);const text=range.getBoundingClientRect(),style=getComputedStyle(e);return {value:e.textContent,width:box.width,height:box.height,x:(text.left+text.right-box.left-box.right)/2,y:(text.top+text.bottom-box.top-box.bottom)/2,textWidth:text.width,spacing:style.letterSpacing};});
-   assert.ok(Math.abs(marker.x)<=.6&&Math.abs(marker.y)<=.6,JSON.stringify({width,...marker}));assert.equal(marker.width,width<=800?18:20);assert.equal(marker.height,marker.width);assert.ok(marker.textWidth<=marker.width-2,JSON.stringify(marker));assert.ok(['0px','normal'].includes(marker.spacing),JSON.stringify(marker));
-   const badges=await (await p.waitForFunction(()=>{const items=[...document.querySelectorAll('.spot-mini-number')].map(e=>{const b=e.getBoundingClientRect(),r=document.createRange();r.selectNodeContents(e);const t=r.getBoundingClientRect();return {value:e.textContent,width:b.width,height:b.height,textWidth:t.width,x:(t.left+t.right-b.left-b.right)/2,y:(t.top+t.bottom-b.top-b.bottom)/2};}).filter(b=>b.width>0);return items.length&&items.every(b=>b.width>=18)?items:false;})).jsonValue();
-   assert.ok(badges.length>0);assert.ok(badges.every(b=>Math.abs(b.x)<=.6&&Math.abs(b.y)<=.6&&b.width===(width<=800?18:20)&&b.height===b.width&&b.textWidth<=b.width-2),JSON.stringify({width,badges}));
+ for(const [width,height]of [[1440,1000],[390,844],[360,540]]){
+  const p=await page(width,height,{isMobile:width<=800,hasTouch:width<=800});
+  try{for(const id of [spots[0].id,spots[11].id,spots.at(-1).id]){
+   await open(p,'/app/spots/'+id+'?scenario=guest');await p.waitForFunction(()=>window.__map&&!__map._animatingZoom&&document.querySelector('.spot-pin.is-selected>span'));
+   const marker=await measureBox(p.locator('.spot-pin.is-selected>span'));assertNumberBadge(marker,width,'map '+id);
+   const photo=await measureBox(p.locator('.spot-mini-number:visible').filter({hasText:new RegExp('^'+marker.textContent+'$')}).first());assertNumberBadge(photo,width,'photo '+id);assertSameSize(marker,photo);
+   await recordGeometry(p,'number-'+width+'-'+id,{marker,photo});
    if(id===spots.at(-1).id)await capture(p,'number-marker-'+width);
-  }
-  await p.close();
+  }}finally{await p.close();}
+ }
+ assert.deepEqual(errors,[]);
+});
+
+test('UI geometry: badge assertions reject oversized insets miscentering and inconsistent photo sizes',async()=>{
+ const cases=[
+  {name:'oversized map padding',selector:'.spot-pin.is-selected>span',css:'padding:8px!important;width:34px!important;height:34px!important',check:assertNumberBadge},
+  {name:'horizontal text offset',selector:'.spot-pin.is-selected>span',css:'padding-left:6px!important',check:assertNumberBadge},
+  {name:'vertical text offset',selector:'.spot-pin.is-selected>span',css:'padding-top:6px!important',check:assertNumberBadge},
+  {name:'oversized photo badge',selector:'.spot-mini-number',css:'width:26px!important;height:26px!important',check:assertNumberBadge}
+ ];
+ for(const width of [390,1440]){
+  const p=await page(width,844);const detections=[];
+  try{
+   await open(p,'/app/spots/'+require('../../web/app/spot-catalog').filter(s=>s.kind==='spot').at(-1).id+'?scenario=guest');
+   const marker=p.locator('.spot-pin.is-selected>span');assertNumberBadge(await measureBox(marker),width);
+   for(const item of cases){
+    const style=await p.addStyleTag({content:'.sskr-map '+item.selector+'{'+item.css+'}'});
+    try{const target=p.locator(item.selector+':visible').first(),metrics=await measureBox(target);assert.throws(()=>item.check(metrics,width,item.name),error=>error.code==='ERR_ASSERTION',item.name+' must be detected');detections.push({name:item.name,metrics});}
+    finally{await style.evaluate(e=>e.remove());}
+    assertNumberBadge(await measureBox(marker),width,'restored map');
+   }
+   await open(p,'/app/spots?scenario=guest');const cluster=p.locator('.spot-pin.cluster>span').first();assertClusterBadge(await measureBox(cluster),width);
+   const style=await p.addStyleTag({content:'.sskr-map .spot-pin.cluster>span{width:48px!important;height:30px!important;padding:6px!important}'});
+   try{const metrics=await measureBox(cluster);assert.throws(()=>assertClusterBadge(metrics,width),error=>error.code==='ERR_ASSERTION','old cluster box must be rejected');detections.push({name:'oversized cluster',metrics});}
+   finally{await style.evaluate(e=>e.remove());}
+   assertClusterBadge(await measureBox(cluster),width);await recordGeometry(p,'negative-badges-'+width,{detections});
+  }finally{await p.close();}
  }
  assert.deepEqual(errors,[]);
 });

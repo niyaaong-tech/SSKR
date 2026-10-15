@@ -8,7 +8,8 @@
     "test:spots": "node --test tests/browser/spots.test.js",
     "test:routes": "node --test tests/browser/route-planner.test.js",
     "map:cache": "node tools/build-map-cache.cjs",
-    "test:services": "node --test tests/browser/app-services.test.js"
+    "test:services": "node --test tests/browser/app-services.test.js",
+    "qa:ui": "node tools/ui-qa.cjs"
   },
   "dependencies": {
     "@mapbox/vector-tile": "3.0.0",

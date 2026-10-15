@@ -58,9 +58,18 @@ function fixture(options={}){
  host.querySelector('.spot-attribution').children.set('summary',new Element());
  const map={zoom:7,min:4,layers:[],fitCalls:[],handlers:{},limitCalls:[],stop(){this.limitCalls.push("stop");return this;},panInsideBounds(bounds,options){this.limitCalls.push({action:"pan",bounds,options});return this;},invalidateSize(){return this;},setView(){return this;},setMinZoom(n){this.min=n;return this;},setMaxBounds(bounds){this.limitCalls.push({action:"bounds",bounds});return this;},getMinZoom(){return this.min;},getZoom(){return this.zoom;},getBoundsZoom(){return 7;},setZoom(n){this.zoom=n;return this;},getBounds(){return {contains:()=>true};},project:([lat,lng])=>({x:lng*100,y:lat*100}),createPane:()=>({style:{}}),on(name,fn){this.handlers[name]=fn;return this;},fitBounds(bounds,opts){this.fitCalls.push({bounds,opts});return this;},getSize(){return {x:1200,y:700};},remove(){this.removed=true;this.layers.forEach(l=>l.clearLayers?.());this.layers=[];}};
  const groups=[];
- const group=()=>{const g={children:[],addTo(m){m.layers.push(this);return this;},eachLayer(fn){this.children.forEach(fn);return this;},clearLayers(){this.children=[];return this;},getBounds(){return {isValid:()=>this.children.length>0,extend(){return this;}};}};groups.push(g);return g;};
- const leaflet={map:()=>map,latLngBounds:points=>({points}),point:points=>({add:other=>points.map((v,i)=>v+other[i])}),layerGroup:group,featureGroup:group,DomEvent:{disableClickPropagation(){},stopPropagation(){}},divIcon:opts=>opts,
-  marker(point,opts){return {point,options:opts,element:new Element(),getElement(){return this.element;},handlers:{},bindTooltip(tip,options){this.tip=tip;this.tipOptions=options;return this;},unbindTooltip(){delete this.tip;delete this.tipOptions;return this;},on(names,fn){for(const name of names.split(' '))this.handlers[name]=fn;return this;},addTo(layer){layer.children.push(this);return this;}};},
+ const group=()=>{const g={children:[],addTo(m){m.layers.push(this);return this;},eachLayer(fn){this.children.forEach(fn);return this;},clearLayers(){this.children.forEach(child=>child.fire?.('remove'));this.children=[];return this;},getBounds(){return {isValid:()=>this.children.length>0,extend(){return this;}};}};groups.push(g);return g;};
+ const leaflet={map:()=>map,latLngBounds:points=>({points}),point:points=>({add:other=>points.map((v,i)=>v+other[i])}),layerGroup:group,featureGroup:group,DomEvent:{disableClickPropagation(){},stopPropagation(){},on(element,names,fn){for(const name of names.split(' '))element.listeners[name]=fn;},off(element,names,fn){for(const name of names.split(' '))if(element.listeners[name]===fn)delete element.listeners[name];}},divIcon:opts=>opts,
+  marker(point,opts){return {
+   point,options:opts,element:new Element(),getElement(){return this.element;},handlers:{},events:{},
+   bindTooltip(tip,options){this.tip=tip;this.tipOptions=options;return this;},
+   unbindTooltip(){delete this.tip;delete this.tipOptions;return this;},
+   on(names,fn){for(const name of names.split(' ')){(this.events[name]??=[]).push(fn);this.handlers[name]=event=>this.fire(name,event);}return this;},
+   off(names,fn){for(const name of names.split(' ')){this.events[name]=(this.events[name]||[]).filter(listener=>listener!==fn);if(!this.events[name].length)delete this.handlers[name];}return this;},
+   once(names,fn){const listener=event=>{this.off(names,listener);fn.call(this,event);};return this.on(names,listener);},
+   fire(name,event={}){for(const fn of [...(this.events[name]||[])])fn.call(this,{...event,type:name,target:this});return this;},
+   addTo(layer){layer.children.push(this);this.fire('add');return this;}
+  };},
   polyline(coordinates,opts){return {coordinates,options:opts,addTo(layer){(layer.children||layer.layers).push(this);return this;},setLatLngs(next){this.coordinates=next;return this;},setStyle(next){Object.assign(this.options,next);return this;}};}
  };
  const observers=[];
@@ -71,6 +80,18 @@ function fixture(options={}){
  const api=sandbox.SSKR_MAP.mount(host,{items:places,catalog:places,onSelect:p=>callbacks.push(p.id),...options});
  return {host,map,groups,observers,api,callbacks,sandbox};
 }
+
+test('Leaflet fixture dispatches lifecycle handlers once and removes detached hover listeners',()=>{
+ const {api,groups,sandbox}=fixture(),layer=groups[0],rendered=[...layer.children];
+ assert.ok(rendered.every(marker=>typeof marker.element.listeners.pointerenter==='function'&&typeof marker.element.listeners.pointerleave==='function'));
+ const marker=sandbox.L.marker([37,128],{});let added=0,removed=0;
+ assert.equal(marker.once('add',()=>added++).once('remove',()=>removed++),marker);
+ assert.deepEqual([added,removed],[0,0],'registration must wait for the corresponding lifecycle event');
+ marker.addTo(layer).fire('add');assert.deepEqual([added,removed],[1,0]);
+ layer.clearLayers();marker.fire('remove');assert.deepEqual([added,removed],[1,1]);
+ assert.ok(rendered.every(marker=>Object.keys(marker.element.listeners).length===0),'removed markers must detach pointer listeners');
+ api.destroy();
+});
 
 test('planner updates retain filtered stops and candidates without refitting the map',()=>{
  const {host,map,groups,api,callbacks}=fixture();

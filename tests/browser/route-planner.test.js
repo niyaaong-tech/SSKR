@@ -3,6 +3,7 @@ const assert=require('node:assert/strict');
 const {spawn}=require('node:child_process');
 const net=require('node:net'),path=require('node:path'),fs=require('node:fs');
 const {chromium,webkit}=require('playwright');
+const {measureBox,assertCenteredText,recordGeometry}=require('./ui-geometry.cjs');
 let server,browser,base;
 // Browser-flow fixture only: production road validity is tested against generated route data.
 const providerFixture=`window.SSKR_ROUTE_PROVIDER={create(){return {version:'browser-fixture',async ready(){if(window.__providerFailure)throw new Error('도로 데이터를 불러오지 못했습니다.');},summary(a,b){const p=SSKR_SPOT_CATALOG.find(p=>p.id===a),q=SSKR_SPOT_CATALOG.find(p=>p.id===b);if(!p||!q)return null;const distanceMeters=Math.hypot((p.lat-q.lat)*111000,(p.lng-q.lng)*90000)*1.2;return {distanceMeters,durationSeconds:distanceMeters/12};},async route(ids,{signal}={}){await new Promise(r=>setTimeout(r,window.__roadDelay||50));if(signal?.aborted)throw new DOMException('Aborted','AbortError');if(window.__roadFailure)throw new Error('도로 정보를 불러오지 못했습니다.');const legs=ids.slice(1).map((id,i)=>{const p=SSKR_SPOT_CATALOG.find(p=>p.id===ids[i]),q=SSKR_SPOT_CATALOG.find(p=>p.id===id);return {fromId:p.id,toId:q.id,coordinates:window.__invalidCoordinates?[[999,q.lng],[q.lat,q.lng]]:[[p.lat,p.lng],[q.lat,q.lng]],...this.summary(p.id,q.id),status:'ready'};});return {legs,distanceMeters:legs.reduce((s,l)=>s+l.distanceMeters,0),durationSeconds:legs.reduce((s,l)=>s+l.durationSeconds,0),valid:!window.__invalidRoads,version:this.version};}};}};`;
@@ -21,7 +22,7 @@ async function page(width=1440,height=1000,input={}){const p=await browser.newPa
 async function open(p,scenario='guest'){await p.goto(base+'/app/spots?scenario='+scenario);await p.waitForSelector('[data-spot-mode="plan"]');try{await p.waitForFunction(()=>window.__map,null,{timeout:5000});}catch(error){throw Error(`Map did not initialize: ${JSON.stringify({errors:p.errors,mapStatus:await p.locator('.spot-map-status').textContent(),leaflet:await p.evaluate(()=>Boolean(window.L)),mapApi:await p.evaluate(()=>Boolean(window.SSKR_MAP))})}`,{cause:error});}await p.locator('[data-spot-mode="plan"]').click();await p.waitForSelector('.route-planner:not([hidden])');}
 const draft=p=>p.evaluate(()=>JSON.parse(sessionStorage.getItem('sskr.route-editor')).plan);
 async function settle(p){await p.waitForFunction(()=>!document.querySelector('[data-route-generation][aria-busy=true]')&&![...document.querySelectorAll('.rp-operation')].some(e=>/연결 중|만드는 중|준비하고/.test(e.textContent)));}
-async function capture(p,name,viewport=false){if(!process.env.SSKR_QA_OUTPUT)return;fs.mkdirSync(process.env.SSKR_QA_OUTPUT,{recursive:true});const target=viewport?p:p.locator('.spot-planning-area');await target.screenshot({path:path.join(process.env.SSKR_QA_OUTPUT,name+'.png')});}
+async function capture(p,name,viewport=false){if(!process.env.SSKR_QA_OUTPUT)return;const dir=path.join(require('./ui-evidence.cjs').output(),process.env.SSKR_QA_PHASE||process.env.SSKR_QA_RUN_ID||'checks','screenshots',process.env.BROWSER_ENGINE||'chromium');fs.mkdirSync(dir,{recursive:true});const file=path.join(dir,name+'.png');if(fs.existsSync(file))throw Error('Screenshot evidence already exists: '+file);const target=viewport?p:p.locator(".spot-planning-area");await target.screenshot({path:file});}
 
 async function chooseStart(p,id='songjeong'){if(!await p.locator('[data-rp-action="change-start"]').isVisible())await p.locator('#rp-tab-route').click();await p.locator('[data-rp-action="change-start"]').click();await p.locator('[data-start-id="'+id+'"]').click();}
 async function start(p,id='songjeong'){await chooseStart(p,id);await settle(p);if(await p.locator('#rp-tab-search').isVisible())await p.locator('#rp-tab-search').click();await p.waitForSelector('.rp-next .rp-place-view');}
@@ -32,6 +33,45 @@ async function tool(p,action){assert.equal(action,'optimize');await p.locator('[
 async function rowAction(p,id,action){const row=p.locator('[data-waypoint="'+id+'"]');if(action==='up'||action==='down'){await row.locator('[data-drag-handle]').focus();await p.keyboard.press(action==='up'?'ArrowUp':'ArrowDown');}else await row.locator('[data-rp-action="'+action+'"]').click();await settle(p);}
 async function seedPlan(p,stopIds){await p.addInitScript(()=>{const seeded=sessionStorage.getItem('qa-plan-seed');if(!seeded)return;sessionStorage.removeItem('qa-plan-seed');const state=JSON.parse(sessionStorage.getItem('sskr.route-editor'));state.plan.stopIds=JSON.parse(seeded);state.anchorId=state.plan.startId;state.selectedId=null;sessionStorage.setItem('sskr.route-editor',JSON.stringify(state));});await p.evaluate(ids=>sessionStorage.setItem('qa-plan-seed',JSON.stringify(ids)),stopIds);await p.reload();await p.waitForSelector('.route-planner:not([hidden])');await settle(p);assert.deepEqual((await draft(p)).stopIds,stopIds);}
 async function autoFill(p){await p.locator('[data-rp-action=autofill]:visible').click();await settle(p);}
+
+async function assertTabCenters(tabs,label){
+ const metrics=[];for(const tab of await tabs.all()){const m=await measureBox(tab),contentTextOffset=m.textOffset&&{x:m.textOffset.x+(m.border.right-m.border.left)/2,y:m.textOffset.y+(m.border.bottom-m.border.top)/2};
+  // The 2px underline is outside the tab content; keep glyph tolerance at 1px.
+  assertCenteredText({...m,textOffset:contentTextOffset},{xTolerance:1,yTolerance:1,label:label+' content center '+await tab.textContent()});metrics.push({...m,contentTextOffset});}return metrics;
+}
+async function mobileControlGeometry(p){return p.locator('.rp-schedule-fields').evaluate(el=>{
+ const rect=e=>e.getBoundingClientRect().toJSON(),fields=[...el.children],controls=[...el.querySelectorAll('input,button')],time=el.querySelector('[type=time]'),timeStyle=getComputedStyle(time);
+ // Native iOS value text is inside a closed shadow tree; this records its layout contract, not glyph coordinates.
+ const nativeTime={display:timeStyle.display,alignItems:timeStyle.alignItems,textAlign:timeStyle.textAlign};
+ return {nativeTime,fields:fields.map(rect),labels:fields.map(e=>rect(e.firstElementChild)),controls:controls.map(e=>({rect:rect(e),padding:[getComputedStyle(e).paddingTop,getComputedStyle(e).paddingRight,getComputedStyle(e).paddingBottom,getComputedStyle(e).paddingLeft].map(parseFloat)})),time:rect(el.querySelector('[type=time]')),stepper:rect(el.querySelector('.rp-break-control'))};
+});}
+function assertMobileControls(geometry,width){
+ const diagnostic=JSON.stringify({width,geometry});
+ // A grid item may blockify inline-flex to flex. Both preserve the temporal control's flex layout.
+ assert.ok(['inline-flex','flex'].includes(geometry.nativeTime.display),'native time must retain flex layout '+diagnostic);
+ assert.equal(geometry.nativeTime.alignItems,'center','native time vertical alignment '+diagnostic);
+ assert.equal(geometry.nativeTime.textAlign,'center','native time horizontal alignment '+diagnostic);
+ assert.ok(Math.abs(geometry.labels[0].top-geometry.labels[1].top)<1,diagnostic);
+ assert.ok(geometry.labels.every(r=>Math.abs(r.height-16)<.1),diagnostic);
+ assert.ok(Math.abs(geometry.fields[0].width-geometry.fields[1].width)<1,diagnostic);
+ assert.ok(Math.abs(geometry.stepper.left-geometry.time.right-12)<.2,diagnostic);
+ assert.ok(geometry.controls.every(({rect:r,padding})=>Math.abs(r.height-44)<.1&&Math.abs(r.top-geometry.time.top)<1&&padding.every(n=>n<=10)),diagnostic);
+ assert.ok(geometry.fields.every((r,i)=>Math.abs((i?geometry.stepper:geometry.time).top-geometry.labels[i].bottom-4)<.2),diagnostic);
+ assert.ok(geometry.time.right<=geometry.fields[0].right+.1&&geometry.stepper.right<=geometry.fields[1].right+.1,diagnostic);
+}
+async function waypointGeometry(row){return row.evaluate(el=>{
+ const rect=e=>e.getBoundingClientRect().toJSON(),css=getComputedStyle(el),actions=el.querySelector('.rp-row-actions'),buttons=[...actions.querySelectorAll('button')];
+ return {row:rect(el),padding:[css.paddingTop,css.paddingRight,css.paddingBottom,css.paddingLeft].map(parseFloat),marginBottom:parseFloat(css.marginBottom),actions:rect(actions),buttons:buttons.map(b=>({rect:rect(b),icon:rect(b.querySelector('svg'))}))};
+});}
+function assertCompactWaypoint(g,width){
+ const target=width<=800?44:32,diagnostic=JSON.stringify({width,geometry:g});
+ assert.ok(g.row.height<=(width<=800?104:78),diagnostic);assert.ok(g.padding.every(n=>n<=4.1),diagnostic);
+ assert.ok(g.marginBottom>=6.9&&g.marginBottom<=7.1,diagnostic);
+ assert.ok(g.buttons.length===2&&g.buttons.every(({rect:r,icon})=>Math.abs(r.width-target)<.1&&Math.abs(r.height-target)<.1&&r.left>=g.row.left&&r.right<=g.row.right&&r.top>=g.row.top&&r.bottom<=g.row.bottom&&Math.abs(icon.left+icon.width/2-r.left-r.width/2)<1&&Math.abs(icon.top+icon.height/2-r.top-r.height/2)<1),diagnostic);
+ assert.ok(Math.abs(g.buttons[1].rect.top-g.buttons[0].rect.bottom)<.1,diagnostic);
+ assert.ok(Math.abs(g.actions.right-g.row.right+5)<.2,diagnostic);
+}
+
 
 test('entry uses one finder, automatic insertion, map-only addition, and a separate management dialog',async()=>{
  const p=await page();await open(p);assert.equal(await p.locator('#rp-tab-places,#rp-tab-saved,#rp-insertion,.rp-sheet-toggle,.rp-expand').count(),0);assert.equal(await p.locator('[data-rp-action=save]').count(),1);assert.equal(await p.locator('[data-rp-action=autofill]').isDisabled(),true);
@@ -148,7 +188,7 @@ test('mouse and keyboard corner selections reveal the card and action on mobile 
 });
 
 
-test('mobile entry prioritizes the left route tab and compact accessible editing controls',async()=>{
+test('UI geometry: mobile entry prioritizes the left route tab and compact accessible editing controls',async()=>{
  for(const width of [390,360,430,768]){
   const p=await page(width,844,{isMobile:true,hasTouch:true,deviceScaleFactor:3});await open(p);await settle(p);await p.locator('.spot-pin.start').first().waitFor();await p.waitForTimeout(200);
   await capture(p,'mobile-entry-'+width,true);
@@ -159,9 +199,7 @@ test('mobile entry prioritizes the left route tab and compact accessible editing
   assert.ok(header.height<=140,JSON.stringify({width,header}));assert.ok(title.width>=140,JSON.stringify({width,title}));assert.ok(title.y+title.height<=fields.y&&save.y+save.height<=fields.y);assert.ok(title.x+title.width+3<=save.x);
   const controls=await p.locator('.rp-header button,.rp-header input,.rp-tabs button').evaluateAll(es=>es.map(e=>({name:e.getAttribute('aria-label')||e.textContent,rect:e.getBoundingClientRect().toJSON()})));
   assert.ok(controls.every(e=>e.rect.height>=44&&e.rect.width>=44),JSON.stringify({width,controls}));
-  const geometry=await p.locator('.rp-schedule-fields').evaluate(el=>{const rect=e=>e.getBoundingClientRect().toJSON(),fields=[...el.children];return {fields:fields.map(rect),labels:fields.map(e=>rect(e.firstElementChild)),controls:[...el.querySelectorAll('input,button')].map(rect),time:rect(el.querySelector('[type=time]')),stepper:rect(el.querySelector('.rp-break-control'))};});
-  assert.ok(Math.abs(geometry.labels[0].top-geometry.labels[1].top)<1,JSON.stringify({width,geometry}));assert.ok(Math.abs(geometry.fields[0].width-geometry.fields[1].width)<1);assert.ok(geometry.stepper.left-geometry.time.right>=11.9,JSON.stringify({width,geometry}));
-  assert.ok(geometry.controls.every(r=>r.height>=44&&r.height<=45&&Math.abs(r.top-geometry.time.top)<1),JSON.stringify({width,geometry}));assert.ok(geometry.time.right<=geometry.fields[0].right+.1&&geometry.stepper.right<=geometry.fields[1].right+.1);
+  const geometry=await mobileControlGeometry(p);assertMobileControls(geometry,width);await recordGeometry(p,'mobile-controls-'+width,geometry);await recordGeometry(p,'mobile-navigation-'+width,await assertTabCenters(p.locator('.rp-tabs button'),'mobile navigation'));
   assert.equal(await p.locator('.rp-header [data-rp-action=help]').count(),0);assert.equal(await p.locator('.rp-route-footer [data-rp-action=help]').count(),1);
   const summary=await p.locator('.rp-route-summary').boundingBox(),start=await p.locator('.rp-start-select').boundingBox();assert.ok(start.y-summary.y-summary.height<=12,JSON.stringify({width,summary,start}));
   assert.equal(await p.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);
@@ -277,7 +315,7 @@ test('start galleries and illustrated help stay usable in narrow and short scree
  }
 });
 
-test('finder order and one-line category tabs survive keyboard use and screen changes',async()=>{
+test('UI geometry: finder order and one-line category tabs survive keyboard use and screen changes',async()=>{
  const p=await page(1280,900);await open(p);await start(p);
  for(const width of [1280,900,390]){
   await p.setViewportSize({width,height:844});await p.waitForTimeout(180);
@@ -288,7 +326,8 @@ test('finder order and one-line category tabs survive keyboard use and screen ch
   assert.equal(await pane.locator('details.rp-filters,.rp-insertion-gap').count(),0);
   assert.doesNotMatch(await pane.locator('.rp-next').textContent(),/→.*구간/);
   assert.equal(await pane.locator('[role=tab]').evaluateAll(tabs=>tabs.every(el=>Math.abs(el.getBoundingClientRect().top-tabs[0].getBoundingClientRect().top)<1)),true);
-  const tabs=pane.locator('.spot-categories');assert.equal(await tabs.evaluate(el=>getComputedStyle(el).overflowX),'auto');
+  const tabs=pane.locator('.spot-categories');assert.equal(await tabs.evaluate(el=>getComputedStyle(el).overflowX),'auto');await recordGeometry(p,'finder-tabs-'+width,await assertTabCenters(tabs.locator('button'),'category tabs'));
+  const filter=await pane.locator('.rp-filter-slot').boundingBox(),search=await pane.locator('.rp-search-slot').boundingBox();assert.ok(search.y-filter.y-filter.height>=11.9&&search.y-filter.y-filter.height<=12.1,JSON.stringify({width,filter,search}));
   await pane.locator('[data-category=all]').focus();await p.keyboard.press('ArrowRight');assert.equal(await pane.locator('[data-category=cafe]').getAttribute('aria-selected'),'true');
   await p.keyboard.press('Home');assert.equal(await pane.locator('[data-category=all]').getAttribute('aria-selected'),'true');
   assert.equal(await p.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);
@@ -361,11 +400,11 @@ test('mobile list actions stay in document flow, reorder access works and saved 
  const p=await page(390,844);await open(p);await start(p);await addFirstRecommendation(p);await addFirstRecommendation(p);await p.locator('#rp-tab-route').click();const before=await draft(p);await rowAction(p,before.stopIds[0],'down');assert.deepEqual((await draft(p)).stopIds,[before.stopIds[1],before.stopIds[0]]);const handle=p.locator('[data-drag-handle="'+before.stopIds[0]+'"]');await handle.focus();await p.keyboard.press('ArrowUp');await settle(p);assert.deepEqual((await draft(p)).stopIds,before.stopIds);await p.locator('[data-rp-action=undo]').click();await settle(p);assert.deepEqual((await draft(p)).stopIds,[before.stopIds[1],before.stopIds[0]]);const last=await p.locator('.rp-waypoint').last().boundingBox(),footer=await p.locator('.rp-route-footer').boundingBox();assert.ok(footer.y>=last.y+last.height);assert.equal(await p.locator('.rp-route-scroll').evaluate(e=>getComputedStyle(e).overflowY),'visible');await capture(p,'mobile-route-list');await p.locator('[data-rp-action=manage]').click();await p.locator('[data-rp-action=new]').click();assert.equal((await draft(p)).startId,null);await p.locator('[data-rp-action=undo]').click();await settle(p);assert.equal((await draft(p)).startId,before.startId);assert.deepEqual(p.errors,[]);await p.close();
 });
 
-test('waypoints use a direct delete button while dragging, touch targets and undo remain available',async()=>{
+test('UI geometry: waypoints use a direct delete button while dragging, touch targets and undo remain available',async()=>{
  for(const width of [1440,390]){
   const p=await page(width,844);await open(p);await start(p);await addFirstRecommendation(p);await addFirstRecommendation(p);if(width===390)await p.locator('#rp-tab-route').click();const before=await draft(p);
   assert.equal(await p.locator('.rp-row-menu,[data-rp-action=up],[data-rp-action=down],[data-rp-action=detail]').count(),0);assert.equal(await p.locator('.rp-remove').count(),2);assert.equal(await p.locator('[data-waypoint="'+before.startId+'"] .rp-remove,[data-waypoint="'+before.finishId+'"] .rp-remove').count(),0);
-  const row=p.locator('[data-waypoint="'+before.stopIds[0]+'"]'),remove=row.locator('.rp-remove'),box=await remove.boundingBox();assert.ok(box.width>=(width===390?44:32)&&box.height>=(width===390?44:32));assert.ok((await row.boundingBox()).height<=(width===390?104:78));assert.match(await remove.getAttribute('aria-label'),/스팟 삭제$/);
+  const row=p.locator('[data-waypoint="'+before.stopIds[0]+'"]'),remove=row.locator('.rp-remove'),box=await remove.boundingBox();assert.ok(box.width>=(width===390?44:32)&&box.height>=(width===390?44:32));assert.ok((await row.boundingBox()).height<=(width===390?104:78));assert.match(await remove.getAttribute('aria-label'),/스팟 삭제$/);const rowGeometry=await waypointGeometry(row);assertCompactWaypoint(rowGeometry,width);await recordGeometry(p,'waypoint-actions-'+width,rowGeometry);
   if(width===1440){await row.dragTo(p.locator('[data-waypoint="'+before.stopIds[1]+'"]'),{targetPosition:{x:60,y:60}});await settle(p);assert.deepEqual((await draft(p)).stopIds,[before.stopIds[1],before.stopIds[0]]);await p.locator('[data-rp-action=undo]').click();await settle(p);}
   await remove.click();await settle(p);assert.deepEqual((await draft(p)).stopIds,[before.stopIds[1]]);await p.locator('[data-rp-action=undo]').click();await settle(p);assert.deepEqual((await draft(p)).stopIds,before.stopIds);await capture(p,width===390?'mobile-waypoint-actions':'desktop-waypoint-actions');assert.deepEqual(p.errors,[]);await p.close();
  }
@@ -542,4 +581,63 @@ test('three distant real-road pins rebuild to ten stops with an honest late-arri
 
 test('a pending addition does not resurrect or replace the selection after an outside deselect',async()=>{
  const p=await page();await open(p);await start(p);await p.locator('.rp-next .rp-place-view').first().click();const candidate=await p.evaluate(()=>JSON.parse(sessionStorage.getItem('sskr.route-editor')).selectedId);await p.evaluate(()=>window.__roadDelay=550);await p.locator('.spot-route-add:visible').click();await p.locator('#rp-route-title').click();await settle(p);assert.ok((await draft(p)).stopIds.includes(candidate));assert.equal(await p.locator('.spot-pin.is-selected,.spot-pin.is-route-active,.rp-waypoint.is-active').count(),0);assert.equal(await p.evaluate(()=>JSON.parse(sessionStorage.getItem('sskr.route-editor')).selectedId),null);assert.deepEqual(p.errors,[]);await p.close();
+});
+
+
+test('UI geometry: isolated CSS regressions are rejected for native controls, gaps, waypoint padding and tab centers',async()=>{
+ const p=await page(390,844,{isMobile:true,hasTouch:true});await open(p);await start(p);await addFirstRecommendation(p);await p.locator('#rp-tab-route').click();
+ const row=p.locator('.rp-waypoint[data-waypoint]').filter({has:p.locator('.rp-row-actions')}).first();
+ const checkControls=async()=>assertMobileControls(await mobileControlGeometry(p),390),checkRow=async()=>assertCompactWaypoint(await waypointGeometry(row),390),checkTabs=async()=>assertTabCenters(p.locator('.rp-tabs button'),'isolated mobile navigation');
+ await checkControls();await checkRow();await checkTabs();
+ for(const {label,css,check} of [
+  {label:'native input expands beyond 44px',css:'.is-mobile-editor .rp-schedule-field input[type=time]{block-size:74px!important;min-block-size:74px!important;max-block-size:none!important;padding:18px!important}',check:checkControls},
+  {label:'native time loses its internal flex layout',css:'.is-mobile-editor .rp-schedule-field input[type=time]{display:block!important}',check:checkControls},
+  {label:'native time value loses vertical centering',css:'.is-mobile-editor .rp-schedule-field input[type=time]{align-items:flex-start!important}',check:checkControls},
+  {label:'native time value loses horizontal centering',css:'.is-mobile-editor .rp-schedule-field input[type=time]{text-align:left!important}',check:checkControls},
+  {label:'time and break fields lose their 12px separation',css:'.is-mobile-editor .rp-toolbar>.rp-schedule-fields{gap:0!important}',check:checkControls},
+  {label:'waypoint internal whitespace makes rows oversized',css:'.rp-waypoint{padding:18px!important}',check:checkRow},
+  {label:'tabs drift horizontally',css:'.is-mobile-editor .rp-tabs button{justify-content:flex-start!important}',check:checkTabs},
+  {label:'tabs drift vertically',css:'.is-mobile-editor .rp-tabs button{padding-top:16px!important;padding-bottom:2px!important}',check:checkTabs}
+ ]){
+  const style=await p.addStyleTag({content:css});try{await assert.rejects(check,{name:'AssertionError'},label);}finally{await style.evaluate(el=>el.remove());}await check();
+ }
+ assert.deepEqual(p.errors,[]);await p.close();
+});
+
+
+test('UI evidence: waypoint rows',{skip:!['before','after'].includes(process.env.SSKR_QA_PHASE)},async()=>{
+ const sizes=(process.env.SSKR_QA_VIEWPORTS||'1440x900,390x844').split(',').map(value=>value.split('x').map(Number));
+ const {capture:captureEvidence}=require('./ui-evidence.cjs');
+ for(const [width,height] of sizes){
+  assert.ok(Number.isInteger(width)&&Number.isInteger(height)&&width>=320&&height>=320,'Evidence viewports must be WIDTHxHEIGHT');
+  const p=await page(width,height,{locale:'ko-KR',timezoneId:'Asia/Seoul',colorScheme:'light',deviceScaleFactor:1,isMobile:width<=800,hasTouch:width<=800});
+  try{
+   await open(p);await start(p,'songjeong');
+   const stops=await p.evaluate(()=>{const retired=new Set((window.SSKR_SPOT_LEGACY||[]).map(x=>x.id)),active=SSKR_SPOT_CATALOG.filter(x=>x.kind==='spot'&&!retired.has(x.id)),short=active.slice().sort((a,b)=>a.name.length-b.name.length||a.id.localeCompare(b.id,'en'))[0],long=active.filter(x=>x.id!==short?.id).sort((a,b)=>b.name.length-a.name.length||a.id.localeCompare(b.id,'en'))[0];return [short?.id,long?.id];});
+   assert.equal(new Set(stops.filter(Boolean)).size,2,'Evidence needs two distinct active waypoint spots');assert.equal(await p.evaluate(ids=>ids.every(id=>SSKR_SPOT_CATALOG.some(x=>x.id===id&&x.kind==='spot')&&!(window.SSKR_SPOT_LEGACY||[]).some(x=>x.id===id)),stops),true,'Evidence fixture cannot use retired spots');
+   await seedPlan(p,stops);if(width<=800)await p.locator('#rp-tab-route').click();assert.equal(await p.locator('.rp-waypoint.is-missing').count(),0);assert.equal(await p.locator('[data-waypoint="'+stops[0]+'"] .rp-pin').isEnabled(),true,'Active evidence waypoint must allow pinning');await rowAction(p,stops[0],'pin');
+   await p.locator('[name=departureTime]').fill('06:30');await p.locator('[name=breakMinutes]').fill('120');await settle(p);
+   if(width<=800)await p.locator('#rp-tab-route').click();else await p.locator('[data-rp-action=manage]').focus();
+   await p.evaluate(async()=>{
+    await document.fonts.ready;
+    const visibleImages=[...document.querySelectorAll('.route-planner img')].filter(img=>{const r=img.getBoundingClientRect();return r.width>0&&r.height>0&&r.bottom>0&&r.top<innerHeight;});
+    await Promise.all(visibleImages.map(img=>new Promise((resolve,reject)=>{
+     img.loading='eager';const timer=setTimeout(()=>reject(Error('Visible QA image did not decode: '+img.getAttribute('src'))),5000);
+     img.decode().then(()=>{clearTimeout(timer);resolve();},error=>{clearTimeout(timer);reject(error);});
+    })));
+    document.querySelector('.rp-route-pane .rp-scroll').scrollTop=0;scrollTo(0,0);
+   });
+   await p.waitForTimeout(250);await p.evaluate(()=>__map.setView([36.2,127.8],Math.max(7,__map.getMinZoom()),{animate:false}));
+   await p.waitForFunction(()=>!__map._animatingZoom&&[...document.querySelectorAll('.leaflet-tile')].every(img=>img.complete));
+   await p.mouse.move(1,1);
+   await p.waitForFunction(()=>![...document.querySelectorAll('.leaflet-tooltip')].some(el=>{const r=el.getBoundingClientRect();return r.width>0&&r.height>0&&getComputedStyle(el).visibility!=='hidden';}));
+   await p.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));
+   const plan=await draft(p),fixture=await p.evaluate(plan=>({scenario:'guest',startId:plan.startId,finishId:plan.finishId,stopIds:plan.stopIds,pinnedStopIds:plan.pinnedStopIds,names:[plan.startId,...plan.stopIds,plan.finishId].map(id=>({id,name:SSKR_SPOT_CATALOG.find(x=>x.id===id).name})),schedule:JSON.parse(sessionStorage.getItem('sskr.route-editor')).schedule,pointer:{x:1,y:1,hoveredMapMarker:false},camera:{center:[__map.getCenter().lat,__map.getCenter().lng].map(n=>Number(n.toFixed(6))),zoom:__map.getZoom()},scroll:{page:scrollY,list:document.querySelector('.rp-route-pane .rp-scroll').scrollTop}}),plan);
+   assert.deepEqual(plan.pinnedStopIds,[stops[0]]);assert.equal(await p.locator('.rp-waypoint.is-pinned').count(),1);assert.equal(await p.locator('.rp-remove').count(),2);
+   for(const id of [plan.startId,plan.finishId])assert.equal(await p.locator('[data-waypoint="'+id+'"] .rp-pin,[data-waypoint="'+id+'"] .rp-remove').count(),0);
+   // Layout assertions run in the separate geometry gate; keep faulty baselines capturable.
+   assert.equal(fixture.scroll.page,0);assert.equal(fixture.scroll.list,0);assert.equal(await p.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);assert.deepEqual(p.errors,[]);
+   await captureEvidence(p,'waypoint-rows-'+width+'x'+height,providerFixture,fixture);
+  }finally{await p.close();}
+ }
 });

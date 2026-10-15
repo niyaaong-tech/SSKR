@@ -50,7 +50,7 @@
       area.style.height=height+'px';
       selectionLayout();
     }
-    function selectionLayout(){viewer.getMap?.()?.invalidateSize({pan:false});}
+    function selectionLayout(){viewer.getMap?.()?.invalidateSize({pan:true,animate:false});}
     function scheduleLayout(){cancelAnimationFrame(layoutFrame);layoutFrame=requestAnimationFrame(()=>{workspaceLayout();requestAnimationFrame(()=>{if(active&&!disposed&&selected)viewer.revealSelected?.(selected.id);});});}
     function selectOnMap(id,pan=false){
       const place=byId.get(id),map=viewer.getMap?.();

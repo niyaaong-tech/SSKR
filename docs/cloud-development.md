@@ -8,7 +8,7 @@
 - 주 작업 경로: `C:\Project\SSKR\source`. 클라우드에서는 해당 저장소의 checkout 루트를 사용합니다.
 - 운영 주소: https://sskr.vercel.app
 - 운영 브랜치: `main`. main push는 Vercel 운영 배포를 자동 실행합니다.
-- 이번 수정의 시작 기준: `81139cbb66814139ba59bff0b9e8504990ad0bfc` (2026-10-15). 지도 배지·입력·탭의 여백과 중앙 정렬 오류를 예방하도록 UI 스킬과 검수 하네스를 보강합니다. 후속 iPhone 화면에서 드러난 시간 입력 상단 정렬은 모바일의 display:block 덮어쓰기를 제거하고 기본 flex 배치를 복구합니다. native 내부 값은 박스 실측과 구분하며 실제 iPhone Safari 확인은 별도입니다. 이후 작업은 항상 최신 `origin/main`에서 시작하고 실제 시작 SHA를 기록합니다.
+- 이번 수정의 시작 기준: `527661736bd0a901bbd9e38652df38233f5bf319` (2026-10-15). 스팟 탐색과 루트 편집 사이의 지도 폭 전환에서 약 245px 중심 이동을 재현했습니다. 크기 동기화는 `invalidateSize({pan:true,animate:false})`로 기존 지리 중심을 보존합니다. 배경과 마커의 투영 일치뿐 아니라 모드·화면 크기 전환 전후의 지리 중심을 함께 검사합니다. 이후 작업은 항상 최신 `origin/main`에서 시작하고 실제 시작 SHA를 기록합니다.
 - 구조: HTML/CSS/JavaScript, Node.js 개발 서버와 Vercel API 함수. React·Next.js 프로젝트가 아니며 `npm run build`는 없습니다.
 - 로컬 확인 환경: Node.js 24.18.0 / npm 11.16.0. 클라우드도 Node.js 24.x를 기준으로 맞추고 `package-lock.json`으로 설치합니다.
 - 번호·묶음 축소는 기존 공용 지도 브라우저 2개 사례를 Edge·WebKit에서 각각 통과했습니다. APP·공개 탐색의 PC·모바일과 800/801px 경계에서 내용 폭·텍스트 중심·한~세 자리 숫자·사진 배지·묶음 터치 확대를 확인했습니다. 실제 로컬 브라우저에서 PC 3열과 핀·선택 번호 및 사진 배지를 확인했습니다. 실제 iPhone Safari 실기 검증은 별도입니다.

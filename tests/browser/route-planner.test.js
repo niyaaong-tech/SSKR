@@ -182,7 +182,7 @@ test('mouse and keyboard corner selections reveal the card and action on mobile 
    assert.ok(button.height>=44);
   }
   assert.ok(await p.locator('.spot-pin').evaluateAll(es=>es.every(e=>getComputedStyle(e).opacity==='1'&&getComputedStyle(e.querySelector('span')).opacity==='1')));
-  assert.equal(await p.locator('.spot-pin.start:not(.is-selected) span').first().evaluate(e=>getComputedStyle(e).backgroundColor),'rgb(182, 136, 66)');
+  const startColors=await Promise.all([p.locator('.spot-pin.start:not(.is-selected) span').first(),p.locator('.spot-mini-number.start:visible').first()].map(node=>node.evaluate(e=>({fill:getComputedStyle(e).backgroundColor,border:getComputedStyle(e).borderColor}))));assert.deepEqual(startColors[0],startColors[1],'Unplanned start markers and photo badges share their role palette');
   assert.deepEqual(p.errors,[]);await p.close();
  }
 });
@@ -348,7 +348,7 @@ test('default browse and empty editor fill the mainland frame and cannot zoom ou
    await p.locator('[data-action="zoom-out"]').click();await p.waitForTimeout(100);assert.equal(await p.evaluate(()=>__map.getZoom()),visible.minimum);
    await p.evaluate(()=>__map.panTo([33.38,126.53],{animate:false}));assert.ok(await p.evaluate(()=>__map.getBounds().contains([33.38,126.53])),'Jeju stays reachable by panning');
    await p.locator('.spot-map-controls [data-action="fit"]').click();await p.waitForTimeout(150);assert.equal(await p.evaluate(()=>__map.getZoom()),visible.minimum);assert.equal(await p.locator('.sskr-land-label.is-dokdo').count(),1);
-   if(editing)await capture(p,width>800?'mainland-editor-'+width:'mainland-editor-mobile');
+   if(editing)await capture(p,width>800?'mainland-editor-'+width:'mainland-editor-mobile-'+width);
   }
   assert.deepEqual(p.errors,[]);await p.close();
  }
@@ -640,4 +640,45 @@ test('UI evidence: waypoint rows',{skip:!['before','after'].includes(process.env
    await captureEvidence(p,'waypoint-rows-'+width+'x'+height,providerFixture,fixture);
   }finally{await p.close();}
  }
+});
+
+
+test('map resize keeps the geographic camera centered when a populated route returns from browsing',async()=>{
+ const p=await page(1762,925);
+ // The map observer debounces for 100ms; wait for stable geometry across that window.
+ const layoutReady=()=>p.waitForFunction(async()=>{
+  let previous='',stable=0;
+  for(let frame=0;frame<90;frame++){
+   await new Promise(requestAnimationFrame);
+   const m=window.__map,b=document.querySelector('.spot-map')?.getBoundingClientRect(),size=m?.getSize();
+   const ready=b&&size&&!m._animatingZoom&&Math.abs(size.x-b.width)<1&&Math.abs(size.y-b.height)<1;
+   const signature=ready?JSON.stringify([innerWidth,innerHeight,b.x,b.y,b.width,b.height,m.getZoom()]):'';
+   stable=signature&&signature===previous?stable+1:0;previous=signature;
+   if(stable>=12)return true;
+  }
+  return false;
+ },null,{timeout:10000});
+ try{
+  await open(p);await start(p,'samcheok');await autoFill(p);assert.equal((await draft(p)).stopIds.length,10);
+  await p.locator('[data-spot-mode=browse]').click();await layoutReady();
+  await p.evaluate(()=>__map.setView([36.5,127.8],8,{animate:false}));
+  const before=await p.evaluate(()=>({lat:__map.getCenter().lat,lng:__map.getCenter().lng,zoom:__map.getZoom(),size:__map.getSize()}));
+  await p.locator('[data-spot-mode=plan]').click();await layoutReady();
+  const after=await p.evaluate(target=>{const m=__map,b=document.querySelector('.spot-map').getBoundingClientRect(),p=m.latLngToContainerPoint([target.lat,target.lng]);return {center:[m.getCenter().lat,m.getCenter().lng],size:m.getSize(),box:[b.width,b.height],target:[p.x,p.y],zoom:m.getZoom()};},before);
+  await capture(p,'route-camera-return',true);
+  assert.ok(Math.abs(after.target[0]-after.size.x/2)<2&&Math.abs(after.target[1]-after.size.y/2)<2,'Returning to the editor must preserve the geographic center '+JSON.stringify({before,after}));
+  const routeIds=(await draft(p)).stopIds,cameraChecks=[];
+  for(const [width,height] of [[1280,720],[1440,900],[1920,1080],[390,844],[430,932],[800,844],[801,900],[1762,925]]){
+   const priorCenter=await p.evaluate(()=>({lat:__map.getCenter().lat,lng:__map.getCenter().lng}));
+   await p.setViewportSize({width,height});await layoutReady();
+   const resized=await p.evaluate(target=>{const m=__map,p=m.latLngToContainerPoint([target.lat,target.lng]),b=document.querySelector('.spot-map').getBoundingClientRect();return {target:[p.x,p.y],size:m.getSize(),box:[b.width,b.height]};},priorCenter);
+   assert.ok(Math.abs(resized.size.x-resized.box[0])<1&&Math.abs(resized.size.y-resized.box[1])<1,'Map size must match its layout '+JSON.stringify({width,height,resized}));
+   cameraChecks.push({width,height,priorCenter,...resized});
+   // Leaflet rounds half-sizes to CSS pixels, and a breakpoint can resize more than once; retain a 2px rounding budget and record unrounded positions.
+   assert.ok(Math.abs(resized.target[0]-resized.size.x/2)<=2&&Math.abs(resized.target[1]-resized.size.y/2)<=2,'Resizing must preserve the geographic center '+JSON.stringify({width,height,resized}));
+   assert.deepEqual((await draft(p)).stopIds,routeIds,'Layout changes must retain route spots');
+  }
+  await recordGeometry(p,'route-camera-resizes',{before,after,cameraChecks});
+  assert.deepEqual(p.errors,[]);
+ }finally{await p.close();}
 });

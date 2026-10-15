@@ -190,8 +190,9 @@
    $('[data-action="fit"]').setAttribute('aria-label',editing||options.route?'전체 경로 보기':'전체 장소 보기');
   }
   function clearSelection({notify=false}={}){selected=null;activeId='';clearTimeout(revealTimer);highlight?.setStyle({opacity:0});renderCards();renderMarkers();if(notify)options.onDeselect?.();}
+  // Resize must preserve the geographic center before bounds or overlays are updated.
   function fit(){
-   if(!map||disposed)return;map.invalidateSize({pan:false});limits();if(editing)clearSelection();
+   if(!map||disposed)return;map.invalidateSize({pan:true,animate:false});limits();if(editing)clearSelection();
    const bounds=routeLayer?.getBounds(),places=editing&&routeIds.length?routePlaces(catalog,routeIds):items;
    const fullKind=places.length>1&&['start','spot','finish'].some(kind=>places.every(p=>p.kind===kind)&&places.length===[...catalog.values()].filter(p=>p.kind===kind).length);
    const overview=options.overview&&!options.route&&!routeIds.length&&(places.length===catalog.size||fullKind);
@@ -256,7 +257,7 @@
    if(options.route?.length)renderRoute();
    map.on('dragstart',()=>{overviewActive=false;clearTimeout(revealTimer);});
    map.on('moveend',()=>{if(clampPan())return;renderCards();renderMarkers()});map.on('click',()=>clearSelection({notify:true}));
-   observer=new ResizeObserver(()=>{clearTimeout(resizeTimer);resizeTimer=setTimeout(()=>{if(disposed)return;map.invalidateSize({pan:false});limits();resizeBackdrop();if(!clampPan()){renderCards();renderMarkers();if(selected){const id=selected.id;requestAnimationFrame(()=>revealSelected(id));}}},100)});observer.observe($('.spot-map'));
+   observer=new ResizeObserver(()=>{clearTimeout(resizeTimer);resizeTimer=setTimeout(()=>{if(disposed)return;map.invalidateSize({pan:true,animate:false});limits();resizeBackdrop();if(!clampPan()){renderCards();renderMarkers();if(selected){const id=selected.id;requestAnimationFrame(()=>revealSelected(id));}}},100)});observer.observe($('.spot-map'));
   }else{$('.spot-map-status').textContent='지도 연결을 확인해 주세요. 장소 카드는 계속 이용할 수 있습니다.';host.querySelectorAll('.spot-map-controls button,[data-in-view]').forEach(b=>b.disabled=true);}
   listen(host,'click',e=>{const id=e.target.closest('[data-place]')?.dataset.place,p=items.find(p=>p.id===id)||(editing?catalog.get(id):null);if(p){select(p,{open:true});return;}const action=e.target.closest('[data-action]')?.dataset.action;if(action==='zoom-in')map?.zoomIn();if(action==='zoom-out')map?.zoomOut();if(action==='fit'){clearSelection({notify:true});fit();}if(action==='previous-cards'||action==='next-cards'){page+=action==='next-cards'?1:-1;renderCards();renderMarkers();}});
   listen($('[data-in-view]'),'change',e=>{inView=e.target.checked;page=0;renderCards();renderMarkers();});

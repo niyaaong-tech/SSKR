@@ -59,13 +59,17 @@ test('overview zoom stops at the spot layout and panning stays within Korean ter
  assert.deepEqual(errors,[]);
 });
 
-test('cluster badges share the catalog shape, use spot counts, and expand without route state',async()=>{
- for(const [width,height]of [[1440,900],[390,844]]){
-  const p=await page(width,height);await open(p,'/app/spots?scenario=guest');const grouped=p.locator('.spot-pin.cluster').first();await grouped.waitFor();
+test('cluster badges share the catalog shape, stay compact only on mobile, and expand without route state',async()=>{
+ for(const [width,height]of [[1440,900],[360,760],[390,844],[430,844],[800,844],[801,900]]){
+  const mobile=width<=800,p=await page(width,height,{isMobile:mobile,hasTouch:mobile});await open(p,'/app/spots?scenario=guest');const grouped=p.locator('.spot-pin.cluster').first();await grouped.waitFor();
   assert.match(await grouped.textContent(),/^\d+스팟$/);assert.match(await grouped.getAttribute('aria-label'),/스팟 묶음 확대$/);assert.equal(await p.locator('.spot-pin.is-route-stop').count(),0);
-  const plain=p.locator('.spot-pin.spot:not(.cluster)').first(),styles=await Promise.all([plain,grouped].map(e=>e.locator('span').evaluate(el=>{const s=getComputedStyle(el),r=el.getBoundingClientRect(),range=document.createRange();range.selectNodeContents(el);return {radius:s.borderRadius,background:s.backgroundColor,color:s.color,textWidth:range.getBoundingClientRect().width,width:r.width};})));
+  await capture(p,'cluster-'+width);
+  const plain=p.locator('.spot-pin.spot:not(.cluster)').first(),styles=await Promise.all([plain,grouped].map(e=>e.locator('span').evaluate(el=>{const s=getComputedStyle(el),r=el.getBoundingClientRect(),parent=el.parentElement.getBoundingClientRect(),range=document.createRange();range.selectNodeContents(el);return {radius:s.borderRadius,background:s.backgroundColor,color:s.color,font:s.fontSize,padding:s.padding,textWidth:range.getBoundingClientRect().width,width:r.width,height:r.height,hitWidth:parent.width,hitHeight:parent.height,offsetX:(r.left+r.right-parent.left-parent.right)/2,offsetY:(r.top+r.bottom-parent.top-parent.bottom)/2};})));
   assert.ok(styles.every(s=>s.radius!=='50%'&&s.textWidth<=s.width-2));assert.notEqual(styles[0].background,styles[1].background);const lum=color=>color.match(/[\d.]+/g).slice(0,3).map(v=>{v=Number(v)/255;return v<=.04045?v/12.92:((v+.055)/1.055)**2.4;}).reduce((sum,v,i)=>sum+v*[.2126,.7152,.0722][i],0);assert.ok(styles.every(s=>(lum(s.background)+.05)/(lum(s.color)+.05)>=4.5));
-  const zoom=await p.evaluate(()=>__map.getZoom());await grouped.click();await p.waitForFunction(z=>__map.getZoom()>z&&!__map._animatingZoom,zoom);assert.equal(await p.locator('.spot-pin.is-route-stop').count(),0);assert.deepEqual(errors,[]);await p.close();
+  const badge=styles[1];assert.equal(badge.height,mobile?18:30,JSON.stringify({width,badge}));assert.equal(badge.font,mobile?'9px':'10px');assert.equal(badge.hitWidth,48);assert.equal(badge.hitHeight,30);assert.ok(Math.abs(badge.offsetX)<1&&Math.abs(badge.offsetY)<1);
+  if(mobile)assert.ok(badge.width<48);else{assert.equal(badge.width,48);assert.equal(badge.padding,'0px');assert.equal(badge.radius,'5px');}
+  const samples=await grouped.locator('span').evaluate(el=>{const original=el.textContent;try{return ['2스팟','23스팟','200스팟'].map(text=>{el.textContent=text;const r=el.getBoundingClientRect(),range=document.createRange();range.selectNodeContents(el);return {text,width:r.width,height:r.height,textWidth:range.getBoundingClientRect().width};});}finally{el.textContent=original;}});assert.ok(samples.every(s=>s.textWidth<=s.width-2&&s.height===(mobile?18:30)),JSON.stringify({width,samples}));
+  const zoom=await p.evaluate(()=>__map.getZoom());if(mobile)await grouped.tap();else await grouped.click();await p.waitForFunction(z=>__map.getZoom()>z&&!__map._animatingZoom,zoom);assert.equal(await p.locator('.spot-pin.is-route-stop').count(),0);assert.deepEqual(errors,[]);await p.close();
  }
 });
 

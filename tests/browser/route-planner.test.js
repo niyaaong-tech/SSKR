@@ -2,7 +2,7 @@ const {test,before,after}=require('node:test');
 const assert=require('node:assert/strict');
 const {spawn}=require('node:child_process');
 const net=require('node:net'),path=require('node:path'),fs=require('node:fs');
-const {chromium}=require('playwright');
+const {chromium,webkit}=require('playwright');
 let server,browser,base;
 // Browser-flow fixture only: production road validity is tested against generated route data.
 const providerFixture=`window.SSKR_ROUTE_PROVIDER={create(){return {version:'browser-fixture',async ready(){if(window.__providerFailure)throw new Error('도로 데이터를 불러오지 못했습니다.');},summary(a,b){const p=SSKR_SPOT_CATALOG.find(p=>p.id===a),q=SSKR_SPOT_CATALOG.find(p=>p.id===b);if(!p||!q)return null;const distanceMeters=Math.hypot((p.lat-q.lat)*111000,(p.lng-q.lng)*90000)*1.2;return {distanceMeters,durationSeconds:distanceMeters/12};},async route(ids,{signal}={}){await new Promise(r=>setTimeout(r,window.__roadDelay||50));if(signal?.aborted)throw new DOMException('Aborted','AbortError');if(window.__roadFailure)throw new Error('도로 정보를 불러오지 못했습니다.');const legs=ids.slice(1).map((id,i)=>{const p=SSKR_SPOT_CATALOG.find(p=>p.id===ids[i]),q=SSKR_SPOT_CATALOG.find(p=>p.id===id);return {fromId:p.id,toId:q.id,coordinates:window.__invalidCoordinates?[[999,q.lng],[q.lat,q.lng]]:[[p.lat,p.lng],[q.lat,q.lng]],...this.summary(p.id,q.id),status:'ready'};});return {legs,distanceMeters:legs.reduce((s,l)=>s+l.distanceMeters,0),durationSeconds:legs.reduce((s,l)=>s+l.durationSeconds,0),valid:!window.__invalidRoads,version:this.version};}};}};`;
@@ -10,7 +10,7 @@ before(async()=>{
  const port=await new Promise(resolve=>{const s=net.createServer();s.listen(0,'127.0.0.1',()=>{const port=s.address().port;s.close(()=>resolve(port));});});base='http://127.0.0.1:'+port;
  server=spawn(process.execPath,['server/dev-server.js'],{cwd:path.resolve(__dirname,'../..'),env:{...process.env,SSKR_DEV_PORT:String(port)},stdio:['ignore','pipe','pipe'],windowsHide:true});
  await new Promise((resolve,reject)=>{const timer=setTimeout(()=>reject(Error('Dev server did not start')),10000);server.stdout.on('data',b=>{if(b.toString().includes('SSKR dev server')){clearTimeout(timer);resolve();}});server.once('error',reject);});
- browser=await chromium.launch({headless:true,channel:process.env.BROWSER_CHANNEL||(process.platform==='win32'?'msedge':undefined)});
+ const engine=process.env.BROWSER_ENGINE==='webkit'?webkit:chromium;browser=await engine.launch({headless:true,...(engine===chromium?{channel:process.env.BROWSER_CHANNEL||(process.platform==='win32'?'msedge':undefined)}:{})});
 });
 after(async()=>{await browser?.close();server?.kill();});
 async function page(width=1440,height=1000,input={}){const p=await browser.newPage({viewport:{width,height},reducedMotion:'reduce',...input});p.errors=[];p.on('pageerror',error=>p.errors.push(error.message));
@@ -469,6 +469,34 @@ test('map selection reveals its route row and blank or outside clicks clear all 
  await p.reload();await p.locator('.route-planner:not([hidden])').waitFor();await settle(p);assert.equal(await p.locator('.spot-pin.is-selected,.spot-pin.is-route-active,.rp-waypoint.is-active').count(),0);
  await p.locator('.spot-pin[title="'+name+'"]').click();await p.locator('[data-rp-action=optimize]').click();await settle(p);assert.equal(await p.locator('.spot-pin.is-selected,.spot-pin.is-route-active,.rp-waypoint.is-active').count(),0);
  const next=await draft(p),nextName=catalog.find(x=>x.id===next.stopIds[0]).name;await p.locator('.spot-pin[title="'+nextName+'"]').click();await p.evaluate(()=>window.__roadFailure=true);await p.locator('[data-rp-action=rebuild]').click();await settle(p);assert.equal(await p.locator('.spot-pin.is-selected,.spot-pin.is-route-active,.rp-waypoint.is-active').count(),0);assert.deepEqual(await draft(p),next);assert.deepEqual(p.errors,[]);await p.close();
+});
+
+test('touch compatibility hover cannot open a preview before selection',async()=>{
+ const p=await page(390,844,{isMobile:true,hasTouch:true});await open(p);await settle(p);const marker=p.locator('.spot-pin.start[title="망양정해수욕장"]');
+ // iOS may omit the later click if compatibility hover changes the document.
+ await marker.dispatchEvent('pointerenter',{pointerType:'touch',isPrimary:true});await marker.dispatchEvent('mouseover',{bubbles:true});await marker.dispatchEvent('mousemove',{bubbles:true});
+ const state={photos:await p.locator('.leaflet-tooltip .spot-photo-card:visible').count(),selected:await p.locator('.spot-pin.is-selected').count()};
+ if(process.env.SSKR_QA_OUTPUT){fs.mkdirSync(process.env.SSKR_QA_OUTPUT,{recursive:true});await p.screenshot({path:path.join(process.env.SSKR_QA_OUTPUT,'touch-hover-before-selection.png')});}assert.deepEqual(state,{photos:0,selected:0});
+ await marker.tap();await p.waitForSelector('.spot-pin.is-selected.start');assert.equal(await p.locator('.spot-route-add:visible').count(),1);assert.deepEqual(p.errors,[]);await p.close();
+});
+
+test('one real touch selects starts and spots without a preparatory hover tap',async()=>{
+ const p=await page(390,844,{isMobile:true,hasTouch:true});await p.addInitScript(()=>{window.__tapEvents=[];for(const type of ['pointerdown','pointerup','touchstart','touchend','mouseover','mousemove','mousedown','mouseup','click'])document.addEventListener(type,e=>{const marker=e.target.closest?.('.spot-pin');if(marker)window.__tapEvents.push({type,title:marker.title,pointer:e.pointerType});},true);});await open(p);await settle(p);
+ const startMarker=p.locator('.spot-pin.start[title="망양정해수욕장"]');await startMarker.tap();await p.waitForTimeout(400);
+ const first={selected:await p.locator('.spot-pin.is-selected.start').count(),buttons:await p.locator('.spot-route-add:visible').count(),events:await p.evaluate(()=>window.__tapEvents)};
+ if(process.env.SSKR_QA_OUTPUT){fs.mkdirSync(process.env.SSKR_QA_OUTPUT,{recursive:true});await p.screenshot({path:path.join(process.env.SSKR_QA_OUTPUT,'first-start-touch.png')});}assert.equal(first.selected,1,JSON.stringify(first));assert.equal(first.buttons,1);assert.equal((await draft(p)).startId,null);
+ await p.locator('.spot-route-add:visible').last().tap();await settle(p);assert.equal((await draft(p)).startId,'uljin');await p.locator('[data-action=fit]').tap();await p.waitForTimeout(150);
+ const candidate=p.locator('.spot-pin.is-route-candidate').first(),candidateName=await candidate.getAttribute('title');await candidate.tap();await p.waitForTimeout(250);assert.equal(await p.locator('.spot-pin.is-selected').getAttribute('title'),candidateName);assert.equal(await p.locator('.spot-route-add:visible').count(),1);await p.locator('.spot-route-add:visible').tap();await settle(p);assert.equal((await draft(p)).stopIds.length,1);
+ await p.locator('[data-action=fit]').tap();const included=p.locator('.spot-pin.is-route-stop.spot');await included.tap();await p.waitForTimeout(200);assert.equal(await p.locator('.spot-pin.is-selected.is-route-stop.spot').count(),1);assert.equal(await p.locator('#rp-tab-route').getAttribute('aria-selected'),'true');assert.equal((await draft(p)).stopIds.length,1);assert.deepEqual(p.errors,[]);await p.close();
+});
+
+test('a first real touch selects a spot in both APP browse and public exploration',async()=>{
+ for(const url of ['/app/spots?scenario=guest','/explore/']){
+  const p=await page(390,844,{isMobile:true,hasTouch:true});await p.goto(base+url);await p.waitForFunction(()=>window.__map);await p.locator('.spot-pin.spot').first().waitFor({state:'attached'});
+  assert.ok((await p.locator('.spot-map').boundingBox()).height>200,url+' map must have a usable height');await p.locator('.spot-map').scrollIntoViewIfNeeded();await p.locator('[data-action=fit]').tap();await p.waitForFunction(()=>!__map._animatingZoom);assert.equal(await p.locator('.spot-pin.is-selected').count(),0);
+  const title=await (await p.waitForFunction(()=>{const map=document.querySelector('.spot-map').getBoundingClientRect();return [...document.querySelectorAll('.spot-pin:not(.cluster):not(.is-selected)')].find(el=>{const r=el.getBoundingClientRect(),x=r.x+r.width/2,y=r.y+r.height/2;return x>map.left+20&&x<map.right-20&&y>map.top+60&&y<map.bottom-100&&document.elementFromPoint(x,y)?.closest('.spot-pin')===el;})?.getAttribute('title');})).jsonValue();
+  const marker=p.locator('.spot-pin[title="'+title+'"]');await marker.tap();await p.waitForSelector('.spot-pin.is-selected');assert.equal(await p.locator('.spot-pin.is-selected').getAttribute('title'),title);assert.equal(await p.locator('.leaflet-tooltip .spot-photo-card:visible').count(),1);assert.deepEqual(p.errors,[]);await p.close();
+ }
 });
 
 test('mobile map selection reveals the included stop and photo details still open without hiding the place',async()=>{

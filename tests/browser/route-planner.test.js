@@ -150,21 +150,24 @@ test('mouse and keyboard corner selections reveal the card and action on mobile 
 
 test('mobile entry prioritizes the left route tab and compact accessible editing controls',async()=>{
  for(const width of [390,360,430,768]){
-  const p=await page(width,844);await open(p);await settle(p);await p.locator('.spot-pin.start').first().waitFor();await p.waitForTimeout(200);
+  const p=await page(width,844,{isMobile:true,hasTouch:true,deviceScaleFactor:3});await open(p);await settle(p);await p.locator('.spot-pin.start').first().waitFor();await p.waitForTimeout(200);
   await capture(p,'mobile-entry-'+width,true);
   const entryTab=await p.locator('#rp-tab-route').getAttribute('aria-selected');await p.locator('#rp-tab-route').click();await capture(p,'mobile-route-'+width,true);assert.equal(entryTab,'true');
   assert.deepEqual(await p.locator('.rp-tabs [role=tab]').allTextContents(),['내 경로','장소 찾기']);
   assert.equal(await p.locator('#rp-tab-route').getAttribute('aria-selected'),'true');assert.equal(await p.locator('.rp-route-pane').isVisible(),true);
   const header=await p.locator('.rp-header').boundingBox(),fields=await p.locator('.rp-schedule-fields').boundingBox(),title=await p.locator('#rp-route-title').boundingBox(),save=await p.locator('[data-rp-action=save]').boundingBox();
-  assert.ok(header.height<=140,JSON.stringify({width,header}));assert.ok(title.y+title.height<=fields.y&&save.y+save.height<=fields.y);assert.ok(title.x+title.width+3<=save.x);
+  assert.ok(header.height<=140,JSON.stringify({width,header}));assert.ok(title.width>=140,JSON.stringify({width,title}));assert.ok(title.y+title.height<=fields.y&&save.y+save.height<=fields.y);assert.ok(title.x+title.width+3<=save.x);
   const controls=await p.locator('.rp-header button,.rp-header input,.rp-tabs button').evaluateAll(es=>es.map(e=>({name:e.getAttribute('aria-label')||e.textContent,rect:e.getBoundingClientRect().toJSON()})));
   assert.ok(controls.every(e=>e.rect.height>=44&&e.rect.width>=44),JSON.stringify({width,controls}));
-  const inputs=await p.locator('[data-schedule-input]').evaluateAll(es=>es.map(e=>e.getBoundingClientRect().toJSON()));assert.ok(Math.abs(inputs[0].y-inputs[1].y)<1);assert.ok(Math.abs(inputs[0].height-inputs[1].height)<1);
+  const geometry=await p.locator('.rp-schedule-fields').evaluate(el=>{const rect=e=>e.getBoundingClientRect().toJSON(),fields=[...el.children];return {fields:fields.map(rect),labels:fields.map(e=>rect(e.firstElementChild)),controls:[...el.querySelectorAll('input,button')].map(rect),time:rect(el.querySelector('[type=time]')),stepper:rect(el.querySelector('.rp-break-control'))};});
+  assert.ok(Math.abs(geometry.labels[0].top-geometry.labels[1].top)<1,JSON.stringify({width,geometry}));assert.ok(Math.abs(geometry.fields[0].width-geometry.fields[1].width)<1);assert.ok(geometry.stepper.left-geometry.time.right>=11.9,JSON.stringify({width,geometry}));
+  assert.ok(geometry.controls.every(r=>r.height>=44&&r.height<=45&&Math.abs(r.top-geometry.time.top)<1),JSON.stringify({width,geometry}));assert.ok(geometry.time.right<=geometry.fields[0].right+.1&&geometry.stepper.right<=geometry.fields[1].right+.1);
+  assert.equal(await p.locator('.rp-header [data-rp-action=help]').count(),0);assert.equal(await p.locator('.rp-route-footer [data-rp-action=help]').count(),1);
   const summary=await p.locator('.rp-route-summary').boundingBox(),start=await p.locator('.rp-start-select').boundingBox();assert.ok(start.y-summary.y-summary.height<=12,JSON.stringify({width,summary,start}));
   assert.equal(await p.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);
   await p.locator('#rp-tab-search').click();await p.locator('#rp-tab-search').focus();await p.keyboard.press('Home');assert.equal(await p.locator('#rp-tab-route').getAttribute('aria-selected'),'true');await p.keyboard.press('End');assert.equal(await p.locator('#rp-tab-search').getAttribute('aria-selected'),'true');
   await p.locator('[data-spot-mode=browse]').click();await p.locator('[data-spot-mode=plan]').click();assert.equal(await p.locator('#rp-tab-route').getAttribute('aria-selected'),'true');
-  await p.locator('#rp-route-title').fill('함께 달리는 동해안 루트');assert.equal(await p.locator('#rp-route-title').evaluate(e=>e===document.activeElement),true);for(const action of ['manage','undo','help','save']){await p.keyboard.press('Tab');assert.equal(await p.evaluate(()=>document.activeElement.dataset.rpAction),action);}await p.keyboard.press('Tab');assert.equal(await p.evaluate(()=>document.activeElement.name),'departureTime');await p.locator('input[name=breakMinutes]').fill('135');await p.locator('input[name=departureTime]').fill('07:15');assert.ok((await p.locator('.rp-header').boundingBox()).height<=140);
+  await p.locator('#rp-route-title').fill('함께 달리는 동해안 루트');assert.equal(await p.locator('#rp-route-title').evaluate(e=>e===document.activeElement),true);for(const action of ['manage','undo','save']){await p.keyboard.press('Tab');assert.equal(await p.evaluate(()=>document.activeElement.dataset.rpAction),action);}await p.keyboard.press('Tab');assert.equal(await p.evaluate(()=>document.activeElement.name),'departureTime');await p.locator('input[name=breakMinutes]').fill('135');await p.locator('input[name=departureTime]').fill('07:15');const editedHeader=await p.locator('.rp-header').boundingBox();assert.ok(Math.abs(editedHeader.height-header.height)<1,JSON.stringify({width,header,editedHeader}));
   await p.reload();await p.locator('.route-planner:not([hidden])').waitFor();await settle(p);assert.equal(await p.locator('#rp-tab-route').getAttribute('aria-selected'),'true');assert.equal(await p.locator('#rp-route-title').inputValue(),'함께 달리는 동해안 루트');assert.equal(await p.locator('input[name=breakMinutes]').inputValue(),'135');assert.equal(await p.locator('input[name=departureTime]').inputValue(),'07:15');
   assert.deepEqual(p.errors,[]);await p.close();
  }
@@ -264,7 +267,7 @@ test('start galleries and illustrated help stay usable in narrow and short scree
   await gallery.locator('[data-start-id="songjeong"]').scrollIntoViewIfNeeded();
   assert.equal(await gallery.locator('[data-close]').evaluate(el=>{const r=el.getBoundingClientRect(),d=el.closest('dialog').getBoundingClientRect();return r.top>=d.top&&r.bottom<=d.bottom;}),true);
   await gallery.locator('[data-start-id="songjeong"]').click();await settle(p);assert.equal((await draft(p)).startId,'songjeong');
-  await p.locator('[data-rp-action=help]').click();const help=p.locator('.rp-dialog--help');
+  await p.locator('#rp-route-title').fill('도움말 복귀 확인');await p.locator('[data-rp-action=help]').click();const help=p.locator('.rp-dialog--help');
   assert.equal(await help.locator('.rp-help-steps img').count(),4);
   assert.equal(await help.locator('.rp-help-steps img').evaluateAll(async images=>{await Promise.all(images.map(img=>img.decode()));return images.every(img=>img.naturalWidth===480&&img.alt.length>10);}),true);
   assert.match(await help.textContent(),/경유 스팟 10개.*총 12개/s);assert.equal(await help.evaluate(el=>el.scrollHeight>el.clientHeight),true);

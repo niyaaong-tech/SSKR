@@ -2,7 +2,8 @@ const {test,before,after}=require('node:test');
 const assert=require('node:assert/strict');
 const {spawn}=require('node:child_process');
 const net=require('node:net'),path=require('node:path'),fs=require('node:fs');
-const {chromium}=require('playwright');
+const {chromium,webkit}=require('playwright');
+const engine=process.env.BROWSER_ENGINE==='webkit'?webkit:chromium;
 const fixture=require('../../data/fixtures/memorial-event.json');
 let server,browser,base;
 before(async()=>{
@@ -10,11 +11,11 @@ before(async()=>{
  base='http://127.0.0.1:'+port;
  server=spawn(process.execPath,['server/dev-server.js'],{cwd:path.resolve(__dirname,'../..'),env:{...process.env,SSKR_DEV_PORT:String(port)},stdio:['ignore','pipe','pipe'],windowsHide:true});
  await new Promise((resolve,reject)=>{const timer=setTimeout(()=>reject(Error('Dev server did not start')),10000);server.stdout.on('data',b=>{if(b.toString().includes('SSKR dev server')){clearTimeout(timer);resolve();}});server.once('error',reject);server.once('exit',code=>{clearTimeout(timer);reject(Error('Dev server exited '+code));});});
- browser=await chromium.launch({headless:true,channel:process.env.BROWSER_CHANNEL||(process.platform==='win32'?'msedge':undefined)});
+ browser=await engine.launch({headless:true,...(engine===chromium?{channel:process.env.BROWSER_CHANNEL||(process.platform==='win32'?'msedge':undefined)}:{})});
 });
 after(async()=>{await browser?.close();server?.kill();});
 const errors=[];
-async function page(width=1440,height=1000){const p=await browser.newPage({viewport:{width,height},reducedMotion:'reduce'});p.on('pageerror',e=>errors.push(e.message));
+async function page(width=1440,height=1000,input={}){const p=await browser.newPage({viewport:{width,height},...input,reducedMotion:'reduce'});p.on('pageerror',e=>errors.push(e.message));
  // Observe map state without adding test globals to production code.
  await p.route('**/web/shared/map/map.js*',async r=>{const response=await r.fetch();await r.fulfill({response,body:(await response.text()).replace('layer=root.L.layerGroup().addTo(map);','window.__map=map;layer=root.L.layerGroup().addTo(map);').replace('backdrop=root.L.maplibreGL','backdrop=window.__backdrop=root.L.maplibreGL')});});return p;
 }
@@ -111,6 +112,7 @@ test('failed detail tiles preserve terrain and map actions, and reconnecting ret
  await p.evaluate(()=>__map.setView([36.5,128],8.25,{animate:false}));await p.waitForTimeout(500);assert.ok(failed>0);
  assert.match(await p.locator('.spot-map-status').textContent(),/기본 지형/);assert.ok(await terrainCovers(p,[36.5,128]));
  assert.equal(await p.locator('.leaflet-sskr-base-land-pane path').getAttribute('fill-opacity'),'1');assert.equal(await p.evaluate(()=>__backdrop.getMaplibreMap().querySourceFeatures('openmaptiles',{sourceLayer:'sskr_land'}).length),0);
+ await p.locator('#rp-tab-search').click();
  await p.locator('.rp-place-results .rp-place-view').first().click();await p.locator('.leaflet-tooltip .spot-route-add:visible').last().waitFor();await capture(p,'mobile-terrain-failed-tiles');
  await p.unroute('**/api/map-tile?*');await p.evaluate(()=>dispatchEvent(new Event('online')));
  await p.waitForFunction(()=>{const gl=__backdrop.getMaplibreMap();return gl.areTilesLoaded()&&gl.querySourceFeatures('openmaptiles',{sourceLayer:'sskr_land'}).length>0;},null,{timeout:60000});
@@ -136,4 +138,29 @@ test('leaving an actively zooming map never updates its removed pane',async()=>{
   // Begin Leaflet's real transition synchronously so fast navigation cannot miss it.
   await p.evaluate(()=>__map._animateZoom(__map.getCenter(),Math.min(__map.getMaxZoom(),__map.getZoom()+1),true));await p.evaluate(()=>document.querySelector('#app-nav a[href="/app"]').click());await p.waitForSelector('.manager-dashboard');await p.waitForTimeout(350);assert.deepEqual(errors,[],`${width} ${motion}: removed zoom callbacks`);await p.close();
  }
+});
+
+
+test('mobile editor keeps vector geography aligned with Leaflet markers across layout and viewport changes',async()=>{
+ const p=await page(390,844,{isMobile:true,hasTouch:true});await open(p,'/app/spots?scenario=guest');
+ async function aligned(label){
+  await p.waitForFunction(()=>window.__backdrop&&!__map._animatingZoom&&__backdrop.getMaplibreMap().isStyleLoaded());
+  await p.waitForTimeout(350);
+  await p.waitForFunction(()=>{const gl=__backdrop.getMaplibreMap(),r=gl.getCanvas().getBoundingClientRect(),b=document.querySelector('.spot-map').getBoundingClientRect();return [[38.2,128.6],[36.5,128],[34.6,127.5],[33.38,126.53]].every(([lat,lng])=>{const a=__map.latLngToContainerPoint([lat,lng]),c=gl.project([lng,lat]);return Math.hypot(b.left+a.x-r.left-c.x*r.width/gl.transform.width,b.top+a.y-r.top-c.y*r.height/gl.transform.height)<2;});},null,{timeout:5000}).catch(()=>{});
+  const positions=await p.evaluate(()=>{
+   const gl=__backdrop.getMaplibreMap(),canvas=gl.getCanvas(),rect=canvas.getBoundingClientRect(),panel=document.querySelector('.spot-map').getBoundingClientRect();
+   return [[38.2,128.6],[36.5,128],[34.6,127.5],[33.38,126.53]].map(([lat,lng])=>{
+    const leaf=__map.latLngToContainerPoint([lat,lng]),vector=gl.project([lng,lat]);
+    return {lat,lng,leaf:[panel.left+leaf.x,panel.top+leaf.y],vector:[rect.left+vector.x*rect.width/gl.transform.width,rect.top+vector.y*rect.height/gl.transform.height],canvas:[rect.width,rect.height],panel:[panel.width,panel.height],leafSize:[__map.getSize().x,__map.getSize().y],container:[gl.getContainer().clientWidth,gl.getContainer().clientHeight],size:[gl.transform.width,gl.transform.height],leafZoom:__map.getZoom(),vectorZoom:gl.getZoom()};
+   });
+  });
+  assert.ok(positions.every(p=>Math.hypot(p.leaf[0]-p.vector[0],p.leaf[1]-p.vector[1])<2),label+' '+JSON.stringify(positions));
+ }
+ await aligned('browse');await p.locator('[data-spot-mode="plan"]').click();await aligned('editor');
+ for(const [width,height]of [[390,664],[430,932],[844,390],[390,844],[1440,900],[390,844]]){
+  await p.setViewportSize({width,height});await aligned(width+'x'+height);
+ }
+ await p.reload();await p.waitForSelector('.route-planner');await aligned('restored editor');
+ await p.evaluate(()=>scrollTo(0,500));await aligned('scrolled sticky map');
+ await capture(p,'mobile-map-aligned');assert.deepEqual(errors,[]);await p.close();
 });

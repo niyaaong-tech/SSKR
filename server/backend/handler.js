@@ -8,7 +8,7 @@ const eventService = require('./events');
 const { workflows } = require('./workflows');
 const {serviceDb}=require('./service-db');
 const {createMedia}=require('./media');
-function createHandler({ readMode = mode, getConfig = config, authService = auth, readPublished = eventService.readPublished, getWorkflows = workflows, workflowEnabled = () => !!process.env.SUPABASE_SECRET_KEY } = {}) {
+function createHandler({ readMode = mode, getConfig = config, authService = auth, readPublished = eventService.readPublished, getWorkflows = workflows, getFieldTests = cfg => require('./field-tests').createFieldTests({db:serviceDb(cfg)}), workflowEnabled = () => !!process.env.SUPABASE_SECRET_KEY } = {}) {
 return async function handler(req, res) {
   try {
     const url = new URL(req.url, 'http://localhost');
@@ -30,6 +30,12 @@ return async function handler(req, res) {
     const mutation = !['GET', 'HEAD'].includes(req.method);
     if (mutation) sameOrigin(req, cfg);
     const body = mutation ? await readBody(req) : {};
+    if(resource==='field-tests') {
+      if(cfg.participationMode!=='test')throw new BackendError('NOT_FOUND','요청한 기능을 찾을 수 없습니다.',404);
+      if(req.method!=='POST')throw new BackendError('METHOD_NOT_ALLOWED','POST 요청만 지원합니다.',405);
+      const current=await authService.actor(req,res,cfg);
+      return json(res,200,await getFieldTests(cfg).handle(current.account,body));
+    }
     if (resource === 'login' && req.method === 'POST') return json(res, 200, await authService.login(req, res, cfg, body));
     if (resource === 'logout' && req.method === 'POST') { await authService.logout(req, res, cfg); return json(res, 200, { ok: true }); }
     if(resource==='profile'&&req.method==='POST'){

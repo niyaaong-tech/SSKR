@@ -20,7 +20,7 @@ async function rpc(action, options = {}) {
 const create = (key, value = plan()) => rpc('save', { key: 'test-request-key-' + key, plan: value, schedule: agenda });
 before(async () => {
   db = new PGlite();
-  await db.exec(`create role anon; create role authenticated;
+  await db.exec(`create role anon; create role authenticated; create role service_role;
     create schema auth;
     create table auth.users(id uuid primary key,banned_until timestamptz,is_anonymous boolean default false);
     create table auth.sessions(id uuid primary key,user_id uuid references auth.users(id),not_after timestamptz);

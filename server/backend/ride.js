@@ -7,7 +7,7 @@ const editable=require('../../web/app/memorial-store').editableValues;
 const {mediaDto}=require('./media');
 const hash=v=>createHash('sha256').update(JSON.stringify(v)).digest('hex');
 function distance(a,b){const r=Math.PI/180,dlat=(a.lat-b.lat)*r,dlng=(a.lng-b.lng)*r;return 12742000*Math.asin(Math.min(1,Math.sqrt(Math.sin(dlat/2)**2+Math.cos(a.lat*r)*Math.cos(b.lat*r)*Math.sin(dlng/2)**2)));}
-function checkin(repo,snapshot,body,now) {
+function checkin(repo,snapshot,body,now,{places=catalog,window:timeWindow,createMemorial=true}={}) {
   const p=repo.getParticipation(),state=repo.snapshot,event=snapshot.event,c=snapshot.commerce;
   if(p?.state!=='ACTIVE'||p.slotAllocation!=='CONFIRMED')throw new BackendError('PARTICIPATION_REQUIRED','참가 확정 후 체크인할 수 있습니다.',403);
   if(!/^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/i.test(body.requestId||''))throw new BackendError('INVALID_INPUT','체크인 요청 번호를 확인해 주세요.');
@@ -19,12 +19,12 @@ function checkin(repo,snapshot,body,now) {
     const start=p.selectedStartLocationId;
     if(!start)throw new BackendError('START_REQUIRED','참가 준비에서 출발지를 먼저 선택해 주세요.',409);
     if(body.locationId!==start)throw new BackendError('START_FIRST','선택한 출발지에서 먼저 체크인해 주세요.',409);
-    const startTime=event.sunlight?.starts?.find(x=>x.locationId===start)?.sunriseAt;
-    const finishTime=event.sunlight?.finish?.sunsetAt;
+    const startTime=timeWindow?.startTime||event.sunlight?.starts?.find(x=>x.locationId===start)?.sunriseAt;
+    const finishTime=timeWindow?.finishTime||event.sunlight?.finish?.sunsetAt;
     if(!startTime||!finishTime)throw new BackendError('EVENT_NOT_READY','행사의 출발·도착 시간을 확인하고 있습니다.',409);
     state.run={state:'NOT_STARTED',rules:{eventId:event.id,eventTitle:event.publicTitle,configVersion:event.configVersion,minimumSpotCheckins:event.minimumSpotCheckins,
       startId:start,finishId:event.finishLocationId,startTime,finishTime,
-      radius:c.checkinRadiusMeters,accuracy:c.maxAccuracyMeters,places:catalog.map(p=>({id:p.id,kind:p.kind,lat:p.lat,lng:p.lng}))},visits:state.run?.visits||[],receipts:state.run?.receipts||[]};
+      radius:c.checkinRadiusMeters,accuracy:c.maxAccuracyMeters,places:places.map(p=>({id:p.id,kind:p.kind,lat:p.lat,lng:p.lng}))},visits:state.run?.visits||[],receipts:state.run?.receipts||[]};
   }
   const run=state.run,rules=run.rules,place=rules.places.find(p=>p.id===body.locationId);
   if(!place)throw new BackendError('INVALID_PLACE','행사에 등록된 스팟을 선택해 주세요.');
@@ -46,7 +46,7 @@ function checkin(repo,snapshot,body,now) {
     receivedAt:now.toISOString(),validationStatus:reason?'REVIEW_REQUIRED':'VALIDATED',reason,note:'',media:[],photoConsent:false};
   run.receipts.push({id:body.requestId,hash:fingerprint});run.visits.push(visit);
   if(!reason){run.state=role==='FINISH'?'COMPLETED':'STARTED';p.runResult=run.state;repo.saveParticipation(p);}
-  finishMemorial(repo);
+  if(createMemorial)finishMemorial(repo);
   return {evidence:{...evidence,validationStatus:visit.validationStatus,reason,ruleVersion:rules.configVersion}};
 }
 function finishMemorial(repo) {

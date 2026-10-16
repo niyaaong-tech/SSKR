@@ -80,6 +80,7 @@
 - HOME 배포 결과: `web/home/`
 - Participate 배포 결과: `web/participate/`
 - 행사·접수 운영 설정: `web/admin/` (`/app/admin`, `/app/admin/operations`), 실제 모드의 운영자 권한 필요
+- GPS 현장 테스트: `/app/gps-test`, 관리자 설정 `/app/admin/gps`. 테스트 참가 모드에서만 인증된 API를 열며 공식 스팟·참가·메모리얼과 데이터를 분리합니다.
 - Journey Presentation 코드와 배포 결과: `web/journey-presentation/`
 - 경로 설정: `vercel.json`
 

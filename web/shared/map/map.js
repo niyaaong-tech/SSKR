@@ -180,7 +180,8 @@
     const tooltipOptions={direction:'top',offset:[0,-10],className:'spot-tooltip'+(multiple?' spot-tooltip-group':'')+(editing?' is-route-tooltip':''),opacity:1,interactive:!multiple};
     // Binding an unselected tooltip makes Leaflet open it on compatibility
     // mouseover before a touch click. iOS can then consume that first tap.
-    if(!multiple&&selected?.id===p.id)marker.bindTooltip(tip,{...tooltipOptions,permanent:true});
+    if(options.selectionCard===false){} // Compact field-test details live outside the map.
+    else if(!multiple&&selected?.id===p.id)marker.bindTooltip(tip,{...tooltipOptions,permanent:true});
     else marker.once('add',()=>{
       const element=marker.getElement(),hover=event=>{
         if(event.pointerType!=='mouse')return;
@@ -190,7 +191,7 @@
       root.L.DomEvent.on(element,'pointerenter pointerleave',hover);marker.once('remove',()=>root.L.DomEvent.off(element,'pointerenter pointerleave',hover));
     });
     marker.on('click keypress',event=>{if(event.type==='keypress'){if(!['Enter',' '].includes(event.originalEvent?.key))return;root.L.DomEvent.preventDefault(event.originalEvent);}if(event.originalEvent)root.L.DomEvent.stopPropagation(event.originalEvent);if(!multiple){requestAnimationFrame(()=>{if(!disposed)select(p)});return;}if(map.getZoom()>=16){select(p);return;}map.fitBounds(group.map(p=>[p.lat,p.lng]),{padding:[70,70],maxZoom:Math.min(16,map.getZoom()+2),animate:!reduced});});
-    marker.addTo(layer);marker.getElement()?.setAttribute('aria-label',multiple?group.length+'스팟 묶음 확대':`${formatPlaceText(p.name)} · ${p.kind==='start'?'출발지':p.kind==='finish'?'도착지':`${p.number}번 스팟`}${planned?' · 경로 포함':''}${pinnedStop?' · 핀고정':''}${selected?.id===p.id?' · 선택됨':''}`);if(!multiple)markers.set(p.id,marker);
+    marker.addTo(layer);marker.getElement()?.setAttribute('aria-label',multiple?group.length+'스팟 묶음 확대':`${formatPlaceText(p.name)} · ${p.testOnly?'테스트 스팟':p.kind==='start'?'출발지':p.kind==='finish'?'도착지':`${p.number}번 스팟`}${planned?' · 경로 포함':''}${pinnedStop?' · 핀고정':''}${selected?.id===p.id?' · 선택됨':''}`);if(!multiple)markers.set(p.id,marker);
    });
   }
   function renderRoute(){
@@ -210,13 +211,13 @@
    const bounds=routeLayer?.getBounds(),places=editing&&routeIds.length?routePlaces(catalog,routeIds):items;
    const fullKind=places.length>1&&['start','spot','finish'].some(kind=>places.every(p=>p.kind===kind)&&places.length===[...catalog.values()].filter(p=>p.kind===kind).length);
    const overview=options.overview&&!options.route&&!routeIds.length&&(places.length===catalog.size||fullKind);
-   const settings={...(overview?overviewPadding():padding()),maxZoom:12,animate:!reduced,duration:.35};overviewActive=overview&&!selected;
+   const settings={...(overview?overviewPadding():padding()),maxZoom:options.fitMaxZoom||12,animate:!reduced,duration:.35};overviewActive=overview&&!selected;
    if(bounds?.isValid()){places.forEach(p=>bounds.extend([p.lat,p.lng]));map.fitBounds(bounds,settings);}
    else if(overview){fittingOverview=true;map.fitBounds(southKoreaView,{...settings,animate:false});fittingOverview=false;}
    else if(places.length)map.fitBounds(places.map(p=>[p.lat,p.lng]),settings);
   }
   if(root.L){
-   map=root.L.map($('.spot-map'),{zoomControl:false,attributionControl:false,scrollWheelZoom:false,minZoom:4,maxZoom:16,zoomSnap:.25,maxBoundsViscosity:1}).setView([36.5,127.8],7);
+   map=root.L.map($('.spot-map'),{zoomControl:false,attributionControl:false,scrollWheelZoom:false,minZoom:4,maxZoom:options.maxZoom||16,zoomSnap:.25,maxBoundsViscosity:1}).setView([36.5,127.8],7);
    // Leaflet 1.9.4 keeps a 250ms zoom-completion callback after remove().
    // Guard this instance so it cannot move a pane that has already been removed.
    const finishZoom=map._onZoomTransitionEnd;

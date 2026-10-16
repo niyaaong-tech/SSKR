@@ -38,7 +38,7 @@ async function route(action,{id=null,revision=null,key=null,schedule=agenda,rout
 }
 before(async()=>{
   db=new PGlite();
-  await db.exec(`create role anon; create role authenticated; create schema auth;
+  await db.exec(`create role anon; create role authenticated; create role service_role; create schema auth;
     create table auth.users(id uuid primary key,banned_until timestamptz,is_anonymous boolean default false);
     create table auth.sessions(id uuid primary key,user_id uuid references auth.users(id),not_after timestamptz);
     create table auth.identities(user_id uuid,provider text);

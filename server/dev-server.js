@@ -8,6 +8,8 @@ const port = Number(process.env.SSKR_DEV_PORT || 8080);
 const types = { ".css": "text/css; charset=utf-8", ".html": "text/html; charset=utf-8", ".js": "text/javascript; charset=utf-8", ".jpg": "image/jpeg", ".jpeg": "image/jpeg", ".png": "image/png", ".webp": "image/webp", ".svg": "image/svg+xml" };
 
 const routes = {
+  "/app/admin/gps": "web/admin/gps.html",
+  "/app/gps-test": "web/admin/gps.html",
   "/app/admin/operations": "web/admin/operations.html",
   "/app/admin": "web/admin/index.html",
   "/app/admin/": "web/admin/index.html",

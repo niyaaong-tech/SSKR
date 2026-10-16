@@ -1,6 +1,8 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "rewrites": [
+    { "source": "/app/admin/gps", "destination": "/web/admin/gps.html" },
+    { "source": "/app/gps-test", "destination": "/web/admin/gps.html" },
     { "source": "/app/admin/operations", "destination": "/web/admin/operations.html" },
     {
       "source": "/app/admin",

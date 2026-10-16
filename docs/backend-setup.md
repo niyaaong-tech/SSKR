@@ -205,3 +205,13 @@ node --env-file=.env --test tests/backend/storage-remote.test.js
 - production origin은 https://sskr.vercel.app, 로컬은 http://127.0.0.1:8112다. Supabase redirect 목록에는 두 서버의 callback만 등록하며 세션 비밀값을 분리한다.
 
 위 기준은 앞 절의 PG 및 운영 DB 개통 조건보다 우선한다. 실사업 개시 전에는 결제·환불·사업용 환경과 법적 정책을 별도로 완성해야 한다.
+
+## 별도 GPS 현장 테스트
+
+`/app/gps-test`는 Google 로그인 후 사용하는 현장 검수 화면이며 `/app/admin/gps`는 운영자 설정 화면이다. `SSKR_PARTICIPATION_MODE=test`에서만 API를 제공한다. 일반 스팟 탐색·루트 추천에는 테스트 장소를 넣지 않는다.
+
+- 도보 30개, 서울 110A 20개, 경기 520번 15개를 `sskr_private.field_places`에 저장한다. 출발 가능 장소 5개 중 공덕·서현은 스팟 역할을 겸하므로 물리 레코드는 68개다. 최초 입력 출처와 좌표 검증 기준은 `server/data/field-test-places.json`에 둔다. 운영 DB가 조회 원본이며 외부 에이전트도 승인된 DB 연결로 편집할 수 있다. 기존 진행 기록에는 시작 당시의 장소·규칙 스냅샷이 유지된다.
+- 오늘·내일 또는 임의 날짜와 시작·종료 시각을 한국 시간으로 지정한다. 일출·일몰 검토 없이 저장하며, 각 테스트는 최대 48시간이다. 초기 설정은 적용 당일 00:00~23:59이고 다음 날에는 관리자가 일정을 변경해야 한다.
+- 실제 GPS의 거리·오차·측정 시각·출발 우선·중복·최소 스팟 수를 공식 체크인과 같은 로직으로 검증한다. 출발지·목적지는 최소 방문 수에서 제외한다. 실측 현장 방문 전이며 좌표 검증을 현장 통행 확인으로 간주하지 않는다.
+- `field_sessions`, `field_runs`, `field_audit`는 공식 참가·결제·메모리얼과 별도다. 모든 테이블은 private 스키마와 RLS로 보호하며 서비스 전용 `sskr_field_tests` RPC는 사용자 소유권·운영자 권한을 추가로 확인한다. 감사 기록은 수정·삭제할 수 없다.
+- 마이그레이션 후 `node --test --test-concurrency=1 tests/backend/field-tests.test.js`, `node --test tests/browser/field-tests.test.js`로 권한·시각·반경·중복·재접속을 검증한다. 브라우저 자동 검사는 격리된 DB와 GPS fixture를 사용하며 실제 휴대전화 현장 GPS 검수를 대체하지 않는다.

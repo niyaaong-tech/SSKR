@@ -3,7 +3,7 @@
   if (typeof module === "object" && module.exports) module.exports = api;
   else root.SSKR_APP_DOMAIN = Object.freeze(api);
 })(typeof globalThis !== "undefined" ? globalThis : this, () => {
-  const PERSONAL_ROUTES = new Set(["/app/my", "/app/profile", "/app/preparation", "/app/memorials/mine"]);
+  const PERSONAL_ROUTES = new Set(["/app/my", "/app/profile", "/app/preparation", "/app/ride", "/app/memorials/mine"]);
   function normalizePath(pathname = "/app") {
     const clean = String(pathname).split("?")[0].replace(/\/+$/, "") || "/app";
     return clean === "/app" || clean.startsWith("/app/") ? clean : "/app";
@@ -38,7 +38,7 @@
   function canAccess(pathname, session = {}) {
     const path = normalizePath(pathname);
     if ((PERSONAL_ROUTES.has(path) || path.startsWith("/app/memorials/mine/")) && !session.linked) return { allowed: false, reason: "AUTH_REQUIRED", returnTo: path };
-    if (path === "/app/preparation" && session.relation !== "ACTIVE") return { allowed: false, reason: "ACTIVE_PARTICIPATION_REQUIRED", returnTo: "/app" };
+    if (["/app/preparation","/app/ride"].includes(path) && session.relation !== "ACTIVE") return { allowed: false, reason: "ACTIVE_PARTICIPATION_REQUIRED", returnTo: "/app" };
     return { allowed: true, reason: null, returnTo: null };
   }
   function memorialAccess(memorial, account = {}) {

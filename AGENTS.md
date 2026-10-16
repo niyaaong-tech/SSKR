@@ -79,6 +79,7 @@
 - 사용자 승인 공개 시안: `web/tests/home-explore/` (`/tests/home-explore/`)
 - HOME 배포 결과: `web/home/`
 - Participate 배포 결과: `web/participate/`
+- 행사·접수 운영 설정: `web/admin/` (`/app/admin`, `/app/admin/operations`), 실제 모드의 운영자 권한 필요
 - Journey Presentation 코드와 배포 결과: `web/journey-presentation/`
 - 경로 설정: `vercel.json`
 

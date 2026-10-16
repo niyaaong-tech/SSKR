@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#788a7f">
+  <meta name="robots" content="noindex, nofollow">
+  <title>행사 운영 설정 · SSKR</title>
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="/web/admin/event-admin.css">
+</head>
+<body>
+  <a class="skip-link" href="#event-editor">본문으로 바로가기</a>
+  <header class="admin-header">
+    <a class="admin-brand" href="/app" aria-label="SSKR 매니저로 이동"><img src="/web/shared/brand/wordmark.svg" width="628" height="141" alt="SSKR"></a>
+    <span>행사 운영 설정</span><a href="/app/admin/operations">접수·참가 운영</a>
+    <a href="/app">매니저로 돌아가기</a>
+  </header>
+  <main class="admin-main">
+    <div class="page-heading"><div><p class="eyebrow">SSKR 운영</p><h1>행사 운영 설정</h1><p>초안을 검토한 뒤 공개하면 참가자의 행사 안내와 루트 일정에 반영됩니다.</p></div></div>
+    <div id="admin-notice" class="notice" role="status" aria-live="polite">운영 권한을 확인하고 있습니다.</div>
+    <div id="access-actions" class="access-actions" hidden><button type="button" id="login-button" class="button button-primary" hidden>Google로 로그인</button><button type="button" id="retry-access" class="button">다시 확인</button></div>
+    <div class="admin-layout" id="admin-workspace" hidden>
+      <aside class="event-sidebar" aria-labelledby="event-list-title">
+        <div class="section-heading"><h2 id="event-list-title">행사 목록</h2><button class="button button-small" type="button" id="new-event">새 행사</button></div>
+        <div id="event-list" class="event-list"></div>
+        <button class="button button-quiet" type="button" id="reload-events">목록 새로고침</button>
+      </aside>
+      <section id="event-editor" class="event-editor" aria-labelledby="editor-title" tabindex="-1">
+        <div class="editor-heading"><div><h2 id="editor-title">새 행사 초안</h2><p id="event-status">아직 저장하지 않았습니다.</p></div><span class="status-pill" id="event-badge">새 초안</span></div>
+        <form id="event-form">
+          <fieldset class="form-section"><legend>기본 정보</legend>
+            <div class="field-grid">
+              <label class="field full">행사 제목<input name="publicTitle" maxlength="120" autocomplete="off" placeholder="예: 2027 SSKR"></label>
+              <label class="field full">회차 이름<input name="editionLabel" maxlength="80" autocomplete="off" placeholder="예: 제1회"></label>
+              <label class="field full">행사 소개<textarea name="description" rows="3" maxlength="3000" placeholder="참가자에게 보여줄 행사 소개"></textarea></label>
+              <label class="field">개최일<input name="eventDate" type="date"></label>
+              <div class="field"><span>기준 시간대</span><span class="fixed-value">한국 표준시 (Asia/Seoul)</span></div>
+              <label class="field">출발 가능 시각<input name="startTime" type="time" step="60"></label>
+              <label class="field">도착 마감 시각<input name="endTime" type="time" step="60"></label>
+              <label class="field">모집 시작 (한국 시각)<input name="applicationOpenAt" type="datetime-local"></label>
+              <label class="field">모집 종료 (한국 시각)<input name="applicationCloseAt" type="datetime-local"></label>
+              <label class="field">최소 경유 스팟 수<input name="minimumSpotCheckins" type="number" value="10" min="1" max="200" step="1" required inputmode="numeric"><small>출발지·도착지 제외</small></label>
+            </div>
+            <p class="draft-schedule-note">미정 항목은 비워 두고 저장할 수 있습니다. 일정은 날짜와 시각을 함께 입력해야 저장됩니다.</p>
+          </fieldset>
+          <fieldset class="form-section"><legend>출발지와 도착지</legend>
+            <p class="section-description">참가자가 선택할 수 있는 출발지를 지정하세요.</p>
+            <div id="start-locations" class="start-grid"></div>
+            <div class="finish-location"><span>고정 도착지</span><strong id="finish-name"></strong><small id="finish-region"></small></div>
+          </fieldset>
+          <fieldset class="form-section"><legend>일출·일몰 검토</legend>
+            <p class="section-description">개최일의 위치별 시각을 출처와 대조하세요. 일출·일몰 시각은 검토 확인 후 함께 저장됩니다.</p>
+            <div id="sunrise-empty" class="empty-hint">출발지를 선택하면 일출 시각 입력란이 표시됩니다.</div>
+            <div id="sunrise-fields" class="sunrise-grid"></div>
+            <div class="field-grid sunlight-details">
+              <label class="field">대천해수욕장 일몰<input name="sunsetTime" type="time" step="60"></label>
+              <label class="field full">검토 자료 주소<input name="sourceUrl" type="url" maxlength="2048" placeholder="https://" inputmode="url" autocomplete="off"></label>
+              <label class="field full">계산·자료 버전<input name="calculationVersion" maxlength="120" placeholder="예: manual-review" autocomplete="off"></label>
+            </div>
+            <label class="review-check"><input name="reviewed" type="checkbox"><span>개최일, 선택한 출발지의 일출과 도착지의 일몰 시각을 확인했습니다.</span></label>
+          </fieldset>
+          <div class="editor-footer"><p id="publish-readiness">공개하려면 초안 저장과 일출·일몰 검토가 필요합니다.</p><div class="form-actions"><button class="button" type="submit" id="save-event">초안 저장</button><button class="button button-primary" type="button" id="publish-event" disabled>검토 후 공개</button></div></div>
+        </form>
+      </section>
+    </div>
+  </main>
+  <dialog id="admin-dialog" aria-labelledby="dialog-title" aria-describedby="dialog-description"><div class="dialog-content"><h2 id="dialog-title"></h2><p id="dialog-description"></p><div class="dialog-actions"><button class="button" type="button" id="dialog-cancel">취소</button><button class="button button-primary" type="button" id="dialog-confirm">확인</button></div></div></dialog>
+  <script src="/web/explore/places.js"></script>
+  <script src="/web/app/spot-curation.js?v=spot-details"></script>
+  <script src="/web/app/spot-catalog.js?v=spot-details"></script>
+  <script src="/web/admin/event-admin.js"></script>
+</body>
+</html>

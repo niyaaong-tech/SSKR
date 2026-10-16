@@ -25,7 +25,7 @@
     for(const [id,edit] of Object.entries(values.visitEdits||{})) {
       if(!id || typeof edit.note!=='string' || edit.note.length>1000)throw new Error('방문 메모는 1,000자 이내로 입력해 주세요.');
       const mediaIds=Array.isArray(edit.mediaIds)?edit.mediaIds:[];
-      if(mediaIds.some(id=>typeof id!=='string'||!/^local-photo-[a-z0-9-]+$/.test(id)))throw new Error('사진 정보를 확인해 주세요.');
+      if(mediaIds.some(id=>typeof id!=='string'||!/^(local-photo-|photo-)[a-z0-9-]+$/.test(id)))throw new Error('사진 정보를 확인해 주세요.');
       visitEdits[id]={note:edit.note.trim(),photoConsent:edit.photoConsent===true,mediaIds:[...new Set(mediaIds)].slice(0,5)};
     }
     return { title, summary, visibility: values.visibility, publishStatus, coverVisitId:typeof values.coverVisitId==='string'?values.coverVisitId:null,visitEdits };
@@ -104,9 +104,9 @@
       const edit=item.visitEdits?.[visit.id];if(!edit)return {...visit};
       const media=[...new Set(edit.mediaIds||[])].map(id=>photos.find(photo=>photo.id===id&&photo.ownerUserId===item.ownerUserId&&photo.memorialId===item.id&&photo.visitId===visit.id)).filter(Boolean).map(photo=>({...photo,visibility:edit.photoConsent?'PUBLIC':'PRIVATE'}));
       // Replace edit-managed local photos even when applying edits to an earlier preview.
-      const originalMedia=(visit.media||[]).filter(photo=>!(photo.sourceKind==='MOCK_UPLOAD'&&/^local-photo-/.test(photo.id||'')));
+      const originalMedia=(visit.media||[]).filter(photo=>!(['MOCK_UPLOAD','USER_UPLOAD'].includes(photo.sourceKind)&&/^(local-photo-|photo-)/.test(photo.id||'')));
       return {...visit,note:edit.note,photoConsent:edit.photoConsent,media:[...media,...originalMedia]};
     });
   }
-  return { collections, create, isOwner, sample, filterMemorials, isPublicPhoto, selectPhoto, selectCover, thumbnailStops, historyRows,applyVisitEdits };
+  return { collections, create, isOwner, sample, filterMemorials, isPublicPhoto, selectPhoto, selectCover, thumbnailStops, historyRows,applyVisitEdits,editableValues };
 });

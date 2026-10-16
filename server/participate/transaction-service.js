@@ -71,7 +71,7 @@ function createTransactionService(repository, options = {}) {
   function editableApplication() {
     const application = repository.getApplication();
     const payment = repository.getPaymentAttempts().at(-1);
-    if (!user().account?.linked || !application || ![APPLICATION.DRAFT, APPLICATION.SUBMITTED].includes(application.state) || repository.getParticipation()?.state === PARTICIPATION.ACTIVE || (payment && payment.state !== PAYMENT.NOT_STARTED)) {
+    if (!user().account?.linked || !application || ![APPLICATION.DRAFT, APPLICATION.SUBMITTED].includes(application.state) || repository.getParticipation()?.state === PARTICIPATION.ACTIVE || (payment && payment.state !== PAYMENT.NOT_STARTED && !(options.allowFailedEditing && payment.state === PAYMENT.FAILED))) {
       throw new DomainError("APPLICATION_NOT_EDITABLE", "현재 신청서를 수정할 수 없습니다. 결제 상태를 확인해 주세요.");
     }
     return application;

@@ -9,6 +9,7 @@
   const mapInteraction=typeof module==='object'&&module.exports?require('../shared/map/interaction'):window.SSKR_MAP_INTERACTION;
   const {createWheelSession}=mapInteraction;
   function mount(host,item,places,{account={},preview=false}={}){
+    if(item.synthetic===false)return mountVerified(host,item,places,account);
     const controller=new AbortController(),byId=new Map(places.map(p=>[p.id,p]));let viewer,record,disposed=false;
     const model=window.SSKR_MEMORIAL_STORE,owner=model.isOwner(item,account);
     host.innerHTML='<div class="memorial-route-loading" role="status">여정 기록을 불러오고 있습니다.</div>';
@@ -30,6 +31,12 @@
     host.addEventListener('click',e=>{if(e.target.closest('[data-return]'))host.querySelector('.journey-map-details').scrollIntoView({block:'start',behavior:'smooth'});if(e.target.closest('[data-download]')&&record){const url=URL.createObjectURL(new Blob([gpx(record,item.title)],{type:'application/gpx+xml'}));const a=document.createElement('a');a.href=url;a.download=item.publicSlug+'-synthetic.gpx';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}},{signal:controller.signal});
     async function load(){try{const response=await fetch(item.routeUrl,{signal:controller.signal});if(!response.ok)throw Error('HTTP '+response.status);record=await response.json();if(disposed)return;if(record.id!==item.runSessionId||!record.legs?.length||!record.visits?.length)throw Error('Invalid journey');record={...record,visits:model.applyVisitEdits(item,record.visits,window.SSKR_MEMORIAL_MEDIA?.all()||[],account)};render();}catch(error){if(disposed||error.name==='AbortError')return;viewer?.destroy();host.innerHTML='<div class="memorial-route-loading" role="status">주행 기록을 불러오지 못했습니다. <button class="memorial-button is-secondary" type="button" data-retry>다시 불러오기</button></div>';host.querySelector('[data-retry]').addEventListener('click',load,{once:true,signal:controller.signal});}}
     load();return()=>{disposed=true;controller.abort();viewer?.destroy();};
+  }
+  function mountVerified(host,item,places,account) {
+    const model=window.SSKR_MEMORIAL_STORE,owner=model.isOwner(item,account),byId=new Map(places.map(p=>[p.id,p]));let viewer;
+    host.innerHTML='<details class="journey-map-details"><summary>방문한 스팟 지도 보기</summary><div class="journey-map-host"></div></details><section class="journey-log"><header><h3>머물렀던 순간들</h3></header><div class="journey-log-list">'+item.visits.map((v,i)=>{const p=byId.get(v.locationId),photo=model.selectPhoto(v,{owner});return '<article class="journey-log-entry"><div class="journey-log-index">'+(v.role==='START'?'출':v.role==='FINISH'?'도':i)+'</div><div><div class="journey-log-title"><h4>'+esc(p?.name||v.locationId)+'</h4><span>'+time(v.checkedInAt)+'</span></div>'+(photo?'<figure class="journey-visit-photo"><img src="'+esc(photo.url)+'" alt="'+esc(p?.name||'방문 사진')+'" loading="lazy"></figure>':'')+'<p class="journey-visit-note">'+esc(v.note||'')+'</p></div></article>';}).join('')+'</div></section>';
+    host.querySelector('details').addEventListener('toggle',e=>{if(e.target.open&&!viewer){const items=item.visits.map((v,i)=>({...byId.get(v.locationId),number:v.role==='START'?'출':v.role==='FINISH'?'도':i}));viewer=window.SSKR_MAP.mount(host.querySelector('.journey-map-host'),{items,catalog:items,cluster:false,inView:false,inViewControl:false});}});
+    return()=>viewer?.destroy();
   }
   return {decode,preview,gpx,mount,km,duration,time,createWheelSession};
 });

@@ -3,6 +3,10 @@
   "private": true,
   "scripts": {
     "test": "node --test tests/participate/*.test.js",
+    "test:backend": "node --test --test-concurrency=1 tests/backend/*.test.js",
+    "test:backend:ui": "node --test tests/browser/backend.test.js",
+    "test:workflow:ui": "node --test tests/browser/service-workflows.test.js",
+    "test:events:ui": "node --test --test-concurrency=1 tests/browser/event-admin.test.js tests/browser/event-admin-integration.test.js tests/browser/planner-event.test.js",
     "dev": "node server/dev-server.js",
     "test:maps": "node --test tests/browser/map.test.js",
     "test:spots": "node --test tests/browser/spots.test.js",
@@ -13,11 +17,15 @@
   },
   "dependencies": {
     "@mapbox/vector-tile": "3.0.0",
+    "@supabase/supabase-js": "2.118.0",
     "pbf": "5.1.2",
     "polygon-clipping": "0.15.7",
+    "sharp": "0.35.5",
     "vt-pbf": "3.1.3"
   },
   "devDependencies": {
-    "playwright": "1.63.0"
+    "@electric-sql/pglite": "0.5.10",
+    "playwright": "1.63.0",
+    "supabase": "2.121.0"
   }
 }

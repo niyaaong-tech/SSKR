@@ -146,6 +146,7 @@ async function handleParticipateRequest(endpoint, body = {}, options = {}) {
 
 function createVercelHandler(endpoint) {
   return async function handler(request, response) {
+    if (require('../backend/config').mode() !== 'mock') return require('../backend/handler').participate(request,response,endpoint);
     if (request.method !== "POST") {
       response.setHeader("Allow", "POST");
       return response.status(405).json({ ok: false, error: { code: "METHOD_NOT_ALLOWED", userMessage: "POST 요청만 지원합니다.", retryable: false } });

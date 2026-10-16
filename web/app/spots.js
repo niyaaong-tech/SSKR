@@ -23,6 +23,8 @@
     const events=new AbortController(),reduced=matchMedia('(prefers-reduced-motion:reduce)');
     const numbers=new Map(places.filter(p=>p.kind==='spot').map((p,i)=>[p.id,i+1]));
     const entries=places.map(p=>({...p,number:p.kind==='start'?'출':p.kind==='finish'?'도':numbers.get(p.id)}));
+    const isStartAvailable=id=>root.SSKR_BACKEND?.mode!=='supabase'||!options.getEvent?.()?.id||options.getEvent().startLocationIds?.includes(id)===true;
+    const availableEntries=()=>entries.filter(p=>p.kind!=='start'||isStartAvailable(p.id));
     host.classList.add('spots-main');
     host.innerHTML=`<section class="spot-workbench" aria-label="스팟 지도 탐색">
       <header class="spot-heading"><div><p>MY DAY, MY STOPS</p><h2>어디에 들를까요?</h2><span>동해안과 부산의 출발점부터 대천까지, 나의 하루에 어울리는 장소를 골라보세요.</span></div></header>
@@ -57,9 +59,9 @@
     const filterParking=document.createElement('div');filterParking.className='spot-filter-parking';
     $('.spot-planning-area').before(filterParking);
     const filters=[$('.spot-toolbar'),$('.spot-categories')];filters.forEach(node=>filterParking.append(node));
-    viewer=shared.mount($('.spot-map-host'),{items:entries,catalog:entries,overview:true,initialId:selected?.id,initialZoom:initial?11:undefined,inView:true,
+    viewer=shared.mount($('.spot-map-host'),{items:availableEntries(),catalog:entries,isStartAvailable,overview:true,initialId:selected?.id,initialZoom:initial?11:undefined,inView:true,
       onRouteAdd:p=>planner?.addFromMap(p),routeActionState:p=>planner?.routeActionState(p),onSelect:p=>{selected=p;if(editing){planner?.select(p);return;}syncURL(p);renderDetail(p)},onOpen:p=>{if(editing){planner?.openPlace(p);return;}$('.spot-detail').scrollIntoView({behavior:reduced.matches?'auto':'smooth',block:'start'});},onDeselect:()=>{selected=null;if(editing)planner?.deselect();else renderDetail(null);syncURL(null);}});
-    planner=root.SSKR_ROUTE_PLANNER.mount($('.route-planner'),{catalog:entries,viewer,filters,filterParking,getBrowseFilters:()=>browseFilters,getAccount:options.getAccount,getEvent:options.getEvent,getParticipation:options.getParticipation,onLogin:options.onLogin,
+    planner=root.SSKR_ROUTE_PLANNER.mount($('.route-planner'),{catalog:entries,viewer,filters,filterParking,getBrowseFilters:()=>browseFilters,getAccount:options.getAccount,getEvent:options.getEvent,getParticipation:options.getParticipation,onLogin:options.onLogin,onRefreshEvent:options.onRefreshEvent,
       onModeChange:(value,startId)=>{clearTimeout(searchTimer);if(value&&!editing&&!browseFilters)browseFilters={...state};editing=value;if(!value)filters.forEach(node=>filterParking.append(node));routeStartId=value?startId:null;if(value){state.kind=startId?'spot':'start';state.category='all';state.search='';}else if(browseFilters){Object.assign(state,browseFilters);browseFilters=null;}$('.spot-search input').value=state.search;$('.spot-workbench').classList.toggle('is-planning',value);$('.spot-planning-area').classList.toggle('is-editing',value);host.querySelectorAll('[data-spot-mode]').forEach(b=>b.setAttribute('aria-pressed',String((b.dataset.spotMode==='plan')===value)));if(viewer)applyFilters();syncURL(selected);},
       onSelectionClear:()=>{selected=null;syncURL(null);},
       onTabChange:tab=>{if(!editing)return;const url=new URL(location.href);tab==='saved'?url.searchParams.set('tab','saved'):url.searchParams.delete('tab');history.replaceState(history.state,'',url.pathname+url.search);},
@@ -69,7 +71,7 @@
     });
     function applyFilters(reset=false){
       if(editing&&!routeStartId)state.kind='start';
-      visible=filterPlaces(entries,state);if(editing&&routeStartId&&state.kind==='spot'){
+      visible=filterPlaces(availableEntries(),state);if(editing&&routeStartId&&state.kind==='spot'){
         const origin=entries.find(p=>p.id===routeStartId),approx=p=>Math.hypot((p.lat-origin.lat)*111000,(p.lng-origin.lng)*90000);
         visible.sort((a,b)=>(planner?.distanceFromStart(a.id)??approx(a))-(planner?.distanceFromStart(b.id)??approx(b)));
       }
@@ -82,7 +84,7 @@
         if(editing){b.setAttribute('role','tab');b.setAttribute('aria-selected',String(chosen));b.setAttribute('aria-controls','rp-category-results');b.tabIndex=chosen?0:-1;b.removeAttribute('aria-pressed');}
         else{b.removeAttribute('role');b.removeAttribute('aria-selected');b.removeAttribute('aria-controls');b.removeAttribute('tabindex');b.setAttribute('aria-pressed',String(chosen));}
       });
-      const counts=filterPlaces(entries,{...state,category:'all'});host.querySelectorAll('[data-count]').forEach(n=>n.textContent=counts.filter(p=>n.dataset.count==='all'||p.category===n.dataset.count).length);
+      const counts=filterPlaces(availableEntries(),{...state,category:'all'});host.querySelectorAll('[data-count]').forEach(n=>n.textContent=counts.filter(p=>n.dataset.count==='all'||p.category===n.dataset.count).length);
       $('[data-action="clear"]').hidden=!state.search;viewer.setItems(visible,{selectedId:editing?undefined:selected?.id,reset,fit:!editing});planner?.setFilters(visible,{query:state.search,category:state.category});if(!editing)renderDetail(selected);
     }
     listen(host,'click',event=>{
@@ -102,7 +104,14 @@
     });
     applyFilters();if(initial&&!editing)viewer.getMap()?.setView([initial.lat,initial.lng],Math.max(11,viewer.getMap().getMinZoom()),{animate:false});
     if(query.get("mode")==="plan") { planner.setMode(true); if(query.get("tab")==="saved") planner.openSaved(); const incoming=query.get("fromExplore");if(incoming){planner.receivePlace(incoming);const url=new URL(location.href);url.searchParams.delete("fromExplore");history.replaceState(history.state,"",url);}}
-    return()=>{events.abort();clearTimeout(searchTimer);planner.destroy();viewer.destroy();host.classList.remove('spots-main')};
+    const dispose=()=>{events.abort();clearTimeout(searchTimer);planner.destroy();viewer.destroy();host.classList.remove('spots-main')};
+    dispose.refreshEvent=()=>{
+      if(!planner.refreshEvent())return;
+      const focused=document.activeElement,selection=focused?.matches('input[type=text],input:not([type]),textarea')?[focused.selectionStart,focused.selectionEnd]:null;
+      applyFilters();
+      if(selection&&focused?.id)host.querySelector('#'+CSS.escape(focused.id))?.setSelectionRange(...selection);
+    };
+    return dispose;
   }
   root.SSKR_APP_SPOTS={mount,filterPlaces,clusterPlaces};if(typeof module!=='undefined')module.exports={filterPlaces,clusterPlaces};
 })(typeof globalThis!=='undefined'?globalThis:this);

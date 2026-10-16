@@ -10,7 +10,7 @@
         <header class="transaction-header">
           <div><p class="transaction-eyebrow">${escapeHtml(context.event.publicTitle)} APPLICATION</p><strong class="step-count">STEP ${current} / 4</strong></div>
           <ol class="step-indicator" aria-label="신청 진행 단계">
-            ${steps.map((label, index) => `<li class="${index + 1 === current ? "is-current" : index + 1 < current ? "is-complete" : ""}"><span>${index + 1}</span>${label}</li>`).join("")}
+            ${(context.participationMode==='test'?[...steps.slice(0,3),'참가 확정']:steps).map((label, index) => `<li class="${index + 1 === current ? "is-current" : index + 1 < current ? "is-complete" : ""}"><span>${index + 1}</span>${label}</li>`).join("")}
           </ol>
         </header>
         ${content}
@@ -33,7 +33,7 @@
         <h2 id="application-title" tabindex="-1">참가 전에 꼭 확인해 주세요</h2>
         <p class="transaction-lead">SSKR의 하루를 안전하게 완성하기 위해 실제 진행 방식을 먼저 확인합니다.</p>
         <p class="participation-core-rule">완주하려면 공식 출발 체크인, 서로 다른 경유 스팟 ${context.event.minimumSpotCheckins}곳 이상 체크인, 일몰 전 ${escapeHtml(context.event.finishLocationName)} 도착 체크인이 필요합니다. 출발·도착을 포함해 총 ${context.event.minimumSpotCheckins+2}곳 이상입니다.</p>
-        <div class="notice-groups">${groups}</div>
+        <div class="notice-groups">${context.backend==='supabase'?'<p style="white-space:pre-wrap">'+escapeHtml(context.event.participationGuide)+'</p>':groups}</div>
         <form class="acknowledgement-form" id="acknowledgement-form">
           <label><input type="checkbox" id="guide-acknowledgement" ${acknowledged ? "checked" : ""} /><span>SSKR의 진행 방식과 위 내용을 확인했습니다.</span></label>
           <div class="transaction-actions"><button class="transaction-secondary transaction-back" id="cancel-application" type="button">취소</button><button class="transaction-primary" type="submit" ${acknowledged ? "" : "disabled"}>다음 <span aria-hidden="true">→</span></button></div>
@@ -61,7 +61,7 @@
   }
 
   function renderStep2(root, context, handlers) {
-    const agreements = context.application?.agreements || context.agreementDocuments || [];
+    const agreements = context.backend==='supabase'?(context.agreementDocuments||[]).map(a=>({...a,accepted:context.application?.agreements?.find(v=>v.code===a.code)?.accepted===true})):context.application?.agreements || context.agreementDocuments || [];
     const required = agreements.filter((item) => item.required);
     const optional = agreements.filter((item) => !item.required);
     root.innerHTML = shell(context, `
@@ -104,6 +104,7 @@
       root.querySelector("#agreement-dialog-title").textContent = item.title;
       root.querySelector("#agreement-dialog-version").textContent = `문서 버전 ${item.version}`;
       root.querySelector("#agreement-dialog-summary").textContent = item.summary;
+      if(context.backend==='supabase'){const text=root.querySelector('.agreement-placeholder');text.textContent=item.body;text.style.whiteSpace='pre-wrap';}
       if (typeof dialog.showModal === "function") dialog.showModal(); else dialog.setAttribute("open", "");
     }));
     root.querySelector("#agreement-dialog-close").addEventListener("click", () => { if (typeof dialog.close === "function") dialog.close(); else dialog.removeAttribute("open"); });
@@ -118,7 +119,7 @@
     const participant = context.application?.participant || context.account?.profile || {};
     const bike = context.application?.bike || {};
     let preference='';try{preference=sessionStorage.getItem('sskr.participate.tier.'+context.event.id)||'';}catch{}
-    const selectedId = context.application?.priceTierId || preference;
+    const selectedId = context.application?.priceTierId || preference || (context.participationMode==='test'?context.tiers?.[0]?.id:'');
     root.innerHTML = shell(context, `
       <section class="transaction-body" aria-labelledby="application-title">
         <p class="step-label">STEP 3</p>
@@ -175,6 +176,12 @@
   }
 
   function renderStep4(root, context, handlers) {
+    if(context.participationMode==='test'){
+      const p=context.application?.participant||{};
+      root.innerHTML=shell(context,`<section class="transaction-body" aria-labelledby="application-title"><p class="step-label">STEP 4</p><h2 id="application-title" tabindex="-1">테스트 참가 확정</h2><p class="transaction-lead">신청을 완료하면 참가 준비와 체크인을 이용할 수 있습니다. 결제는 진행하지 않습니다.</p><dl class="payment-summary"><div><dt>테스트 행사</dt><dd>${escapeHtml(context.event.publicTitle)}</dd></div><div><dt>참가자</dt><dd>${escapeHtml(p.name)}</dd></div><div><dt>연락처</dt><dd>${escapeHtml(p.phone)}<small>${escapeHtml(p.email)}</small></dd></div><div class="is-total"><dt>결제</dt><dd>없음</dd></div></dl><div class="transaction-actions"><button class="transaction-secondary" id="previous-step" type="button">이전 단계</button><button class="transaction-primary" id="confirm-test" type="button" ${context.surface.primaryAction?.enabled===false?'disabled':''}>테스트 참가 확정</button></div></section>`);
+      root.querySelector('#previous-step').onclick=()=>handlers.previousStep('STEP_4');
+      root.querySelector('#confirm-test').onclick=()=>handlers.startPayment();return;
+    }
     const variant = context.surface.variant;
     const tier = context.tiers?.find((item) => item.id === context.application?.priceTierId) || context.price;
     const participant = context.application?.participant || {};
@@ -186,6 +193,11 @@
     else if (variant === "CLOSED") content = `<div class="state-message"><span class="state-mark" aria-hidden="true">!</span><h2 id="application-title" tabindex="-1">새로운 결제를 진행할 수 없습니다.</h2><p>${escapeHtml(context.surface.blockedReason?.message || "현재 모집 조건을 다시 확인해 주세요.")}</p>${summary}<button class="transaction-primary" type="button" disabled>결제 불가</button></div>`;
     else content = `<section class="transaction-body" aria-labelledby="application-title"><p class="step-label">STEP 4</p><h2 id="application-title" tabindex="-1">결제</h2><p class="transaction-lead">결제 시작 직전에 선택 Tier의 가격과 정원을 다시 확인합니다.</p>${summary}<div class="payment-notice"><strong>결제 전 확인</strong><p>실제 카드정보는 입력하지 않습니다. Checkout Hold와 결제 상태 전이를 검증하는 Mock 단계입니다.</p></div>${paymentOutcomeControl()}<div class="transaction-actions transaction-actions--payment"><button class="transaction-secondary transaction-back" id="previous-step" type="button"><span aria-hidden="true">←</span> 이전 단계</button><button class="transaction-secondary payment-later" id="defer-payment" type="button">나중에 결제</button>${paymentButton(context)}</div></section>`;
     root.innerHTML = shell(context, content);
+    if(context.backend==='supabase') {
+      root.querySelector('#mock-outcome')?.closest('label')?.remove();
+      const notice=root.querySelector('.payment-notice p');if(notice)notice.textContent='결제 수단을 선택한 뒤 참가비를 확인해 주세요. 결제가 확인되면 참가가 확정됩니다.';
+      const lead=root.querySelector('.transaction-lead');if(lead)lead.textContent='참가 정보와 금액을 확인한 뒤 결제를 진행해 주세요.';
+    }
     root.querySelector("#previous-step")?.addEventListener("click", () => handlers.previousStep("STEP_4"));
     root.querySelector("#defer-payment")?.addEventListener("click", handlers.deferPayment);
     root.querySelector("#refresh-payment")?.addEventListener("click", handlers.refreshPayment);

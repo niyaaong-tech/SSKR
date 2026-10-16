@@ -145,8 +145,8 @@
       window.SSKR_ACCOUNT_CONTROL.render(shell, {
         account: context.account,
         showGuest: true,
-        showReset: true,
-        showPaymentProcessing: true,
+        showReset: window.SSKR_BACKEND?.mode !== 'supabase',
+        showPaymentProcessing: window.SSKR_BACKEND?.mode !== 'supabase',
         onLogin: () => callbacks.login(),
         onProfile: () => openView("profile"),
         onSettings: () => openView("settings"),

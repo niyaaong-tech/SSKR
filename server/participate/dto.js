@@ -125,4 +125,4 @@ function buildContextDto(repository, options = {}) {
   };
 }
 
-module.exports = { buildContextDto };
+module.exports = { buildContextDto, dateRange };

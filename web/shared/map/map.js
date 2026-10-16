@@ -158,7 +158,7 @@
   function renderMarkers(){
    if(!map||disposed)return;closeHover();layer.eachLayer(marker=>{marker.getTooltip?.()?.getElement?.()?.remove();marker.unbindTooltip();});layer.clearLayers();markers.clear();
    const ordered=editing?routePlaces(catalog,routeIds):[],chosen=new Set(ordered.map(p=>p.id)),candidateIds=new Set(editing?candidates.map(p=>p.id):[]);
-   const starts=editing?[...catalog.values()].filter(p=>p.kind==='start'):[];
+   const starts=editing?[...catalog.values()].filter(p=>p.kind==='start'&&(!options.isStartAvailable||options.isStartAvailable(p.id))):[];
    const visible=new Map(items.map(p=>[p.id,p]));if(editing){starts.forEach(p=>visible.set(p.id,p));candidates.forEach(p=>visible.set(p.id,p));ordered.forEach(p=>visible.set(p.id,p));}
    const pinned=editing?new Set([...chosen,...candidateIds,...starts.map(p=>p.id)]):new Set(pageItems.map(p=>p.id));
    const groups=options.cluster===false?[...visible.values()].map(p=>[p]):clusterPlaces([...visible.values()],p=>map.project([p.lat,p.lng],map.getZoom()),50,selected?.id,pinned);

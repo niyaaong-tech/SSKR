@@ -1,0 +1,15 @@
+project_id = "sskr"
+
+[auth]
+site_url = "https://sskr.vercel.app"
+additional_redirect_urls = ["http://127.0.0.1:8112/api/backend?resource=callback&nonce=*", "https://sskr.vercel.app/api/backend?resource=callback&nonce=*"]
+enable_anonymous_sign_ins = false
+
+[auth.email]
+enable_signup = false
+
+[auth.external.google]
+enabled = true
+client_id = "env(SUPABASE_AUTH_EXTERNAL_GOOGLE_CLIENT_ID)"
+secret = "env(SUPABASE_AUTH_EXTERNAL_GOOGLE_CLIENT_SECRET)"
+skip_nonce_check = false

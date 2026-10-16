@@ -8,6 +8,9 @@ const port = Number(process.env.SSKR_DEV_PORT || 8080);
 const types = { ".css": "text/css; charset=utf-8", ".html": "text/html; charset=utf-8", ".js": "text/javascript; charset=utf-8", ".jpg": "image/jpeg", ".jpeg": "image/jpeg", ".png": "image/png", ".webp": "image/webp", ".svg": "image/svg+xml" };
 
 const routes = {
+  "/app/admin/operations": "web/admin/operations.html",
+  "/app/admin": "web/admin/index.html",
+  "/app/admin/": "web/admin/index.html",
   "/explore": "web/explore/index.html",
   "/explore/": "web/explore/index.html",
   "/tests/home-explore": "web/tests/home-explore/index.html",
@@ -69,8 +72,10 @@ const server = http.createServer(async (request, response) => {
     response.writeHead(308,{Location:target.pathname+target.search});return response.end();
   }
   if (pathname === "/api/map-tile") return require("./map/tiles").handler(request,response);
+  if (pathname === "/api/backend") return require("./backend/handler").handler(request,response);
   const apiMatch = pathname.match(/^\/api\/participate\/(context|application|checkout|payment|mock)$/);
   if (apiMatch) {
+    if (process.env.SSKR_BACKEND_MODE && process.env.SSKR_BACKEND_MODE !== 'mock') return require('./backend/handler').participate(request,response,apiMatch[1]);
     if (request.method !== "POST") return sendJson(response, 405, { ok: false, error: { code: "METHOD_NOT_ALLOWED", userMessage: "POST 요청만 지원합니다." } });
     try {
       const result = await handleParticipateRequest(apiMatch[1], await readBody(request));

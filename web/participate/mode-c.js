@@ -6,10 +6,10 @@
     const participation = context.participation;
     const tier = context.tiers?.find((item) => paymentDeferred ? item.id === context.application?.priceTierId : item.code === participation?.registrationTierCode) || context.price;
     const title = paymentDeferred ? "참가 신청이 저장되었습니다." : legacy ? "이전 참가 내역의 확인이 필요합니다." : `${context.event?.publicTitle || 'SSKR'} 참가가 확정되었습니다.`;
-    const description = paymentDeferred ? "신청 정보는 저장되었으며 결제만 남아 있습니다. SSKR 매니저 또는 이 화면에서 결제를 이어갈 수 있습니다." : legacy ? "이전 슬롯 대기 내역은 운영 확인이 필요합니다. 추가 결제 없이 신청 내역을 확인해 주세요." : "결제와 참가 등록이 모두 완료되었습니다. 이제 SSKR 매니저에서 이번 랠리를 준비할 수 있습니다.";
+    const description = context.participationMode==='test'?'테스트 참가가 확정되었습니다. 결제 없이 SSKR 매니저에서 참가 준비를 진행해 보세요.':paymentDeferred ? "신청 정보는 저장되었으며 결제만 남아 있습니다. SSKR 매니저 또는 이 화면에서 결제를 이어갈 수 있습니다." : legacy ? "이전 슬롯 대기 내역은 운영 확인이 필요합니다. 추가 결제 없이 신청 내역을 확인해 주세요." : "결제와 참가 등록이 모두 완료되었습니다. 이제 SSKR 매니저에서 이번 랠리를 준비할 수 있습니다.";
     const status = paymentDeferred ? "결제 대기" : legacy ? "내역 확인 필요" : "참가 확정";
     const participantNumber = paymentDeferred ? "결제 후 배정" : participation?.participantNumber || "배정 대기";
-    const paymentStatus = paymentDeferred ? "결제 전" : "결제 완료";
+    const paymentStatus = context.participationMode==='test'?'테스트 참가 · 결제 없음':paymentDeferred ? "결제 전" : "결제 완료";
     root.innerHTML = `
       <div class="completion-shell ${paymentDeferred ? "completion-shell--payment-deferred" : ""}">
         <p class="completion-eyebrow">${paymentDeferred ? "APPLICATION SAVED" : "APPLICATION COMPLETE"}</p>

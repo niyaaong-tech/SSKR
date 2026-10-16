@@ -1,0 +1,21 @@
+'use strict';
+const {test}=require('node:test'),assert=require('node:assert/strict'),{randomUUID}=require('node:crypto');
+const {fixture}=require('./workflow-fixture');
+const {saveProfile}=require('../../server/backend/profile');
+test('account contacts preserve login identity, require an active owner, and reject stale revisions',async t=>{
+ const f=await fixture();t.after(()=>f.db.close());const session=randomUUID();
+ await f.db.exec(`create or replace function auth.uid() returns uuid language sql as $$select current_setting('test.owner')::uuid$$;
+ create or replace function auth.jwt() returns jsonb language sql as $$select jsonb_build_object('session_id','${session}')$$;`);
+ await f.db.query('insert into auth.sessions(id,user_id) values($1,$2)',[session,f.A]);
+ await f.db.query("insert into auth.identities(user_id,provider) values($1,'google')",[f.A]);
+ await f.db.query("select set_config('test.owner',$1,false)",[f.A]);
+ const db={rpc:async(name,args={})=>{try{return {data:(await f.db.query('select public.sskr_profile($1,$2) result',[args.p_data?JSON.stringify(args.p_data):null,args.p_revision??null])).rows[0].result};}catch(e){return {error:{message:e.message}};}}};
+ const current={account:f.account(f.A),db};
+ const changed=await saveProfile(current,{revision:0,profile:{name:'변경 이름',email:'contact@example.invalid',phone:'010-1234-5678',ownerId:f.B}});
+ assert.equal(changed.id,f.A);assert.equal(changed.profileRevision,1);assert.equal(changed.profile.phone,'01012345678');
+ assert.equal((await db.rpc('sskr_profile')).data.profile.email,'contact@example.invalid');
+ await assert.rejects(saveProfile(current,{revision:0,profile:changed.profile}),e=>e.code==='CONFLICT');
+ await f.db.exec('set role anon');await assert.rejects(f.db.query('select public.sskr_profile()'),/permission denied/);await f.db.exec('reset role');
+ await f.db.query("select set_config('test.owner',$1,false)",[f.B]);assert.equal((await db.rpc('sskr_profile')).error.message,'AUTH_REQUIRED');
+ await f.db.query("select set_config('test.owner',$1,false)",[f.A]);await f.db.query('delete from auth.sessions where id=$1',[session]);assert.equal((await db.rpc('sskr_profile')).error.message,'AUTH_REQUIRED');
+});

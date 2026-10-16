@@ -19,15 +19,17 @@
   const linkedScenarios = new Set(["logged-in-no-application", "application-step1", "application-step2", "application-step3", "application-payment", "processing", "failed", "active", "past-only", "current+past", "private-owner", "private-other", "blocked", "c-payment-deferred", "c-confirmed-spots", "c-preparation", "c-ride-check", "c-countdown", "c-live-confirmed", "c-season-completed", "c-season-no-show", "c-season-retired"]);
   const publicScenarios = new Set(["guest", "public-memorial"]);
   let context = null;
+  let contextRefresh = null;
   let pendingRoute = null;
   let disposeSpots = null;
   let disposeMemorials = null;
   let disposeAuth = null;
   let disposePreparation = null;
+  let authNotice = '';
   let memorialStorage;
   try { memorialStorage = window.localStorage; } catch { /* Restricted browser storage. */ }
-  const memorialStore = window.SSKR_MEMORIAL_STORE.create(data.memorials, memorialStorage);
-  const memorialAccount = () => scenario === "private-other" ? { ...context.account, id: "mock-rider-other" } : context.account;
+  let memorialStore = window.SSKR_MEMORIAL_STORE.create(data.memorials, memorialStorage);
+  const memorialAccount = () => window.SSKR_BACKEND?.mode!=='supabase'&&scenario === "private-other" ? { ...context.account, id: "mock-rider-other" } : context.account;
 
   const esc = (value) => String(value ?? "").replace(/[&<>'"]/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "'": "&#39;", '"': "&quot;" })[char]);
   const participateHref = (href) => {
@@ -41,6 +43,31 @@
   const primary = (action) => `<a class="primary-link" href="${esc(participateHref(action.href))}">${esc(action.label)} <span aria-hidden="true">→</span></a>`;
   const participantAccessCopy = "참가 확정되면 SSKR 관련 안내가 제공됩니다.";
   const relation = () => domain.currentRelation(context);
+
+  function consumeAuthError() {
+    const url = new URL(location.href);
+    if (!url.searchParams.has('authError')) return;
+    authNotice = url.searchParams.get('authError') === 'cancelled'
+      ? '로그인이 취소되었습니다. 작성 중인 루트는 그대로 유지됩니다.'
+      : '로그인 연결이 만료되었습니다. 작성 중인 루트는 유지됩니다. 다시 로그인해 주세요.';
+    url.searchParams.delete('authError'); params.delete('authError');
+    history.replaceState(history.state, '', url.pathname + url.search + url.hash);
+    try { sessionStorage.removeItem('sskr.route-save-after-login'); } catch { /* Login recovery also works when storage is restricted. */ }
+  }
+
+  function showAuthNotice() {
+    if (!authNotice) return;
+    root.insertAdjacentHTML('afterbegin', '<p class="manager-alert" data-auth-notice role="alert">' + esc(authNotice) + '</p>');
+    authNotice = '';
+  }
+
+  function rememberExpiredDraft() {
+    try {
+      const draft = JSON.parse(sessionStorage.getItem('sskr.route-editor') || 'null');
+      if (draft?.backend === 'supabase' && draft.ownerId) sessionStorage.setItem('sskr.route-relogin-owner', draft.ownerId);
+      sessionStorage.removeItem('sskr.route-save-after-login');
+    } catch { /* Recovery must not depend on writable browser storage. */ }
+  }
 
   function navigationSearch() {
     const next = new URLSearchParams(location.search);
@@ -83,7 +110,7 @@
     accountControl.render(accountRoot, {
       account: displayAccount(),
       showGuest: true,
-      showReset: true,
+      showReset: window.SSKR_BACKEND?.mode === 'mock',
       onLogin: () => renderAuth(domain.normalizePath(location.pathname)),
       onProfile: () => route("/app/profile"),
       onSettings: () => route("/app/profile"),
@@ -95,7 +122,9 @@
       },
       onLogout: async () => {
         if (!window.confirm("로그아웃하시겠습니까? 참가 신청과 기록은 삭제되지 않습니다.")) return;
-        auth.logout(); context = await api.context(); renderChrome(); renderRouteSafely();
+        await auth.logout();
+        try { sessionStorage.removeItem('sskr.route-relogin-owner'); } catch { /* Restricted storage. */ }
+        context = await api.context(); renderChrome(); renderRouteSafely();
       }
     });
   }
@@ -113,13 +142,13 @@
   function renderHome() {
     let plans = [], planError = '';
     if (context.account.linked) {
-      try { plans = window.SSKR_ROUTE_PLAN.createStore(window.localStorage, window.SSKR_SPOT_CATALOG).list(context.account); }
+      try { plans = (window.SSKR_BACKEND?.mode === 'supabase' ? window.SSKR_REMOTE_ROUTES : window.SSKR_ROUTE_PLAN.createStore(window.localStorage, window.SSKR_SPOT_CATALOG)).list(context.account); }
       catch (error) { planError = error.message; }
     }
-    const model = managerResolver.resolveManager(context, { plans, notices: data.notices });
+    const model = managerResolver.resolveManager(context, { plans, notices: window.SSKR_BACKEND?.mode === 'supabase' ? context.event.notices||[] : data.notices });
     const appLink = (url,label,cls='manager-link') => '<a class="'+cls+'" href="'+esc(url.startsWith('/participate')?participateHref(url):url)+'"'+(url.startsWith('/app')?' data-app-link':'')+'>'+esc(label)+' <span aria-hidden="true">↗</span></a>';
     const planCards = model.plans.map(item=>'<article class="manager-plan-card"><span>경유 '+item.stopIds.length+'곳 · '+(item.stopIds.length>=window.SSKR_CHECKIN_RULES.minimumSpotCheckins(context.event)?'최소 경유 수 충족':'초안')+'</span><h3>'+esc(item.title||'이름 없는 루트')+'</h3><p>'+esc(window.SSKR_MAP.formatPlaceText(window.SSKR_SPOT_CATALOG.find(p=>p.id===item.startId)?.name||'출발지 미정'))+' → '+esc(window.SSKR_SPOT_CATALOG.find(p=>p.id===item.finishId)?.name||'도착지 확인 필요')+'</p>'+appLink('/app/spots?mode=plan&tab=saved','저장 목록에서 열기')+'</article>').join('');
-    root.innerHTML = '<div class="manager-dashboard">'+
+    root.innerHTML = '<div class="manager-dashboard">'+(context.participationMode==='test'?'<p class="manager-test-notice">테스트 사이트 · 결제 없이 참가할 수 있습니다.</p>':'')+
       (model.alert?'<aside class="manager-alert"><strong>'+esc(model.alert.title)+'</strong><p>'+esc(model.alert.body)+'</p>'+appLink('/app/notices','공지 확인')+'</aside>':'')+
       '<section class="manager-welcome"><div><p class="eyebrow">'+esc(model.label)+'</p><h2>'+esc(model.title)+'</h2><p>'+esc(model.copy)+'</p></div>'+(model.primaryAction?appLink(model.primaryAction.href,model.primaryAction.label,'manager-primary'):'')+'</section>'+
       (model.banner?'<a class="manager-event-banner" href="'+esc(participateHref(model.banner.href))+'"><strong>'+esc(model.banner.title)+' 참가안내</strong><span>'+esc(model.banner.status)+' · 일정과 참가 조건 확인</span><b aria-hidden="true">→</b></a>':'')+
@@ -135,9 +164,10 @@
       id, participation: context.participation,
       getAccount: () => context.account,
       getEvent: () => context.event,
+      onRefreshEvent: refreshEventContext,
       getParticipation: () => context.participation,
       onLogin: async provider => {
-        auth.linkAccount(provider);
+        await auth.linkAccount(provider);
         if (publicScenarios.has(scenario)) window.SSKR_MOCK_SESSION.replaceScenario("logged-in-no-application");
         context = await api.context();
         renderChrome();
@@ -146,11 +176,17 @@
     });
   }
 
-  function renderMemorials() {
+  async function renderMemorials() {
+    const currentPath=location.pathname,owner=context.account.id;
+    if(window.SSKR_BACKEND?.mode==='supabase') {
+      root.innerHTML='<p role="status">기록을 불러오고 있습니다.</p>';
+      try{await memorialStore.refresh();}catch(e){if(location.pathname===currentPath)root.innerHTML='<p role="alert">'+esc(e.message)+'</p>';return;}
+      if(currentPath!==location.pathname||owner!==context.account.id)return;
+    }
     disposeMemorials = window.SSKR_MEMORIALS.mount({
       root, store: memorialStore, account: memorialAccount(),
       history: context.pastParticipations || [],
-      event: window.SSKR_MEMORIAL_FIXTURE.event,
+      event: window.SSKR_BACKEND?.mode==='supabase'?context.event:window.SSKR_MEMORIAL_FIXTURE.event,
       path: domain.normalizePath(location.pathname)
     });
   }
@@ -158,7 +194,7 @@
   function renderMy() { renderMemorials(); }
 
   function renderPreparation() {
-    disposePreparation=window.SSKR_PREPARATION.mount(root,context,{notices:data.notices,onUpdate:contextUpdater()});
+    disposePreparation=window.SSKR_PREPARATION.mount(root,context,{notices:window.SSKR_BACKEND?.mode==='supabase'?[{title:'참가 준비 안내',body:context.event.preparationNotice||'',version:context.event.preparationNoticeVersion}]:data.notices,onUpdate:contextUpdater()});
   }
 
   function contextUpdater() {
@@ -167,7 +203,7 @@
   }
 
   function renderNotices() {
-    root.innerHTML = `${pageHead("OFFICIAL NOTICE", "공지", "현재 이벤트와 APP 이용에 필요한 공개 안내입니다.")}<div class="notice-list">${data.notices.map((item) => `<article class="notice-item"><span>${esc(item.category)}</span><div><h3>${esc(item.title)}</h3><p>${esc(item.body)}</p></div><time>${esc(item.date)}</time></article>`).join("")}</div>`;
+    root.innerHTML = `${pageHead("OFFICIAL NOTICE", "공지", "현재 이벤트와 APP 이용에 필요한 공개 안내입니다.")}<div class="notice-list">${(window.SSKR_BACKEND?.mode==='supabase'?context.event.notices||[]:data.notices).map((item) => `<article class="notice-item"><span>${esc(item.category)}</span><div><h3>${esc(item.title)}</h3><p>${esc(item.body)}</p></div><time>${esc(item.date)}</time></article>`).join("")}</div>`;
   }
 
   function renderAuth(returnTo) {
@@ -182,7 +218,7 @@
     disposeAuth = window.SSKR_SOCIAL_AUTH.mount(root.querySelector('#app-social-auth'), {
       note: '로그인하면 내 신청 내역과 참가 기록을 확인할 수 있습니다.',
       onSelect: async provider => {
-        auth.linkAccount(provider);
+        await auth.linkAccount(provider);
         if (publicScenarios.has(scenario)) window.SSKR_MOCK_SESSION.replaceScenario("logged-in-no-application");
         context = await api.context();
         renderChrome();
@@ -225,7 +261,9 @@
     document.title = `${sectionTitle.textContent} · SSKR`;
     const access = domain.canAccess(path, { linked: context.account.linked, relation: relation() });
     nav.querySelectorAll("[data-app-link]").forEach((link) => link.classList.toggle("is-current", link.getAttribute("href") === routeRoot));
-    if (!access.allowed) {
+    if (window.SSKR_BACKEND?.mode === 'supabase' && !['/app','/app/spots','/app/my','/app/memorials','/app/preparation','/app/ride','/app/profile','/app/notices'].includes(routeRoot)) {
+      root.innerHTML = '<section class="access-denied"><h1>서비스를 준비하고 있어요</h1><p>이 기능은 운영 연결을 준비하고 있습니다.</p><a class="primary-link" href="/app/spots?mode=plan" data-app-link>루트 만들기</a></section>';
+    } else if (!access.allowed) {
       if (access.reason === "AUTH_REQUIRED") renderAuth(access.returnTo);
       else if (access.reason === "ACTIVE_PARTICIPATION_REQUIRED") renderParticipantUnavailable();
       else renderDenied("현재 참가자에게만 열리는 화면입니다.", participantAccessCopy);
@@ -236,21 +274,38 @@
     else if (path.startsWith("/app/memorials/")) renderMemorials();
     else if (path === "/app/my") renderMy();
     else if (path === "/app/preparation") renderPreparation();
+    else if(path==='/app/ride')disposePreparation=window.SSKR_SERVICE_UI.mountRide(root,context,contextUpdater());
     else if (path === "/app/profile") disposePreparation=window.SSKR_PREPARATION.profile(root,context,contextUpdater());
     else if (path === "/app/notices") renderNotices();
     else renderNotFound();
-    root.insertAdjacentHTML("beforeend", `<span class="scenario-tag">MOCK · ${esc(scenario)}</span>`);
+    if (window.SSKR_BACKEND?.mode === 'mock') root.insertAdjacentHTML("beforeend", `<span class="scenario-tag">MOCK · ${esc(scenario)}</span>`);
     root.focus({ preventScroll: true });
   }
 
   function renderRouteSafely() {
     if (!context) { pendingRoute = { path: domain.normalizePath(location.pathname), replace: true }; return; }
-    try { renderRoute(); }
+    try { renderRoute(); showAuthNotice(); }
     catch (error) { renderFailure(error); }
   }
 
   async function load() {
     try {
+      await api.initialize();
+      if (window.SSKR_BACKEND.mode === 'supabase') {
+        consumeAuthError();
+        try { context = await api.context(); }
+        catch (error) {
+          if (error.code !== 'AUTH_REQUIRED') throw error;
+          rememberExpiredDraft();
+          // The server has cleared the rejected cookie. Reopen as a guest so
+          // the user can sign in again without a failed-context retry loop.
+          context = await api.context();
+          authNotice = '로그인이 만료되었습니다. 작성 중인 루트는 유지됩니다. 다시 로그인해 주세요.';
+        }
+        try { await window.SSKR_REMOTE_ROUTES.refresh(context.account); } catch { /* Manager and editor display the same storage error without discarding a draft. */ }
+        memorialStore=window.SSKR_SERVICE_UI.remote;window.SSKR_MEMORIAL_MEDIA=window.SSKR_SERVICE_UI.media;
+        renderChrome(); renderRouteSafely(); return;
+      }
       try { await window.SSKR_MEMORIAL_MEDIA.read(); } catch { /* Reading existing records must work without upload storage. */ }
       if (linkedScenarios.has(scenario) && !auth.isAccountLinked()) auth.linkAccount("google");
       if (publicScenarios.has(scenario) && auth.isAccountLinked()) auth.logout();
@@ -270,6 +325,23 @@
   document.querySelectorAll(".utility-button")[0]?.addEventListener("click", () => route("/app/notices"));
   document.querySelectorAll(".utility-button")[1]?.addEventListener("click", () => route("/app/profile"));
   window.addEventListener("popstate", renderRouteSafely);
+  async function refreshEventContext() {
+    if (window.SSKR_BACKEND?.mode !== 'supabase' || !context) return;
+    if (contextRefresh) return contextRefresh;
+    const owner = context.account.id, linked = context.account.linked;
+    contextRefresh = (async () => {
+      try {
+        const next = await api.context();
+        if (context?.account?.id !== owner || context?.account?.linked !== linked || next.account?.id !== owner || next.account?.linked !== linked) return;
+        context = next;
+        disposeSpots?.refreshEvent?.();
+        if (linked) try { await window.SSKR_REMOTE_ROUTES.refresh(context.account); } catch { /* Display the storage error when the user opens the list. */ }
+        if (context?.account?.id === owner && domain.normalizePath(location.pathname) === '/app') renderHome();
+      } catch { /* Keep the current draft and event until an authoritative context is available. */ }
+    })();
+    try { return await contextRefresh; } finally { contextRefresh = null; }
+  }
+  window.addEventListener('focus', refreshEventContext);
   document.addEventListener("click", handleAppLink);
   load();
 })();

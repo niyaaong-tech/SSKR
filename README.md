@@ -9,6 +9,10 @@ SSKR 웹의 현재 실행 결과를 관리하는 저장소입니다. 기획 문�
 - `/about/` — `web/about/`: SSKR 소개, 스크롤 연동 8개 장면과 읽기 모드
 - `/explore/` — `web/explore/`: 출발 11곳·경유 200곳·대천 도착지 공통 지도 탐색
 - `/app/*` — `web/app/`: 매니저·스팟 탐색과 루트 만들기·공개 메모리얼·내 기록
+- `/app/admin` — `web/admin/`: 운영자 전용 행사 초안·일출/일몰 검토·공개 설정
+- `/app/admin/operations` — 접수·참가자·공지·환불·체크인 증거·사진 검토
+- `/app/ride` — 실제 참가자의 당일 GPS 체크인
+- `/participate/payment.html` — 실제 모드의 Toss V2 결제위젯 진입
 - `/tests/home-explore/` — `web/tests/home-explore/`: HOME 장소 탐색 인터랙션 검토 시안 (검색엔진 비노출)
 - `/` — `web/home/`: SSKR HOME
 - `/participate` — `web/participate/`: 참가 안내
@@ -27,9 +31,11 @@ HOME 헤더에서 Journey Presentation 링크를 제거했습니다. 기존 `/jo
 
 ## 로컬 실행
 
-`npm ci` 후 `npm run dev`를 실행하고 `http://127.0.0.1:8080/app/spots?scenario=guest`에서 탐색·루트 만들기를 확인합니다. `/explore/`도 같은 카탈로그와 지도를 사용합니다. 전체 장소는 `web/explore/places.js`의 기반 데이터에 `web/app/spot-catalog.js`와 `spot-curation.js`를 적용해 구성합니다. 현재 200개 경유지·11개 출발지·1개 고정 도착지가 있으며 지도 안내 좌표는 주차 지점입니다. 출발·도착을 포함해 주차 GPS 간 5km 이하의 근접 장소는 한 곳만 남기고, 서울·경기 북부를 제외한 경기 남부에 10개 경유지를 배치합니다. 장소와 주차 구역은 1km 이내, 이륜차 도로 접근점은 주차 구역에서 750m 이내로 검증합니다. 공통 지도는 Leaflet·MapLibre와 `/api/map-tile`을 사용합니다. 외부 라이브러리·지도 글꼴·확대 타일에는 인터넷 연결이 필요합니다. 실제 도로 데이터는 저장소에 포함돼 있습니다. 로그인·계정별 저장은 mock 및 브라우저 저장 어댑터이며 운영 인증·DB 연동과 구분합니다.
+`npm ci` 후 `npm run dev`를 실행하고 `http://127.0.0.1:8080/app/spots?scenario=guest`에서 탐색·루트 만들기를 확인합니다. `/explore/`도 같은 카탈로그와 지도를 사용합니다. 전체 장소는 `web/explore/places.js`의 기반 데이터에 `web/app/spot-catalog.js`와 `spot-curation.js`를 적용해 구성합니다. 현재 200개 경유지·11개 출발지·1개 고정 도착지가 있으며 지도 안내 좌표는 주차 지점입니다. 출발·도착을 포함해 주차 GPS 간 5km 이하의 근접 장소는 한 곳만 남기고, 서울·경기 북부를 제외한 경기 남부에 10개 경유지를 배치합니다. 장소와 주차 구역은 1km 이내, 이륜차 도로 접근점은 주차 구역에서 750m 이내로 검증합니다. 공통 지도는 Leaflet·MapLibre와 `/api/map-tile`을 사용합니다. 외부 라이브러리·지도 글꼴·확대 타일에는 인터넷 연결이 필요합니다. 실제 도로 데이터는 저장소에 포함돼 있습니다. 기본 mock 모드는 브라우저 저장을 사용하고, 실제 개발 모드는 Google 인증과 Supabase 계정별 저장을 사용합니다. 운영 사이트의 실제 모드 전환은 아직 진행하지 않았습니다.
 
 저장소 루트에서 `server/dev-server.js`를 실행해 공개 URL로 확인합니다. 단순 정적 파일 서버는 지도·참가 API를 제공하지 않습니다. 운영 URL 연결은 `vercel.json`에 정의되어 있습니다.
+
+실제 Supabase 개발 연결은 [백엔드 실행 문서](docs/backend-setup.md)를 따릅니다. Google 로그인·계정별 루트 저장·행사 초안과 공개 버전은 개발 DB에 연결했습니다. 로컬 실제 모드의 운영 설정은 `http://127.0.0.1:8112/app/admin`입니다. 신청·정원·결제 어댑터·참가 준비·체크인·사진·메모리얼·계정 연락처·운영 공지도 구현했습니다. 운영 사이트는 아직 mock 모드이며 실제 PG 키·공식 행사 입력과 실기기 검증 후 개통해야 합니다.
 
 ## 보존 기준
 
@@ -112,3 +118,5 @@ npm test
 ```
 
 `--stage routes --only gangneung`은 해당 출발지의 경로만 작업 폴더에 검증하며 서비스 데이터를 게시하지 않습니다. 전체 실행은 완료된 행을 재사용합니다. 카탈로그 교체 시에는 `--catalog staged-catalog.json --output VERIFIED_ROUTES`로 저장소 밖에서 먼저 생성·검증하고, 카탈로그·사진·도로 데이터를 함께 반영합니다. 카탈로그와 도로 행렬의 ID 순서와 버전이 일치해야 합니다. 원본 도로·정책·장소 좌표가 바뀌면 다시 생성해야 합니다. Windows native 빌드는 1개 스레드로 그래프를 생성하고 경로 계산만 여러 프로세스로 처리합니다. 프로세스당 약 1GB의 메모리를 사용하므로 8GB PC에서는 기본 3개 이하를 권장합니다. 원본 PBF·그래프·중간 파일은 Git에 넣지 않습니다. 배포에는 검증된 압축 데이터만 포함합니다. `npm run test:routes`로 실제 도로 데이터와 비로그인·저장·모바일 편집 흐름을 검사합니다. 도로 형상과 파생 데이터: [© OpenStreetMap contributors](https://www.openstreetmap.org/copyright), ODbL-1.0.
+
+실제 DB를 사용하는 테스트 웹: 결제 없이 테스트 참가를 확정합니다. PG·환불은 사업 개시 직전 단계로 보류합니다. 환경·검수 기준은 [백엔드 실행 문서](docs/backend-setup.md#테스트-웹-배포-기준-2026-10-16-변경)를 참고하세요.

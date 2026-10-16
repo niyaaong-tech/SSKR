@@ -19,11 +19,17 @@
 
   function renderStep1(root, context, handlers) {
     const acknowledged = (context.application?.acknowledgements || []).some((item) => item.code === "PARTICIPATION_GUIDE");
+    const manualTime = context.event.timeMode === "MANUAL";
+    const caption = (item) => manualTime && item.key === "STEP1_2_1"
+      ? "지정된 출발 시각 전까지 출발지에 도착해야 합니다"
+      : manualTime && item.key === "STEP1_2_4"
+        ? "지정된 종료 시각 전까지 목적지에 도착합니다"
+        : item.caption;
     const groups = noticeGroups.map((group, groupIndex) => `
       <section class="notice-group" data-notice-group="${escapeHtml(group.key)}">
         <header><span class="notice-bullet" aria-hidden="true"></span><h3>${escapeHtml(group.title)}</h3></header>
         <div class="notice-grid">
-          ${group.items.map((item) => `<figure class="notice-item" data-asset-key="${item.key}"><span class="notice-visual-frame"><img class="notice-visual" src="${escapeHtml(item.asset)}" alt="${escapeHtml(item.caption)} 삽화" loading="${groupIndex === 0 ? "eager" : "lazy"}" decoding="async" /></span><figcaption>${escapeHtml(item.caption)}</figcaption></figure>`).join("")}
+          ${group.items.map((item) => `<figure class="notice-item" data-asset-key="${item.key}"><span class="notice-visual-frame"><img class="notice-visual" src="${escapeHtml(item.asset)}" alt="${escapeHtml(caption(item))} 삽화" loading="${groupIndex === 0 ? "eager" : "lazy"}" decoding="async" /></span><figcaption>${escapeHtml(caption(item))}</figcaption></figure>`).join("")}
         </div>
       </section>`).join("");
 
@@ -32,8 +38,9 @@
         <p class="step-label">STEP 1</p>
         <h2 id="application-title" tabindex="-1">참가 전에 꼭 확인해 주세요</h2>
         <p class="transaction-lead">SSKR의 하루를 안전하게 완성하기 위해 실제 진행 방식을 먼저 확인합니다.</p>
-        <p class="participation-core-rule">완주하려면 공식 출발 체크인, 서로 다른 경유 스팟 ${context.event.minimumSpotCheckins}곳 이상 체크인, 일몰 전 ${escapeHtml(context.event.finishLocationName)} 도착 체크인이 필요합니다. 출발·도착을 포함해 총 ${context.event.minimumSpotCheckins+2}곳 이상입니다.</p>
-        <div class="notice-groups">${context.backend==='supabase'?'<p style="white-space:pre-wrap">'+escapeHtml(context.event.participationGuide)+'</p>':groups}</div>
+        <p class="participation-core-rule">완주하려면 공식 출발 체크인, 서로 다른 경유 스팟 ${context.event.minimumSpotCheckins}곳 이상 체크인, ${manualTime ? "행사 종료 전" : "일몰 전"} ${escapeHtml(context.event.finishLocationName)} 도착 체크인이 필요합니다. 출발·도착을 포함해 총 ${context.event.minimumSpotCheckins+2}곳 이상입니다.</p>
+        ${context.backend === 'supabase' && context.event.participationGuide ? '<p class="participation-guide-copy" style="white-space:pre-wrap">'+escapeHtml(context.event.participationGuide)+'</p>' : ''}
+        <div class="notice-groups">${groups}</div>
         <form class="acknowledgement-form" id="acknowledgement-form">
           <label><input type="checkbox" id="guide-acknowledgement" ${acknowledged ? "checked" : ""} /><span>SSKR의 진행 방식과 위 내용을 확인했습니다.</span></label>
           <div class="transaction-actions"><button class="transaction-secondary transaction-back" id="cancel-application" type="button">취소</button><button class="transaction-primary" type="submit" ${acknowledged ? "" : "disabled"}>다음 <span aria-hidden="true">→</span></button></div>

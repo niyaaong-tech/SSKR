@@ -52,6 +52,34 @@ test('one administration screen adds GPS locations without removing national sta
     const dir=process.env.SSKR_QA_OUTPUT||'D:/sskr-qa/gps-test/unified-ui';fs.mkdirSync(dir,{recursive:true});await p.screenshot({path:path.join(dir,'admin-'+width+'.png'),fullPage:true});assert.deepEqual(p.errors,[]);await p.close();
   }
 });
+test('real participation restores all sixteen guide illustrations and follows configured event times',async()=>{
+  for(const width of [1440,390]){
+    await f.db.query("update sskr_private.workflows set document='{}' where owner_id=$1",[f.A]);
+    await f.service.handle(f.account(f.A),'application',{action:'START'});
+    const p=await page(width);await p.goto(base+'/participate');await p.locator('#guide-acknowledgement').waitFor();
+    const output=process.env.SSKR_QA_OUTPUT||'D:/sskr-qa/participation-guide';fs.mkdirSync(output,{recursive:true});
+    assert.equal(await p.locator('.notice-group').count(),4);
+    assert.equal(await p.locator('.notice-visual').count(),16);
+    for(const image of await p.locator('.notice-visual').all()){
+      await image.scrollIntoViewIfNeeded();
+      await p.waitForFunction(el=>el.complete&&el.naturalWidth>0,await image.elementHandle());
+    }
+    await p.evaluate(()=>{window.scrollTo(0,0);document.querySelector('.service-panel').scrollTop=0;});
+    await p.screenshot({path:path.join(output,'guide-'+width+'.png'),fullPage:true});
+    const body=await p.locator('.transaction-body--notice').innerText();
+    assert.ok(body.includes(f.commerce.guide));
+    assert.doesNotMatch(body,/일출 전까지|일몰 전/);
+    assert.match(body,/지정된 출발 시각/);assert.match(body,/지정된 종료 시각/);
+    assert.ok(await p.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1));
+    assert.equal(await p.locator('#acknowledgement-form [type=submit]').isDisabled(),true);
+    await p.locator('#guide-acknowledgement').check();
+    assert.equal(await p.locator('#acknowledgement-form [type=submit]').isEnabled(),true);
+    await p.locator('#acknowledgement-form [type=submit]').click();await p.locator('#agreement-form').waitFor();
+    assert.deepEqual(p.errors,[]);await p.close();
+  }
+  await f.db.query("update sskr_private.workflows set document='{}' where owner_id=$1",[f.A]);
+});
+
 test('participant uses the ordinary manager, preparation and planner with both national and GPS places',async()=>{
   const user=f.account(f.A);await f.service.handle(user,'application',{action:'START'});await f.service.handle(user,'application',{action:'SAVE_ACKNOWLEDGEMENT',acknowledgement:{acknowledged:true}});await f.service.handle(user,'application',{action:'SAVE_AGREEMENTS',agreements:{TERMS:true,PRIVACY:true,LOCATION:true}});await f.service.handle(user,'application',{action:'SAVE_PARTICIPANT_INFO',participant:{name:'검수',email:'fixture@example.invalid',phone:'01012345678',priceTierId:'test-participation'}});
   const p=await page();await p.goto(base+'/participate');await p.locator('#confirm-test').waitFor();await p.locator('#confirm-test').click();await p.getByText('참가 등록이 완료되었습니다.',{exact:false}).waitFor();assert.equal(await p.locator('.service-test-notice').count(),0);

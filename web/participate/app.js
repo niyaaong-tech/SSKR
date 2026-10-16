@@ -267,7 +267,9 @@
       login: () => showLogin(),
       showAccount: () => showMode(SURFACE_MODES.ACCOUNT),
       restore: (mode) => showMode(mode || context?.surface?.mode || SURFACE_MODES.REVIEW, { focus: false }),
-      updateProfile: (profile) => requestWithoutSurfaceChange(() => api.mock("UPDATE_ACCOUNT_PROFILE", { profile })),
+      updateProfile: (profile) => requestWithoutSurfaceChange(() => context.backend === 'supabase'
+        ? window.SSKR_BACKEND.request('profile', 'POST', { profile, revision: context.account.profileRevision || 0 })
+        : api.mock("UPDATE_ACCOUNT_PROFILE", { profile })),
       resetParticipation: async () => {
         await run(async () => {
           const nextContext = await api.mock("RESET", { scenario: "a-open-linked", snapshot: null });

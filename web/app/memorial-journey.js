@@ -9,34 +9,87 @@
   const mapInteraction=typeof module==='object'&&module.exports?require('../shared/map/interaction'):window.SSKR_MAP_INTERACTION;
   const {createWheelSession}=mapInteraction;
   function mount(host,item,places,{account={},preview=false}={}){
-    if(item.synthetic===false)return mountVerified(host,item,places,account);
-    const controller=new AbortController(),byId=new Map(places.map(p=>[p.id,p]));let viewer,record,disposed=false;
-    const model=window.SSKR_MEMORIAL_STORE,owner=model.isOwner(item,account);
+    const controller=new AbortController(),byId=new Map([...places,...(item.places||[])].map(p=>[p.id,p]));
+    const model=window.SSKR_MEMORIAL_STORE,owner=model.isOwner(item,account),synthetic=item.synthetic!==false;
+    let viewer,record,disposed=false;
+    const motion=()=>matchMedia('(prefers-reduced-motion:reduce)').matches?'auto':'smooth';
+    const label=(visit,index)=>visit.role==='START'?'출':visit.role==='FINISH'?'도':String(index);
     host.innerHTML='<div class="memorial-route-loading" role="status">여정 기록을 불러오고 있습니다.</div>';
+    function clearSelection(){
+      viewer?.highlight([]);
+      host.querySelectorAll('.journey-log-entry').forEach(entry=>{entry.classList.remove('is-selected');entry.querySelector('[data-return]')?.remove();});
+    }
     function mountMap(){
       if(viewer||!record||disposed)return;
-      const visits=record.visits.map((c,i)=>{const p=byId.get(c.locationId),photo=model.selectPhoto(c,{owner});return {id:String(i),locationId:c.locationId,lat:c.coordinate[1],lng:c.coordinate[0],kind:i===0?'start':i===record.visits.length-1?'finish':'spot',number:i===0?'출':i===record.visits.length-1?'도':i,name:p?.name||c.locationId,region:p?.region||'',image:photo?.url||p?.image,meta:time(c.arrivedAt)};});
-      viewer=window.SSKR_MAP.mount(host.querySelector('.journey-map-host'),{items:visits,catalog:visits,inView:false,inViewControl:false,cluster:false,route:record.legs.map(l=>decode(l.shape).map(([lon,lat])=>[lat,lon])),onSelect:p=>select(Number(p.id)),onOpen:p=>select(Number(p.id),true),onDeselect:()=>host.querySelectorAll('.journey-log-entry').forEach(e=>e.classList.remove('is-selected'))});
+      const visits=record.visits.map((visit,index)=>{
+        const place=byId.get(visit.locationId),photo=model.selectPhoto(visit,{owner});
+        return {id:String(index),locationId:visit.locationId,
+          lat:visit.coordinate?.[1]??place?.lat,lng:visit.coordinate?.[0]??place?.lng,
+          kind:visit.role==='START'?'start':visit.role==='FINISH'?'finish':'spot',number:label(visit,index),
+          name:place?.name||visit.locationId,region:place?.region||'',image:photo?.url||place?.image,meta:time(visit.arrivedAt)};
+      }).filter(visit=>Number.isFinite(visit.lat)&&Number.isFinite(visit.lng));
+      viewer=window.SSKR_MAP.mount(host.querySelector('.journey-map-host'),{
+        items:visits,catalog:visits,inView:false,inViewControl:false,cluster:false,
+        route:record.legs.map(leg=>decode(leg.shape).map(([lon,lat])=>[lat,lon])),
+        onSelect:place=>select(Number(place.id)),onOpen:place=>select(Number(place.id),true),onDeselect:clearSelection
+      });
     }
     function select(index,open=false){
+      clearSelection();
       const leg=record.legs[index-1];viewer?.highlight(leg?decode(leg.shape).map(([lon,lat])=>[lat,lon]):[]);
-      host.querySelectorAll('.journey-log-entry').forEach(e=>{e.classList.toggle('is-selected',Number(e.dataset.visit)===index);e.querySelector('[data-return]')?.remove();});
       const entry=host.querySelector('[data-visit="'+index+'"]');
-      if(open&&entry){const button=document.createElement('button');button.type='button';button.className='sskr-map-return journey-log-return';button.dataset.return='';button.textContent='← 지도로 돌아가기';entry.querySelector('div:nth-child(2)').prepend(button);entry.scrollIntoView({behavior:matchMedia('(prefers-reduced-motion:reduce)').matches?'auto':'smooth',block:'start'});}
+      if(!entry)return;
+      entry.classList.add('is-selected');
+      if(open){
+        const button=document.createElement('button');button.type='button';button.className='sskr-map-return journey-log-return';
+        button.dataset.return='';button.textContent='← 지도로 돌아가기';entry.children[1].prepend(button);
+        entry.scrollIntoView({behavior:motion(),block:'start'});
+      }
     }
     function render(){
-      host.innerHTML='<details class="journey-map-details"><summary>여정 지도 보기</summary><div class="journey-map-host"></div><details class="memorial-time-details"><summary>거리·주행 시간과 출발·도착</summary><p>'+km(item.distanceMeters)+'km · 경유 '+item.spotCount+'곳 · 주행 '+duration(item.movingSeconds)+' · 정차 '+duration(item.stoppedSeconds)+' · '+time(item.startedAt)+' → '+time(item.finishedAt)+'</p><button type="button" class="memorial-button is-secondary" data-download>테스트 주행기록 GPX ↓</button></details></details><section class="journey-log"><header><div><h3>머물렀던 순간들</h3><p>방문 순서대로 남긴 사진과 메모</p></div></header><div class="journey-log-list">'+record.visits.map((c,i)=>{const p=byId.get(c.locationId),leg=record.legs[i-1],photo=model.selectPhoto(c,{owner});return '<article class="journey-log-entry" data-visit="'+i+'"><div class="journey-log-index">'+(i===0?'출':i===record.visits.length-1?'도':String(i))+'</div><div><div class="journey-log-title"><h4>'+esc(p?.name||c.locationId)+'</h4><span>'+time(c.arrivedAt)+'</span></div>'+(photo?'<figure class="journey-visit-photo"><img src="'+esc(photo.url)+'" alt="'+esc(p?.name||'방문 장소')+'" loading="lazy" />'+(photo.sourceUrl?'<figcaption><a href="'+esc(photo.sourceUrl)+'" target="_blank" rel="noreferrer">'+esc(photo.credit||'사진 출처')+' ↗</a></figcaption>':'')+'</figure>':'')+(c.note?'<p class="journey-visit-note">'+esc(c.note)+'</p>':'')+(leg?'<details><summary>직전 주행 구간</summary><p>'+km(leg.distanceMeters)+'km · '+duration(leg.durationSeconds)+' · '+esc(leg.roadNames.join(' → ')||'도로명 없는 연결 도로')+'</p></details>':'')+'</div></article>';}).join('')+'</div></section><details class="journey-data-source"><summary>테스트 데이터와 출처</summary><p>2026년 5월 행사가 치러졌다고 가정한 합성 기록입니다. '+record.sampleCount.toLocaleString('ko-KR')+'개 도로 좌표와 모의 시각을 연결했으며 실제 참가자의 GPS 기록이 아닙니다. 기본 사진은 장소 참고 사진이며, 브라우저에서 추가한 사진도 개발용 미리보기로만 보관합니다.</p><p>경로: <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer">© OpenStreetMap contributors · ODbL</a> / <a href="https://valhalla.github.io/valhalla/api/route/api-reference/" target="_blank" rel="noreferrer">Valhalla 이륜차 경로</a>. 조회 시점 도로망을 사용했으며 2026년 5월 당시 도로·영업·출입 조건의 검증 자료가 아닙니다.</p></details>';
-      host.querySelector('.journey-map-details').addEventListener('toggle',e=>{if(e.target.open){mountMap();requestAnimationFrame(()=>viewer?.getMap?.()?.invalidateSize({pan:false}));}},{signal:controller.signal});
+      // Check-in records share the journey UI. Road statistics and downloads need
+      // recorded data; a planned route must never be presented as a ridden track.
+      const hasMetrics=record.legs.length>0&&[item.distanceMeters,item.movingSeconds,item.stoppedSeconds].every(Number.isFinite);
+      const metrics=hasMetrics?'<details class="memorial-time-details"><summary>거리·주행 시간과 출발·도착</summary><p>'+km(item.distanceMeters)+'km · '+item.spotCount+' 스팟 경유 · 주행 '+duration(item.movingSeconds)+' · 정차 '+duration(item.stoppedSeconds)+' · '+time(item.startedAt)+' → '+time(item.finishedAt)+'</p>'+(synthetic?'<button type="button" class="memorial-button is-secondary" data-download>테스트 주행기록 GPX ↓</button>':'')+'</details>':'';
+      const entries=record.visits.map((visit,index)=>{
+        const place=byId.get(visit.locationId),leg=record.legs[index-1],photo=model.selectPhoto(visit,{owner});
+        return '<article class="journey-log-entry" data-visit="'+index+'"><div class="journey-log-index">'+label(visit,index)+'</div><div><div class="journey-log-title"><h4>'+esc(place?.name||visit.locationId)+'</h4><span>'+time(visit.arrivedAt)+'</span></div>'+
+          (photo?'<figure class="journey-visit-photo"><img src="'+esc(photo.url)+'" alt="'+esc(place?.name||'방문 장소')+'" loading="lazy" />'+(photo.sourceUrl?'<figcaption><a href="'+esc(photo.sourceUrl)+'" target="_blank" rel="noreferrer">'+esc(photo.credit||'사진 출처')+' ↗</a></figcaption>':'')+'</figure>':'')+
+          (visit.note?'<p class="journey-visit-note">'+esc(visit.note)+'</p>':'')+
+          (leg?'<details><summary>직전 주행 구간</summary><p>'+km(leg.distanceMeters)+'km · '+duration(leg.durationSeconds)+' · '+esc(leg.roadNames.join(' → ')||'도로명 없는 연결 도로')+'</p></details>':'')+'</div></article>';
+      }).join('');
+      const source=synthetic?'<details class="journey-data-source"><summary>테스트 데이터와 출처</summary><p>2026년 5월 행사가 치러졌다고 가정한 합성 기록입니다. '+record.sampleCount.toLocaleString('ko-KR')+'개 도로 좌표와 모의 시각을 연결했으며 실제 참가자의 GPS 기록이 아닙니다. 기본 사진은 장소 참고 사진이며, 브라우저에서 추가한 사진도 개발용 미리보기로만 보관합니다.</p><p>경로: <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer">© OpenStreetMap contributors · ODbL</a> / <a href="https://valhalla.github.io/valhalla/api/route/api-reference/" target="_blank" rel="noreferrer">Valhalla 이륜차 경로</a>. 조회 시점 도로망을 사용했으며 2026년 5월 당시 도로·영업·출입 조건의 검증 자료가 아닙니다.</p></details>':'';
+      host.innerHTML='<details class="journey-map-details"><summary>여정 지도 보기</summary><div class="journey-map-host"></div>'+metrics+'</details><section class="journey-log"><header><div><h3>머물렀던 순간들</h3><p>방문 순서대로 남긴 사진과 메모</p></div></header><div class="journey-log-list">'+entries+'</div></section>'+source;
+      host.querySelector('.journey-map-details').addEventListener('toggle',event=>{
+        if(event.target.open){mountMap();requestAnimationFrame(()=>{if(!disposed)viewer?.getMap?.()?.invalidateSize({pan:false});});}
+      },{signal:controller.signal});
     }
-    host.addEventListener('click',e=>{if(e.target.closest('[data-return]'))host.querySelector('.journey-map-details').scrollIntoView({block:'start',behavior:'smooth'});if(e.target.closest('[data-download]')&&record){const url=URL.createObjectURL(new Blob([gpx(record,item.title)],{type:'application/gpx+xml'}));const a=document.createElement('a');a.href=url;a.download=item.publicSlug+'-synthetic.gpx';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}},{signal:controller.signal});
-    async function load(){try{const response=await fetch(item.routeUrl,{signal:controller.signal});if(!response.ok)throw Error('HTTP '+response.status);record=await response.json();if(disposed)return;if(record.id!==item.runSessionId||!record.legs?.length||!record.visits?.length)throw Error('Invalid journey');record={...record,visits:model.applyVisitEdits(item,record.visits,window.SSKR_MEMORIAL_MEDIA?.all()||[],account)};render();}catch(error){if(disposed||error.name==='AbortError')return;viewer?.destroy();host.innerHTML='<div class="memorial-route-loading" role="status">주행 기록을 불러오지 못했습니다. <button class="memorial-button is-secondary" type="button" data-retry>다시 불러오기</button></div>';host.querySelector('[data-retry]').addEventListener('click',load,{once:true,signal:controller.signal});}}
+    host.addEventListener('click',event=>{
+      if(event.target.closest('[data-return]'))host.querySelector('.journey-map-details').scrollIntoView({block:'start',behavior:motion()});
+      if(event.target.closest('[data-download]')&&record&&synthetic){
+        const url=URL.createObjectURL(new Blob([gpx(record,item.title)],{type:'application/gpx+xml'}));
+        const link=document.createElement('a');link.href=url;link.download=item.publicSlug+'-synthetic.gpx';link.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
+      }
+    },{signal:controller.signal});
+    async function load(){
+      try{
+        if(synthetic){
+          const response=await fetch(item.routeUrl,{signal:controller.signal});if(!response.ok)throw Error('HTTP '+response.status);
+          record=await response.json();if(disposed)return;
+          if(record.id!==item.runSessionId||!record.legs?.length||!record.visits?.length)throw Error('Invalid journey');
+          record={...record,visits:model.applyVisitEdits(item,record.visits,window.SSKR_MEMORIAL_MEDIA?.all()||[],account)};
+        }else{
+          record={legs:[],visits:item.visits.map(visit=>({...visit,arrivedAt:visit.checkedInAt}))};
+        }
+        render();
+      }catch(error){
+        if(disposed||error.name==='AbortError')return;
+        viewer?.destroy();viewer=null;
+        host.innerHTML='<div class="memorial-route-loading" role="status">여정 기록을 불러오지 못했습니다. <button class="memorial-button is-secondary" type="button" data-retry>다시 불러오기</button></div>';
+        host.querySelector('[data-retry]').addEventListener('click',load,{once:true,signal:controller.signal});
+      }
+    }
     load();return()=>{disposed=true;controller.abort();viewer?.destroy();};
-  }
-  function mountVerified(host,item,places,account) {
-    const model=window.SSKR_MEMORIAL_STORE,owner=model.isOwner(item,account),byId=new Map(places.map(p=>[p.id,p]));let viewer;
-    host.innerHTML='<details class="journey-map-details"><summary>방문한 스팟 지도 보기</summary><div class="journey-map-host"></div></details><section class="journey-log"><header><h3>머물렀던 순간들</h3></header><div class="journey-log-list">'+item.visits.map((v,i)=>{const p=byId.get(v.locationId),photo=model.selectPhoto(v,{owner});return '<article class="journey-log-entry"><div class="journey-log-index">'+(v.role==='START'?'출':v.role==='FINISH'?'도':i)+'</div><div><div class="journey-log-title"><h4>'+esc(p?.name||v.locationId)+'</h4><span>'+time(v.checkedInAt)+'</span></div>'+(photo?'<figure class="journey-visit-photo"><img src="'+esc(photo.url)+'" alt="'+esc(p?.name||'방문 사진')+'" loading="lazy"></figure>':'')+'<p class="journey-visit-note">'+esc(v.note||'')+'</p></div></article>';}).join('')+'</div></section>';
-    host.querySelector('details').addEventListener('toggle',e=>{if(e.target.open&&!viewer){const items=item.visits.map((v,i)=>({...byId.get(v.locationId),number:v.role==='START'?'출':v.role==='FINISH'?'도':i}));viewer=window.SSKR_MAP.mount(host.querySelector('.journey-map-host'),{items,catalog:items,cluster:false,inView:false,inViewControl:false});}});
-    return()=>viewer?.destroy();
   }
   return {decode,preview,gpx,mount,km,duration,time,createWheelSession};
 });

@@ -58,6 +58,7 @@ test('checkin ledger: N excludes endpoints, duplicate replay, uncertain location
   for(const p of catalog.filter(p=>p.kind==='spot').slice(0,10))await s.handle(a,'ride',input(p.id));
   const done=await s.handle(a,'ride',input('daecheon'));assert.equal(done.run.state,'COMPLETED');
   const owner=(await s.memorials(a)).items;assert.equal(owner.length,1);assert.equal(owner[0].spotCount,10);assert.equal(owner[0].visits.length,12);
+  assert.ok(owner[0].places.find(p=>p.id==='auraji').image);assert.equal(owner[0].visits.find(v=>v.locationId==='auraji').placePhoto.sourceUrl,catalog.find(p=>p.id==='auraji').source);
   assert.equal((await s.memorials(null)).items.length,0);
   const objects=new Map();let uploadPath;
   const storage={async createSignedUploadUrl(path){uploadPath=path;return {data:{signedUrl:'https://fixture.invalid/upload'}};},async download(path){return {data:objects.has(path)?new Blob([objects.get(path)]):null,error:objects.has(path)?null:Error('missing')};},async upload(path,bytes){objects.set(path,bytes);return {};},async remove(paths){paths.forEach(p=>objects.delete(p));return {};}};
@@ -141,4 +142,15 @@ test('public notices hide drafts and future publications while operations retain
     {id:'future',title:'예정 공지',body:'예약',publishedAt:'2099-01-01T00:00:00Z'}]}});
   assert.deepEqual((await s.handle(null,'context')).event.notices.map(n=>n.id),['public']);
   assert.equal((await s.operations(a,{action:'READ'})).commerce.notices.length,3);
+});
+
+
+test('memorial catalog photos support old snapshots and preserve event photo overrides',()=>{
+  const {publicMemorial}=require('../../server/backend/ride');
+  const item={ownerUserId:'owner',places:[{id:'auraji',name:'행사 당시 이름'}],visits:[{id:'visit',locationId:'auraji',role:'SPOT',sequence:1,checkedInAt:'2026-10-16T00:00:00Z',lat:37,lng:127,photoConsent:false,media:[]}]};
+  const original=catalog.find(p=>p.id==='auraji');
+  const old=publicMemorial(item,null);assert.equal(old.visits[0].placePhoto.url,original.image);assert.equal(old.visits[0].placePhoto.sourceUrl,original.source);assert.equal(old.visits[0].lat,undefined);
+  item.places[0]={...item.places[0],image:'https://example.invalid/event.webp',source:'https://example.invalid/source',photoCredit:'행사 사진'};
+  const custom=publicMemorial(item,null).visits[0].placePhoto;assert.equal(custom.url,item.places[0].image);assert.equal(custom.credit,'행사 사진');
+  item.places[0].image=null;assert.equal(publicMemorial(item,null).visits[0].placePhoto,undefined,'an intentionally removed photo is not restored');
 });

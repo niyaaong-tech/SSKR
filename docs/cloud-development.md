@@ -346,3 +346,11 @@ web/about/assets/sskr_sp3.png
 ## 테스트 웹 전환
 
 SSKR_PARTICIPATION_MODE=test에서 참가 신청은 실제 DB에 저장하고 결제 없이 확정합니다. PG와 환불은 비활성 상태로 사업 시작 직전까지 보류합니다. 공개 사이트에 목업 계정·샘플 기록을 노출하지 않습니다. 상세 환경과 지정 테스트 일정은 docs/backend-setup.md를 따릅니다. 테스트 계정의 저장 데이터도 임의 삭제하지 않습니다.
+
+
+### 공통 UI의 실제 데이터 연결
+
+- 참가 확인은 `web/participate/mode-b.js`의 공통 요약을 사용합니다. 참가 이벤트·참가 유형·참가자·연락처·참가비를 유지하고 테스트 플래그는 결제 생략과 확정 버튼에만 적용합니다.
+- 참가 페이지의 프로필 저장은 실제 모드에서 `/api/backend?resource=profile`에 `profile`과 최신 계정의 `profileRevision`을 담은 `revision`을 전달합니다. 응답의 최신 계정과 revision을 다음 저장에 사용하며, 목업 API는 목업 실행에만 사용합니다.
+- `web/app/memorial-journey.js`는 체크인 기록과 로컬 합성 기록을 동일한 방문 목록·지도 UI로 표시합니다. 지도 선택·방문 기록 이동·강조·지도 복귀·사진 출처를 공통으로 유지하고, 대회 당시 장소 스냅샷을 우선합니다. 실제 체크인은 연속 GPS 주행 궤적을 수집하지 않으므로 경로 선·거리·주행 및 정차 시간·GPX를 합성하지 않습니다.
+- 참가 준비의 운영 공지 전체 보기 링크는 실제 모드에서도 유지합니다. 회귀 검사는 `tests/browser/field-tests.test.js`에서 실제 BFF와 격리된 PostgreSQL 정책으로 실행합니다. 브라우저 채널은 `BROWSER_CHANNEL`로 지정할 수 있습니다.

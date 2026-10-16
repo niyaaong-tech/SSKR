@@ -25,7 +25,7 @@ before(async()=>{
   const originalRPC=f.adapter.rpc.bind(f.adapter);f.adapter.rpc=async(name,args={})=>{try{if(name==='sskr_event_place_options')return {data:(await f.db.query('select public.sskr_event_place_options() result')).rows[0].result};if(name==='sskr_events')return {data:(await f.db.query('select public.sskr_events($1,$2,$3,$4) result',[args.p_action,args.p_id,JSON.stringify(args.p_document),args.p_revision])).rows[0].result};if(name==='sskr_routes')return {data:(await f.db.query('select public.sskr_routes($1,$2,$3,$4,$5,$6) result',[args.p_action,args.p_id,JSON.stringify(args.p_plan),JSON.stringify(args.p_schedule),args.p_revision,args.p_key])).rows[0].result};return originalRPC(name,args);}catch(e){return {error:{message:e.message}};}};
   handler=createHandler({readMode:()=> 'supabase',getConfig:()=>({mode:'supabase',origin:base}),authService:{actor:async()=>{const stored=(await f.adapter.rpc('sskr_profile')).data,account=f.account(f.A);return {account:{...account,profile:{...account.profile,...stored.profile},profileRevision:stored.revision},db:f.adapter};}},readPublished:async()=>f.event,getWorkflows:()=>f.service,workflowEnabled:()=>true});
   const engine=process.env.BROWSER_ENGINE==='webkit'?webkit:chromium;
-  browser=await engine.launch({headless:true,...(engine===chromium?{channel:process.platform==='win32'?'msedge':undefined}:{})});
+  browser=await engine.launch({headless:true,...(engine===chromium?{channel:process.env.BROWSER_CHANNEL||(process.platform==='win32'?'msedge':undefined)}:{})});
 });
 after(async()=>{await browser?.close();server?.kill();await f?.db.close();});
 async function page(width=390){
@@ -80,11 +80,51 @@ test('real participation restores all sixteen guide illustrations and follows co
   await f.db.query("update sskr_private.workflows set document='{}' where owner_id=$1",[f.A]);
 });
 
+test('participation profile uses the real API and preserves saved contacts after reload',async()=>{
+  for(const width of [1440,390]){
+    const p=await page(width);await p.goto(base+'/participate');
+    const openProfile=async()=>{await p.locator('.account-trigger').click();await p.locator('[data-account-action=profile]').click();await p.locator('#profile-edit').waitFor();};
+    await openProfile();assert.doesNotMatch(await p.locator('#mode-account').innerText(),/Mock Account|Social Provider/);
+    for(const suffix of ['first','updated']){
+      await p.locator('#profile-edit').click();await p.locator('#profile-form [name=name]').fill('연락처 검수');
+      await p.locator('#profile-form [name=email]').fill(`${suffix}-${width}@example.invalid`);await p.locator('#profile-form [name=phone]').fill('01055556666');
+      const saved=p.waitForResponse(r=>r.url().includes('resource=profile')&&r.request().method()==='POST');
+      await p.locator('#profile-form [type=submit]').click();const response=await saved;assert.equal(response.status(),200);
+      await p.getByText('프로필을 저장했습니다.',{exact:true}).waitFor();
+    }
+    await p.reload();await openProfile();assert.match(await p.locator('.profile-card').innerText(),new RegExp(`updated-${width}@example.invalid`));
+    const dir=process.env.SSKR_QA_OUTPUT||'D:/sskr-qa/shared-service';fs.mkdirSync(dir,{recursive:true});
+    await p.screenshot({path:path.join(dir,'profile-'+width+'.png'),fullPage:true});
+    assert.ok(await p.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1));
+    await p.goto(base+'/app/profile');assert.equal(await p.locator('#profile-form [name=email]').inputValue(),`updated-${width}@example.invalid`);
+    assert.deepEqual(p.errors,[]);await p.close();
+  }
+});
+
 test('participant uses the ordinary manager, preparation and planner with both national and GPS places',async()=>{
   const user=f.account(f.A);await f.service.handle(user,'application',{action:'START'});await f.service.handle(user,'application',{action:'SAVE_ACKNOWLEDGEMENT',acknowledgement:{acknowledged:true}});await f.service.handle(user,'application',{action:'SAVE_AGREEMENTS',agreements:{TERMS:true,PRIVACY:true,LOCATION:true}});await f.service.handle(user,'application',{action:'SAVE_PARTICIPANT_INFO',participant:{name:'검수',email:'fixture@example.invalid',phone:'01012345678',priceTierId:'test-participation'}});
-  const p=await page();await p.goto(base+'/participate');await p.locator('#confirm-test').waitFor();await p.locator('#confirm-test').click();await p.getByText('참가 등록이 완료되었습니다.',{exact:false}).waitFor();assert.equal(await p.locator('.service-test-notice').count(),0);
+  const p=await page();await p.goto(base+'/participate');await p.locator('#confirm-test').waitFor();
+  for(const width of [1440,390]){
+    await p.setViewportSize({width,height:844});
+    assert.deepEqual(await p.locator('.payment-summary dt').allTextContents(),['참가 이벤트','참가 유형','참가자','연락처','참가비']);
+    assert.equal(await p.locator('.payment-summary dd').nth(1).textContent(),'기본 참가');
+    assert.equal(await p.locator('.payment-summary dd').last().textContent(),'0원');
+    assert.equal(await p.locator('#payment-action, #defer-payment, #mock-outcome').count(),0);
+    assert.ok(await p.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1));
+    const dir=process.env.SSKR_QA_OUTPUT||'D:/sskr-qa/shared-service';fs.mkdirSync(dir,{recursive:true});await p.screenshot({path:path.join(dir,'confirmation-'+width+'.png'),fullPage:true});
+  }
+  const variants=await p.evaluate(async()=>{
+    const context=await SSKR_PARTICIPATE_API.context();
+    return ['READY','CLOSED'].flatMap(variant=>['paid','test'].map(participationMode=>{
+      const host=document.createElement('div');SSKR_MODE_B.render(host,{...context,participationMode,surface:{...context.surface,variant,primaryAction:{enabled:variant!=='CLOSED'}}},{});
+      return {variant,participationMode,labels:[...host.querySelectorAll('.payment-summary dt')].map(el=>el.textContent),payment:!!host.querySelector('#payment-action'),confirm:!!host.querySelector('#confirm-test'),disabled:host.querySelector('#confirm-test')?.disabled};
+    }));
+  });
+  for(const variant of variants){assert.deepEqual(variant.labels,['참가 이벤트','참가 유형','참가자','연락처','참가비']);if(variant.participationMode==='test'){assert.equal(variant.payment,false);assert.equal(variant.confirm,true);assert.equal(variant.disabled,variant.variant==='CLOSED');}}
+  await p.locator('#confirm-test').click();await p.getByText('참가 등록이 완료되었습니다.',{exact:false}).waitFor();assert.equal(await p.locator('.service-test-notice').count(),0);
   await p.goto(base+'/app');await p.locator('.manager-dashboard').waitFor();assert.equal(await p.locator('.manager-test-notice').count(),0);assert.ok(!/테스트|결제·키트 제공 없음/.test(await p.locator('#app-main').innerText()));
   await p.goto(base+'/app/preparation');await p.locator('[name=startLocationId]').selectOption('test-start-ori');await p.locator('[data-preparation=start] button').click();await p.locator('[data-preparation=start] [role=status]').filter({hasText:'저장'}).waitFor();assert.ok(!/테스트/.test(await p.locator('#app-main').innerText()));
+  await p.getByRole('link',{name:'운영 공지 전체 보기'}).click();await p.waitForURL('**/app/notices');await p.locator('#app-main').getByRole('heading',{name:'공지',exact:true}).waitFor();
   await p.goto(base+'/app/spots?mode=plan');await p.locator('.rp-start-select').waitFor();const counts=await p.evaluate(()=>({normal:window.SSKR_SPOT_CATALOG.filter(p=>!p.testOnly).length,extra:window.SSKR_SPOT_CATALOG.filter(p=>p.testOnly).length}));assert.deepEqual(counts,{normal:212,extra:68});assert.ok(await p.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1));assert.deepEqual(p.errors,[]);await p.close();
 });
 test('mixed national and GPS route computes, saves and reloads through the ordinary planner',async()=>{
@@ -102,9 +142,29 @@ test('mixed national and GPS route computes, saves and reloads through the ordin
 });
 test('ordinary check-in creates a memorial visible through the same owner and public screens',async()=>{
   const p=await page();let ms=Date.parse('2099-10-16T06:05:00+09:00');f.setNow(ms);await p.addInitScript(()=>{navigator.geolocation.getCurrentPosition=resolve=>resolve(window.__gpsFixture);});await p.goto(base+'/app/ride');await p.locator('[data-checkin]').waitFor();
-  const places=(await f.service.handle(f.account(f.A),'context')).event.placeCatalog,ids=['test-start-ori',...Array.from({length:10},(_,i)=>'test-walk-'+String(i+1).padStart(2,'0')),'test-walk-30'];
+  const places=(await f.service.handle(f.account(f.A),'context')).event.placeCatalog,ids=['test-start-ori',...Array.from({length:9},(_,i)=>'test-walk-'+String(i+1).padStart(2,'0')),'auraji','test-walk-30'];
   for(const id of ids){ms+=60000;f.setNow(ms);const point=places.find(p=>p.id===id);await p.evaluate(({point,ms})=>{window.__gpsFixture={coords:{latitude:point.lat,longitude:point.lng,accuracy:5},timestamp:ms};},{point,ms});await p.locator('[data-checkin]').click();await p.locator('.service-visits li').nth(ids.indexOf(id)).waitFor();}
   await p.getByText('완주 기록 보기',{exact:true}).click();await p.locator('.memorial-record').first().waitFor();assert.ok(!/테스트/.test(await p.locator('#app-main').innerText()));
   const item=(await f.service.memorials(f.account(f.A))).items[0];await f.service.handle(f.account(f.A),'memorial',{eventId:f.E,revision:item.revision,values:{title:'함께 걸었던 하루',summary:'탄천을 따라 남긴 기억',visibility:'PUBLIC',publishStatus:'PUBLISHED',visitEdits:{}}});
-  await p.goto(base+'/app/memorials/'+item.id);await p.getByRole('heading',{name:'함께 걸었던 하루',exact:true}).waitFor();await p.getByText(places.find(p=>p.id==='test-walk-01').name,{exact:true}).first().waitFor();assert.equal((await f.service.memorials(null)).items.length,1);assert.deepEqual(p.errors,[]);await p.close();
+  for(const width of [1440,390]){
+    await p.setViewportSize({width,height:844});await p.goto(base+'/app/memorials/'+item.id);await p.getByRole('heading',{name:'함께 걸었던 하루',exact:true}).waitFor();
+    await p.locator('.journey-log-entry[data-visit="10"]').waitFor();assert.equal(await p.locator('.journey-log-entry[data-visit]').count(),12);
+    const photo=p.locator('[data-visit="10"] .journey-visit-photo');assert.equal(await photo.locator('figcaption a').count(),1,JSON.stringify(item.visits[10]));
+    assert.equal(await p.locator('.memorial-time-details, [data-download], .journey-data-source').count(),0);
+    assert.ok(!/테스트|NaN|Invalid Date/.test(await p.locator('.memorial-detail').innerText()));
+    await p.getByText('여정 지도 보기',{exact:true}).click();await p.locator('.journey-map-host .spot-map').waitFor();
+    const dir=process.env.SSKR_QA_OUTPUT||'D:/sskr-qa/shared-service';fs.mkdirSync(dir,{recursive:true});
+    await p.locator('.journey-map-host').scrollIntoViewIfNeeded();await p.screenshot({path:path.join(dir,'journey-map-'+width+'.png')});
+    await p.locator('.journey-map-host [data-place="10"]').click();
+    const selected=p.locator('.journey-log-entry.is-selected[data-visit="10"]');await selected.locator('[data-return]').waitFor();
+    const box=await selected.boundingBox();assert.ok(box.y>=0&&box.y<844,'map photo opens the selected visit in view');
+    assert.match(await selected.innerText(),/아우라지/);await photo.locator('img').evaluate(img=>img.decode());
+    await p.screenshot({path:path.join(dir,'journey-visit-'+width+'.png')});
+    await selected.locator('[data-return]').click();assert.ok(await p.locator('.journey-map-host').evaluate(el=>{const r=el.getBoundingClientRect();return r.top<innerHeight&&r.bottom>0;}));
+    await p.locator('.journey-map-host [data-action=fit]').click();assert.equal(await p.locator('.journey-log-entry.is-selected, [data-return]').count(),0);
+    assert.ok(await p.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1));
+    // Closing and reopening the map must keep one viewer and the same handlers.
+    await p.getByText('여정 지도 보기',{exact:true}).click();await p.getByText('여정 지도 보기',{exact:true}).click();assert.equal(await p.locator('.journey-map-host .spot-map').count(),1);
+  }
+  assert.equal((await f.service.memorials(null)).items.length,1);assert.deepEqual(p.errors,[]);await p.close();
 });

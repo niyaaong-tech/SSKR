@@ -9,7 +9,7 @@ before(async()=>{
  base='http://127.0.0.1:'+port;
  server=spawn(process.execPath,['server/dev-server.js'],{cwd:path.resolve(__dirname,'../..'),env:{...process.env,SSKR_DEV_PORT:String(port)},stdio:['ignore','pipe','pipe'],windowsHide:true});
  await new Promise((resolve,reject)=>{const t=setTimeout(()=>reject(Error('Server timeout')),10000);server.stdout.on('data',b=>{if(b.toString().includes('SSKR dev server')){clearTimeout(t);resolve();}});server.once('error',reject);});
- browser=await chromium.launch({headless:true,channel:process.platform==='win32'?'msedge':undefined});
+ browser=await chromium.launch({headless:true,channel:process.env.BROWSER_CHANNEL||(process.platform==='win32'?'msedge':undefined)});
 });
 after(async()=>{await browser?.close();server?.kill();});
 async function page(width=1440,height=1000){const p=await browser.newPage({viewport:{width,height},reducedMotion:'reduce'});p.on('pageerror',e=>errors.push(e.message));return p;}
@@ -207,17 +207,17 @@ test('removing a saved local photo stays removed through preview, return, save a
  const p=await page(390,844);await open(p,'/app/my?scenario=private-owner','.memorial-library');
  await p.locator('.memorial-record-actions a').filter({hasText:'관리'}).first().click();await p.waitForSelector('.memorial-form');
  const row=p.locator('[data-edit-visit]').first();
- await row.locator('[data-visit-photo]').setInputFiles(path.resolve(__dirname,'../../web/about/assets/SSKR_info01.webp'));await p.waitForSelector('[data-remove-photo]');
+ await row.locator('[data-visit-photo]').setInputFiles(path.resolve(__dirname,'../../web/about/assets/SSKR_info01.webp'));await p.waitForSelector('[data-remove-photo^="local-photo-"]');await p.waitForFunction(()=>!Number(document.querySelector('.memorial-form').dataset.uploads));
  await p.locator('.memorial-form button[type=submit]').click();await p.waitForFunction(()=>document.querySelector('.memorial-save-status').textContent.includes('저장했습니다.'));
- await p.reload();await p.waitForSelector('[data-remove-photo]');await p.locator('[data-remove-photo]').click();
- for(let i=0;i<2;i++){await p.locator('[data-preview-record]').click();await p.waitForSelector('.memorial-detail');assert.equal(await p.locator('.memorial-detail img[src^="blob:"]').count(),0);await p.locator('[data-editor-return]').click();assert.equal(await p.locator('[data-remove-photo]').count(),0);}
- await p.locator('.memorial-form button[type=submit]').click();await p.waitForFunction(()=>document.querySelector('.memorial-save-status').textContent.includes('저장했습니다.'));await p.reload();await p.waitForSelector('.memorial-form');assert.equal(await p.locator('[data-remove-photo]').count(),0);assert.ok(await p.locator('.memorial-edit-photos img').count()>0);await p.close();
+ await p.reload();await p.waitForSelector('[data-remove-photo^="local-photo-"]');await p.locator('[data-remove-photo^="local-photo-"]').click();
+ for(let i=0;i<2;i++){await p.locator('[data-preview-record]').click();await p.waitForSelector('.memorial-detail');assert.equal(await p.locator('.memorial-detail img[src^="blob:"]').count(),0);await p.locator('[data-editor-return]').click();assert.equal(await p.locator('[data-remove-photo^="local-photo-"]').count(),0);}
+ await p.locator('.memorial-form button[type=submit]').click();await p.waitForFunction(()=>document.querySelector('.memorial-save-status').textContent.includes('저장했습니다.'));await p.reload();await p.waitForSelector('.memorial-form');assert.equal(await p.locator('[data-remove-photo^="local-photo-"]').count(),0);assert.ok(await p.locator('.memorial-edit-photos img').count()>0);await p.close();
 });
 
 test('chosen private local cover is consistent for its owner and is not exposed to gallery visitors',async()=>{
  const p=await page();await open(p,'/app/my?scenario=logged-in-no-application','.memorial-library');await p.locator('.memorial-record-actions a').filter({hasText:'관리'}).first().click();await p.waitForSelector('.memorial-form');
  const id=await p.locator('.memorial-form').getAttribute('data-memorial-id'),row=p.locator('[data-edit-visit]').nth(1);
- await row.locator('[data-visit-photo]').setInputFiles(path.resolve(__dirname,'../../web/about/assets/SSKR_info01.webp'));await p.waitForSelector('[data-remove-photo]');await row.locator('input[name=coverVisitId]').check();
+ await row.locator('[data-visit-photo]').setInputFiles(path.resolve(__dirname,'../../web/about/assets/SSKR_info01.webp'));await p.waitForSelector('[data-remove-photo]');await p.waitForFunction(()=>!Number(document.querySelector('.memorial-form').dataset.uploads));await row.locator('input[name=coverVisitId]').check();
  await p.locator('.memorial-form button[type=submit]').click();await p.waitForFunction(()=>document.querySelector('.memorial-save-status').textContent.includes('저장했습니다.'));
  await p.locator('.memorial-back').click();await p.waitForSelector('.memorial-library');assert.match(await p.locator('.memorial-record-photo img').first().getAttribute('src'),/^blob:/);
  await p.locator('.memorial-record-photo').first().click();await p.waitForSelector('.memorial-story-cover img');assert.match(await p.locator('.memorial-story-cover img').getAttribute('src'),/^blob:/);

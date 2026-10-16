@@ -369,7 +369,7 @@ function createTransactionService(repository, options = {}) {
   }
   function saveStartLocation(id) {
     const p=preparationParticipant(event().startSelectionDeadlineAt);
-    const catalog=require('../../web/app/spot-catalog');
+    const catalog=event().placeCatalog||require('../../web/app/spot-catalog');
     if(!catalog.some(place=>place.id===id&&place.kind==='start') || (event().startLocationIds && !event().startLocationIds.includes(id))) throw new DomainError("INVALID_START_LOCATION", "이 행사에서 선택 가능한 출발지를 골라 주세요.");
     p.selectedStartLocationId=id;p.updatedAt=nowIso(clock);repository.saveParticipation(p);
     log("OFFICIAL_START_UPDATED",{participationId:p.id,startLocationId:id});return p;

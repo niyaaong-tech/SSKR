@@ -174,7 +174,7 @@ test('event admin mobile and desktop controls keep 44px targets and avoid horizo
     await p.evaluate(() => document.fonts.ready);
     const geometry = await p.evaluate(() => ({
       viewport: innerWidth, width: document.documentElement.scrollWidth,
-      fields: [...document.querySelectorAll('.field input')].filter(node => node.getBoundingClientRect().height).map(node => ({ name: node.name, height: node.getBoundingClientRect().height, width: node.getBoundingClientRect().width })),
+      fields: [...document.querySelectorAll('.field input:not([type=checkbox])')].filter(node => node.getBoundingClientRect().height).map(node => ({ name: node.name, height: node.getBoundingClientRect().height, width: node.getBoundingClientRect().width })),
       buttons: [...document.querySelectorAll('button')].filter(node => node.getBoundingClientRect().height).map(node => ({ text: node.textContent, height: node.getBoundingClientRect().height })),
       timeTop: document.querySelector('[name=startTime]').getBoundingClientRect().top,
       endTop: document.querySelector('[name=endTime]').getBoundingClientRect().top,
@@ -182,6 +182,7 @@ test('event admin mobile and desktop controls keep 44px targets and avoid horizo
     }));
     assert.ok(geometry.width <= geometry.viewport, JSON.stringify(geometry));
     assert.ok(geometry.fields.every(field => field.height >= 44 && field.width >= 90), JSON.stringify(geometry));
+    assert.ok(await p.locator('[name=isTest]').evaluate(e=>e.closest('label').getBoundingClientRect().height>=44));
     assert.ok(geometry.buttons.every(button => button.height >= 44), JSON.stringify(geometry));
     assert.ok(Math.abs(geometry.timeTop - geometry.endTop) < 1, JSON.stringify(geometry));
     for (let i = 0; i < geometry.sunriseRows.length - 1; i += 2) assert.ok(Math.abs(geometry.sunriseRows[i].top - geometry.sunriseRows[i + 1].top) < 1, JSON.stringify(geometry));

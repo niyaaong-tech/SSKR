@@ -62,13 +62,12 @@
     }
     const e=nextContext.event,tiers=nextContext.tiers||[],policy=e.refundPolicy;
     let preferred='';try{preferred=sessionStorage.getItem('sskr.participate.tier.'+e.id)||'';}catch{}
-    document.querySelector('#public-event-guide').innerHTML=`<h2>${esc(e.publicTitle)} 참가 안내</h2><p><strong>공식 출발 → 경유 ${e.minimumSpotCheckins}곳 이상 → ${esc(e.finishLocationName)}</strong></p><p>출발·도착을 포함해 총 ${e.minimumSpotCheckins+2}곳 이상 체크인합니다. 일출 이후 출발하고 일몰 전에 도착해야 합니다. 루트 계획의 선택 수는 실제 체크인과 별개입니다.</p><p>${esc(e.eligibilitySummary)}</p><a href="/explore/">출발지와 스팟 미리 보기 →</a><h3>참가 유형과 혜택</h3><p>모든 참가 유형에서 메모리얼을 남길 수 있습니다. 공개 탐색·루트 체험은 무료이며, 로그인하면 참가 신청 전에도 루트를 저장할 수 있습니다.</p><div class="public-tier-grid">${tiers.map(t=>`<label class="public-tier ${t.availability.selectable?'':'is-disabled'}"><input type="radio" name="publicTier" value="${esc(t.id)}" ${preferred===t.id?'checked':''} ${t.availability.selectable?'':'disabled'}><strong>${esc(t.displayName)}</strong><b>${esc(t.displayAmount)}</b><span>${esc(t.availability.label)}</span><ul>${t.benefits.map(b=>`<li>${esc(b)}</li>`).join('')}</ul></label>`).join('')}</div><p>선택한 유형은 신청 단계로 이어집니다. 정원을 먼저 확보한 뒤 결제하며, 정원이 없으면 결제를 진행하지 않습니다.</p><details><summary>취소·환불 안내</summary><p>${esc(policy?.beforeShipping||'운영 정책 공개 예정')}</p><p>${esc(policy?.afterShipping||'운영 정책 공개 예정')}</p><p>${esc(policy?.notice||'확정된 정책은 신청 전 안내합니다.')}</p></details>`;
+    document.querySelector('#public-event-guide').innerHTML=`<h2>${esc(e.publicTitle)} 참가 안내</h2><p><strong>공식 출발 → 경유 ${e.minimumSpotCheckins}곳 이상 → ${esc(e.finishLocationName)}</strong></p><p>출발·도착을 포함해 총 ${e.minimumSpotCheckins+2}곳 이상 체크인합니다. ${e.timeMode==='MANUAL'?'지정된 시작·종료 시각 안에 진행합니다.':'일출 이후 출발하고 일몰 전에 도착해야 합니다.'} 루트 계획의 선택 수는 실제 체크인과 별개입니다.</p><p>${esc(e.eligibilitySummary)}</p><a href="/explore/">출발지와 스팟 미리 보기 →</a><h3>참가 유형과 혜택</h3><p>모든 참가 유형에서 메모리얼을 남길 수 있습니다. 공개 탐색·루트 체험은 무료이며, 로그인하면 참가 신청 전에도 루트를 저장할 수 있습니다.</p><div class="public-tier-grid">${tiers.map(t=>`<label class="public-tier ${t.availability.selectable?'':'is-disabled'}"><input type="radio" name="publicTier" value="${esc(t.id)}" ${preferred===t.id?'checked':''} ${t.availability.selectable?'':'disabled'}><strong>${esc(t.displayName)}</strong><b>${esc(t.displayAmount)}</b><span>${esc(t.availability.label)}</span><ul>${t.benefits.map(b=>`<li>${esc(b)}</li>`).join('')}</ul></label>`).join('')}</div><p>선택한 유형은 신청 단계로 이어집니다. 정원을 먼저 확보한 뒤 결제하며, 정원이 없으면 결제를 진행하지 않습니다.</p><details><summary>취소·환불 안내</summary><p>${esc(policy?.beforeShipping||'운영 정책 공개 예정')}</p><p>${esc(policy?.afterShipping||'운영 정책 공개 예정')}</p><p>${esc(policy?.notice||'확정된 정책은 신청 전 안내합니다.')}</p></details>`;
     if(nextContext.participationMode==='test'){
       const guide=document.querySelector('#public-event-guide');guide.querySelector('details')?.remove();
-      const note=guide.querySelector('.public-tier-grid')?.nextElementSibling;if(note)note.textContent='테스트 참가에는 비용이 들지 않습니다. 신청을 완료하면 참가가 확정됩니다.';
-      guide.insertAdjacentHTML('afterbegin','<p class="service-test-notice"><strong>테스트 사이트 · 실제 결제 없음</strong><br>표시된 일정은 기능 검증용입니다. 정식 행사 모집과 키트 제공은 시작하지 않았습니다.</p>');
+      const note=guide.querySelector('.public-tier-grid')?.nextElementSibling;if(note)note.textContent='신청을 완료하면 참가가 확정됩니다.';
     }
-    const chosen=tiers.find(t=>t.id===preferred);if(chosen)document.querySelector('#event-facts dd').innerHTML=esc(chosen.displayAmount)+(nextContext.participationMode==='test'?'<small>테스트 참가 · 청구 없음</small>':'<small>1인 기준 · 부가세 포함</small>');
+    const chosen=tiers.find(t=>t.id===preferred);if(chosen)document.querySelector('#event-facts dd').innerHTML=esc(chosen.displayAmount)+(nextContext.participationMode==='test'?'<small>1인 기준</small>':'<small>1인 기준 · 부가세 포함</small>');
     document.querySelectorAll('input[name="publicTier"]').forEach(input=>input.addEventListener('change',()=>{try{sessionStorage.setItem('sskr.participate.tier.'+e.id,input.value);}catch{}const chosen=tiers.find(t=>t.id===input.value);if(chosen){const fact=document.querySelector('#event-facts dd');fact.innerHTML=esc(chosen.displayAmount)+'<small>1인 기준 · 부가세 포함</small>';}}));
   }
 
@@ -113,18 +112,14 @@
     document.querySelector("#event-subtitle").textContent = "참가 신청";
     document.querySelector("#event-description").textContent = event.description;
     const facts = [
-      { icon: "₩", label: "참가비", value: price?.displayAmount || "확인 중", note: nextContext.participationMode==='test'?'테스트 참가 · 청구 없음':'1인 기준 · 부가세 포함' },
+      { icon: "₩", label: "참가비", value: price?.displayAmount || "확인 중", note: nextContext.participationMode==='test'?'1인 기준':'1인 기준 · 부가세 포함' },
       { icon: "▣", label: "신청 기간", value: event.applicationPeriodDisplay, note: "선착순 마감" },
       { icon: "⚑", label: "행사 일시", value: event.eventDateDisplay, note: "당일 행사" },
       { icon: "◎", label: "모집 정원", value: event.capacityDisplay, note: event.capacityNote }
     ];
     document.querySelector("#event-facts").innerHTML = facts.map((fact) => `<div class="event-fact"><dt><i aria-hidden="true">${fact.icon}</i>${fact.label}</dt><dd>${esc(fact.value)}<small>${esc(fact.note)}</small></dd></div>`).join("");
     renderPublicGuide(nextContext);
-    if(nextContext.participationMode==='test'){
-      const cards={kit:['테스트 참가','결제 없이 신청하고 참가 준비까지','신청 정보와 참가 상태는 실제 계정에 저장됩니다.','테스트 참가 확정 · 공식 출발지 선택 · 바이크 정보'],finisher:['현장 체크인','출발부터 도착까지 실제 방문 기록','지정된 테스트 일정과 현장 위치에서 방문을 확인합니다.','출발 · 스팟 10개 이상 · 도착 체크인']};
-      for(const [key,copy] of Object.entries(cards)){const card=document.querySelector('[data-key="'+key+'"]');if(!card)continue;card.querySelector('.benefit-copy strong').textContent=copy[0];card.querySelector('.benefit-copy small').textContent=copy[1];card.querySelector('.benefit-detail p').textContent=copy[2];card.querySelector('.benefit-detail small').textContent=copy[3];}
-      const step=document.querySelectorAll('.manager-step-copy strong')[1];if(step)step.textContent='공식 출발과 루트';
-    }
+
   }
 
   function focusActive(view, shouldFocus) {

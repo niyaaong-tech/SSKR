@@ -22,6 +22,7 @@ function rpcClient(role) {
       const result = await db.transaction(async tx => {
         await tx.exec(role === 'anon' ? 'set local role anon' : 'set local role authenticated');
         if (name === 'sskr_events') return tx.query('select public.sskr_events($1,$2,$3::jsonb,$4) as result', [args.p_action, args.p_id, args.p_document === null ? null : JSON.stringify(args.p_document), args.p_revision]);
+        if (name === 'sskr_event_place_options') return tx.query('select public.sskr_event_place_options() as result');
         if (name === 'sskr_public_event') return tx.query('select public.sskr_public_event() as result');
         throw Error('Unexpected test RPC: ' + name);
       });
@@ -35,7 +36,7 @@ before(async () => {
   server = spawn(process.execPath, ['server/dev-server.js'], { cwd: path.resolve(__dirname, '../..'), env: { ...process.env, SSKR_DEV_PORT: String(port), SSKR_BACKEND_MODE: 'mock' }, windowsHide: true, stdio: ['ignore', 'pipe', 'pipe'] });
   await new Promise((resolve, reject) => { const timer = setTimeout(() => reject(Error('Server startup timeout')), 10000); server.stdout.on('data', chunk => { if (String(chunk).includes('SSKR dev server')) { clearTimeout(timer); resolve(); } }); server.once('error', reject); });
   db = new PGlite();
-  await db.exec(`create role anon; create role authenticated; create schema auth;
+  await db.exec(`create role anon; create role authenticated; create role service_role; create schema auth;
     create table auth.users(id uuid primary key,banned_until timestamptz,is_anonymous boolean default false);
     create table auth.sessions(id uuid primary key,user_id uuid references auth.users(id),not_after timestamptz);
     create table auth.identities(user_id uuid,provider text);

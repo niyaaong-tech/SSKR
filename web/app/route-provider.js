@@ -16,7 +16,8 @@
     if(leg.prefix>base.length)throw Error('도로 압축 정보가 손상되었습니다.');
     return base.slice(0,leg.prefix)+leg.shape;
   }
-  function create({base='/web/shared/routes',fetcher=globalThis.fetch?.bind(globalThis)}={}){
+  function create({base='/web/shared/routes',supplement=null,fetcher=globalThis.fetch?.bind(globalThis)}={}){
+    if(supplement)return combined(create({base,fetcher}),create({base:supplement,fetcher}));
     let manifest,loading;const rows=new Map(),pending=new Map();let indices=new Map();
     async function json(url){
       const response=await fetcher(url);if(!response.ok)throw Error('도로 데이터를 불러오지 못했습니다. 다시 시도해 주세요.');
@@ -70,6 +71,45 @@
       return {legs,valid,version:manifest.version,distanceMeters:valid?legs.reduce((n,l)=>n+l.distanceMeters,0):null,durationSeconds:valid?legs.reduce((n,l)=>n+l.durationSeconds,0):null};
     }
     return {ready,summary,route,get version(){return manifest?.version||'';},get catalogVersion(){return manifest?.catalogVersion||'';},get manifest(){return manifest||null;},accessPoint(id){return manifest?.accessPoints?.[id]||null;}};
+  }
+  // Supplemental places connect through shared, surveyed road access points.
+  // Existing national legs keep their original geometry and directional costs.
+  function combined(national,local){
+    let loaded=false,baseIds=new Set(),extraIds=new Set(),anchors=[];
+    async function ready(){
+      const [a,b]=await Promise.all([national.ready(),local.ready()]);
+      if(b.parentVersion!==a.version)throw Error('도로 데이터가 갱신되었습니다. 화면을 새로고침해 주세요.');
+      baseIds=new Set(a.placeIds);extraIds=new Set(b.placeIds);anchors=b.placeIds.filter(id=>baseIds.has(id));loaded=true;
+      return {...a,version:version(),placeIds:[...new Set([...a.placeIds,...b.placeIds])]};
+    }
+    const version=()=>national.version&&local.version?national.version+'+'+local.version:'';
+    function path(a,b){
+      if(!loaded)return null;
+      if(baseIds.has(a)&&baseIds.has(b))return national.summary(a,b)?[{provider:national,from:a,to:b}]:null;
+      if(extraIds.has(a)&&extraIds.has(b)&&local.summary(a,b))return [{provider:local,from:a,to:b}];
+      let best=null;
+      for(const anchor of anchors){
+        const edges=baseIds.has(a)?[{provider:national,from:a,to:anchor},{provider:local,from:anchor,to:b}]:[{provider:local,from:a,to:anchor},{provider:national,from:anchor,to:b}];
+        const costs=edges.map(e=>e.provider.summary(e.from,e.to));if(costs.some(c=>!c))continue;
+        const distance=costs.reduce((n,c)=>n+c.distanceMeters,0),duration=costs.reduce((n,c)=>n+c.durationSeconds,0);
+        if(!best||distance<best.distance||distance===best.distance&&duration<best.duration)best={edges,distance,duration};
+      }
+      return best?.edges||null;
+    }
+    function summary(a,b){const edges=path(a,b);return edges?edges.reduce((sum,e)=>{const cost=e.provider.summary(e.from,e.to);return {distanceMeters:sum.distanceMeters+cost.distanceMeters,durationSeconds:sum.durationSeconds+cost.durationSeconds};},{distanceMeters:0,durationSeconds:0}):null;}
+    async function route(ids,options={}){
+      const check=()=>{if(options.signal?.aborted)throw new DOMException('Aborted','AbortError');};
+      await ready();check();const legs=[];
+      for(let i=0;i<ids.length-1;i++){
+        const a=ids[i],b=ids[i+1],edges=path(a,b),metric=summary(a,b);
+        if(!edges){legs.push({fromId:a,toId:b,status:'unavailable',coordinates:[],distanceMeters:null,durationSeconds:null});continue;}
+        const parts=[];for(const edge of edges){const r=await edge.provider.route([edge.from,edge.to],options);parts.push(...r.legs);}
+        legs.push({fromId:a,toId:b,status:parts.every(p=>p.status==='ready')?'ready':'unavailable',coordinates:parts.flatMap(p=>p.coordinates),...metric});
+      }
+      check();const valid=ids.length>=2&&legs.every(l=>l.status==='ready');
+      return {legs,valid,version:version(),distanceMeters:valid?legs.reduce((n,l)=>n+l.distanceMeters,0):null,durationSeconds:valid?legs.reduce((n,l)=>n+l.durationSeconds,0):null};
+    }
+    return {ready,summary,route,get version(){return version();},get catalogVersion(){return national.catalogVersion;},get manifest(){return national.manifest;},accessPoint:id=>local.accessPoint(id)||national.accessPoint(id)};
   }
   return {create,decode,expandShape};
 });

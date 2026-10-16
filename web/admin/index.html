@@ -13,7 +13,7 @@
   <a class="skip-link" href="#event-editor">본문으로 바로가기</a>
   <header class="admin-header">
     <a class="admin-brand" href="/app" aria-label="SSKR 매니저로 이동"><img src="/web/shared/brand/wordmark.svg" width="628" height="141" alt="SSKR"></a>
-    <span>행사 운영 설정</span><a href="/app/admin/operations">접수·참가 운영</a><a href="/app/admin/gps">GPS 테스트</a>
+    <span>행사 운영 설정</span><a href="/app/admin/operations">접수·참가 운영</a>
     <a href="/app">매니저로 돌아가기</a>
   </header>
   <main class="admin-main">
@@ -34,8 +34,8 @@
               <label class="field full">행사 제목<input name="publicTitle" maxlength="120" autocomplete="off" placeholder="예: 2027 SSKR"></label>
               <label class="field full">회차 이름<input name="editionLabel" maxlength="80" autocomplete="off" placeholder="예: 제1회"></label>
               <label class="field full">행사 소개<textarea name="description" rows="3" maxlength="3000" placeholder="참가자에게 보여줄 행사 소개"></textarea></label>
-              <label class="field">개최일<input name="eventDate" type="date"></label>
-              <div class="field"><span>기준 시간대</span><span class="fixed-value">한국 표준시 (Asia/Seoul)</span></div>
+              <label class="field full"><span><input name="isTest" type="checkbox"> 이번 대회를 테스트로 진행</span><small>같은 참가·루트·체크인·메모리얼 기능을 사용하며 결제만 생략합니다.</small></label><label class="field">진행 시각 기준<select name="timeMode"><option value="SOLAR">일출·일몰</option><option value="MANUAL">직접 지정</option></select></label><label class="field">개최일<input name="eventDate" type="date"></label>
+              <div class="field full"><span>기준 시간대</span><span class="fixed-value">한국 표준시 (Asia/Seoul)</span></div>
               <label class="field">출발 가능 시각<input name="startTime" type="time" step="60"></label>
               <label class="field">도착 마감 시각<input name="endTime" type="time" step="60"></label>
               <label class="field">모집 시작 (한국 시각)<input name="applicationOpenAt" type="datetime-local"></label>
@@ -47,9 +47,9 @@
           <fieldset class="form-section"><legend>출발지와 도착지</legend>
             <p class="section-description">참가자가 선택할 수 있는 출발지를 지정하세요.</p>
             <div id="start-locations" class="start-grid"></div>
-            <div class="finish-location"><span>고정 도착지</span><strong id="finish-name"></strong><small id="finish-region"></small></div>
+            <label class="field">도착지<select name="finishLocationId"></select></label>
           </fieldset>
-          <fieldset class="form-section"><legend>일출·일몰 검토</legend>
+          <fieldset class="form-section" id="sunlight-section"><legend>일출·일몰 검토</legend>
             <p class="section-description">개최일의 위치별 시각을 출처와 대조하세요. 일출·일몰 시각은 검토 확인 후 함께 저장됩니다.</p>
             <div id="sunrise-empty" class="empty-hint">출발지를 선택하면 일출 시각 입력란이 표시됩니다.</div>
             <div id="sunrise-fields" class="sunrise-grid"></div>

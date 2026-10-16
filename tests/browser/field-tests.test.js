@@ -1,6 +1,6 @@
 'use strict';
-// Browser + actual BFF + isolated PostgreSQL. Identity and GPS are fixtures;
-// real mobile GPS and site access still require an on-site test.
+// Actual BFF + PostgreSQL policies. Identity and the PG boundary are explicit
+// isolated fixtures; this does not claim a real card charge or device GPS test.
 const {test,before,after}=require('node:test');
 const assert=require('node:assert/strict');
 const {chromium,webkit}=require('playwright');
@@ -8,61 +8,75 @@ const {spawn}=require('node:child_process');
 const net=require('node:net'),path=require('node:path'),fs=require('node:fs');
 const {fixture}=require('../backend/workflow-fixture');
 const {createHandler}=require('../../server/backend/handler');
-const {createFieldTests}=require('../../server/backend/field-tests');
-let f,browser,server,base,handler,service;
+let f,browser,server,base,handler;
 before(async()=>{
-  f=await fixture();const port=await new Promise(resolve=>{const s=net.createServer();s.listen(0,'127.0.0.1',()=>{const p=s.address().port;s.close(()=>resolve(p));});});base='http://127.0.0.1:'+port;
+  f=await fixture();
+  const draft=require('../../server/backend/events').documentFor({...f.event,publicTitle:'2026 SSKR',isTest:true,timeMode:'MANUAL',sunlight:null,startLocationIds:[...require('../../web/app/spot-catalog').filter(p=>p.kind==='start').map(p=>p.id),...require('../../server/data/field-test-places.json').records.filter(p=>p.startEligible).map(p=>p.id)],finishLocationId:'test-walk-30'});
+  const doc=(await f.db.query('select sskr_private.event_document($1) doc',[JSON.stringify(draft)])).rows[0].doc;
+  await f.db.query('insert into sskr_private.event_publications(event_id,config_version,document,actor_id) values($1,2,$2,$3)',[f.E,JSON.stringify(doc),f.A]);await f.db.query('update sskr_private.event_current set current_version=2');
+  await f.db.query('update sskr_private.event_drafts set document=$1,revision=2 where id=$2',[JSON.stringify(doc),f.E]);
+  const ops=await f.service.operations(f.account(f.A),{action:'READ'});await f.service.operations(f.account(f.A),{action:'CONFIGURE',revision:ops.epoch,commerce:{...f.commerce,preparationNotice:"출발 전 준비 사항을 확인해 주세요.",checkinRadiusMeters:20,maxAccuracyMeters:35}});const port=await new Promise(resolve=>{const s=net.createServer();s.listen(0,'127.0.0.1',()=>{const p=s.address().port;s.close(()=>resolve(p));});});base='http://127.0.0.1:'+port;
   server=spawn(process.execPath,['server/dev-server.js'],{cwd:path.resolve(__dirname,'../..'),env:{...process.env,SSKR_DEV_PORT:String(port),SSKR_BACKEND_MODE:'mock'},stdio:['ignore','pipe','pipe'],windowsHide:true});
   await new Promise((resolve,reject)=>{const timer=setTimeout(()=>reject(Error('startup')),10000);server.stdout.on('data',s=>{if(String(s).includes('SSKR dev server')){clearTimeout(timer);resolve();}});});
-  const db={async rpc(name,args){try{return {data:(await f.db.query('select public.sskr_field_tests($1,$2,$3,$4,$5) result',[args.p_action,args.p_actor,JSON.stringify(args.p_data),args.p_id,args.p_revision])).rows[0].result};}catch(e){return {error:{message:e.message}};}}};
-  service=createFieldTests({db});
-  handler=createHandler({getConfig:()=>({mode:'supabase',participationMode:'test',origin:base}),authService:{actor:async()=>({account:f.account(f.A)})},getFieldTests:()=>service});
+  const session=require('node:crypto').randomUUID();
+  await f.db.exec(`create or replace function auth.uid() returns uuid language sql as $$select '${f.A}'::uuid$$;
+    create or replace function auth.jwt() returns jsonb language sql as $$select jsonb_build_object('session_id','${session}')$$;`);
+  await f.db.query('insert into auth.sessions(id,user_id) values($1,$2)',[session,f.A]);await f.db.query("insert into auth.identities(user_id,provider) values($1,'google')",[f.A]);
+  const originalRPC=f.adapter.rpc.bind(f.adapter);f.adapter.rpc=async(name,args={})=>{try{if(name==='sskr_event_place_options')return {data:(await f.db.query('select public.sskr_event_place_options() result')).rows[0].result};if(name==='sskr_events')return {data:(await f.db.query('select public.sskr_events($1,$2,$3,$4) result',[args.p_action,args.p_id,JSON.stringify(args.p_document),args.p_revision])).rows[0].result};if(name==='sskr_routes')return {data:(await f.db.query('select public.sskr_routes($1,$2,$3,$4,$5,$6) result',[args.p_action,args.p_id,JSON.stringify(args.p_plan),JSON.stringify(args.p_schedule),args.p_revision,args.p_key])).rows[0].result};return originalRPC(name,args);}catch(e){return {error:{message:e.message}};}};
+  handler=createHandler({readMode:()=> 'supabase',getConfig:()=>({mode:'supabase',origin:base}),authService:{actor:async()=>{const stored=(await f.adapter.rpc('sskr_profile')).data,account=f.account(f.A);return {account:{...account,profile:{...account.profile,...stored.profile},profileRevision:stored.revision},db:f.adapter};}},readPublished:async()=>f.event,getWorkflows:()=>f.service,workflowEnabled:()=>true});
   const engine=process.env.BROWSER_ENGINE==='webkit'?webkit:chromium;
   browser=await engine.launch({headless:true,...(engine===chromium?{channel:process.platform==='win32'?'msedge':undefined}:{})});
 });
 after(async()=>{await browser?.close();server?.kill();await f?.db.close();});
 async function page(width=390){
-  const p=await browser.newPage({viewport:{width,height:844},hasTouch:width<=430,isMobile:width<=430,locale:'ko-KR',timezoneId:'Asia/Seoul',reducedMotion:'reduce'});p.errors=[];p.on('pageerror',e=>p.errors.push(e.message));
-  await p.route('**/api/backend?*',async route=>{const r=route.request();let status=200,headers={},body;
-    const req={url:r.url(),method:r.method(),headers:await r.allHeaders(),body:r.postData()||undefined};const res={writeHead:(s,h)=>{status=s;Object.assign(headers,h);},end:v=>body=v};
-    await handler(req,res);await route.fulfill({status,headers,body:body||''});});
-  await p.addInitScript(()=>{navigator.geolocation.getCurrentPosition=resolve=>resolve({coords:window.__gps,timestamp:Date.now()});});return p;
+  const p=await browser.newPage({viewport:{width,height:844},locale:'ko-KR',timezoneId:'Asia/Seoul',reducedMotion:'reduce'});p.errors=[];p.on('pageerror',e=>p.errors.push(e.message));
+  const intercept=async route=>{const r=route.request(),url=new URL(r.url());let status=200,headers={},body;
+    const endpoint=url.pathname.split('/').at(-1);
+    const req={url:r.url(),method:r.method(),headers:await r.allHeaders(),body:r.postData()||undefined,query:url.pathname.startsWith('/api/participate/')?{resource:endpoint}:undefined};
+    const res={getHeader:k=>headers[k],setHeader:(k,v)=>headers[k]=v,writeHead:(s,h)=>{status=s;Object.assign(headers,h);},end:v=>body=v};
+    await handler(req,res);await route.fulfill({status,headers,body:body||''});};
+  await p.route('**/api/backend?*',intercept);await p.route('**/api/participate/*',intercept);
+  return p;
 }
-test('admin custom times/destination persist and controls fit mobile/tablet/desktop',async()=>{
-  for(const width of [360,390,430,768,1440]){
-    const p=await page(width);await p.goto(base+'/app/admin/gps');await p.locator('#config-form').waitFor();
-    await p.locator('[name=title]').fill('현장 검수 '+width);await p.locator('[data-day="1"]').click();
-    const tomorrow=await p.locator('[name=startAt]').inputValue();assert.match(tomorrow,/T00:00$/);
-    await p.locator('[data-day="0"]').click();await p.locator('[name=finishId]').selectOption('test-walk-29');
-    await p.getByRole('button',{name:'테스트 설정 저장',exact:true}).click();await p.getByText('테스트 설정을 저장했습니다.',{exact:true}).waitFor();
-    const id=await p.locator('#edit-session').inputValue();await p.reload();await p.locator('#config-form').waitFor();await p.locator('#edit-session').selectOption(id);
-    assert.equal(await p.locator('[name=finishId]').inputValue(),'test-walk-29');
+
+test('one administration screen adds GPS locations without removing national starts or finish',async()=>{
+  for(const width of [390,1440]){
+    const p=await page(width);await p.goto(base+'/app/admin');await p.locator('[name=isTest]').waitFor();await p.locator('#admin-workspace').waitFor();
+    assert.equal(await p.locator('[name=isTest]').isChecked(),true);
+    assert.equal(await p.locator('#start-locations input').count(),16);
+    assert.equal(await p.locator('[name=finishLocationId] option').count(),66);
+    await p.locator('[name=isTest]').uncheck();assert.equal(await p.locator('#start-locations input').count(),11);assert.equal(await p.locator('[name=finishLocationId] option').count(),1);
+    await p.locator('[name=isTest]').check();assert.equal(await p.locator('#start-locations input').count(),16);
+    await p.locator('[name=start-test-start-ori]').check();await p.locator('[name=finishLocationId]').selectOption('test-walk-30');await p.reload();await p.locator('#admin-workspace').waitFor();assert.equal(await p.locator('[name=start-test-start-ori]').isChecked(),true);assert.equal(await p.locator('[name=finishLocationId]').inputValue(),'test-walk-30');
     assert.ok(await p.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1));
-    const sizes=await p.locator('#config-form input:not([type=checkbox]),#config-form select').evaluateAll(ns=>ns.map(n=>({w:n.getBoundingClientRect().width,h:n.getBoundingClientRect().height})));assert.ok(sizes.every(s=>s.h>=44&&s.w>100));
-    if([390,1440].includes(width)){fs.mkdirSync(output(),{recursive:true});await p.screenshot({path:path.join(output(),'gps-admin-'+width+'.png'),fullPage:true});}
-    assert.deepEqual(p.errors,[]);await p.close();
+    const dir=process.env.SSKR_QA_OUTPUT||'D:/sskr-qa/gps-test/unified-ui';fs.mkdirSync(dir,{recursive:true});await p.screenshot({path:path.join(dir,'admin-'+width+'.png'),fullPage:true});assert.deepEqual(p.errors,[]);await p.close();
   }
 });
-function output(){return process.env.SSKR_QA_OUTPUT||'D:/sskr-qa/gps-test/ui';}
-test('single tap test markers, GPS checkin, reload, nearest and compact label geometry',async()=>{
-  for(const width of [360,390,430,768,1440]){
-    const p=await page(width);await p.goto(base+'/app/gps-test');await p.locator('#session option').first().waitFor({state:'attached'});
-    await p.locator('#session').selectOption('bfc00000-0000-4000-8000-000000000001');await p.locator('#begin').click();await p.locator('#checkin').waitFor();
-    const start=require('../../server/data/field-test-places.json').records.find(p=>p.id==='test-start-ori');
-    await p.evaluate(p=>window.__gps={latitude:p.lat,longitude:p.lng,accuracy:8},start);await p.locator('#checkin').click();await p.getByText('체크인을 완료했습니다.',{exact:true}).waitFor();
-    await p.reload();await p.locator('#checkin').waitFor();assert.match(await p.locator('#progress').textContent(),/진행 중/);
-    await p.locator('.spot-pin').first().waitFor();const labels=await p.locator('.spot-pin>span').allTextContents();assert.ok(labels.length>=30);assert.ok(labels.every(s=>s==='테'));
-    const target=require('../../server/data/field-test-places.json').records.find(p=>p.id==='test-walk-01');await p.locator('#place').selectOption(target.id);
-    await p.evaluate(p=>window.__gps={latitude:p.lat,longitude:p.lng,accuracy:8},target);await p.locator('#checkin').click();await p.getByText('체크인을 완료했습니다.',{exact:true}).waitFor();
-    assert.match(await p.locator('#progress').textContent(),/1 \/ 10/);
-    await p.locator('#nearest').click();assert.notEqual(await p.locator('#place').inputValue(),target.id);
-    await p.locator('.spot-map-controls [data-action=fit]').click();
-    const marker=p.locator('.spot-pin[aria-label="탄천 죽전 방면 산책로 11 · 테스트 스팟"]');
-    if(width<=430)await marker.tap();else await marker.click();
-    await p.waitForFunction(()=>document.querySelector('#place-name').textContent==='탄천 죽전 방면 산책로 11');
-    assert.ok(await p.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1));
-    const center=await p.locator('.spot-pin>span').first().evaluate(n=>{const b=n.getBoundingClientRect(),r=document.createRange();r.selectNodeContents(n);const t=r.getBoundingClientRect();return {x:Math.abs((b.left+b.right-t.left-t.right)/2),y:Math.abs((b.top+b.bottom-t.top-t.bottom)/2),w:b.width,h:b.height};});assert.ok(center.x<1.1&&center.y<2.1&&center.w<=24&&center.h<=24,JSON.stringify(center));
-    if([390,1440].includes(width)){fs.mkdirSync(output(),{recursive:true});await p.screenshot({path:path.join(output(),'gps-run-'+width+'.png'),fullPage:true});}
-    assert.deepEqual(p.errors,[]);await p.close();
+test('participant uses the ordinary manager, preparation and planner with both national and GPS places',async()=>{
+  const user=f.account(f.A);await f.service.handle(user,'application',{action:'START'});await f.service.handle(user,'application',{action:'SAVE_ACKNOWLEDGEMENT',acknowledgement:{acknowledged:true}});await f.service.handle(user,'application',{action:'SAVE_AGREEMENTS',agreements:{TERMS:true,PRIVACY:true,LOCATION:true}});await f.service.handle(user,'application',{action:'SAVE_PARTICIPANT_INFO',participant:{name:'검수',email:'fixture@example.invalid',phone:'01012345678',priceTierId:'test-participation'}});
+  const p=await page();await p.goto(base+'/participate');await p.locator('#confirm-test').waitFor();await p.locator('#confirm-test').click();await p.getByText('참가 등록이 완료되었습니다.',{exact:false}).waitFor();assert.equal(await p.locator('.service-test-notice').count(),0);
+  await p.goto(base+'/app');await p.locator('.manager-dashboard').waitFor();assert.equal(await p.locator('.manager-test-notice').count(),0);assert.ok(!/테스트|결제·키트 제공 없음/.test(await p.locator('#app-main').innerText()));
+  await p.goto(base+'/app/preparation');await p.locator('[name=startLocationId]').selectOption('test-start-ori');await p.locator('[data-preparation=start] button').click();await p.locator('[data-preparation=start] [role=status]').filter({hasText:'저장'}).waitFor();assert.ok(!/테스트/.test(await p.locator('#app-main').innerText()));
+  await p.goto(base+'/app/spots?mode=plan');await p.locator('.rp-start-select').waitFor();const counts=await p.evaluate(()=>({normal:window.SSKR_SPOT_CATALOG.filter(p=>!p.testOnly).length,extra:window.SSKR_SPOT_CATALOG.filter(p=>p.testOnly).length}));assert.deepEqual(counts,{normal:212,extra:68});assert.ok(await p.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1));assert.deepEqual(p.errors,[]);await p.close();
+});
+test('mixed national and GPS route computes, saves and reloads through the ordinary planner',async()=>{
+  const p=await page(1440);await p.goto(base+'/app/spots?mode=plan');await p.locator('.rp-start-select').click();await p.locator('[data-start-id="test-start-ori"]').click();
+  for(const id of ['test-walk-01','auraji']){
+    if(await p.locator('[data-rp-action=back-detail]').isVisible())await p.locator('[data-rp-action=back-detail]').click();
+    const name=[...require('../../server/data/field-test-places.json').records,...require('../../web/app/spot-catalog')].find(q=>q.id===id).name;await p.locator('.spot-search input').fill(name);await p.locator('.rp-place-view[data-id="'+id+'"]').click();const add=p.locator('.rp-detail-add[data-id="'+id+'"]');await add.waitFor();await p.waitForFunction(id=>!document.querySelector('.rp-detail-add[data-id="'+id+'"]')?.disabled,id);await add.click();await p.locator('.rp-waypoints [data-waypoint="'+id+'"]').waitFor();
   }
+  await p.locator('[data-rp-action="save"]').click();
+  await p.waitForFunction(()=>document.body.innerText.includes('저장됨'));
+  const stored=(await f.db.query('select plan from sskr_private.routes where owner_id=$1',[f.A])).rows.at(-1).plan;
+  assert.equal(stored.startId,'test-start-ori');assert.equal(stored.finishId,'test-walk-30');assert.deepEqual(new Set(stored.stopIds),new Set(['test-walk-01','auraji']));assert.ok(stored.routingVersion.includes('+'));
+  const dir=process.env.SSKR_QA_OUTPUT||'D:/sskr-qa/gps-test/unified-ui';await p.screenshot({path:path.join(dir,'mixed-planner.png'),fullPage:false});
+  await p.reload();await p.locator('.rp-waypoints [data-waypoint="auraji"]').waitFor();assert.deepEqual(p.errors,[]);await p.close();
+});
+test('ordinary check-in creates a memorial visible through the same owner and public screens',async()=>{
+  const p=await page();let ms=Date.parse('2099-10-16T06:05:00+09:00');f.setNow(ms);await p.addInitScript(()=>{navigator.geolocation.getCurrentPosition=resolve=>resolve(window.__gpsFixture);});await p.goto(base+'/app/ride');await p.locator('[data-checkin]').waitFor();
+  const places=(await f.service.handle(f.account(f.A),'context')).event.placeCatalog,ids=['test-start-ori',...Array.from({length:10},(_,i)=>'test-walk-'+String(i+1).padStart(2,'0')),'test-walk-30'];
+  for(const id of ids){ms+=60000;f.setNow(ms);const point=places.find(p=>p.id===id);await p.evaluate(({point,ms})=>{window.__gpsFixture={coords:{latitude:point.lat,longitude:point.lng,accuracy:5},timestamp:ms};},{point,ms});await p.locator('[data-checkin]').click();await p.locator('.service-visits li').nth(ids.indexOf(id)).waitFor();}
+  await p.getByText('완주 기록 보기',{exact:true}).click();await p.locator('.memorial-record').first().waitFor();assert.ok(!/테스트/.test(await p.locator('#app-main').innerText()));
+  const item=(await f.service.memorials(f.account(f.A))).items[0];await f.service.handle(f.account(f.A),'memorial',{eventId:f.E,revision:item.revision,values:{title:'함께 걸었던 하루',summary:'탄천을 따라 남긴 기억',visibility:'PUBLIC',publishStatus:'PUBLISHED',visitEdits:{}}});
+  await p.goto(base+'/app/memorials/'+item.id);await p.getByRole('heading',{name:'함께 걸었던 하루',exact:true}).waitFor();await p.getByText(places.find(p=>p.id==='test-walk-01').name,{exact:true}).first().waitFor();assert.equal((await f.service.memorials(null)).items.length,1);assert.deepEqual(p.errors,[]);await p.close();
 });

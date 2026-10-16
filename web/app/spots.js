@@ -7,7 +7,7 @@
   const normalize = value => String(value??'').toLowerCase().replace(/\s/g,'');
   function filterPlaces(places, state) {
     const query=normalize(state.search);
-    return places.filter(p=>(state.kind==='all'||p.kind===state.kind)&&(state.category==='all'||p.category===state.category)&&(!query||normalize([p.name,p.region,p.address,p.lead].join(' ')).includes(query)));
+    return places.filter(p=>p.kind!=='inactive'&&(state.kind==='all'||p.kind===state.kind)&&(state.category==='all'||p.category===state.category)&&(!query||normalize([p.name,p.region,p.address,p.lead].join(' ')).includes(query)));
   }
 
   const shared=typeof module==='object'&&module.exports?require('../shared/map/map'):root.SSKR_MAP;
@@ -22,12 +22,13 @@
     try{const saved=JSON.parse(root.sessionStorage.getItem('sskr.route-editor')||'null'),filters=saved?.active?saved.browseFilters:null;if(filters&&(filters.kind==='all'||Object.hasOwn(labels,filters.kind))&&Object.hasOwn(categories,filters.category)&&typeof filters.search==='string')browseFilters={kind:filters.kind,category:filters.category,search:filters.search};}catch{}
     const events=new AbortController(),reduced=matchMedia('(prefers-reduced-motion:reduce)');
     const numbers=new Map(places.filter(p=>p.kind==='spot').map((p,i)=>[p.id,i+1]));
-    const entries=places.map(p=>({...p,number:p.kind==='start'?'출':p.kind==='finish'?'도':numbers.get(p.id)}));
+    const entries=places.map(p=>({...p,number:p.testOnly?'테':p.kind==='start'?'출':p.kind==='finish'?'도':numbers.get(p.id)}));
+    entries.version=places.version;
     const isStartAvailable=id=>root.SSKR_BACKEND?.mode!=='supabase'||!options.getEvent?.()?.id||options.getEvent().startLocationIds?.includes(id)===true;
     const availableEntries=()=>entries.filter(p=>p.kind!=='start'||isStartAvailable(p.id));
     host.classList.add('spots-main');
     host.innerHTML=`<section class="spot-workbench" aria-label="스팟 지도 탐색">
-      <header class="spot-heading"><div><p>MY DAY, MY STOPS</p><h2>어디에 들를까요?</h2><span>동해안과 부산의 출발점부터 대천까지, 나의 하루에 어울리는 장소를 골라보세요.</span></div></header>
+      <header class="spot-heading"><div><p>MY DAY, MY STOPS</p><h2>어디에 들를까요?</h2><span>출발부터 도착까지, 나의 하루에 어울리는 장소를 골라보세요.</span></div></header>
       <div class="spot-mode-switch" role="group" aria-label="스팟 페이지 모드"><button type="button" data-spot-mode="browse" aria-pressed="true">스팟 탐색</button><button type="button" data-spot-mode="plan" aria-pressed="false">루트 만들기</button></div>
       <div class="spot-toolbar"><div class="spot-kind" role="group" aria-label="장소 구분">${[['spot','경유 스팟'],['start','출발지'],['finish','도착지'],['all','전체']].map(([key,label])=>`<button type="button" data-kind="${key}" aria-pressed="${key===state.kind}">${label}</button>`).join('')}</div><label class="spot-search">${icon('search')}<input type="search" aria-label="장소 이름 또는 지역 검색" placeholder="장소 이름 또는 지역 검색" value="${esc(state.search)}" autocomplete="off"><button type="button" data-action="clear" aria-label="검색어 지우기">×</button></label></div>
       <div class="spot-categories" role="group" aria-label="스팟 주제">${Object.entries(categories).map(([key,label])=>`<button type="button" id="spot-category-${key}" data-category="${key}" aria-pressed="${key==='all'}">${key==='all'?'':icon(key)}<span data-category-label>${label}</span><span data-count="${key}"></span></button>`).join('')}</div>

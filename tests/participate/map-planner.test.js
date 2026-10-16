@@ -183,3 +183,5 @@ test('focus ignores intermediate layout events and removes cancelled completion 
  api.select('a',{fly:true});api.select('b',{fly:true});assert.equal(map.events.moveend.length,baseline+1,'rapid choices retain only the latest completion handler');
  api.setEditing(true);assert.equal(map.events.moveend.length,baseline);api.destroy();
 });
+
+test('GPS display badge preserves the ordinal of following normal route spots',()=>{const catalog=new Map([{id:'start',kind:'start',testOnly:true},{id:'gps',kind:'spot',testOnly:true},{id:'normal',kind:'spot'},{id:'finish',kind:'finish'}].map(p=>[p.id,p]));assert.deepEqual(routePlaces(catalog,['start','gps','normal','finish']).map(p=>p.number),['테','테',2,'도']);});

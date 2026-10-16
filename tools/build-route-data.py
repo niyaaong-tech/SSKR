@@ -100,7 +100,7 @@ def catalog(catalog_path=None):
     return json.loads(raw.decode("utf-8"))
 
 
-def prepare(work, source, source_url):
+def prepare(work, source, source_url, bounds=None):
     with osmium.io.Reader(str(source)) as reader:
         snapshot = reader.header().get("osmosis_replication_timestamp")
     snapshot_basis = "replication-header" if snapshot else "latest-object-timestamp"
@@ -128,6 +128,8 @@ def prepare(work, source, source_url):
                 writer.add_node(n)
 
         def way(self, w):
+            if bounds and ('highway' not in w.tags or not all(n.location.valid() and bounds[0] <= n.lat <= bounds[2] and bounds[1] <= n.lon <= bounds[3] for n in w.nodes)):
+                return
             observe_timestamp(w)
             tags = dict(w.tags)
             if "highway" in tags or tags.get("route") in {"ferry", "shuttle_train"}:
@@ -145,18 +147,19 @@ def prepare(work, source, source_url):
 
         def relation(self, r):
             observe_timestamp(r)
-            writer.add_relation(r)  # Preserve turn restrictions and boundaries.
+            if not bounds or (r.tags.get('type') == 'restriction' and all(m.ref in allowed or m.ref in denied for m in r.members if m.type == 'w')):
+                writer.add_relation(r)  # Preserve applicable turn restrictions and boundaries.
 
     started = time.time()
     with osmium.SimpleWriter(str(target)) as writer:
-        Filter().apply_file(str(source))
+        Filter().apply_file(str(source), locations=bool(bounds))
     if not snapshot and latest_timestamp is not None:
         snapshot = latest_timestamp.isoformat().replace("+00:00", "Z")
     with source.open("rb") as stream:
         digest = hashlib.file_digest(stream, "sha256").hexdigest()
     dump(work / "input.json", {"source": source_url,
          "snapshot": snapshot, "snapshotBasis": snapshot_basis, "sha256": digest, "policyVersion": POLICY_VERSION,
-         "allowedWayCount": len(allowed), "blockedWayCount": len(denied)})
+         "allowedWayCount": len(allowed), "blockedWayCount": len(denied), "bounds": bounds})
     dump(work / "allowed-ways.json", sorted(allowed))
     dump(work / "blocked-ways.json", sorted(denied))
     print(json.dumps({"stage": "prepare", "seconds": round(time.time()-started), "allowed": len(allowed), "blocked": len(denied)}), flush=True)
@@ -397,15 +400,24 @@ def route_origin_impl(job):
     return origin, len(result["legs"]), len(result["unavailable"])
 
 
-def routes(work, workers, only, catalog_path=None, output=None):
+def routes(work, workers, only, catalog_path=None, output=None, parent_manifest=None):
     places = catalog(catalog_path)
     source = json.loads((work / "input.json").read_text())
     catalog_json = json.dumps([{k: p[k] for k in ("id", "kind", "lat", "lng")} for p in places], separators=(",", ":"))
     catalog_version = hashlib.sha256(catalog_json.encode()).hexdigest()[:16]
     allowed = set(json.loads((work / "allowed-ways.json").read_text()))
     points = access_points(work, places, allowed)
+    parent = json.loads(parent_manifest.read_text(encoding="utf-8")) if parent_manifest else None
+    if parent:
+        for place_id, point in list(points.items()):
+            original = parent.get("accessPoints", {}).get(place_id)
+            if original:
+                if original["wayId"] not in allowed or point.get("status") != "ready":
+                    raise RuntimeError("Supplement anchor no longer exists: " + place_id)
+                points[place_id] = original
     access_version = hashlib.sha256(json.dumps(points, sort_keys=True).encode()).hexdigest()
-    version = hashlib.sha256((source["sha256"] + POLICY_VERSION + catalog_version + access_version).encode()).hexdigest()[:20]
+    graph_scope = json.dumps(source.get("bounds"), separators=(",", ":")) if source.get("bounds") else ""
+    version = hashlib.sha256((source["sha256"] + POLICY_VERSION + graph_scope + catalog_version + access_version).encode()).hexdigest()[:20]
     if sum(p["status"] == "ready" for p in points.values()) < len(places) * .8:
         raise RuntimeError("Too few road access points; inspect graph metadata before publishing")
     jobs = [(p["id"], [q["id"] for q in places if q["kind"] in {"spot", "finish"} and p["id"] != q["id"]])
@@ -441,7 +453,7 @@ def routes(work, workers, only, catalog_path=None, output=None):
         target.parent.mkdir(parents=True, exist_ok=True)
         target.write_bytes(gzip.compress(json.dumps(public_row, ensure_ascii=False, separators=(",", ":")).encode(), compresslevel=9, mtime=0))
     dump(publication / "manifest.json", {"schemaVersion": 1, "version": version, "catalogVersion": catalog_version,
-          "placeIds": ids, "distances": distances, "durations": durations, "accessPoints": points,
+          "parentVersion": parent["version"] if parent else None, "placeIds": ids, "distances": distances, "durations": durations, "accessPoints": points,
           "dataFileSuffix": ".json.gz", "geometryEncoding": "polyline6-prefix", "source": source, "engine": "Valhalla " + str(valhalla.__version__),
           "accessPolicy": {"maxSnapMeters": 750, "minReachableEdges": 50, "tunnelAccess": False},
           "license": "ODbL-1.0", "attribution": "© OpenStreetMap contributors", "policyVersion": POLICY_VERSION})
@@ -459,6 +471,8 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--work", type=Path, required=True)
     parser.add_argument("--input", type=Path)
+    parser.add_argument("--parent-manifest", type=Path, help="National manifest for shared supplemental access points")
+    parser.add_argument("--bounds", nargs=4, type=float, metavar=("SOUTH", "WEST", "NORTH", "EAST"), help="Optional regional graph bounds for supplemental places")
     parser.add_argument("--source-url", default="https://download.geofabrik.de/asia/south-korea-latest.osm.pbf")
     parser.add_argument("--stage", choices=["prepare", "graph", "routes"], required=True)
     parser.add_argument("--resume", default="initialize")
@@ -474,11 +488,11 @@ def main():
     if args.stage == "prepare":
         if not args.input:
             parser.error("--input is required for prepare")
-        prepare(work, args.input, args.source_url)
+        prepare(work, args.input, args.source_url, args.bounds)
     elif args.stage == "graph":
         graph(work, args.resume)
     elif args.stage == "routes":
-        routes(work, args.workers, args.only, args.catalog, args.output)
+        routes(work, args.workers, args.only, args.catalog, args.output, args.parent_manifest)
 
 
 if __name__ == "__main__":

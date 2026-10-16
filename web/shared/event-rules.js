@@ -8,7 +8,7 @@
     return [
       {key:'bike',label:'바이크 정보',complete:Boolean(p.bikeInfo?.maker&&p.bikeInfo?.model&&p.bikeInfo?.className),value:p.bikeInfo?.model||'등록 필요',deadline:e.bikeInfoDeadlineAt,editable:editable(e.bikeInfoDeadlineAt)},
       {key:'start',label:'공식 출발지',complete:Boolean(p.selectedStartLocationId),value:p.selectedStartLocationId||'선택 필요',deadline:e.startSelectionDeadlineAt,editable:editable(e.startSelectionDeadlineAt)},
-      {key:'kit',label:context.participationMode==='test'?'테스트 참가':e.kitDeliveryMode==='ONSITE'?'키트 현장 수령':'키트 배송 정보',complete:e.kitDeliveryMode==='ONSITE'||Boolean(address?.name&&address?.phone&&address?.postalCode&&address?.address),value:context.participationMode==='test'?'결제·키트 제공 없음':e.kitDeliveryMode==='ONSITE'?'현장 수령':({SHIPPED:'발송 완료',DELIVERED:'배송 완료'})[p.fulfillmentState]||(address?.address||'배송지 입력 필요'),deadline:e.kitAddressDeadlineAt,editable:editable(e.kitAddressDeadlineAt)&&!['SHIPPED','DELIVERED'].includes(p.fulfillmentState)},
+      {key:'kit',label:e.kitDeliveryMode==='ONSITE'?'키트 현장 수령':'키트 배송 정보',complete:e.kitDeliveryMode==='ONSITE'||Boolean(address?.name&&address?.phone&&address?.postalCode&&address?.address),value:e.kitDeliveryMode==='ONSITE'?'현장 수령':({SHIPPED:'발송 완료',DELIVERED:'배송 완료'})[p.fulfillmentState]||(address?.address||'배송지 입력 필요'),deadline:e.kitAddressDeadlineAt,editable:editable(e.kitAddressDeadlineAt)&&!['SHIPPED','DELIVERED'].includes(p.fulfillmentState)},
       {key:'notice',label:'운영 안내',complete:p.acknowledgedNoticeVersion===e.preparationNoticeVersion,value:p.acknowledgedNoticeVersion===e.preparationNoticeVersion?'확인 완료':'최신 안내 확인 필요',editable:!context.account.blocked}
     ];
   }

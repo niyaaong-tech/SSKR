@@ -15,28 +15,28 @@ const actions={START:['startApplication'],SAVE_ACKNOWLEDGEMENT:['saveAcknowledge
   SAVE_KIT_RECIPIENT:['saveKitRecipient','recipient'],ACKNOWLEDGE_PREPARATION:['acknowledgePreparation','version']};
 function createWorkflows({db,payments=createPayments(),clock=()=>new Date(),rpc=call,testParticipation=false}={}) {
   const read=(account,event)=>rpc(db,'read',account?.id||null,event);
-  function repo(s,account) {return new WorkflowRepository(s.state,eventForWorkflow(s,clock(),testParticipation||payments.ready),account,s.history||[]);}
+  function repo(s,account) {return new WorkflowRepository(s.state,eventForWorkflow(s,clock(),s.event?.isTest===true||payments.ready),account,s.history||[]);}
   function project(s,account) {
-    if(!s.event||!s.commerce?.priceTiers?.length)return {...emptyContext(account,clock(),s.event),participationMode:testParticipation?'test':'paid'};
+    if(!s.event||!s.commerce?.priceTiers?.length)return {...emptyContext(account,clock(),s.event),participationMode:s.event?.isTest===true?'test':'paid'};
     const r=repo(s,account),dto=buildContextDto(r,{now:clock()});
-    dto.participationMode=testParticipation?'test':'paid';
-    if(testParticipation){
+    dto.participationMode=s.event.isTest===true?'test':'paid';
+    if(s.event.isTest===true){
       dto.event.refundPolicy=null;
       dto.surface.primaryAction.label=({PREPARE_CHECKOUT:'테스트 참가 확정',RETRY_PAYMENT:'테스트 참가 확정',RESUME_PAYMENT:'신청 이어하기'})[dto.surface.primaryAction.code]||dto.surface.primaryAction.label;
-      for(const t of dto.tiers)t.displayAmount='결제 없음';
-      if(dto.price)dto.price.displayAmount='결제 없음';
+      for(const t of dto.tiers)t.displayAmount='0원';
+      if(dto.price)dto.price.displayAmount='0원';
     }
     const p=dto.payment;
     dto.payment=Object.fromEntries(['id','state','createdAt','updatedAt','amount','failureCode'].filter(k=>Object.hasOwn(p,k)).map(k=>[k,p[k]]));
     dto.pastParticipations=dto.pastParticipations.map(p=>({...p,synthetic:false}));
     dto.event.capacityDisplay=String(s.commerce.baseCapacity+(s.commerce.extraCapacity||0))+'명';
-    dto.event.capacityNote=testParticipation?'테스트 참가 정원':'';
-    dto.event.eligibilitySummary=testParticipation?'서비스 기능 검증을 위한 테스트 참가입니다. 실제 행사 모집은 별도로 안내합니다.':dto.event.eligibilitySummary;
+    dto.event.capacityNote='';
+
     dto.event.published=true;dto.backend='supabase';dto.event.preparationNotice=s.commerce.preparationNotice;
     dto.event.participationGuide=s.commerce.guide;dto.agreementDocuments=s.commerce.agreements||[];
     dto.event.notices=(s.commerce.notices||[]).filter(n=>n.publishedAt&&Date.parse(n.publishedAt)<=+clock()).map(n=>({...n,eventId:s.event.id,category:'운영 공지',date:n.publishedAt.slice(0,10)}));
     dto.refund=s.state?.refund?{state:s.state.refund.state,requestedAt:s.state.refund.requestedAt}:null;
-    dto.run=s.state?.run?{state:s.state.run.state,visits:s.state.run.visits,minimumSpotCheckins:s.state.run.rules.minimumSpotCheckins}:null;
+    dto.run=s.state?.run?{state:s.state.run.state,visits:s.state.run.visits,minimumSpotCheckins:s.state.run.rules.minimumSpotCheckins,places:s.state.run.rules.places}:null;
     return dto;
   }
   async function mutate(account,event,action,fn) {
@@ -135,8 +135,9 @@ function createWorkflows({db,payments=createPayments(),clock=()=>new Date(),rpc=
     if(!account?.id)throw new BackendError('AUTH_REQUIRED','로그인이 필요합니다.',401);
     if(testParticipation&&['payment','checkout','refund'].includes(endpoint))throw new BackendError('PAYMENT_DEFERRED','테스트 사이트에서는 결제와 환불을 진행하지 않습니다.',409);
     if(endpoint==='application'&&body.action==='CONFIRM_TEST'){
-      if(!testParticipation)throw new BackendError('NOT_FOUND','지원하지 않는 신청 동작입니다.',404);
+
       return (await mutate(account,null,'TEST_PARTICIPATION_CONFIRMED',r=>{
+        if(r.getCurrentEvent().isTest!==true)throw new BackendError('NOT_FOUND','지원하지 않는 신청 동작입니다.',404);
         if(r.getParticipation()?.state==='ACTIVE')return;
         if(r.getCurrentEvent().registrationState!=='OPEN')throw new BackendError('REGISTRATION_CLOSED','현재 접수 기간이 아닙니다.',409);
         expire(r);
@@ -148,6 +149,7 @@ function createWorkflows({db,payments=createPayments(),clock=()=>new Date(),rpc=
           bikeInfo:a.bike,selectedStartLocationId:null,kitRecipient:null,acknowledgedNoticeVersion:null,fulfillmentState:'NOT_PREPARED',runResult:'NOT_STARTED',createdAt:clock().toISOString()});
       })).context;
     }
+    if(['payment','checkout','refund'].includes(endpoint)&&(await read(account,body.eventId||null)).event?.isTest===true)throw new BackendError('PAYMENT_DEFERRED','현재 참가에는 결제·환불 처리가 없습니다.',409);
     if(endpoint==='payment')return payment(account,body);
     if(endpoint==='application'||endpoint==='checkout') {
       if(endpoint==='checkout'&&body.action!=='PREPARE')throw new BackendError('INVALID_INPUT','지원하지 않는 요청입니다.');
@@ -161,7 +163,7 @@ function createWorkflows({db,payments=createPayments(),clock=()=>new Date(),rpc=
         svc[action[0]](body[action[1]]);
       })).context;
     }
-    if(endpoint==='ride')return (await mutate(account,body.eventId||null,'CHECKIN',(r,s)=>checkin(r,s,body,clock()))).context;
+    if(endpoint==='ride')return (await mutate(account,body.eventId||null,'CHECKIN',(r,s)=>checkin(r,s,body,clock(),{places:s.event.placeCatalog||undefined,window:s.event.timeMode==='MANUAL'?{startTime:s.event.eventStartAt,finishTime:s.event.eventEndAt}:undefined}))).context;
     if(endpoint==='memorial')return (await mutate(account,body.eventId,'MEMORIAL_EDIT',r=>editMemorial(r,body.values,body.revision))).context;
     if(endpoint==='refund')return (await mutate(account,body.eventId||null,'REFUND_REQUEST',r=>{
       if(r.getParticipation()?.state!=='ACTIVE')throw new BackendError('NOT_FOUND','취소할 참가 내역이 없습니다.',404);
@@ -172,7 +174,7 @@ function createWorkflows({db,payments=createPayments(),clock=()=>new Date(),rpc=
   async function operations(account,body) {
     const page={offset:Number.isInteger(body.offset)&&body.offset>=0?body.offset:0};
     const s=await rpc(db,'operations',account.id,body.eventId||null,page);
-    if(testParticipation&&['REFUND_DETAILS','REFUND_APPROVE','RECONCILE'].includes(body.action))throw new BackendError('PAYMENT_DEFERRED','테스트 사이트에서는 결제와 환불을 진행하지 않습니다.',409);
+    if((testParticipation||s.event.isTest===true)&&['REFUND_DETAILS','REFUND_APPROVE','RECONCILE'].includes(body.action))throw new BackendError('PAYMENT_DEFERRED','이 대회에서는 결제와 환불을 진행하지 않습니다.',409);
     if(body.action==='REFUND_DETAILS'){
       const snapshot=await read({id:body.ownerId,linked:true},s.event.id),order=snapshot.state.paymentAttempts?.at(-1);
       if(!order||snapshot.state.refund?.state!=='REVIEW_REQUIRED')throw new BackendError('NOT_FOUND','검토할 환불 요청이 없습니다.',404);
@@ -182,7 +184,7 @@ function createWorkflows({db,payments=createPayments(),clock=()=>new Date(),rpc=
     if(body.action==='CHECKIN_EVIDENCE')return {ok:true,evidence:await rpc(db,'evidence',account.id,s.event.id,{ownerId:body.ownerId},null,body.id)};
     if(body.action==='CONFIGURE') {
       if(body.revision!==s.epoch)throw new BackendError('CONFLICT','다른 요청으로 설정이 바뀌었습니다.',409);
-      const c=validateCommerce(body.commerce,s.event,{testParticipation});if(c.enabled&&!testParticipation&&!payments.ready)throw new BackendError('PAYMENT_NOT_CONFIGURED','결제 키를 연결한 뒤 접수를 열어 주세요.',409);
+      const c=validateCommerce(body.commerce,s.event,{testParticipation:s.event.isTest===true});if(c.enabled&&s.event.isTest!==true&&!payments.ready)throw new BackendError('PAYMENT_NOT_CONFIGURED','결제 키를 연결한 뒤 접수를 열어 주세요.',409);
       return {ok:true,...await rpc(db,'configure',account.id,s.event.id,c,s.epoch)};
     }
     if(body.action==='FULFILLMENT') {
@@ -210,7 +212,7 @@ function createWorkflows({db,payments=createPayments(),clock=()=>new Date(),rpc=
       // Full refunds only. Partial refunds require a separate reviewed workflow.
       const data=await payments.cancel(p,'운영자 검토 후 참가 취소');await settle(owner,s.event.id,p.id,data);
     }else if(body.action&&body.action!=='READ')throw new BackendError('INVALID_INPUT','지원하지 않는 운영 동작입니다.');
-    return {ok:true,...await rpc(db,'operations',account.id,s.event?.id,page),participationMode:testParticipation?'test':'paid',paymentReady:!testParticipation&&payments.ready,paymentEnvironment:payments.environment};
+    return {ok:true,...await rpc(db,'operations',account.id,s.event?.id,page),participationMode:s.event?.isTest===true?'test':'paid',paymentReady:s.event?.isTest!==true&&payments.ready,paymentEnvironment:payments.environment};
   }
   async function memorials(account) {
     const data=await rpc(db,'memorials',account?.id||null);

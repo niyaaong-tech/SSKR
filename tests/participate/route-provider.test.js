@@ -30,6 +30,18 @@ function deferred() {
   return { promise, resolve, reject };
 }
 
+test('supplement joins directed road legs, preserves national routes and rejects a stale parent',async()=>{
+  const base=fixture(),extra={schemaVersion:1,version:'gps',parentVersion:'roads-test',placeIds:['middle','gps'],distances:[[0,100],[250,0]],durations:[[0,10],[25,0]]};
+  const fetcher=async url=>url.startsWith('/gps')?{ok:true,json:async()=>url.endsWith('manifest.json')?extra:{version:'gps',fromId:url.includes('/middle.')?'middle':'gps',legs:{middle:{shape},gps:{shape}}}}:base.fetcher(url);
+  const provider=create({base:'/roads',supplement:'/gps',fetcher});await provider.ready();
+  assert.deepEqual(provider.summary('start','gps'),{distanceMeters:600,durationSeconds:60});
+  assert.deepEqual(provider.summary('gps','finish'),{distanceMeters:950,durationSeconds:95});
+  assert.deepEqual(provider.summary('start','finish'),{distanceMeters:1200,durationSeconds:120});
+  const route=await provider.route(['start','gps','finish']);assert.equal(route.valid,true);assert.equal(route.distanceMeters,1550);assert.equal(route.legs[0].coordinates.length,6);assert.equal(provider.version,'roads-test+gps');
+  const controller=new AbortController();controller.abort();await assert.rejects(provider.route(['start','gps'],{signal:controller.signal}),{name:'AbortError'});
+  extra.parentVersion='changed';await assert.rejects(create({base:'/roads',supplement:'/gps',fetcher}).ready(),/갱신/);
+});
+
 test('decodes standard precision-six coordinates and rejects truncated/invalid strings', () => {
   assert.deepEqual(decode(shape), coordinates);
   for (const invalid of [null, 42, '_', 'a', '??!']) assert.throws(() => decode(invalid));

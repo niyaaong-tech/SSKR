@@ -3,8 +3,7 @@
   const $ = selector => document.querySelector(selector);
   const form = $('#event-form');
   const catalog = window.SSKR_SPOT_CATALOG || [];
-  const starts = catalog.filter(place => place.kind === 'start');
-  const finish = catalog.find(place => place.id === 'daecheon');
+  let fieldPlaces=[],starts=catalog.filter(p=>p.kind==='start'),finish=catalog.find(p=>p.id==='daecheon');
   const storageKey = 'sskr.event-admin.draft';
   const state = { events: [], current: null, record: null, dirty: false, busy: false, access: false, conflict: false };
   const input = name => form.elements.namedItem(name);
@@ -34,7 +33,7 @@
   }
   function readyToPublish(record) {
     const data = record?.document;
-    return Boolean(data?.publicTitle?.trim() && data.eventStartAt && data.eventEndAt && data.startLocationIds?.length && data.sunlight?.verification === 'REVIEWED');
+    return Boolean(data?.publicTitle?.trim() && data.eventStartAt && data.eventEndAt && data.startLocationIds?.length && (data.isTest&&data.timeMode==='MANUAL'||data.sunlight?.verification === 'REVIEWED'));
   }
   function syncSunriseFields() {
     starts.forEach(place => { $('#sunrise-' + place.id).hidden = !input('start-' + place.id).checked; });
@@ -59,7 +58,7 @@
     const completeSchedule = input('eventDate').value && input('startTime').value && input('endTime').value && selectedStarts().length;
     input('reviewed').disabled = state.busy || !completeSchedule;
     $('#publish-event').disabled = state.busy || !state.access || !readyToPublish(record) || state.dirty || state.conflict;
-    $('#publish-readiness').textContent = state.conflict ? '현재 입력은 보존했습니다. 목록에서 최신 초안을 다시 불러온 뒤 변경사항을 반영하세요.' : state.dirty ? '변경사항을 먼저 저장하면 공개할 수 있습니다.' : !readyToPublish(record) ? '공개 전에는 행사 제목·일정·출발지와 검토한 일출·일몰 시각이 필요합니다.' : '공개하면 이 초안이 참가자에게 적용됩니다. 이후 편집한 내용은 다시 공개할 때 반영됩니다.';
+    $('#publish-readiness').textContent = state.conflict ? '현재 입력은 보존했습니다. 목록에서 최신 초안을 다시 불러온 뒤 변경사항을 반영하세요.' : state.dirty ? '변경사항을 먼저 저장하면 공개할 수 있습니다.' : !readyToPublish(record) ? '공개 전에는 행사 제목·일정·출발지·도착지를 입력하고 시각 기준을 확인하세요.' : '공개하면 이 초안이 참가자에게 적용됩니다. 이후 편집한 내용은 다시 공개할 때 반영됩니다.';
   }
   function snapshot() {
     const values = {};
@@ -73,6 +72,8 @@
     try {
       const saved = JSON.parse(sessionStorage.getItem(storageKey));
       if (!saved || !saved.values || (!saved.dirty && !saved.partialSchedule)) return false;
+      input('isTest').checked=saved.values.isTest===true;input('timeMode').value=saved.values.timeMode||'SOLAR';
+      renderPlaces({startLocationIds:Object.entries(saved.values).filter(([key,value])=>key.startsWith('start-')&&value===true).map(([key])=>key.slice(6)),finishLocationId:saved.values.finishLocationId});
       for (const [name, value] of Object.entries(saved.values)) {
         const control = input(name);
         if (control && typeof value === (control.type === 'checkbox' ? 'boolean' : 'string')) control.type === 'checkbox' ? control.checked = value : control.value = value;
@@ -100,8 +101,9 @@
   }
   function loadRecord(record) {
     form.reset(); state.record = record || null; state.dirty = false; state.conflict = false;
+    const data=record?.document||{};
+    input('isTest').checked=data.isTest===true;input('timeMode').value=data.timeMode||'SOLAR';renderPlaces(data);
     if (record) {
-      const data = record.document;
       ['publicTitle', 'editionLabel', 'description'].forEach(name => { input(name).value = data[name] || ''; });
       input('minimumSpotCheckins').value = String(data.minimumSpotCheckins ?? 10);
       const start = localDateTime(data.eventStartAt), end = localDateTime(data.eventEndAt);
@@ -119,6 +121,7 @@
     syncSunriseFields(); renderList(); updateState(); rememberDraft();
   }
   async function request(method, suffix = '', body, revision) {
+    if(body?.document){const {placeCatalog,catalogVersion,routingVersion,...editable}=body.document;body={...body,document:editable};}
     const headers = { 'X-SSKR-Request': '1' };
     if (body !== undefined) headers['Content-Type'] = 'application/json';
     if (revision !== undefined) headers['If-Match'] = '"' + revision + '"';
@@ -150,7 +153,7 @@
     setBusy(true);
     try {
       const response = await request('GET');
-      state.access = true; state.events = response.events || []; state.current = response.current || null;
+      state.access = true;fieldPlaces=response.placeOptions||[]; state.events = response.events || []; state.current = response.current || null;
       $('#access-actions').hidden = true; $('#admin-workspace').hidden = false;
       renderList();
       if (initial && !restoreDraft()) loadRecord(state.events.find(record => record.id === state.current?.id) || state.events[0] || null);
@@ -164,7 +167,7 @@
     if (date && input('startTime').value && input('endTime').value && input('endTime').value <= input('startTime').value) { notice('도착 마감 시각은 출발 가능 시각보다 늦어야 합니다.', true); input('endTime').focus(); return null; }
     const at = time => date && time ? date + 'T' + time + ':00+09:00' : null;
     let sunlight = null;
-    if (input('reviewed').checked) {
+    if (input('timeMode').value==='SOLAR'&&input('reviewed').checked) {
       const missing = selected.find(place => !input('sunrise-' + place.id).value);
       if (missing || !input('sunsetTime').value || !input('sourceUrl').value.trim()) {
         notice('검토 완료로 저장하려면 선택한 출발지의 일출, 도착지의 일몰, 자료 주소를 모두 입력하세요.', true);
@@ -175,7 +178,7 @@
       if (!url || url.protocol !== 'https:' || url.username || url.password) { notice('검토 자료 주소는 계정 정보가 없는 https 주소를 입력하세요.', true); input('sourceUrl').focus(); return null; }
       sunlight = { date, timezone: 'Asia/Seoul', verification: 'REVIEWED', sourceUrl: url.href, calculationVersion: input('calculationVersion').value.trim() || 'manual-review', starts: selected.map(place => ({ locationId: place.id, lat: place.lat, lng: place.lng, sunriseAt: at(input('sunrise-' + place.id).value) })), finish: { locationId: finish.id, lat: finish.lat, lng: finish.lng, sunsetAt: at(input('sunsetTime').value) } };
     }
-    return { ...state.record?.document, publicTitle: input('publicTitle').value.trim(), editionLabel: input('editionLabel').value.trim(), description: input('description').value.trim(), timezone: 'Asia/Seoul', eventStartAt: at(input('startTime').value), eventEndAt: at(input('endTime').value), applicationOpenAt:input('applicationOpenAt').value?input('applicationOpenAt').value+':00+09:00':null,applicationCloseAt:input('applicationCloseAt').value?input('applicationCloseAt').value+':00+09:00':null,minimumSpotCheckins: Number(input('minimumSpotCheckins').value), startLocationIds: selected.map(place => place.id), finishLocationId: finish.id, sunlight };
+    return { ...state.record?.document, publicTitle: input('publicTitle').value.trim(), editionLabel: input('editionLabel').value.trim(), description: input('description').value.trim(), timezone: 'Asia/Seoul', eventStartAt: at(input('startTime').value), eventEndAt: at(input('endTime').value), applicationOpenAt:input('applicationOpenAt').value?input('applicationOpenAt').value+':00+09:00':null,applicationCloseAt:input('applicationCloseAt').value?input('applicationCloseAt').value+':00+09:00':null,minimumSpotCheckins: Number(input('minimumSpotCheckins').value), startLocationIds: selected.map(place => place.id), finishLocationId: input('finishLocationId').value, sunlight,isTest:input('isTest').checked,timeMode:input('timeMode').value };
   }
   async function saveEvent(event) {
     event.preventDefault();
@@ -189,6 +192,7 @@
       state.events = [saved, ...state.events.filter(record => record.id !== saved.id)];
       state.record = saved; state.dirty = false; state.conflict = false;
       input('reviewed').checked = saved.document.sunlight?.verification === 'REVIEWED';
+      ['applicationOpenAt','applicationCloseAt'].forEach(name=>{const value=localDateTime(saved.document[name]);input(name).value=value.date&&value.time?value.date+'T'+value.time:'';});
       renderList(); updateState(); rememberDraft();
       notice(partialSchedule() ? '초안을 저장했습니다. 날짜·시각을 모두 입력하지 않은 일정은 이 브라우저에만 보관했습니다.' : '초안을 저장했습니다. 공개 전까지 참가자 화면에는 반영되지 않습니다.');
     } catch (error) { showError(error); } finally { setBusy(false); }
@@ -229,17 +233,31 @@
       location.assign(target.href);
     } catch (error) { notice(error.message, true); $('#login-button').disabled = false; }
   }
-  if (!starts.length || !finish) { notice('공용 장소 정보를 불러오지 못했습니다. 페이지를 새로 열어 주세요.', true); return; }
-  starts.forEach(place => {
-    const label = element('label', undefined, 'start-option'), checkbox = element('input'); checkbox.type = 'checkbox'; checkbox.name = 'start-' + place.id;
-    const name = element('span'); name.append(element('strong', place.name), element('small', place.region)); label.append(checkbox, name); $('#start-locations').append(label);
-    const sunriseLabel = element('label', place.name + ' 일출', 'field'); sunriseLabel.id = 'sunrise-' + place.id; sunriseLabel.hidden = true;
-    const time = element('input'); time.type = 'time'; time.name = 'sunrise-' + place.id; time.step = '60'; sunriseLabel.append(time); $('#sunrise-fields').append(sunriseLabel);
-  });
-  $('#finish-name').textContent = finish.name; $('#finish-region').textContent = finish.region;
+  function renderPlaces(data={}) {
+    const testing=input('isTest').checked;
+    input('timeMode').disabled=!testing;
+    if(!testing){input('timeMode').value='SOLAR';}
+    const group=testing;
+    starts=[...catalog.filter(p=>p.kind==='start'),...(group?fieldPlaces.filter(p=>p.startEligible):[])];
+    const finishes=[...catalog.filter(p=>p.kind==='finish'),...(group?fieldPlaces.filter(p=>p.kind==='spot'):[])];
+    $('#start-locations').replaceChildren();$('#sunrise-fields').replaceChildren();
+    for(const place of starts){
+      const label=element('label',undefined,'start-option'),checkbox=element('input');checkbox.type='checkbox';checkbox.name='start-'+place.id;checkbox.checked=(data.startLocationIds||[]).includes(place.id);
+      const name=element('span');name.append(element('strong',place.startName||place.name),element('small',place.region||''));label.append(checkbox,name);$('#start-locations').append(label);
+      const sunriseLabel=element('label',place.name+' 일출','field');sunriseLabel.id='sunrise-'+place.id;const time=element('input');time.type='time';time.name='sunrise-'+place.id;time.step='60';sunriseLabel.append(time);$('#sunrise-fields').append(sunriseLabel);
+    }
+    input('finishLocationId').replaceChildren(...finishes.map(p=>{const o=element('option',p.name);o.value=p.id;return o;}));
+    if(finishes.some(p=>p.id===data.finishLocationId))input('finishLocationId').value=data.finishLocationId;
+    finish=finishes.find(p=>p.id===input('finishLocationId').value);
+    $('#sunlight-section').hidden=input('timeMode').value==='MANUAL';syncSunriseFields();
+  }
+  renderPlaces();
   form.addEventListener('input', event => {
     if (state.busy) return;
     state.dirty = true;
+    if(event.target.name==='isTest'){const before={startLocationIds:selectedStarts().map(p=>p.id),finishLocationId:input('finishLocationId').value};if(input('isTest').checked)input('timeMode').value='MANUAL';renderPlaces(before);}
+    if(event.target.name==='timeMode')$('#sunlight-section').hidden=input('timeMode').value==='MANUAL';
+    if(event.target.name==='finishLocationId')finish=[...fieldPlaces,...catalog].find(p=>p.id===input('finishLocationId').value);
     if (['eventDate', 'startTime', 'endTime', 'sourceUrl', 'calculationVersion', 'sunsetTime'].includes(event.target.name) || event.target.name.startsWith('start-') || event.target.name.startsWith('sunrise-')) input('reviewed').checked = false;
     syncSunriseFields(); updateState(); rememberDraft();
   });

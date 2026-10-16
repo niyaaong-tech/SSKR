@@ -12,8 +12,7 @@ SSKR 웹의 현재 실행 결과를 관리하는 저장소입니다. 기획 문�
 - `/app/admin` — `web/admin/`: 운영자 전용 행사 초안·일출/일몰 검토·공개 설정
 - `/app/admin/operations` — 접수·참가자·공지·환불·체크인 증거·사진 검토
 - `/app/ride` — 실제 참가자의 당일 GPS 체크인
-- `/app/gps-test` — 공식 참가 기록과 분리된 GPS 현장 테스트
-- `/app/admin/gps` — 테스트 코스·출발지·도착지·날짜·시간·GPS 반경 설정
+- 대회 테스트 — `/app/admin`의 테스트 플래그로 추가 GPS 장소와 직접 지정 시각을 사용하며 참가부터 메모리얼까지 공통 서비스 흐름을 유지합니다.
 - `/participate/payment.html` — 실제 모드의 Toss V2 결제위젯 진입
 - `/tests/home-explore/` — `web/tests/home-explore/`: HOME 장소 탐색 인터랙션 검토 시안 (검색엔진 비노출)
 - `/` — `web/home/`: SSKR HOME

@@ -8,8 +8,6 @@ const port = Number(process.env.SSKR_DEV_PORT || 8080);
 const types = { ".css": "text/css; charset=utf-8", ".html": "text/html; charset=utf-8", ".js": "text/javascript; charset=utf-8", ".jpg": "image/jpeg", ".jpeg": "image/jpeg", ".png": "image/png", ".webp": "image/webp", ".svg": "image/svg+xml" };
 
 const routes = {
-  "/app/admin/gps": "web/admin/gps.html",
-  "/app/gps-test": "web/admin/gps.html",
   "/app/admin/operations": "web/admin/operations.html",
   "/app/admin": "web/admin/index.html",
   "/app/admin/": "web/admin/index.html",
@@ -67,7 +65,7 @@ const server = http.createServer(async (request, response) => {
     response.writeHead(400, { "Content-Type": "text/plain; charset=utf-8" });
     return response.end("Invalid URL");
   }
-  const redirect = { '/app/current':'/participate?view=guide', '/app/memorials/all':'/app/memorials', '/app/memorials/mine':'/app/my' }[pathname.replace(/\/$/,'')];
+  const redirect = { '/app/gps-test':'/app', '/app/admin/gps':'/app/admin', '/app/current':'/participate?view=guide', '/app/memorials/all':'/app/memorials', '/app/memorials/mine':'/app/my' }[pathname.replace(/\/$/,'')];
   if (redirect) {
     const target = new URL(redirect, url.origin);
     url.searchParams.forEach((v,k)=>{if (!target.searchParams.has(k)) target.searchParams.set(k,v);});

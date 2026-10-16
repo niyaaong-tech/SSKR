@@ -18,6 +18,8 @@
   const scenario = params.get("scenario") || "session";
   const linkedScenarios = new Set(["logged-in-no-application", "application-step1", "application-step2", "application-step3", "application-payment", "processing", "failed", "active", "past-only", "current+past", "private-owner", "private-other", "blocked", "c-payment-deferred", "c-confirmed-spots", "c-preparation", "c-ride-check", "c-countdown", "c-live-confirmed", "c-season-completed", "c-season-no-show", "c-season-retired"]);
   const publicScenarios = new Set(["guest", "public-memorial"]);
+  const basePlaces=window.SSKR_SPOT_CATALOG;
+  function syncCatalog(){const next=context.event.placeCatalog||basePlaces;const changed=window.SSKR_SPOT_CATALOG.version!==(context.event.catalogVersion||basePlaces.version);window.SSKR_SPOT_CATALOG=next;if(context.event.placeCatalog)next.version=context.event.catalogVersion;return changed;}
   let context = null;
   let contextRefresh = null;
   let pendingRoute = null;
@@ -148,7 +150,7 @@
     const model = managerResolver.resolveManager(context, { plans, notices: window.SSKR_BACKEND?.mode === 'supabase' ? context.event.notices||[] : data.notices });
     const appLink = (url,label,cls='manager-link') => '<a class="'+cls+'" href="'+esc(url.startsWith('/participate')?participateHref(url):url)+'"'+(url.startsWith('/app')?' data-app-link':'')+'>'+esc(label)+' <span aria-hidden="true">↗</span></a>';
     const planCards = model.plans.map(item=>'<article class="manager-plan-card"><span>경유 '+item.stopIds.length+'곳 · '+(item.stopIds.length>=window.SSKR_CHECKIN_RULES.minimumSpotCheckins(context.event)?'최소 경유 수 충족':'초안')+'</span><h3>'+esc(item.title||'이름 없는 루트')+'</h3><p>'+esc(window.SSKR_MAP.formatPlaceText(window.SSKR_SPOT_CATALOG.find(p=>p.id===item.startId)?.name||'출발지 미정'))+' → '+esc(window.SSKR_SPOT_CATALOG.find(p=>p.id===item.finishId)?.name||'도착지 확인 필요')+'</p>'+appLink('/app/spots?mode=plan&tab=saved','저장 목록에서 열기')+'</article>').join('');
-    root.innerHTML = '<div class="manager-dashboard">'+(context.participationMode==='test'?'<p class="manager-test-notice">테스트 사이트 · 결제 없이 참가할 수 있습니다.</p>':'')+
+    root.innerHTML = '<div class="manager-dashboard">'+
       (model.alert?'<aside class="manager-alert"><strong>'+esc(model.alert.title)+'</strong><p>'+esc(model.alert.body)+'</p>'+appLink('/app/notices','공지 확인')+'</aside>':'')+
       '<section class="manager-welcome"><div><p class="eyebrow">'+esc(model.label)+'</p><h2>'+esc(model.title)+'</h2><p>'+esc(model.copy)+'</p></div>'+(model.primaryAction?appLink(model.primaryAction.href,model.primaryAction.label,'manager-primary'):'')+'</section>'+
       (model.banner?'<a class="manager-event-banner" href="'+esc(participateHref(model.banner.href))+'"><strong>'+esc(model.banner.title)+' 참가안내</strong><span>'+esc(model.banner.status)+' · 일정과 참가 조건 확인</span><b aria-hidden="true">→</b></a>':'')+
@@ -302,6 +304,7 @@
           context = await api.context();
           authNotice = '로그인이 만료되었습니다. 작성 중인 루트는 유지됩니다. 다시 로그인해 주세요.';
         }
+        syncCatalog();
         try { await window.SSKR_REMOTE_ROUTES.refresh(context.account); } catch { /* Manager and editor display the same storage error without discarding a draft. */ }
         memorialStore=window.SSKR_SERVICE_UI.remote;window.SSKR_MEMORIAL_MEDIA=window.SSKR_SERVICE_UI.media;
         renderChrome(); renderRouteSafely(); return;
@@ -334,7 +337,7 @@
         const next = await api.context();
         if (context?.account?.id !== owner || context?.account?.linked !== linked || next.account?.id !== owner || next.account?.linked !== linked) return;
         context = next;
-        disposeSpots?.refreshEvent?.();
+        if(syncCatalog())renderRouteSafely();else disposeSpots?.refreshEvent?.();
         if (linked) try { await window.SSKR_REMOTE_ROUTES.refresh(context.account); } catch { /* Display the storage error when the user opens the list. */ }
         if (context?.account?.id === owner && domain.normalizePath(location.pathname) === '/app') renderHome();
       } catch { /* Keep the current draft and event until an authoritative context is available. */ }

@@ -40,6 +40,7 @@
   function windowFor(event,start,finish){
     const timezone=event.timezone||'Asia/Seoul',date=dateKey(event.eventStartAt,timezone),saved=event.sunlight;
     if(!date||!coordinates(start)||!coordinates(finish))return {state:'UNAVAILABLE'};
+    if(event.timeMode==='MANUAL' && validDate(event.eventEndAt) && Date.parse(event.eventStartAt)<Date.parse(event.eventEndAt))return {state:'REVIEWED',sunriseAt:event.eventStartAt,sunsetAt:event.eventEndAt};
     if(saved){
       const rise=saved.starts?.find(p=>p.locationId===start.id),set=saved.finish;
       const matches=(record,place)=>record&&record.locationId===place.id&&record.lat===place.lat&&record.lng===place.lng;

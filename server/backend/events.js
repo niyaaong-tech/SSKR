@@ -4,8 +4,9 @@ const { client } = require('./auth');
 const { revision } = require('./routes');
 const catalog = require('../../web/app/spot-catalog');
 const solar = require('../../web/shared/solar-times');
-const byId = new Map(catalog.map(place => [place.id, place]));
-const keys = ['publicTitle', 'editionLabel', 'description', 'timezone', 'eventStartAt', 'eventEndAt', 'applicationOpenAt', 'applicationCloseAt', 'minimumSpotCheckins', 'startLocationIds', 'finishLocationId', 'sunlight', 'coreConfirmedAt', 'spotsConfirmedAt'];
+const fieldPlaces = require('../data/field-test-places.json').records;
+const normalById = new Map(catalog.map(place => [place.id, place]));
+const keys = ['publicTitle', 'editionLabel', 'description', 'timezone', 'eventStartAt', 'eventEndAt', 'applicationOpenAt', 'applicationCloseAt', 'minimumSpotCheckins', 'startLocationIds', 'finishLocationId', 'sunlight', 'coreConfirmedAt', 'spotsConfirmedAt','isTest','timeMode'];
 const messages = {
   AUTH_REQUIRED: [401, '로그인한 뒤 다시 시도해 주세요.'],
   FORBIDDEN: [403, '행사 관리 권한이 없습니다.'],
@@ -21,7 +22,8 @@ function errorFrom(error) {
 }
 const invalid = () => { throw new BackendError('INVALID_EVENT', messages.INVALID_EVENT[1]); };
 const timestamp = value => typeof value === 'string' && /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(?::\d{2}(?:\.\d+)?)?(?:Z|[+-]\d{2}:\d{2})$/.test(value) && Number.isFinite(Date.parse(value));
-function documentFor(input) {
+function documentFor(input, available=fieldPlaces) {
+  const byId=new Map([...catalog,...available].map(place=>[place.id,place]));
   if (!input || typeof input !== 'object' || Array.isArray(input)) invalid();
   const doc = Object.fromEntries(keys.filter(key => Object.hasOwn(input, key)).map(key => [key, input[key]]));
   for (const [key, max] of [['publicTitle', 120], ['editionLabel', 80], ['description', 4000]]) {
@@ -29,14 +31,18 @@ function documentFor(input) {
     if (typeof doc[key] === 'string') doc[key] = doc[key].trim();
   }
   doc.timezone ??= 'Asia/Seoul'; doc.minimumSpotCheckins ??= 10; doc.finishLocationId ??= 'daecheon'; doc.startLocationIds ??= [];
-  if (doc.timezone !== 'Asia/Seoul' || doc.finishLocationId !== 'daecheon' || !Number.isInteger(doc.minimumSpotCheckins) || doc.minimumSpotCheckins < 1 || doc.minimumSpotCheckins > 200) invalid();
-  if (!Array.isArray(doc.startLocationIds) || new Set(doc.startLocationIds).size !== doc.startLocationIds.length || doc.startLocationIds.some(id => byId.get(id)?.kind !== 'start')) invalid();
+  if (doc.timezone !== 'Asia/Seoul' || (doc.isTest ? doc.finishLocationId!=='daecheon'&&!available.some(p=>p.id===doc.finishLocationId&&p.kind==='spot') : doc.finishLocationId !== 'daecheon') || !Number.isInteger(doc.minimumSpotCheckins) || doc.minimumSpotCheckins < 1 || doc.minimumSpotCheckins > 200) invalid();
+  if (!Array.isArray(doc.startLocationIds) || new Set(doc.startLocationIds).size !== doc.startLocationIds.length || doc.startLocationIds.some(id => !(doc.isTest ? byId.get(id)?.kind==='start'||available.some(p=>p.id===id&&p.startEligible) : normalById.get(id)?.kind === 'start'))) invalid();
   for (const key of ['eventStartAt', 'eventEndAt', 'applicationOpenAt', 'applicationCloseAt', 'coreConfirmedAt', 'spotsConfirmedAt']) {
     if (doc[key] === '') doc[key] = null;
     if (doc[key] != null && !timestamp(doc[key])) invalid();
   }
   if (doc.eventStartAt && doc.eventEndAt && (Date.parse(doc.eventStartAt) >= Date.parse(doc.eventEndAt) || solar.dateKey(doc.eventStartAt) !== solar.dateKey(doc.eventEndAt))) invalid();
   if (doc.applicationOpenAt && doc.applicationCloseAt && Date.parse(doc.applicationOpenAt) >= Date.parse(doc.applicationCloseAt)) invalid();
+  if(doc.isTest!=null&&typeof doc.isTest!=='boolean')invalid();
+  if(doc.timeMode==='MANUAL'&&doc.isTest!==true)invalid();
+  if(doc.timeMode && !['SOLAR','MANUAL'].includes(doc.timeMode)) invalid();
+  if(doc.timeMode==='MANUAL') doc.sunlight=null;
   if (doc.sunlight != null) {
     const light = doc.sunlight;
     if (!light || typeof light !== 'object' || Array.isArray(light) || light.verification !== 'REVIEWED' || !Array.isArray(light.starts)) invalid();
@@ -66,8 +72,11 @@ async function events(actor, req, body, url) {
   const action = req.method === 'GET' ? 'list' : publish ? 'publish' : ['POST', 'PUT'].includes(req.method) ? 'save' : null;
   if (!action) throw new BackendError('METHOD_NOT_ALLOWED', '지원하지 않는 요청입니다.', 405);
   if ((publish || req.method === 'PUT') && !id || req.method === 'POST' && !publish && id || req.method === 'GET' && id) invalid();
-  const { data, error } = await actor.db.rpc('sskr_events', { p_action: action, p_id: id, p_document: action === 'save' ? documentFor(body.document) : null, p_revision: revision(req.headers['if-match']) });
+  let available=fieldPlaces;
+  if(action==='save'&&body.document?.isTest===true){const options=await actor.db.rpc('sskr_event_place_options');if(options.error)throw errorFrom(options.error);available=options.data;}
+  const { data, error } = await actor.db.rpc('sskr_events', { p_action: action, p_id: id, p_document: action === 'save' ? documentFor(body.document,available) : null, p_revision: revision(req.headers['if-match']) });
   if (error) throw errorFrom(error);
+  if(action==='list'){const options=await actor.db.rpc('sskr_event_place_options');if(options.error)throw errorFrom(options.error);data.placeOptions=options.data;}
   return data;
 }
 module.exports = { documentFor, readPublished, events };

@@ -21,7 +21,7 @@
     const eventSignature=()=>JSON.stringify([eventMetadata(),minimum(),event().eventStartAt,event().eventEndAt,event().sunlight,event().startLocationIds,event().finishLocationId]);
     let seenEvent=eventSignature();
     let storage,session;try{storage=root.localStorage;}catch{}try{session=root.sessionStorage;}catch{}
-    const store=root.SSKR_BACKEND?.mode==='supabase'?root.SSKR_REMOTE_ROUTES:domain.createStore(storage,catalog),provider=root.SSKR_ROUTE_PROVIDER.create(),events=new AbortController();
+    const store=root.SSKR_BACKEND?.mode==='supabase'?root.SSKR_REMOTE_ROUTES:domain.createStore(storage,catalog),provider=root.SSKR_ROUTE_PROVIDER.create({supplement:event().isTest?'/web/shared/routes/gps':null}),events=new AbortController();
     const startAvailable=id=>!store.remote||!event().id||event().startLocationIds?.includes(id)===true;
     const startNeedsChange=()=>Boolean(plan.startId&&!startAvailable(plan.startId));
     const serverRevisions=new Map(),createRequests=new Map();let restoredRevision=null,saving=false,saveQueue=Promise.resolve(),scheduleTimer;
@@ -320,7 +320,7 @@
       if(startNeedsChange()){notify('이번 행사에서 사용할 출발지로 변경한 뒤 저장해 주세요.',true);return;}
       if(saving)return;if(pendingAdd||generation){notify('도로 확인이 끝난 뒤 저장해 주세요.');return;}if(!account.linked){login(true);return;}
       if(!store.remote){try{plan=store.save({...plan,routingVersion:ready?provider.version:plan.routingVersion},account);identities.set(context,identity(plan));dirty=false;const scheduleSaved=saveSchedule();persist();render();notify(scheduleSaved?'루트를 저장했습니다.':'루트는 저장했지만 일정 검토는 저장하지 못했습니다. 저장 공간을 확인한 뒤 다시 저장해 주세요.',!scheduleSaved);}catch(error){notify(error?.message||'저장하지 못했습니다. 다시 시도해 주세요.',true);}return;}
-      clearTimeout(scheduleTimer);saving=true;const scope=context,owner={...account},original=JSON.stringify(plan),originalSchedule=JSON.stringify({...schedule,autoDeparture}),draft={...plan,routingVersion:ready?provider.version:plan.routingVersion},agenda=scheduleForSave();
+      clearTimeout(scheduleTimer);saving=true;const scope=context,owner={...account},original=JSON.stringify(plan),originalSchedule=JSON.stringify({...schedule,autoDeparture}),draft={...plan,catalogVersion:domain.createEmpty(catalog).catalogVersion,routingVersion:ready?provider.version:plan.routingVersion},agenda=scheduleForSave();
       let request=createRequests.get(scope);const signature=JSON.stringify({draft,agenda});
       if(!request){request={key:root.crypto.randomUUID(),signature};createRequests.set(scope,request);}
       // Keep a failed create request unchanged until its outcome is resolved; no accidental duplicate.

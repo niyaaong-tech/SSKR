@@ -69,6 +69,8 @@ function buildContextDto(repository, options = {}) {
       eventStartAt: event.eventStartAt,
       eventEndAt: event.eventEndAt,
       configVersion: event.configVersion,
+      isTest:event.isTest===true,
+      timeMode:event.timeMode||'SOLAR',placeCatalog:event.placeCatalog||null,catalogVersion:event.catalogVersion||null,routingVersion:event.routingVersion||null,
       sunlightMode: event.sunlightMode || null,
       sunlight: event.sunlight || null,
       applicationOpenAt: event.applicationOpenAt,

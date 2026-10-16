@@ -1,0 +1,50 @@
+'use strict';
+const {test}=require('node:test');
+const assert=require('node:assert/strict');
+const {randomUUID}=require('node:crypto');
+const {fixture}=require('./workflow-fixture');
+const {documentFor}=require('../../server/backend/events');
+const {createWorkflows}=require('../../server/backend/workflows');
+const catalog=require('../../web/app/spot-catalog');
+const extra=require('../../server/data/field-test-places.json').records;
+
+test('test flag adds places to the real event; ordinary participation, GPS and public memorial share one workflow',async t=>{
+  const f=await fixture();t.after(()=>f.db.close());
+  const input=documentFor({...f.event,isTest:true,timeMode:'MANUAL',sunlight:null,
+    startLocationIds:[...catalog.filter(p=>p.kind==='start').map(p=>p.id),...extra.filter(p=>p.startEligible).map(p=>p.id)],finishLocationId:'test-walk-30'});
+  const doc=(await f.db.query('select sskr_private.event_document($1) doc',[JSON.stringify(input)])).rows[0].doc;
+  assert.equal(doc.placeCatalog.length,catalog.length+extra.length);
+  assert.deepEqual(doc.placeCatalog.slice(0,catalog.length).map(p=>p.id),catalog.map(p=>p.id),'national numbering stays stable');
+  assert.equal(doc.placeCatalog.find(p=>p.id==='daecheon').kind,'inactive');
+  assert.ok(catalog.every(p=>doc.placeCatalog.some(q=>q.id===p.id)),'all national places stay available');
+  assert.equal(doc.placeCatalog.filter(p=>p.testOnly).length,68);
+  assert.equal(doc.placeCatalog.filter(p=>p.kind==='finish').length,1);
+  await f.db.query('select sskr_private.validate_event_publication($1,2,$2)',[f.E,JSON.stringify(doc)]);
+  await f.db.query('insert into sskr_private.event_publications(event_id,config_version,document,actor_id) values($1,2,$2,$3)',[f.E,JSON.stringify(doc),f.A]);
+  await f.db.query('update sskr_private.event_current set current_version=2');
+  let ms=Date.parse('2099-10-15T00:00:00+09:00');
+  const service=createWorkflows({db:f.adapter,payments:{ready:false},clock:()=>new Date(ms)}),user=f.account(f.A);
+  const snapshot=await service.operations(user,{action:'READ'});
+  await service.operations(user,{action:'CONFIGURE',revision:snapshot.epoch,commerce:{...f.commerce,checkinRadiusMeters:20,maxAccuracyMeters:35}});
+  await service.handle(user,'application',{action:'START'});
+  await service.handle(user,'application',{action:'SAVE_ACKNOWLEDGEMENT',acknowledgement:{acknowledged:true}});
+  await service.handle(user,'application',{action:'SAVE_AGREEMENTS',agreements:{TERMS:true,PRIVACY:true,LOCATION:true}});
+  await service.handle(user,'application',{action:'SAVE_PARTICIPANT_INFO',participant:{name:'검수',email:'fixture@example.invalid',phone:'01012345678',priceTierId:'test-participation'}});
+  const confirmed=await service.handle(user,'application',{action:'CONFIRM_TEST'});
+  assert.equal(confirmed.surface.mode,'MODE_C');assert.equal(confirmed.event.placeCatalog.length,280);
+  await service.handle(user,'application',{action:'SAVE_START_LOCATION',startLocationId:'test-start-ori'});
+  const ids=['test-start-ori',...extra.filter(p=>p.group==='walk').slice(0,5).map(p=>p.id),...catalog.filter(p=>p.kind==='spot').slice(0,5).map(p=>p.id),'test-walk-30'];
+  ms=Date.parse(doc.eventStartAt)+60000;
+  for(const id of ids){const p=doc.placeCatalog.find(p=>p.id===id);ms+=60000;const evidence={requestId:randomUUID(),locationId:id,lat:p.lat,lng:p.lng,accuracy:5,capturedAt:new Date(ms).toISOString()};await service.handle(user,'ride',evidence);await service.handle(user,'ride',evidence);}
+  const ctx=await service.handle(user,'context');assert.equal(ctx.run.state,'COMPLETED');assert.equal(ctx.run.visits.length,12);
+  let memorial=(await service.memorials(user)).items[0];assert.equal(memorial.synthetic,false);assert.equal(memorial.spotCount,10);assert.equal(memorial.visibility,'PRIVATE');
+  assert.equal((await service.memorials(f.account(f.B))).items.length,0);
+  await service.handle(user,'memorial',{eventId:f.E,revision:memorial.revision,values:{title:'오늘의 여정',summary:'내가 남긴 하루',visibility:'PUBLIC',publishStatus:'PUBLISHED',visitEdits:{}}});
+  memorial=(await service.memorials(null)).items[0];assert.equal(memorial.title,'오늘의 여정');assert.equal(memorial.places.find(p=>p.id==='test-start-ori').name,extra.find(p=>p.id==='test-start-ori').name);
+  assert.equal((await f.db.query('select count(*)::int n from sskr_private.field_runs')).rows[0].n,0,'no parallel run is created');
+  assert.equal((await f.db.query('select count(*)::int n from sskr_private.payment_orders')).rows[0].n,0);
+  const ordinary=(await f.db.query('select sskr_private.event_document($1) doc',[JSON.stringify({...documentFor({...f.event,sunlight:null}),isTest:false})])).rows[0].doc;
+  assert.equal(ordinary.placeCatalog,undefined);
+  assert.throws(()=>documentFor({...input,isTest:false}),/확인/);
+  await assert.rejects(f.db.query('select sskr_private.event_document($1)',[JSON.stringify({...input,isTest:false})]),/INVALID_EVENT/);
+});

@@ -15,7 +15,7 @@ function context(account, now = new Date(), published = null) {
     warnings: [], services: [], manager: null
   };
   if (published) {
-    const allowed = ['id', 'configVersion', 'publicTitle', 'editionLabel', 'description', 'timezone', 'eventStartAt', 'eventEndAt', 'applicationOpenAt', 'applicationCloseAt', 'minimumSpotCheckins', 'startLocationIds', 'finishLocationId', 'sunlight', 'publishedAt', 'coreConfirmedAt', 'spotsConfirmedAt'];
+    const allowed = ['id', 'configVersion', 'publicTitle', 'editionLabel', 'description', 'timezone', 'eventStartAt', 'eventEndAt', 'applicationOpenAt', 'applicationCloseAt', 'minimumSpotCheckins', 'startLocationIds', 'finishLocationId', 'sunlight', 'publishedAt', 'coreConfirmedAt', 'spotsConfirmedAt','isTest','timeMode','placeCatalog','catalogVersion','routingVersion'];
     const event = Object.fromEntries(allowed.filter(key => Object.hasOwn(published, key)).map(key => [key, published[key]]));
     event.coreConfirmedAt ||= event.publishedAt;
     Object.assign(value.event, event, { published: true, visibility: 'PUBLIC', sunlightMode: 'REVIEWED', resolvedStage: resolveEventStage(event, now).stage, eventDateDisplay: dateRange(event.eventStartAt, event.eventEndAt, event.timezone), applicationPeriodDisplay: dateRange(event.applicationOpenAt, event.applicationCloseAt, event.timezone), registrationState: 'NOT_OPEN', registrationLabel: '참가 접수 준비 중' });

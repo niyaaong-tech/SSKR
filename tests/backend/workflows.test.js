@@ -75,7 +75,7 @@ test('checkin ledger: N excludes endpoints, duplicate replay, uncertain location
   await assert.rejects(media.image(null,reservation.id),e=>e.code==='NOT_FOUND','consent alone does not bypass moderation');
   await s.operations(a,{action:'PHOTO_REVIEW',eventId:f.E,ownerId:a.id,id:reservation.id,state:'APPROVED'});
   assert.ok((await media.image(null,reservation.id)).length);
-  const publicItems=(await s.memorials(null)).items;assert.equal(publicItems.length,1);assert.ok(!JSON.stringify(publicItems).includes('"lat"'));assert.ok(!JSON.stringify(publicItems).includes('accuracy'));
+  const publicItems=(await s.memorials(null)).items;assert.equal(publicItems.length,1);assert.ok(publicItems.every(m=>m.visits.every(v=>!Object.hasOwn(v,'lat')&&!Object.hasOwn(v,'lng'))));assert.ok(!JSON.stringify(publicItems).includes('accuracy'));
   await assert.rejects(s.handle(f.account(f.B),'memorial',{eventId:f.E,values:{title:'다른 사람 수정',summary:'',visibility:'PUBLIC'}}),e=>e.code==='NOT_FOUND');
   await assert.rejects(s.handle(a,'memorial',{eventId:f.E,revision:1,values:{title:'오래된 편집',summary:'',visibility:'PUBLIC'}}),e=>e.code==='CONFLICT');
   await s.handle(a,'memorial',{eventId:f.E,revision:2,values:{title:'내 완주',summary:'기록',visibility:'PRIVATE'}});

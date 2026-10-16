@@ -1,9 +1,10 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "rewrites": [
-    { "source": "/app/admin/gps", "destination": "/web/admin/gps.html" },
-    { "source": "/app/gps-test", "destination": "/web/admin/gps.html" },
-    { "source": "/app/admin/operations", "destination": "/web/admin/operations.html" },
+    {
+      "source": "/app/admin/operations",
+      "destination": "/web/admin/operations.html"
+    },
     {
       "source": "/app/admin",
       "destination": "/web/admin/index.html"
@@ -165,6 +166,16 @@
       "source": "/app/memorials/mine",
       "destination": "/app/my",
       "permanent": true
+    },
+    {
+      "source": "/app/gps-test",
+      "destination": "/app",
+      "permanent": false
+    },
+    {
+      "source": "/app/admin/gps",
+      "destination": "/app/admin",
+      "permanent": false
     }
   ]
 }

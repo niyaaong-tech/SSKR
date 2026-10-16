@@ -17,7 +17,7 @@ function validateCommerce(input,event,{testParticipation=false}={}) {
     v[k]=input[k]?new Date(input[k]).toISOString():null;
     if(v[k]&&Date.parse(v[k])>Date.parse(event.eventEndAt))invalid('준비 마감은 행사 종료 이전이어야 합니다.');
   }
-  if(!Number.isFinite(v.checkinRadiusMeters)||!Number.isFinite(v.maxAccuracyMeters)||v.checkinRadiusMeters<30||v.checkinRadiusMeters>500||v.maxAccuracyMeters<10||v.maxAccuracyMeters>150)invalid('체크인 위치 허용 범위를 확인해 주세요.');
+  if(!Number.isFinite(v.checkinRadiusMeters)||!Number.isFinite(v.maxAccuracyMeters)||v.checkinRadiusMeters<10||v.checkinRadiusMeters>500||v.maxAccuracyMeters<5||v.maxAccuracyMeters>150)invalid('체크인 위치 허용 범위를 확인해 주세요.');
   if(input.notices&&(!Array.isArray(input.notices)||input.notices.length>50))invalid('행사 공지는 최대 50개까지 등록할 수 있습니다.');
   for(const n of input.notices||[]){
     const notice={id:text(n.id,80),title:text(n.title,120),body:text(n.body,10000),publishedAt:n.publishedAt||null};
@@ -25,7 +25,7 @@ function validateCommerce(input,event,{testParticipation=false}={}) {
     v.notices.push(notice);
   }
   const ids=new Set(),codes=new Set();
-  if(testParticipation)input={...input,priceTiers:[{id:'test-participation',code:'STANDARD',displayName:'테스트 참가',amount:0,currency:'KRW',salesStartAt:event.applicationOpenAt,salesEndAt:event.applicationCloseAt,isActive:true}]};
+  if(testParticipation)input={...input,priceTiers:[{id:'test-participation',code:'STANDARD',displayName:'기본 참가',amount:0,currency:'KRW',salesStartAt:event.applicationOpenAt,salesEndAt:event.applicationCloseAt,isActive:true}]};
   for(const p of Array.isArray(input.priceTiers)?input.priceTiers:[]) {
     const tier={id:text(p.id,80),eventId:event.id,code:p.code,displayName:text(p.displayName,80),amount:Number(p.amount),currency:'KRW',
       salesStartAt:p.salesStartAt,salesEndAt:p.salesEndAt,isActive:p.isActive===true,entryLimit:p.entryLimit==null?null:Number(p.entryLimit),benefits:[]};
@@ -48,7 +48,7 @@ function eventForWorkflow(snapshot,now,providerReady) {
     registrationState:open?'OPEN':c.enabled&&+now>=Date.parse(e.applicationCloseAt)?'CLOSED':'NOT_OPEN',
     capacityPolicy:{baseCapacity:c.baseCapacity||0,platinumExtraCapacity:c.extraCapacity||0,...snapshot.capacity},
     earlyBirdEnabled:(c.priceTiers||[]).some(p=>p.code==='EARLY'&&p.isActive),visibility:'PUBLIC',
-    coreConfirmedAt:e.publishedAt,spotsConfirmedAt:e.publishedAt,finishLocationName:require('../../web/app/spot-catalog').find(p=>p.id===e.finishLocationId)?.name||'',
+    coreConfirmedAt:e.publishedAt,spotsConfirmedAt:e.publishedAt,finishLocationName:(e.placeCatalog||require('../../web/app/spot-catalog')).find(p=>p.id===e.finishLocationId)?.name||'',
     seasonClearUntil:new Date(Date.parse(e.eventEndAt)+366*86400000).toISOString()};
 }
 module.exports={validateCommerce,eventForWorkflow};

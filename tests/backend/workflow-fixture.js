@@ -5,7 +5,7 @@ const {createWorkflows}=require('../../server/backend/workflows');
 const {call}=require('../../server/backend/service-db');
 const {validateCommerce}=require('../../server/backend/commerce');
 const {randomUUID}=require('node:crypto');
-async function fixture() {
+async function fixture({isTest=false}={}) {
   const db=new PGlite(),A=randomUUID(),B=randomUUID(),E=randomUUID();
   await db.exec(`create role anon;create role authenticated;create role service_role;create schema auth;
     create table auth.users(id uuid primary key,banned_until timestamptz,is_anonymous boolean default false);
@@ -13,7 +13,7 @@ async function fixture() {
     create function auth.jwt() returns jsonb language sql as $$select '{}'::jsonb$$;create function auth.uid() returns uuid language sql as $$select null::uuid$$;`);
   for(const file of fs.readdirSync('supabase/migrations').filter(f=>f.endsWith('.sql')).sort())await db.exec(fs.readFileSync('supabase/migrations/'+file,'utf8'));
   await db.query('insert into auth.users(id) values($1),($2)',[A,B]);await db.query('insert into sskr_private.event_operators(user_id) values($1)',[A]);
-  const event={id:E,configVersion:1,publicTitle:'격리된 통합 테스트 행사',timezone:'Asia/Seoul',publishedAt:'2026-01-01T00:00:00Z',
+  const event={isTest,id:E,configVersion:1,publicTitle:'격리된 통합 테스트 행사',timezone:'Asia/Seoul',publishedAt:'2026-01-01T00:00:00Z',
     eventStartAt:'2099-10-16T06:00:00+09:00',eventEndAt:'2099-10-16T19:00:00+09:00',applicationOpenAt:'2020-01-01T00:00:00Z',applicationCloseAt:'2099-10-15T00:00:00Z',
     startLocationIds:['sokcho'],finishLocationId:'daecheon',minimumSpotCheckins:10,
     sunlight:{starts:[{locationId:'sokcho',sunriseAt:'2099-10-16T06:00:00+09:00'}],finish:{sunsetAt:'2099-10-16T19:00:00+09:00'}}};

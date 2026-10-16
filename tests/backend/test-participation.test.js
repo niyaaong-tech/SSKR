@@ -4,7 +4,7 @@ const assert=require('node:assert/strict');
 const {fixture}=require('./workflow-fixture');
 const {createWorkflows}=require('../../server/backend/workflows');
 test('test participation confirms atomically without a payment, enforces capacity, and disables financial endpoints',async()=>{
-  const f=await fixture();
+  const f=await fixture({isTest:true});
   try{
     const service=createWorkflows({db:f.adapter,testParticipation:true,payments:{ready:false},clock:()=>new Date('2026-10-16T00:00:00Z')});
     const s=await service.operations(f.account(f.A),{action:'READ'});
@@ -29,6 +29,6 @@ test('test participation confirms atomically without a payment, enforces capacit
     for(const endpoint of ['payment','checkout','refund'])await assert.rejects(service.handle(user,endpoint,{action:'START'}),e=>e.code==='PAYMENT_DEFERRED');
     for(const action of ['RECONCILE','REFUND_DETAILS','REFUND_APPROVE'])await assert.rejects(service.operations(user,{action}),e=>e.code==='PAYMENT_DEFERRED');
     assert.deepEqual(await service.webhook({data:{orderId:'anything'}}),{ok:true});
-    await assert.rejects(f.service.handle(user,'application',{action:'CONFIRM_TEST'}),e=>e.code==='NOT_FOUND');
+    assert.equal((await f.service.handle(f.account(winner),'application',{action:'CONFIRM_TEST'})).participation.id,confirmed.participation.id,'event flag works independently of deployment mode');
   }finally{await f.db.close();}
 });

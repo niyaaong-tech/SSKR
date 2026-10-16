@@ -24,7 +24,7 @@ function checkin(repo,snapshot,body,now,{places=catalog,window:timeWindow,create
     if(!startTime||!finishTime)throw new BackendError('EVENT_NOT_READY','행사의 출발·도착 시간을 확인하고 있습니다.',409);
     state.run={state:'NOT_STARTED',rules:{eventId:event.id,eventTitle:event.publicTitle,configVersion:event.configVersion,minimumSpotCheckins:event.minimumSpotCheckins,
       startId:start,finishId:event.finishLocationId,startTime,finishTime,
-      radius:c.checkinRadiusMeters,accuracy:c.maxAccuracyMeters,places:places.map(p=>({id:p.id,kind:p.kind,lat:p.lat,lng:p.lng}))},visits:state.run?.visits||[],receipts:state.run?.receipts||[]};
+      radius:c.checkinRadiusMeters,accuracy:c.maxAccuracyMeters,places:places.map(p=>({id:p.id,name:p.name,region:p.region,kind:p.kind,lat:p.lat,lng:p.lng,testOnly:p.testOnly===true}))},visits:state.run?.visits||[],receipts:state.run?.receipts||[]};
   }
   const run=state.run,rules=run.rules,place=rules.places.find(p=>p.id===body.locationId);
   if(!place)throw new BackendError('INVALID_PLACE','행사에 등록된 스팟을 선택해 주세요.');
@@ -58,7 +58,7 @@ function finishMemorial(repo) {
       eventId:rules.eventId,eventTitle:rules.eventTitle,participantNumber:p.participantNumber,title:rules.eventTitle+'의 하루',summary:'',
       revision:1,publishStatus:'DRAFT',visibility:'PRIVATE',synthetic:false,result:'완주',startedAt:visits[0].checkedInAt,finishedAt:visits.at(-1).checkedInAt,
       startLocationId:rules.startId,finishLocationId:rules.finishId,visitedLocationIds:visits.map(v=>v.locationId),spotCount:requirement.spotCount,
-      visits,visitEdits:{},distanceMeters:null,minimumSpotCheckins:rules.minimumSpotCheckins,ruleVersion:rules.configVersion};
+      visits,places:structuredClone(rules.places),visitEdits:{},distanceMeters:null,minimumSpotCheckins:rules.minimumSpotCheckins,ruleVersion:rules.configVersion};
   }
 }
 function reviewCheckin(repo,body,actor,now) {
@@ -91,7 +91,7 @@ function publicMemorial(item,account) {
   if(!owner)delete m.visitEdits;
   m.visits=m.visits.map(v=>({id:v.id,locationId:v.locationId,role:v.role,sequence:v.sequence,checkedInAt:v.checkedInAt,
     validationStatus:v.validationStatus,note:v.note,photoConsent:v.photoConsent,media:(v.media||[]).filter(p=>owner||v.photoConsent&&p.moderationStatus==='APPROVED')}));
-  for(const v of m.visits){const p=catalog.find(p=>p.id===v.locationId);if(p?.image)v.placePhoto={id:'place-'+p.id,sourceKind:'CATALOG',status:'READY',moderationStatus:'APPROVED',visibility:'PUBLIC',url:p.image,sourceUrl:p.source,credit:p.photoCredit};}
+  for(const v of m.visits){const p=[...(m.places||[]),...catalog].find(p=>p.id===v.locationId);if(p?.image)v.placePhoto={id:'place-'+p.id,sourceKind:'CATALOG',status:'READY',moderationStatus:'APPROVED',visibility:'PUBLIC',url:p.image,sourceUrl:p.source,credit:p.photoCredit};}
   return m;
 }
 module.exports={checkin,editMemorial,publicMemorial,distance,reviewCheckin};
